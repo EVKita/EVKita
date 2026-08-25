@@ -18,7 +18,7 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
 ```
 ├── astro.config.mjs
 ├── package.json
-├── .env                     (buat dari .env.example)
+├── .env                     (dibuat otomatis oleh wizard /install)
 ├── data/
 │   └── content.json         (data konten yang dikelola CMS)
 └── src/
@@ -41,29 +41,18 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
 npm install
 ```
 
-Salin file environment lalu isi password & secret Anda:
-
-```bash
-cp .env.example .env
-```
-
-Isi `.env`:
-
-```
-ADMIN_USERNAME=Maryamazkadynarachmat
-ADMIN_PASSWORD=Nurrachmat1
-SESSION_SECRET=string-acak-panjang
-```
-
 Jalankan mode pengembangan:
 
 ```bash
 npm run dev
 ```
 
-Buka `http://localhost:4321` untuk halaman utama, dan `http://localhost:4321/admin` untuk login admin.
+Buka `http://localhost:4321`, lalu selesaikan wizard di `http://localhost:4321/install`
+untuk membuat akun admin dan kunci sesi. Wizard menulis file `.env` sendiri —
+tidak perlu menyalin `.env.example` secara manual.
 
-> Kredensial admin default di `.env.example` adalah username `Maryamazkadynarachmat` dan password `Nurrachmat1`. **Segera ganti sebelum production.**
+> Sebelum wizard dijalankan, login admin **selalu ditolak**: aplikasi tidak
+> punya kredensial bawaan. `.env` tidak pernah ikut ke Git.
 
 ## Build & jalankan production
 
@@ -74,22 +63,74 @@ npm run start
 
 `npm run start` menjalankan server standalone (`node ./dist/server/entry.mjs`) dari root proyek, default port **4321**.
 
-## Deploy ke CyberPanel (wizard installer)
+## Deploy ke CyberPanel / OpenLiteSpeed
 
-1. Download rilis terbaru dari GitHub Releases (file `evkita.zip`), lalu **ekstrak** ke folder website di CyberPanel lewat **File Manager** (mis. `/home/evkita.com/`).
-2. Buka **Terminal** bawaan CyberPanel, masuk ke folder hasil ekstrak, lalu jalankan satu perintah:
+1. Download rilis terbaru dari GitHub Releases (`evkita.zip`), lalu **ekstrak** ke
+   folder di luar `public_html`, mis. `/home/domain-kamu/evkita/`.
+2. Lewat SSH, masuk ke folder itu dan jalankan:
    ```bash
+   cd /home/domain-kamu/evkita
    bash install.sh
    ```
-3. Buka `http://IP_SERVER:4321/install` di browser, ikuti **wizard instalasi** (buat akun admin + kunci keamanan).
-4. Di CyberPanel, buat **website** untuk domain kamu dan arahkan ke `http://127.0.0.1:4321` via **Rewrite Rules**:
+   Installer memeriksa Node.js, memastikan `dist/` ada, **memilih port yang
+   benar-benar bebas** (kalau 4321 sudah dipakai aplikasi Node lain di server
+   yang sama, ia pindah ke 4322, dst.), menjalankan PM2, lalu memverifikasi
+   aplikasi benar-benar merespons. Port yang dipakai dicatat di `.env` dan
+   dicetak di akhir output — catat angkanya.
+
+3. **Pasang reverse proxy.** Aplikasi sengaja hanya mendengarkan di
+   `127.0.0.1`, jadi `http://IP-SERVER:PORT` tidak bisa dibuka dari internet.
+   Di CyberPanel: **Websites → Manage → Config → vHost Conf**, tambahkan blok
+   berikut (ganti `4321` dengan port dari langkah 2), lalu **Save**:
+
    ```
-   RewriteRule ^(.*)$ http://127.0.0.1:4321/$1 [P,L]
+   extprocessor evkitanode {
+     type                    proxy
+     address                 127.0.0.1:4321
+     maxConns                100
+     pcKeepAliveTimeout      60
+     initTimeout             60
+     retryTimeout            0
+     respBuffer              0
+   }
+
+   context / {
+     type                    proxy
+     handler                 evkitanode
+     addDefaultCharset       off
+   }
    ```
 
-Selesai — login admin di `https://domain.com/admin`.
+   Lalu restart LiteSpeed (**Server → Services**, atau `systemctl restart lsws`).
 
-> Kredensial & kunci sesi tersimpan di `.env` (dibuat otomatis oleh wizard). Untuk update selanjutnya: `bash deploy.sh` (backup `data/` & `.env` otomatis).
+   > Jangan pakai `RewriteRule ^(.*)$ http://127.0.0.1:4321/$1 [P,L]`.
+   > Flag `[P]` milik `mod_proxy` Apache dan **tidak bekerja** di
+   > OpenLiteSpeed — proxy di OLS harus lewat `extprocessor` + `context`
+   > seperti di atas. Blok `context /.well-known/acme-challenge` bawaan
+   > CyberPanel tetap menang karena lebih spesifik, jadi perpanjangan
+   > sertifikat Let's Encrypt tidak terganggu.
+
+4. Buka `https://domain-kamu.com/install` dan ikuti **wizard instalasi**
+   (buat akun admin + kunci keamanan).
+
+Selesai — login admin di `https://domain-kamu.com/admin`.
+
+> Kredensial & kunci sesi tersimpan di `.env` (dibuat otomatis oleh wizard).
+> Untuk update selanjutnya: `bash deploy.sh` (backup `data/` & `.env` otomatis).
+
+### Kalau domain menampilkan 503
+
+Berarti reverse proxy sudah aktif tapi aplikasi Node tidak berjalan di port
+yang dituju. Cek dengan:
+
+```bash
+pm2 list
+pm2 logs evkita --lines 50
+grep PORT /home/domain-kamu/evkita/.env
+```
+
+Penyebab paling umum: **port bentrok** dengan aplikasi Node lain di server yang
+sama. Pastikan angka `PORT` di `.env` sama dengan `address` di vHost Conf.
 
 ## Update & Rilis (GitHub)
 
@@ -116,5 +157,6 @@ Halaman **Admin → Pembaruan** (`/admin/update`) menampilkan daftar rilis GitHu
 
 - `data/content.json` menyimpan seluruh konten dan ditulis ulang setiap penyimpanan.
 - Autentikasi memakai cookie httpOnly bertanda tangan HMAC dengan `SESSION_SECRET`.
-- Ganti `ADMIN_USERNAME`, `ADMIN_PASSWORD` dan `SESSION_SECRET` dengan nilai kuat sebelum produksi.
+- Aplikasi tidak punya kredensial bawaan: sebelum wizard `/install` dijalankan, login admin selalu ditolak dan cookie sesi apa pun dianggap tidak sah.
+- Cookie sesi dikirim dengan flag `Secure` saat diakses lewat HTTPS.
 - Untuk skala lebih besar, pertimbangkan memindahkan penyimpanan ke database.

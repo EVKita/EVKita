@@ -4,6 +4,7 @@ import "../../styles/admin.css";
 import { isAuthed } from "../../lib/auth";
 import { markdownToHtml } from "../../lib/markdown";
 import { getEnv } from "../../lib/env";
+import { fetchReleases } from "../../lib/releases";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -21,46 +22,7 @@ try {
   /* ignore */
 }
 
-interface Release {
-  tag_name: string;
-  name: string;
-  published_at: string;
-  body: string;
-  html_url: string;
-  assets: { name: string; browser_download_url: string }[];
-}
-
-interface ReleasesCache {
-  repo: string;
-  at: number;
-  data: Release[];
-}
-
-let cache: ReleasesCache | null = null;
-
-let releases: Release[] = [];
-let error: string | null = null;
-
-if (cache && cache.repo === REPO && Date.now() - cache.at < 5 * 60 * 1000) {
-  releases = cache.data;
-} else {
-  try {
-    const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=20`, {
-      headers: {
-        Accept: "application/vnd.github+json",
-        "User-Agent": "evkita-cms",
-      },
-    });
-    if (res.ok) {
-      releases = (await res.json()) as Release[];
-      cache = { repo: REPO, at: Date.now(), data: releases };
-    } else {
-      error = `GitHub API merespons status ${res.status}.`;
-    }
-  } catch {
-    error = "Tidak dapat terhubung ke GitHub API.";
-  }
-}
+const { releases, error } = await fetchReleases(REPO);
 
 const latest = releases[0];
 ---

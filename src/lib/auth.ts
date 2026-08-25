@@ -1,9 +1,24 @@
 import crypto from "node:crypto";
 import { getEnv } from "./env";
 
-const secret = () => getEnv("SESSION_SECRET", "dev-secret-change-me");
-const adminUser = () => getEnv("ADMIN_USERNAME", "Maryamazkadynarachmat");
-const adminPass = () => getEnv("ADMIN_PASSWORD", "Nurrachmat1");
+const PLACEHOLDER_SECRETS = new Set([
+  "ubah-dengan-string-acak-yang-panjang-dan-rahasia",
+  "dev-secret-change-me",
+]);
+
+/**
+ * Kredensial dan kunci sesi TIDAK punya nilai bawaan: selama wizard di /install
+ * belum dijalankan, login admin harus selalu ditolak. Nilai bawaan yang
+ * di-hardcode di sini akan ikut terpublikasi bersama kode sumber.
+ */
+function configured(key: string): string {
+  const v = getEnv(key, "");
+  return PLACEHOLDER_SECRETS.has(v) ? "" : v;
+}
+
+const secret = () => configured("SESSION_SECRET");
+const adminUser = () => configured("ADMIN_USERNAME");
+const adminPass = () => configured("ADMIN_PASSWORD");
 
 function safeEqual(a: string, b: string): boolean {
   const x = Buffer.from(a, "utf8");
@@ -23,6 +38,7 @@ export function makeSession(): string {
 
 export function isValidSession(token?: string | null): boolean {
   if (!token) return false;
+  if (!secret()) return false;
   const i = token.lastIndexOf(".");
   if (i <= 0) return false;
   const value = token.slice(0, i);
@@ -36,6 +52,7 @@ export function isValidSession(token?: string | null): boolean {
 }
 
 export function checkCredentials(username?: string | null, password?: string | null): boolean {
+  if (!adminUser() || !adminPass() || !secret()) return false;
   if (!safeEqual(username || "", adminUser())) return false;
   if (!safeEqual(password || "", adminPass())) return false;
   return true;

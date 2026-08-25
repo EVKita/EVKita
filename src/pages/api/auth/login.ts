@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { makeSession, checkCredentials } from "../../../lib/auth";
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, cookies, url }) => {
   let body: any = {};
   try {
     body = await request.json();
@@ -21,6 +21,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
+    // Di belakang reverse proxy, url.protocol sudah mencerminkan skema asli
+    // selama proxy meneruskan X-Forwarded-Proto.
+    secure: url.protocol === "https:",
     maxAge: 60 * 60 * 24 * 7,
   });
 
