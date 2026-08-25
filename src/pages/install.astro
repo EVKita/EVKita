@@ -1,0 +1,208 @@
+---
+import Base from "../layouts/Base.astro";
+import "../styles/install.css";
+import { isInstalled } from "../lib/env";
+
+if (isInstalled()) {
+  return Astro.redirect("/admin/login");
+}
+---
+
+<Base title="Instalasi — EVKita">
+  <div class="install-wrap">
+    <div class="install-card">
+      <div class="install-brand">EV<span>Kita</span> <small>Installer</small></div>
+
+      <div class="install-progress">
+        <div class="install-progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="install-step-label" id="step-label">Langkah 1 dari 4</div>
+
+      <!-- Step 1: Welcome + system check -->
+      <section class="install-step" data-step="0">
+        <h1>Selamat datang 👋</h1>
+        <p class="install-sub">
+          Wizard ini akan memandu kamu mengonfigurasi website. Berikut pemeriksaan sistem:
+        </p>
+        <ul class="install-checks" id="checks">
+          <li><span class="dot"></span> Memeriksa lingkungan…</li>
+        </ul>
+        <div class="install-actions">
+          <button class="btn btn-primary" id="next-0" type="button">Mulai Konfigurasi →</button>
+        </div>
+      </section>
+
+      <!-- Step 2: Admin account -->
+      <section class="install-step" data-step="1" hidden>
+        <h1>Buat Akun Admin</h1>
+        <p class="install-sub">Kredensial untuk login ke panel admin (<code>/admin</code>).</p>
+        <div class="field">
+          <label for="f-username">Username</label>
+          <input type="text" id="f-username" autocomplete="username" placeholder="mis. admin" />
+        </div>
+        <div class="field">
+          <label for="f-password">Password</label>
+          <input type="password" id="f-password" autocomplete="new-password" placeholder="minimal 8 karakter" />
+        </div>
+        <div class="field">
+          <label for="f-password2">Ulangi Password</label>
+          <input type="password" id="f-password2" autocomplete="new-password" placeholder="ketik ulang password" />
+        </div>
+        <div class="install-err" id="err-admin"></div>
+        <div class="install-actions">
+          <button class="btn btn-ghost" id="back-1" type="button">← Kembali</button>
+          <button class="btn btn-primary" id="next-1" type="button">Lanjut →</button>
+        </div>
+      </section>
+
+      <!-- Step 3: Security key -->
+      <section class="install-step" data-step="2" hidden>
+        <h1>Kunci Keamanan</h1>
+        <p class="install-sub">
+          Dipakai untuk menandatangani sesi login. Biarkan otomatis (sudah aman) atau klik "Buat ulang".
+        </p>
+        <div class="field">
+          <label for="f-secret">Kunci sesi (SESSION_SECRET)</label>
+          <div class="secret-row">
+            <input type="text" id="f-secret" readonly />
+            <button class="btn btn-ghost" id="regen" type="button">Buat ulang</button>
+          </div>
+        </div>
+        <div class="install-actions">
+          <button class="btn btn-ghost" id="back-2" type="button">← Kembali</button>
+          <button class="btn btn-primary" id="next-2" type="button">Lanjut →</button>
+        </div>
+      </section>
+
+      <!-- Step 4: Review & install -->
+      <section class="install-step" data-step="3" hidden>
+        <h1>Konfirmasi</h1>
+        <p class="install-sub">Periksa kembali ringkasan berikut sebelum menginstal.</p>
+        <ul class="install-review">
+          <li><span>Username</span><strong id="rv-username">—</strong></li>
+          <li><span>Password</span><strong>••••••••</strong></li>
+          <li><span>Kunci sesi</span><strong id="rv-secret">—</strong></li>
+          <li><span>Repository</span><strong id="rv-repo">—</strong></li>
+        </ul>
+        <div class="install-err" id="err-install"></div>
+        <div class="install-actions">
+          <button class="btn btn-ghost" id="back-3" type="button">← Kembali</button>
+          <button class="btn btn-primary" id="install-btn" type="button">Instal Sekarang</button>
+        </div>
+      </section>
+
+      <!-- Step 5: Done -->
+      <section class="install-step" data-step="4" hidden>
+        <div class="install-done">
+          <div class="install-checkmark">✓</div>
+          <h1>Instalasi Selesai!</h1>
+          <p class="install-sub">
+            Website kamu sudah terkonfigurasi. Login ke panel admin untuk mulai mengelola konten.
+          </p>
+          <a class="btn btn-primary" href="/admin/login">Buka Admin →</a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const stepEls = [...document.querySelectorAll(".install-step")];
+    let current = 0;
+
+    function genSecret() {
+      const arr = new Uint8Array(32);
+      crypto.getRandomValues(arr);
+      return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function go(i) {
+      current = i;
+      stepEls.forEach((el, idx) => (el.hidden = idx !== i));
+      $("progress-bar").style.width = ((i + 1) / 5) * 100 + "%";
+      $("step-label").textContent = "Langkah " + (i + 1) + " dari 4";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function okRow(text, ok) {
+      return `<li><span class="dot ${ok ? "ok" : "bad"}"></span> ${text}</li>`;
+    }
+
+    // Step 1: system check
+    async function loadChecks() {
+      const ul = $("checks");
+      try {
+        const res = await fetch("/api/install");
+        const d = await res.json();
+        let html = "";
+        html += okRow("Node.js " + d.node, true);
+        html += okRow("Direktori data bisa ditulis", d.writable);
+        html += okRow("Akan berjalan di port " + d.port, true);
+        $("rv-repo").textContent = d.repo || "EVKita/EVKita";
+        ul.innerHTML = html;
+      } catch {
+        ul.innerHTML = okRow("Tidak dapat menghubungi server", false);
+      }
+    }
+    loadChecks();
+
+    $("next-0").addEventListener("click", () => go(1));
+
+    $("back-1").addEventListener("click", () => go(0));
+    $("next-1").addEventListener("click", () => {
+      const u = $("f-username").value.trim();
+      const p = $("f-password").value;
+      const p2 = $("f-password2").value;
+      const err = $("err-admin");
+      err.textContent = "";
+      if (u.length < 3) { err.textContent = "Username minimal 3 karakter."; return; }
+      if (p.length < 8) { err.textContent = "Password minimal 8 karakter."; return; }
+      if (p !== p2) { err.textContent = "Password tidak sama."; return; }
+      go(2);
+    });
+
+    $("back-2").addEventListener("click", () => go(1));
+    $("next-2").addEventListener("click", () => {
+      $("rv-username").textContent = $("f-username").value.trim();
+      $("rv-secret").textContent = $("f-secret").value.slice(0, 16) + "…";
+      go(3);
+    });
+
+    $("regen").addEventListener("click", () => { $("f-secret").value = genSecret(); });
+
+    $("back-3").addEventListener("click", () => go(2));
+
+    $("install-btn").addEventListener("click", async () => {
+      const btn = $("install-btn");
+      const err = $("err-install");
+      btn.disabled = true;
+      btn.textContent = "Menginstal…";
+      err.textContent = "";
+      try {
+        const res = await fetch("/api/install", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: $("f-username").value.trim(),
+            password: $("f-password").value,
+            secret: $("f-secret").value,
+          }),
+        });
+        const d = await res.json();
+        if (d.ok) {
+          go(4);
+        } else {
+          err.textContent = d.error || "Gagal menginstal.";
+        }
+      } catch {
+        err.textContent = "Terjadi kesalahan. Coba lagi.";
+      }
+      btn.disabled = false;
+      btn.textContent = "Instal Sekarang";
+    });
+
+    // prefill secret
+    $("f-secret").value = genSecret();
+    go(0);
+  </script>
+</Base>

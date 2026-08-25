@@ -3,6 +3,7 @@ import Base from "../../layouts/Base.astro";
 import "../../styles/admin.css";
 import { isAuthed } from "../../lib/auth";
 import { markdownToHtml } from "../../lib/markdown";
+import { getEnv } from "../../lib/env";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -10,7 +11,7 @@ if (!isAuthed(Astro.cookies)) {
   return Astro.redirect("/admin/login");
 }
 
-const REPO = process.env.GITHUB_REPO || "EVKita/EVKita";
+const REPO = getEnv("GITHUB_REPO", "EVKita/EVKita");
 
 let currentVersion = "dev";
 try {

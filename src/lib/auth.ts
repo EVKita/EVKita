@@ -1,8 +1,9 @@
 import crypto from "node:crypto";
+import { getEnv } from "./env";
 
-const SECRET = process.env.SESSION_SECRET || "dev-secret-change-me";
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Maryamazkadynarachmat";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Nurrachmat1";
+const secret = () => getEnv("SESSION_SECRET", "dev-secret-change-me");
+const adminUser = () => getEnv("ADMIN_USERNAME", "Maryamazkadynarachmat");
+const adminPass = () => getEnv("ADMIN_PASSWORD", "Nurrachmat1");
 
 function safeEqual(a: string, b: string): boolean {
   const x = Buffer.from(a, "utf8");
@@ -12,7 +13,7 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 function sign(value: string): string {
-  return crypto.createHmac("sha256", SECRET).update(value).digest("hex");
+  return crypto.createHmac("sha256", secret()).update(value).digest("hex");
 }
 
 export function makeSession(): string {
@@ -35,8 +36,8 @@ export function isValidSession(token?: string | null): boolean {
 }
 
 export function checkCredentials(username?: string | null, password?: string | null): boolean {
-  if (!safeEqual(username || "", ADMIN_USERNAME)) return false;
-  if (!safeEqual(password || "", ADMIN_PASSWORD)) return false;
+  if (!safeEqual(username || "", adminUser())) return false;
+  if (!safeEqual(password || "", adminPass())) return false;
   return true;
 }
 

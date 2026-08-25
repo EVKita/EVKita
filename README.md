@@ -74,33 +74,22 @@ npm run start
 
 `npm run start` menjalankan server standalone (`node ./dist/server/entry.mjs`) dari root proyek, default port **4321**.
 
-## Deploy ke CyberPanel
+## Deploy ke CyberPanel (wizard installer)
 
-1. Download rilis terbaru dari GitHub Releases (file `evkita.zip`), atau jalankan di server:
+1. Download rilis terbaru dari GitHub Releases (file `evkita.zip`), lalu **ekstrak** ke folder website di CyberPanel lewat **File Manager** (mis. `/home/evkita.com/`).
+2. Buka **Terminal** bawaan CyberPanel, masuk ke folder hasil ekstrak, lalu jalankan satu perintah:
    ```bash
-   curl -L -o evkita.zip https://github.com/EVKita/EVKita/releases/latest/download/evkita.zip
+   bash install.sh
    ```
-2. Pastikan **Node.js** (v18/v20/v22) dan **PM2** terpasang di server.
-3. Ekstrak ke folder aplikasi (mis. `/home/user/evkita`), lalu buat file `.env` dari `.env.example`:
-   ```bash
-   unzip evkita.zip -d /home/user/evkita
-   cd /home/user/evkita
-   cp .env.example .env   # lalu edit isi: ADMIN_*, SESSION_SECRET, GITHUB_REPO
-   ```
-4. Jalankan server sebagai proses permanen dengan **PM2**:
-   ```bash
-   pm2 start ecosystem.config.cjs
-   pm2 save
-   pm2 startup
-   ```
-   > `ecosystem.config.cjs` membaca kredensial dari `.env` lalu menyuntikkannya ke proses. Server membaca `data/content.json` dan `data/uploads/` dari root proyek (`cwd`).
-5. Di CyberPanel, buat **website** `evkita.com` dan arahkan ke aplikasi Node melalui reverse proxy (OpenLiteSpeed) ke `http://127.0.0.1:4321`. Pastikan direktori `data/` bisa ditulis oleh user server.
-
-   Rewrite rules OpenLiteSpeed (Website > Rewrite):
+3. Buka `http://IP_SERVER:4321/install` di browser, ikuti **wizard instalasi** (buat akun admin + kunci keamanan).
+4. Di CyberPanel, buat **website** untuk domain kamu dan arahkan ke `http://127.0.0.1:4321` via **Rewrite Rules**:
    ```
    RewriteRule ^(.*)$ http://127.0.0.1:4321/$1 [P,L]
    ```
-   Gunakan `ProxyPreserveHost On` bila tersedia agar domain tetap `evkita.com`.
+
+Selesai — login admin di `https://domain.com/admin`.
+
+> Kredensial & kunci sesi tersimpan di `.env` (dibuat otomatis oleh wizard). Untuk update selanjutnya: `bash deploy.sh` (backup `data/` & `.env` otomatis).
 
 ## Update & Rilis (GitHub)
 
