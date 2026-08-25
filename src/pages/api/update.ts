@@ -16,9 +16,13 @@ const stateDir = () => path.resolve(root(), ".update");
 const logFile = () => path.join(stateDir(), "update.log");
 const statusFile = () => path.join(stateDir(), "status.json");
 const exitFile = () => path.join(stateDir(), "exit");
+const pidFile = () => path.join(stateDir(), "pid");
 const deployScript = () => path.resolve(root(), "deploy.sh");
 
-const STALE_MS = 15 * 60 * 1000;
+/** Batas mutlak; deteksi proses mati di bawah biasanya jauh lebih cepat. */
+const STALE_MS = 10 * 60 * 1000;
+/** Jeda wajar sebelum berkas PID dianggap seharusnya sudah ada. */
+const PID_GRACE_MS = 10 * 1000;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -55,6 +59,25 @@ function readExitCode(): number | null {
   }
 }
 
+function readPid(): number | null {
+  try {
+    const n = Number.parseInt(fs.readFileSync(pidFile(), "utf8").trim(), 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Sinyal 0 tidak mengirim apa pun, hanya menanyakan apakah proses masih ada. */
+function isAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err: any) {
+    return err?.code === "EPERM"; // ada, tapi milik user lain
+  }
+}
+
 function readLogTail(maxBytes = 16000): string {
   try {
     const { size } = fs.statSync(logFile());
@@ -72,31 +95,53 @@ function readLogTail(maxBytes = 16000): string {
   }
 }
 
-/** Menyatukan status.json dengan berkas exit code jadi satu keadaan. */
+/** Menyatukan status.json, PID, dan berkas exit code jadi satu keadaan. */
 function currentState() {
   const status = readStatus();
   const version = installedVersion();
 
   if (!status) return { state: "idle" as const, version };
 
+  const startedAt = Number(status.startedAt || 0);
+  const base = { version, startedAt: status.startedAt, fromVersion: status.fromVersion };
+
   const code = readExitCode();
   if (code !== null) {
-    return {
-      state: code === 0 ? ("done" as const) : ("failed" as const),
-      version,
-      exitCode: code,
-      startedAt: status.startedAt,
-      fromVersion: status.fromVersion,
-    };
+    return { state: code === 0 ? ("done" as const) : ("failed" as const), exitCode: code, ...base };
   }
 
-  // Proses induk bisa saja mati saat PM2 memuat ulang aplikasi di tengah
-  // pembaruan; tanpa batas waktu, statusnya akan "running" selamanya.
-  if (Date.now() - Number(status.startedAt || 0) > STALE_MS) {
-    return { state: "failed" as const, version, stale: true, startedAt: status.startedAt };
+  const age = Date.now() - startedAt;
+  const pid = readPid();
+  const alive = pid !== null && isAlive(pid);
+
+  // Jaring pengaman kalau proses deploy mati tanpa sempat menulis exit code:
+  // kalau versi yang terpasang sudah berubah, berkas versi baru jelas sudah
+  // masuk dan aplikasi sudah dimuat ulang dengannya — itu berhasil, bukan
+  // gagal. Sengaja hanya berlaku saat prosesnya sudah tidak hidup: package.json
+  // sempat berganti beberapa detik sebelum PM2 restart, dan tanpa syarat ini
+  // pembaruan yang normal akan dilaporkan selesai terlalu dini.
+  //
+  // Aturan ini juga yang menyelamatkan satu pembaruan berikutnya: pembaruan itu
+  // masih dijalankan oleh kode versi lama yang belum punya perbaikan double-fork
+  // di bawah, jadi prosesnya tetap akan terbunuh PM2 di tengah jalan.
+  if (!alive && status.fromVersion && version !== status.fromVersion) {
+    return { state: "done" as const, exitCode: 0, ...base };
   }
 
-  return { state: "running" as const, version, startedAt: status.startedAt, fromVersion: status.fromVersion };
+  // Tanpa pengecekan ini, proses deploy yang mati mendadak membuat panel
+  // menunggu sampai batas waktunya — pembaruannya sendiri sudah lama selesai
+  // atau gagal, tapi tidak ada yang melaporkannya.
+  if (pid === null) {
+    if (age > PID_GRACE_MS) {
+      return { state: "failed" as const, reason: "no-start" as const, ...base };
+    }
+  } else if (!alive) {
+    return { state: "failed" as const, reason: "process-gone" as const, ...base };
+  }
+
+  if (age > STALE_MS) return { state: "failed" as const, reason: "stale" as const, ...base };
+
+  return { state: "running" as const, ...base };
 }
 
 export const GET: APIRoute = ({ cookies }) => {
@@ -120,25 +165,50 @@ export const POST: APIRoute = ({ cookies }) => {
 
   fs.mkdirSync(stateDir(), { recursive: true });
   fs.rmSync(exitFile(), { force: true });
+  fs.rmSync(pidFile(), { force: true });
   fs.writeFileSync(logFile(), "");
   fs.writeFileSync(
     statusFile(),
     JSON.stringify({ startedAt: Date.now(), fromVersion: installedVersion() }),
   );
 
+  // PM2 mematikan SELURUH pohon proses aplikasi lama setiap kali memuat ulang
+  // (opsi `treekill`, aktif secara bawaan). Proses deploy adalah anak dari
+  // aplikasi, jadi ia ikut mati persis saat `pm2 startOrReload` dijalankan:
+  // skrip berhenti tepat di tahap "Restart PM2", berkas exit code tidak pernah
+  // ditulis, dan panel menunggu sia-sia sampai batas waktu — padahal berkas
+  // versi baru sudah terpasang beberapa detik sebelumnya. `detached: true`
+  // saja tidak menolong: itu memisahkan grup proses, bukan hubungan induk-anak
+  // yang ditelusuri PM2.
+  //
+  // Solusinya double-fork: bash pembungkus menjalankan deploy di latar lalu
+  // langsung keluar, sehingga proses deploy diadopsi init dan tidak lagi
+  // berada di pohon proses aplikasi. `setsid` menambah lapisan kedua dengan
+  // memberinya sesi sendiri, kebal sinyal yang dikirim ke grup proses lama.
+  const inner =
+    'echo $$ > "$EVKITA_PID"; ' +
+    'bash "$EVKITA_SCRIPT" >> "$EVKITA_LOG" 2>&1; ' +
+    'echo $? > "$EVKITA_EXIT"';
+  const runner =
+    'if command -v setsid >/dev/null 2>&1; then SETSID=setsid; else SETSID=; fi; ' +
+    `$SETSID bash -c '${inner}' </dev/null >/dev/null 2>&1 &`;
+
   // Tidak ada satu pun nilai dari klien yang masuk ke perintah ini: deploy.sh
   // selalu dijalankan tanpa argumen, yang berarti "pasang rilis terbaru".
   const token = getEnv("GITHUB_TOKEN", "");
-  const child = spawn(
-    "bash",
-    ["-c", 'bash "$0" >> "$1" 2>&1; echo $? > "$2"', deployScript(), logFile(), exitFile()],
-    {
-      cwd: root(),
-      detached: true, // grup proses sendiri, supaya selamat saat PM2 me-restart aplikasi
-      stdio: "ignore",
-      env: token ? { ...process.env, GITHUB_TOKEN: token } : process.env,
+  const child = spawn("bash", ["-c", runner], {
+    cwd: root(),
+    detached: true,
+    stdio: "ignore",
+    env: {
+      ...process.env,
+      ...(token ? { GITHUB_TOKEN: token } : {}),
+      EVKITA_SCRIPT: deployScript(),
+      EVKITA_LOG: logFile(),
+      EVKITA_EXIT: exitFile(),
+      EVKITA_PID: pidFile(),
     },
-  );
+  });
   child.unref();
 
   return json({ ok: true, state: "running" });

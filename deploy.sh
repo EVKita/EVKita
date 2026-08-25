@@ -27,12 +27,18 @@ if [ -z "${EVKITA_DEPLOY_REEXEC:-}" ]; then
   exit "$CODE"
 fi
 
-echo "==> Deploy dari ${REPO} (${VERSION:-latest})"
+# Setiap tahap diberi cap waktu relatif. Log ini tampil apa adanya di panel
+# Admin → Pembaruan, jadi kalau suatu saat pembaruan terasa lambat, angka di
+# sini langsung menunjukkan tahap mana yang memakan waktu — tidak perlu menebak.
+START_TS="$(date +%s)"
+step() { printf '[%4ss] ==> %s\n' "$(( $(date +%s) - START_TS ))" "$1"; }
+
+step "Deploy dari ${REPO} (${VERSION:-latest})"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-echo "==> Mengunduh paket rilis"
+step "Mengunduh paket rilis"
 REPO="$REPO" VERSION="$VERSION" GITHUB_TOKEN="${GITHUB_TOKEN:-}" OUT="$TMP/evkita.zip" node - <<'NODE'
 const fs = require("node:fs");
 const repo = process.env.REPO;
@@ -42,8 +48,11 @@ const auth = token ? { "User-Agent": "evkita-deploy", Accept: "application/vnd.g
 const relUrl = version
   ? `https://api.github.com/repos/${repo}/releases/tags/v${version}`
   : `https://api.github.com/repos/${repo}/releases/latest`;
+// Tanpa batas waktu, satu koneksi yang menggantung (mis. IPv6 yang tidak bisa
+// keluar di VPS) membuat pembaruan diam tanpa kabar sampai berpuluh menit.
+const timeout = (ms) => AbortSignal.timeout(ms);
 (async () => {
-  const relRes = await fetch(relUrl, { headers: auth });
+  const relRes = await fetch(relUrl, { headers: auth, signal: timeout(20000) });
   if (!relRes.ok) {
     console.error(`Release tidak ditemukan (HTTP ${relRes.status}). Cek nama repo/versi atau GITHUB_TOKEN.`);
     process.exit(1);
@@ -57,7 +66,7 @@ const relUrl = version
   const dl = token
     ? { "User-Agent": "evkita-deploy", Accept: "application/octet-stream", Authorization: `Bearer ${token}` }
     : { "User-Agent": "evkita-deploy", Accept: "application/octet-stream" };
-  const res = await fetch(asset.url, { headers: dl });
+  const res = await fetch(asset.url, { headers: dl, signal: timeout(120000) });
   if (!res.ok) {
     console.error(`Download gagal (HTTP ${res.status}).`);
     process.exit(1);
@@ -65,12 +74,12 @@ const relUrl = version
   fs.writeFileSync(process.env.OUT, Buffer.from(await res.arrayBuffer()));
   console.log(`Downloaded ${rel.tag_name} (${fs.statSync(process.env.OUT).size} bytes)`);
 })().catch((e) => {
-  console.error(e.message);
+  console.error(e.name === "TimeoutError" ? "Koneksi ke GitHub kehabisan waktu." : e.message);
   process.exit(1);
 });
 NODE
 
-echo "==> Memeriksa isi paket"
+step "Memeriksa isi paket"
 unzip -o -q "$TMP/evkita.zip" -d "$TMP/extract"
 if [ ! -f "$TMP/extract/dist/server/entry.mjs" ]; then
   echo "! Paket rilis tidak berisi dist/server/entry.mjs. Pembaruan dibatalkan;"
@@ -78,36 +87,62 @@ if [ ! -f "$TMP/extract/dist/server/entry.mjs" ]; then
   exit 1
 fi
 
-echo "==> Mencadangkan data dan konfigurasi"
+# data/ di paket rilis hanya berisi konten awal untuk instalasi baru. Di server
+# yang sudah jalan, direktori itu milik server: berisi content.json dan seluruh
+# gambar yang diunggah admin. Membuangnya dari payload berarti data/ tidak
+# perlu dicadangkan lalu dikembalikan — dua kali salin seluruh unggahan
+# (bisa ratusan MB) hilang dari setiap pembaruan.
+FRESH_INSTALL=0
+if [ -f "$APP_DIR/data/content.json" ]; then
+  rm -rf "$TMP/extract/data"
+else
+  FRESH_INSTALL=1
+fi
+
+step "Mencadangkan konfigurasi"
 BACKUP_DIR="$APP_DIR/.backup-$(date +%Y%m%d%H%M%S)"
 mkdir -p "$BACKUP_DIR"
-if [ -d "$APP_DIR/data" ]; then cp -a "$APP_DIR/data" "$BACKUP_DIR/data"; fi
 if [ -f "$APP_DIR/.env" ]; then cp -a "$APP_DIR/.env" "$BACKUP_DIR/.env"; fi
 if [ -d "$APP_DIR/dist" ]; then cp -a "$APP_DIR/dist" "$BACKUP_DIR/dist"; fi
+# Hanya berkas JSON kecil yang dicadangkan, bukan data/uploads: gambar tidak
+# pernah disentuh pembaruan, jadi menyalinnya cuma membuang waktu dan disk.
+if [ -d "$APP_DIR/data" ]; then
+  mkdir -p "$BACKUP_DIR/data"
+  find "$APP_DIR/data" -maxdepth 1 -type f -name '*.json' -exec cp -a {} "$BACKUP_DIR/data/" \; 2>/dev/null || true
+fi
 
-echo "==> Memasang berkas baru"
+step "Memasang berkas baru"
 # dist/ diganti utuh, bukan ditimpa. Nama berkas chunk berubah setiap build,
 # jadi `unzip -o` akan meninggalkan chunk versi lama yang menumpuk terus.
 rm -rf "$APP_DIR/dist"
 cp -a "$TMP/extract/." "$APP_DIR/"
 
-# data/ dan .env milik server, bukan paket rilis: selalu kembalikan.
-if [ -d "$BACKUP_DIR/data" ]; then
-  rm -rf "$APP_DIR/data"
-  cp -a "$BACKUP_DIR/data" "$APP_DIR/data"
-fi
+# .env milik server, bukan paket rilis. Paket memang tidak membawanya, tapi
+# pemulihan ini murah dan menjaga kredensial admin kalau suatu saat terbawa.
 if [ -f "$BACKUP_DIR/.env" ]; then
   cp -a "$BACKUP_DIR/.env" "$APP_DIR/.env"
 fi
 
-chmod -R 775 "$APP_DIR/data" 2>/dev/null || true
+if [ "$FRESH_INSTALL" = "1" ]; then
+  mkdir -p "$APP_DIR/data"
+  chmod -R 775 "$APP_DIR/data" 2>/dev/null || true
+fi
 
-echo "==> Restart PM2"
+# Cadangan lama menumpuk selamanya kalau tidak dibersihkan — tiap pembaruan
+# menambah satu salinan dist/. Simpan tiga terakhir saja, cukup untuk mundur.
+step "Membersihkan cadangan lama"
+# `|| true`: tanpa itu, `ls` yang tidak menemukan apa pun akan menjatuhkan
+# seluruh skrip karena `set -o pipefail`.
+{ ls -1dt "$APP_DIR"/.backup-* 2>/dev/null || true; } | tail -n +4 | while IFS= read -r old; do
+  rm -rf "$old"
+done
+
+step "Restart PM2"
 if command -v pm2 >/dev/null 2>&1; then
-  pm2 startOrReload "$APP_DIR/ecosystem.config.cjs"
-  pm2 save
+  pm2 startOrReload "$APP_DIR/ecosystem.config.cjs" --update-env
+  pm2 save >/dev/null 2>&1 || true
 else
   echo "! PM2 tidak ditemukan. Jalankan: node dist/server/entry.mjs"
 fi
 
-echo "==> Selesai. Backup tersimpan di $BACKUP_DIR"
+step "Selesai dalam $(( $(date +%s) - START_TS )) detik. Backup: $BACKUP_DIR"

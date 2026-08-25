@@ -34,8 +34,13 @@ export async function fetchReleases(
   if (token) headers.Authorization = `Bearer ${token}`;
 
   try {
+    // Halaman admin menunggu permintaan ini sebelum merender. Tanpa batas
+    // waktu, GitHub yang lambat (atau IPv6 buntu di VPS) membuat halaman
+    // Pembaruan menggantung — termasuk saat halaman dimuat ulang tepat setelah
+    // pembaruan selesai, sehingga terasa seolah pembaruannya yang lambat.
     const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=20`, {
       headers,
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
       return { releases: [], error: `GitHub API merespons status ${res.status}.` };
@@ -43,8 +48,14 @@ export async function fetchReleases(
     const releases = (await res.json()) as Release[];
     cache = { repo, at: Date.now(), data: releases };
     return { releases, error: null };
-  } catch {
-    return { releases: [], error: "Tidak dapat terhubung ke GitHub API." };
+  } catch (err: any) {
+    return {
+      releases: [],
+      error:
+        err?.name === "TimeoutError"
+          ? "GitHub API tidak merespons dalam 8 detik."
+          : "Tidak dapat terhubung ke GitHub API.",
+    };
   }
 }
 

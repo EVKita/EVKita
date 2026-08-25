@@ -184,20 +184,24 @@ const tanggal = (iso: string) =>
       // rentang persen tahap itu, `speed` perkiraan lamanya dalam milidetik —
       // bilah tetap merayap halus di dalam rentangnya walau log belum berubah,
       // jadi progres tidak pernah terlihat macet.
+      // `speed` disetel mendekati lama tahap yang sebenarnya (diukur: seluruh
+      // deploy ±5 detik). Angka yang jauh lebih besar membuat bilah merayap
+      // pelan padahal kerjanya sudah selesai — pembaruan jadi terasa lambat
+      // walau tidak.
       const STEPS = [
         {
           label: "Menyiapkan",
           note: "Menyiapkan proses pembaruan…",
           from: 2,
           to: 8,
-          speed: 2500,
+          speed: 1200,
         },
         {
           label: "Mengunduh",
           note: "Mengunduh paket rilis dari GitHub…",
           from: 8,
           to: 44,
-          speed: 9000,
+          speed: 4000,
           match: /==> (Deploy dari|Mengunduh paket)/,
         },
         {
@@ -205,15 +209,15 @@ const tanggal = (iso: string) =>
           note: "Memeriksa keutuhan isi paket…",
           from: 46,
           to: 58,
-          speed: 3000,
+          speed: 1200,
           match: /(^|\n)Downloaded |==> Memeriksa isi paket/,
         },
         {
           label: "Mencadangkan",
-          note: "Mencadangkan data dan konfigurasi…",
+          note: "Mencadangkan konfigurasi…",
           from: 60,
           to: 68,
-          speed: 3000,
+          speed: 1200,
           match: /==> Mencadangkan/,
         },
         {
@@ -221,7 +225,7 @@ const tanggal = (iso: string) =>
           note: "Menyalin berkas versi baru…",
           from: 70,
           to: 86,
-          speed: 5000,
+          speed: 1500,
           match: /==> Memasang berkas baru/,
         },
         {
@@ -229,7 +233,7 @@ const tanggal = (iso: string) =>
           note: "Memuat ulang aplikasi…",
           from: 88,
           to: 97,
-          speed: 7000,
+          speed: 3000,
           match: /==> Restart PM2/,
         },
       ];
@@ -307,7 +311,13 @@ const tanggal = (iso: string) =>
         }
       };
 
-      const finish = (ok, message) => {
+      const REASONS = {
+        "process-gone": "Proses pembaruan berhenti sebelum selesai — lihat log teknis.",
+        "no-start": "Proses pembaruan tidak bisa dijalankan di server.",
+        stale: "Pembaruan melewati batas waktu.",
+      };
+
+      const finish = (ok, message, reason) => {
         settled = true;
         outcome = ok ? "done" : "failed";
         box.classList.add(ok ? "is-done" : "is-failed");
@@ -316,9 +326,10 @@ const tanggal = (iso: string) =>
         if (ok) {
           setPercent(100);
           note.textContent = "Selesai. Memuat ulang halaman…";
-          setTimeout(() => location.reload(), 1200);
+          setTimeout(() => location.reload(), 700);
         } else {
-          note.textContent = "Data dan konfigurasi aman — lihat log teknis untuk sebabnya.";
+          note.textContent =
+            REASONS[reason] || "Data dan konfigurasi aman — lihat log teknis untuk sebabnya.";
           logbox.open = true;
           if (btn) {
             btn.disabled = false;
@@ -363,7 +374,7 @@ const tanggal = (iso: string) =>
             misses = 0;
             readLog(data.log);
             if (data.state === "done") return finish(true, `Berhasil diperbarui ke v${data.version}`);
-            if (data.state === "failed") return finish(false, "Pembaruan gagal");
+            if (data.state === "failed") return finish(false, "Pembaruan gagal", data.reason);
             note.textContent = STEPS[stage].note;
           } else if (++misses >= 2) {
             note.textContent = "Aplikasi sedang dimuat ulang, menyambungkan kembali…";

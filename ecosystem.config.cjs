@@ -33,6 +33,12 @@ module.exports = {
       autorestart: true,
       max_memory_restart: "300M",
       kill_timeout: 5000,
+      // Bawaannya PM2 mematikan seluruh pohon proses aplikasi saat memuat
+      // ulang. Satu-satunya anak yang pernah dibuat aplikasi ini adalah proses
+      // pembaruan (deploy.sh) — dan justru itu yang HARUS tetap hidup melewati
+      // restart, karena dialah yang melakukan restart itu. Lihat komentar di
+      // src/pages/api/update.ts.
+      treekill: false,
       env: {
         NODE_ENV: "production",
         PORT: dotenv.PORT || "4321",
