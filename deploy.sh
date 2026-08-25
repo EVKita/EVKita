@@ -32,6 +32,7 @@ echo "==> Deploy dari ${REPO} (${VERSION:-latest})"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
+echo "==> Mengunduh paket rilis"
 REPO="$REPO" VERSION="$VERSION" GITHUB_TOKEN="${GITHUB_TOKEN:-}" OUT="$TMP/evkita.zip" node - <<'NODE'
 const fs = require("node:fs");
 const repo = process.env.REPO;
@@ -77,6 +78,7 @@ if [ ! -f "$TMP/extract/dist/server/entry.mjs" ]; then
   exit 1
 fi
 
+echo "==> Mencadangkan data dan konfigurasi"
 BACKUP_DIR="$APP_DIR/.backup-$(date +%Y%m%d%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 if [ -d "$APP_DIR/data" ]; then cp -a "$APP_DIR/data" "$BACKUP_DIR/data"; fi

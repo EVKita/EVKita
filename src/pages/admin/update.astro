@@ -97,14 +97,42 @@ const tanggal = (iso: string) =>
         </div>
 
         <div class="upd-progress" id="progress" hidden>
-          <div class="upd-progress-head">
-            <span class="upd-spinner" aria-hidden="true"></span>
-            <strong id="progress-title">Memasang pembaruan…</strong>
+          <div class="upd-prog-top">
+            <span class="upd-prog-icon" aria-hidden="true"></span>
+            <div class="upd-prog-heading">
+              <strong id="progress-title">Memasang pembaruan</strong>
+              <span class="upd-prog-route">
+                v{currentVersion} <span class="upd-prog-arrow" aria-hidden="true">→</span> {latest.tag_name}
+              </span>
+            </div>
+            <div class="upd-prog-pct"><span id="prog-pct">0</span><small>%</small></div>
           </div>
-          <p class="upd-meta" id="progress-note">
-            Aplikasi akan dimuat ulang sebentar. Jangan tutup halaman ini.
+
+          <div
+            class="upd-bar"
+            id="prog-bar"
+            role="progressbar"
+            aria-label="Kemajuan pembaruan"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
+            <div class="upd-bar-fill" id="prog-fill"></div>
+          </div>
+
+          <p class="upd-prog-note">
+            <span id="progress-note">Menyiapkan proses pembaruan…</span>
+            <span class="upd-prog-time" id="prog-time">00:00</span>
           </p>
-          <pre class="upd-log" id="progress-log" aria-live="polite"></pre>
+
+          <ol class="upd-steps" id="prog-steps"></ol>
+
+          <p class="upd-prog-hint">Jangan tutup halaman ini sampai pembaruan selesai.</p>
+
+          <details class="upd-logbox" id="prog-logbox">
+            <summary>Log teknis</summary>
+            <pre class="upd-log" id="progress-log" aria-live="polite"></pre>
+          </details>
         </div>
 
         <div class="upd-changelog">
@@ -143,46 +171,216 @@ const tanggal = (iso: string) =>
     const title = document.getElementById("progress-title");
     const note = document.getElementById("progress-note");
     const log = document.getElementById("progress-log");
+    const logbox = document.getElementById("prog-logbox");
+    const bar = document.getElementById("prog-bar");
+    const fill = document.getElementById("prog-fill");
+    const pct = document.getElementById("prog-pct");
+    const time = document.getElementById("prog-time");
+    const stepList = document.getElementById("prog-steps");
 
     if (btn && box) {
-      const paint = (text) => {
-        if (!text || log.textContent === text) return;
-        log.textContent = text;
-        log.scrollTop = log.scrollHeight;
+      // Tahapan deploy.sh. `match` dicocokkan ke isi log: tahap yang cocok
+      // paling akhir dianggap tahap yang sedang berjalan. `from`/`to` adalah
+      // rentang persen tahap itu, `speed` perkiraan lamanya dalam milidetik —
+      // bilah tetap merayap halus di dalam rentangnya walau log belum berubah,
+      // jadi progres tidak pernah terlihat macet.
+      const STEPS = [
+        {
+          label: "Menyiapkan",
+          note: "Menyiapkan proses pembaruan…",
+          from: 2,
+          to: 8,
+          speed: 2500,
+        },
+        {
+          label: "Mengunduh",
+          note: "Mengunduh paket rilis dari GitHub…",
+          from: 8,
+          to: 44,
+          speed: 9000,
+          match: /==> (Deploy dari|Mengunduh paket)/,
+        },
+        {
+          label: "Memeriksa",
+          note: "Memeriksa keutuhan isi paket…",
+          from: 46,
+          to: 58,
+          speed: 3000,
+          match: /(^|\n)Downloaded |==> Memeriksa isi paket/,
+        },
+        {
+          label: "Mencadangkan",
+          note: "Mencadangkan data dan konfigurasi…",
+          from: 60,
+          to: 68,
+          speed: 3000,
+          match: /==> Mencadangkan/,
+        },
+        {
+          label: "Memasang",
+          note: "Menyalin berkas versi baru…",
+          from: 70,
+          to: 86,
+          speed: 5000,
+          match: /==> Memasang berkas baru/,
+        },
+        {
+          label: "Memuat ulang",
+          note: "Memuat ulang aplikasi…",
+          from: 88,
+          to: 97,
+          speed: 7000,
+          match: /==> Restart PM2/,
+        },
+      ];
+
+      const chips = STEPS.map((s) => {
+        const li = document.createElement("li");
+        li.className = "upd-step";
+        li.textContent = s.label;
+        stepList.appendChild(li);
+        return li;
+      });
+
+      let stage = 0;
+      let stageSince = Date.now();
+      let startedAt = Date.now();
+      let shown = 0;
+      let outcome = null; // null | "done" | "failed"
+      let settled = false;
+      let ticker = 0;
+
+      // Saat gagal, tahap yang sedang berjalan ditandai silang — bukan ikut
+      // dicentang — supaya terlihat di mana pembaruan berhenti.
+      const paintChips = () => {
+        chips.forEach((li, i) => {
+          li.classList.toggle("is-done", outcome === "done" || i < stage);
+          li.classList.toggle("is-active", !outcome && i === stage);
+          li.classList.toggle("is-failed", outcome === "failed" && i === stage);
+        });
+      };
+
+      const setStage = (i) => {
+        if (settled || i <= stage) return;
+        stage = i;
+        stageSince = Date.now();
+        note.textContent = STEPS[i].note;
+        paintChips();
+      };
+
+      const setPercent = (value) => {
+        const v = Math.max(0, Math.min(100, value));
+        shown = Math.max(shown, v);
+        const rounded = Math.round(shown);
+        fill.style.width = `${shown}%`;
+        pct.textContent = String(rounded);
+        bar.setAttribute("aria-valuenow", String(rounded));
+      };
+
+      const clock = () => {
+        const s = Math.floor((Date.now() - startedAt) / 1000);
+        time.textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+      };
+
+      const tick = () => {
+        clock();
+        if (settled) return;
+        const s = STEPS[stage];
+        // Perayapan melambat mendekati batas atas tahap: tidak pernah
+        // menyentuh `to` sebelum log tahap berikutnya benar-benar muncul.
+        const t = (Date.now() - stageSince) / s.speed;
+        setPercent(s.from + (s.to - s.from) * (1 - Math.exp(-t)));
+      };
+
+      const readLog = (text) => {
+        if (typeof text !== "string" || !text) return;
+        if (log.textContent !== text) {
+          const stick = log.scrollTop + log.clientHeight >= log.scrollHeight - 24;
+          log.textContent = text;
+          if (stick) log.scrollTop = log.scrollHeight;
+        }
+        for (let i = STEPS.length - 1; i > stage; i--) {
+          if (STEPS[i].match && STEPS[i].match.test(text)) {
+            setStage(i);
+            break;
+          }
+        }
       };
 
       const finish = (ok, message) => {
+        settled = true;
+        outcome = ok ? "done" : "failed";
         box.classList.add(ok ? "is-done" : "is-failed");
         title.textContent = message;
-        note.textContent = ok
-          ? "Memuat ulang halaman…"
-          : "Pembaruan dibatalkan. Isi data dan konfigurasi tidak berubah — deploy.sh mem-backup data/ dan .env sebelum mengganti berkas.";
-        if (ok) setTimeout(() => location.reload(), 2500);
+        paintChips();
+        if (ok) {
+          setPercent(100);
+          note.textContent = "Selesai. Memuat ulang halaman…";
+          setTimeout(() => location.reload(), 1200);
+        } else {
+          note.textContent = "Data dan konfigurasi aman — lihat log teknis untuk sebabnya.";
+          logbox.open = true;
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Coba lagi";
+          }
+        }
+        clock();
+        clearInterval(ticker);
+      };
+
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      // Batas waktu per permintaan: saat PM2 memuat ulang aplikasi, koneksi
+      // bisa menggantung. Tanpa batas ini polling ikut berhenti berdenyut.
+      const ask = async () => {
+        const ac = new AbortController();
+        const t = setTimeout(() => ac.abort(), 4000);
+        try {
+          const res = await fetch("/api/update", {
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+            signal: ac.signal,
+          });
+          if (!res.ok) return null;
+          return await res.json();
+        } catch {
+          return null;
+        } finally {
+          clearTimeout(t);
+        }
       };
 
       // Selama pembaruan, PM2 memuat ulang aplikasi sehingga beberapa
-      // permintaan pasti gagal. Itu normal: kegagalan jaringan diabaikan
-      // dan polling diteruskan sampai batas waktu.
+      // permintaan pasti gagal. Itu normal: kegagalan diabaikan dan polling
+      // diteruskan sampai batas waktu.
       const poll = async () => {
         const deadline = Date.now() + 10 * 60 * 1000;
-        while (Date.now() < deadline) {
-          await new Promise((r) => setTimeout(r, 2000));
-          try {
-            const res = await fetch("/api/update", { headers: { Accept: "application/json" } });
-            if (!res.ok) continue;
-            const data = await res.json();
-            paint(data.log);
-            if (data.state === "done") return finish(true, `Berhasil diperbarui ke v${data.version}.`);
-            if (data.state === "failed") return finish(false, "Pembaruan gagal.");
-          } catch {
-            /* aplikasi sedang restart */
+        let misses = 0;
+        while (Date.now() < deadline && !settled) {
+          const data = await ask();
+          if (data) {
+            misses = 0;
+            readLog(data.log);
+            if (data.state === "done") return finish(true, `Berhasil diperbarui ke v${data.version}`);
+            if (data.state === "failed") return finish(false, "Pembaruan gagal");
+            note.textContent = STEPS[stage].note;
+          } else if (++misses >= 2) {
+            note.textContent = "Aplikasi sedang dimuat ulang, menyambungkan kembali…";
           }
+          await sleep(misses ? 1200 : 700);
         }
-        finish(false, "Pembaruan tidak selesai dalam batas waktu.");
+        if (!settled) finish(false, "Pembaruan tidak selesai dalam batas waktu");
       };
 
-      const showPanel = () => {
+      const showPanel = (since) => {
+        startedAt = Number(since) || Date.now();
+        stageSince = Date.now();
         box.hidden = false;
+        paintChips();
+        clearInterval(ticker);
+        ticker = setInterval(tick, 120);
+        tick();
         if (btn) {
           btn.disabled = true;
           btn.textContent = "Memasang…";
@@ -193,8 +391,15 @@ const tanggal = (iso: string) =>
         if (!confirm("Pasang pembaruan sekarang? Situs akan tidak bisa diakses beberapa saat saat aplikasi dimuat ulang.")) {
           return;
         }
-        showPanel();
-        paint("Memulai…");
+        box.classList.remove("is-done", "is-failed");
+        settled = false;
+        outcome = null;
+        stage = 0;
+        shown = 0;
+        log.textContent = "";
+        note.textContent = STEPS[0].note;
+        title.textContent = "Memasang pembaruan";
+        showPanel(Date.now());
 
         try {
           // Content-Type wajib diisi: proteksi CSRF bawaan Astro menolak POST
@@ -206,10 +411,10 @@ const tanggal = (iso: string) =>
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok) {
-            return finish(false, data.error || "Tidak bisa memulai pembaruan.");
+            return finish(false, data.error || "Tidak bisa memulai pembaruan");
           }
         } catch {
-          return finish(false, "Tidak bisa menghubungi server.");
+          return finish(false, "Tidak bisa menghubungi server");
         }
         poll();
       });
@@ -218,17 +423,11 @@ const tanggal = (iso: string) =>
       // di tengah proses. Kalau di server masih ada pembaruan yang berjalan,
       // sambung lagi progresnya alih-alih menampilkan keadaan diam.
       (async () => {
-        try {
-          const res = await fetch("/api/update");
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data.state !== "running") return;
-          showPanel();
-          paint(data.log);
-          poll();
-        } catch {
-          /* abaikan */
-        }
+        const data = await ask();
+        if (!data || data.state !== "running") return;
+        showPanel(data.startedAt);
+        readLog(data.log);
+        poll();
       })();
     }
   </script>
