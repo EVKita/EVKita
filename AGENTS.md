@@ -63,16 +63,21 @@ atau perubahannya tidak menyentuh apa pun yang ikut ke dalam paket rilis
    dan ingatkan bahwa rilis itu sekarang muncul di **Admin → Pembaruan**
    (`/admin/update`).
 
-6. **Beri tahu cara memasangnya di server.** Halaman Pembaruan saat ini hanya
-   *menampilkan* rilis — belum bisa memasang sendiri. Pemasangan dijalankan
-   di server lewat SSH:
+6. **Beri tahu cara memasangnya.** Cara utama: user membuka
+   **Admin → Pembaruan** (`/admin/update`), menekan tombol
+   **"Perbarui ke vX.Y.Z"**, lalu menunggu panel progres selesai — halaman
+   itu menjalankan `deploy.sh` di server dan menampilkan lognya langsung.
+
+   Cadangan, kalau pembaruan lewat panel gagal (lognya akan menjelaskan
+   sebabnya), jalankan manual lewat SSH:
    ```bash
    cd /home/evkita.com/evkita
    bash deploy.sh          # pasang rilis terbaru
-   bash deploy.sh 1.2.3    # pasang versi tertentu
+   bash deploy.sh 1.2.3    # pasang versi tertentu / mundur ke versi lama
    ```
-   `deploy.sh` mem-backup `data/` dan `.env` dulu, jadi konten CMS dan
-   kredensial admin tidak hilang.
+
+   Keduanya memakai `deploy.sh` yang sama, yang mem-backup `data/` dan
+   `.env` lebih dulu — konten CMS dan kredensial admin tidak hilang.
 
 ### Aturan yang tidak boleh dilanggar saat rilis
 
