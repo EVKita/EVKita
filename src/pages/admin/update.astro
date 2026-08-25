@@ -25,7 +25,14 @@ try {
 const { releases, error } = await fetchReleases(REPO);
 
 const latest = releases[0];
+const previous = releases.slice(1, 4); // tiga versi sebelumnya
 const updateAvailable = !!latest && compareVersions(latest.tag_name, currentVersion) > 0;
+const canAutoUpdate = fs.existsSync(path.resolve(process.cwd(), "deploy.sh"));
+
+const zipOf = (r: (typeof releases)[number]) => r.assets.find((a) => a.name.endsWith(".zip"));
+const mb = (bytes: number) => `${(bytes / 1048576).toFixed(1)} MB`;
+const tanggal = (iso: string) =>
+  iso ? new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "";
 ---
 
 <Base title="Pembaruan — EVKita">
@@ -41,68 +48,188 @@ const updateAvailable = !!latest && compareVersions(latest.tag_name, currentVers
 
   <div class="admin-wrap">
     <h1>Pembaruan</h1>
-    <p class="upd-sub">Rilis aplikasi dari GitHub — versi &amp; changelog.</p>
-
-    <div class="stat-cards upd-versions">
-      <div class="stat-card">
-        <span class="n">v{currentVersion}</span>
-        <span class="l">Versi terpasang</span>
-      </div>
-      <div class="stat-card">
-        <span class="n">{latest?.tag_name || "—"}</span>
-        <span class="l">Versi terbaru</span>
-      </div>
-    </div>
-
-    {!error && latest && (
-      <div class={`panel upd-status ${updateAvailable ? "is-outdated" : "is-current"}`}>
-        {updateAvailable ? (
-          <Fragment>
-            <strong>Pembaruan tersedia: {latest.tag_name}.</strong> Pasang di server lewat SSH:
-            <pre><code>cd /home/evkita.com/evkita
-bash deploy.sh</code></pre>
-            <span class="upd-note">
-              <code>deploy.sh</code> mem-backup <code>data/</code> dan <code>.env</code> lebih dulu,
-              jadi konten CMS dan kredensial admin tidak hilang.
-            </span>
-          </Fragment>
-        ) : (
-          <strong>Sudah memakai versi terbaru.</strong>
-        )}
-      </div>
-    )}
+    <p class="upd-sub">Pasang versi terbaru EVKita langsung dari GitHub Release.</p>
 
     {error && (
       <div class="panel upd-error">
-        <strong>Gagal memuat rilis.</strong> {error}{" "}
-        <a href={`https://github.com/${REPO}/releases`} target="_blank" rel="noopener">Buka di GitHub</a>.
+        <strong>Gagal memuat daftar rilis.</strong> {error}{" "}
+        <a href={`https://github.com/${REPO}/releases`} target="_blank" rel="noopener">Buka di GitHub</a>
       </div>
     )}
 
-    {!error && releases.length === 0 && (
-      <div class="panel">Belum ada rilis. Rilis pertama dibuat otomatis saat kamu push ke branch <code>main</code>.</div>
+    {!error && !latest && (
+      <div class="panel">
+        Belum ada rilis di <code>{REPO}</code>. Rilis pertama dibuat otomatis saat ada
+        push ke branch <code>main</code>.
+      </div>
     )}
 
-    {!error && releases.map((r) => (
-      <article class="panel upd-release">
-        <div class="upd-head">
-          <h2 class="sub-head">{r.tag_name}</h2>
-          <span class="upd-date">
-            {r.published_at
-              ? new Date(r.published_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
-              : ""}
-          </span>
+    {!error && latest && (
+      <section class={`upd-hero ${updateAvailable ? "is-outdated" : "is-current"}`}>
+        <div class="upd-hero-top">
+          <div>
+            <span class="upd-badge">{updateAvailable ? "Pembaruan tersedia" : "Terpasang & terbaru"}</span>
+            <h2 class="upd-version">{latest.tag_name}</h2>
+            <p class="upd-meta">
+              Dirilis {tanggal(latest.published_at)}
+              {zipOf(latest) && <> · {zipOf(latest)!.name} · {mb(zipOf(latest)!.size)}</>}
+            </p>
+          </div>
+          <div class="upd-nowbox">
+            <span class="upd-nowbox-l">Versi terpasang</span>
+            <span class="upd-nowbox-v">v{currentVersion}</span>
+          </div>
         </div>
-        <div class="upd-body" set:html={markdownToHtml(r.body || "*Tidak ada catatan rilis.*")} />
-        <div class="upd-actions">
-          {r.assets.filter((a) => a.name.endsWith(".zip")).map((a) => (
-            <a class="btn btn-primary btn-sm" href={a.browser_download_url} target="_blank" rel="noopener">
-              Unduh {a.name}
-            </a>
-          ))}
-          <a class="btn btn-ghost btn-sm" href={r.html_url} target="_blank" rel="noopener">Lihat di GitHub</a>
+
+        <div class="upd-cta">
+          {updateAvailable && canAutoUpdate && (
+            <button class="btn btn-primary" id="btn-update" type="button">
+              Perbarui ke {latest.tag_name}
+            </button>
+          )}
+          {updateAvailable && !canAutoUpdate && (
+            <span class="upd-meta">
+              <code>deploy.sh</code> tidak ada di server, jadi pembaruan otomatis tidak tersedia.
+            </span>
+          )}
+          {!updateAvailable && <span class="upd-meta">Tidak ada yang perlu dipasang.</span>}
+          <a class="btn btn-ghost" href={latest.html_url} target="_blank" rel="noopener">Lihat di GitHub</a>
         </div>
-      </article>
-    ))}
+
+        <div class="upd-progress" id="progress" hidden>
+          <div class="upd-progress-head">
+            <span class="upd-spinner" aria-hidden="true"></span>
+            <strong id="progress-title">Memasang pembaruan…</strong>
+          </div>
+          <p class="upd-meta" id="progress-note">
+            Aplikasi akan dimuat ulang sebentar. Jangan tutup halaman ini.
+          </p>
+          <pre class="upd-log" id="progress-log" aria-live="polite"></pre>
+        </div>
+
+        <div class="upd-changelog">
+          <h3>Yang berubah</h3>
+          <div class="upd-body" set:html={markdownToHtml(latest.body || "*Tidak ada catatan rilis.*")} />
+        </div>
+      </section>
+    )}
+
+    {!error && previous.length > 0 && (
+      <section class="upd-history">
+        <h2>Versi sebelumnya</h2>
+        {previous.map((r) => (
+          <details class="upd-acc">
+            <summary>
+              <span class="upd-acc-v">{r.tag_name}</span>
+              <span class="upd-acc-d">{tanggal(r.published_at)}</span>
+              {r.tag_name.replace(/^v/, "") === currentVersion && (
+                <span class="upd-acc-tag">terpasang</span>
+              )}
+              <span class="upd-acc-chev" aria-hidden="true"></span>
+            </summary>
+            <div class="upd-acc-body">
+              <div class="upd-body" set:html={markdownToHtml(r.body || "*Tidak ada catatan rilis.*")} />
+              <a class="btn btn-ghost btn-sm" href={r.html_url} target="_blank" rel="noopener">Lihat di GitHub</a>
+            </div>
+          </details>
+        ))}
+      </section>
+    )}
   </div>
+
+  <script>
+    const btn = document.getElementById("btn-update");
+    const box = document.getElementById("progress");
+    const title = document.getElementById("progress-title");
+    const note = document.getElementById("progress-note");
+    const log = document.getElementById("progress-log");
+
+    if (btn && box) {
+      const paint = (text) => {
+        if (!text || log.textContent === text) return;
+        log.textContent = text;
+        log.scrollTop = log.scrollHeight;
+      };
+
+      const finish = (ok, message) => {
+        box.classList.add(ok ? "is-done" : "is-failed");
+        title.textContent = message;
+        note.textContent = ok
+          ? "Memuat ulang halaman…"
+          : "Pembaruan dibatalkan. Isi data dan konfigurasi tidak berubah — deploy.sh mem-backup data/ dan .env sebelum mengganti berkas.";
+        if (ok) setTimeout(() => location.reload(), 2500);
+      };
+
+      // Selama pembaruan, PM2 memuat ulang aplikasi sehingga beberapa
+      // permintaan pasti gagal. Itu normal: kegagalan jaringan diabaikan
+      // dan polling diteruskan sampai batas waktu.
+      const poll = async () => {
+        const deadline = Date.now() + 10 * 60 * 1000;
+        while (Date.now() < deadline) {
+          await new Promise((r) => setTimeout(r, 2000));
+          try {
+            const res = await fetch("/api/update", { headers: { Accept: "application/json" } });
+            if (!res.ok) continue;
+            const data = await res.json();
+            paint(data.log);
+            if (data.state === "done") return finish(true, `Berhasil diperbarui ke v${data.version}.`);
+            if (data.state === "failed") return finish(false, "Pembaruan gagal.");
+          } catch {
+            /* aplikasi sedang restart */
+          }
+        }
+        finish(false, "Pembaruan tidak selesai dalam batas waktu.");
+      };
+
+      const showPanel = () => {
+        box.hidden = false;
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Memasang…";
+        }
+      };
+
+      btn.addEventListener("click", async () => {
+        if (!confirm("Pasang pembaruan sekarang? Situs akan tidak bisa diakses beberapa saat saat aplikasi dimuat ulang.")) {
+          return;
+        }
+        showPanel();
+        paint("Memulai…");
+
+        try {
+          // Content-Type wajib diisi: proteksi CSRF bawaan Astro menolak POST
+          // tanpa content-type dengan 403.
+          const res = await fetch("/api/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) {
+            return finish(false, data.error || "Tidak bisa memulai pembaruan.");
+          }
+        } catch {
+          return finish(false, "Tidak bisa menghubungi server.");
+        }
+        poll();
+      });
+
+      // Pembaruan me-restart aplikasi, jadi halaman ini bisa saja ter-reload
+      // di tengah proses. Kalau di server masih ada pembaruan yang berjalan,
+      // sambung lagi progresnya alih-alih menampilkan keadaan diam.
+      (async () => {
+        try {
+          const res = await fetch("/api/update");
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.state !== "running") return;
+          showPanel();
+          paint(data.log);
+          poll();
+        } catch {
+          /* abaikan */
+        }
+      })();
+    }
+  </script>
 </Base>

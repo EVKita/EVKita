@@ -431,78 +431,230 @@
   margin: -10px 0 22px;
 }
 
-.upd-versions {
-  max-width: 480px;
+/* --- Kartu rilis terbaru --- */
+.upd-hero {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
 }
 
-.upd-release {
-  margin-bottom: 16px;
+/* Pita tipis di sisi atas: oranye kalau ada pembaruan, abu kalau sudah terbaru. */
+.upd-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--border);
 }
 
-.upd-head {
+.upd-hero.is-outdated::before {
+  background: var(--accent-grad);
+}
+
+.upd-hero-top {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.upd-head .sub-head {
-  margin-bottom: 0;
+.upd-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--text-muted);
 }
 
-.upd-date {
+.upd-hero.is-outdated .upd-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.upd-version {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin: 10px 0 4px;
+}
+
+.upd-meta {
   color: var(--text-muted);
   font-size: 13px;
-  flex-shrink: 0;
+  margin: 0;
+}
+
+.upd-nowbox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: right;
+}
+
+.upd-nowbox-l {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.upd-nowbox-v {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.upd-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* --- Panel proses pembaruan --- */
+.upd-progress {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.upd-progress.is-done {
+  border-color: #2fa66b;
+}
+
+.upd-progress.is-failed {
+  border-color: var(--danger);
+}
+
+.upd-progress-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.upd-spinner {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: upd-spin 0.7s linear infinite;
+}
+
+.is-done .upd-spinner,
+.is-failed .upd-spinner {
+  display: none;
+}
+
+@keyframes upd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upd-spinner {
+    animation: none;
+  }
+}
+
+.upd-log {
+  margin: 12px 0 0;
+  padding: 12px;
+  max-height: 220px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #101319;
+  color: #d6dae2;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.upd-log:empty {
+  display: none;
+}
+
+/* --- Changelog --- */
+.upd-changelog {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.upd-changelog h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
 }
 
 .upd-body {
-  margin-top: 10px;
   font-size: 14px;
-  color: var(--text);
-  line-height: 1.6;
+  line-height: 1.75;
 }
 
 .upd-body p {
-  margin: 6px 0;
+  margin: 0 0 10px;
 }
 
 .upd-body h1,
 .upd-body h2,
 .upd-body h3,
 .upd-body h4 {
-  margin: 14px 0 6px;
-  line-height: 1.3;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 16px 0 8px;
 }
 
 .upd-body ul {
-  margin: 6px 0;
+  margin: 0 0 10px;
   padding-left: 20px;
 }
 
 .upd-body li {
-  margin: 3px 0;
+  margin-bottom: 4px;
 }
 
 .upd-body code {
-  background: var(--bg-soft);
+  background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 1px 6px;
+  border-radius: 5px;
+  padding: 1px 5px;
   font-size: 12.5px;
 }
 
 .upd-body pre {
-  background: var(--bg-soft);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
   overflow-x: auto;
+  margin: 0 0 10px;
 }
 
 .upd-body pre code {
+  background: none;
   border: none;
-  background: transparent;
   padding: 0;
 }
 
@@ -510,13 +662,86 @@
   color: var(--accent);
 }
 
-.upd-actions {
+/* --- Akordion versi sebelumnya --- */
+.upd-history h2 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin: 32px 0 12px;
+}
+
+.upd-acc {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.upd-acc summary {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 14px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.upd-acc summary::-webkit-details-marker {
+  display: none;
+}
+
+.upd-acc summary:hover {
+  color: var(--accent);
+}
+
+.upd-acc-v {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.upd-acc-d {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.upd-acc-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* Panah kanan yang berputar jadi menghadap bawah saat akordion terbuka. */
+.upd-acc-chev {
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.upd-acc[open] .upd-acc-chev {
+  transform: rotate(45deg);
+}
+
+.upd-acc-body {
+  padding: 0 18px 18px;
   border-top: 1px solid var(--border);
+  margin-top: -1px;
+  padding-top: 16px;
+}
+
+.upd-acc-body .btn {
+  margin-top: 8px;
 }
 
 .upd-error {
@@ -555,4 +780,23 @@
 
 .upd-status .upd-note {
   color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .upd-hero {
+    padding: 18px;
+  }
+  .upd-version {
+    font-size: 24px;
+  }
+  .upd-nowbox {
+    text-align: left;
+  }
+  .upd-cta .btn {
+    flex: 1 1 100%;
+  }
+  .upd-acc summary {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
