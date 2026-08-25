@@ -20,15 +20,12 @@ if [ "$NODE_MAJOR" -lt 18 ]; then
 fi
 echo "Node.js: $(node -v)"
 
-# --- 2. Dependensi & hasil build --------------------------------------------
-if [ ! -d node_modules ]; then
-  echo ">> node_modules belum ada, menjalankan npm install..."
-  npm install --omit=dev
-fi
-
+# --- 2. Hasil build -----------------------------------------------------------
+# Paket rilis sudah membawa dist/ yang mandiri: dependensi runtime dibundel
+# ke dalamnya, jadi node_modules tidak diperlukan untuk menjalankan aplikasi.
 if [ ! -f dist/server/entry.mjs ]; then
   if [ -f astro.config.mjs ]; then
-    echo ">> dist/ belum ada, menjalankan build (butuh devDependencies)..."
+    echo ">> dist/ belum ada, memasang dependensi dan menjalankan build..."
     npm install
     npm run build
   else

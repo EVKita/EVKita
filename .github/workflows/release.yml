@@ -65,15 +65,16 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Prune dev dependencies
-        run: npm prune --omit=dev
-
       - name: Package zip
         shell: bash
         run: |
           V="${{ steps.version.outputs.new }}"
           rm -rf release && mkdir -p release
-          cp -r dist node_modules package.json package-lock.json ecosystem.config.cjs .env.example deploy.sh install.sh release/ 2>/dev/null || true
+          # node_modules sengaja TIDAK ikut: dependensi runtime sudah dibundel
+          # ke dalam dist/ lewat vite.ssr.noExternal di astro.config.mjs.
+          # Membawanya berarti mengirim 186 MB / 11.440 berkas toolchain build
+          # (TypeScript, Vite, esbuild, sharp) yang tidak dipakai server.
+          cp -r dist package.json package-lock.json ecosystem.config.cjs .env.example deploy.sh install.sh release/ 2>/dev/null || true
           chmod +x release/deploy.sh release/install.sh
           mkdir -p release/data
           if [ -f data/content.json ]; then cp data/content.json release/data/content.json; fi
