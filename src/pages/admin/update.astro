@@ -4,7 +4,7 @@ import "../../styles/admin.css";
 import { isAuthed } from "../../lib/auth";
 import { markdownToHtml } from "../../lib/markdown";
 import { getEnv } from "../../lib/env";
-import { fetchReleases } from "../../lib/releases";
+import { fetchReleases, compareVersions } from "../../lib/releases";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -25,9 +25,10 @@ try {
 const { releases, error } = await fetchReleases(REPO);
 
 const latest = releases[0];
+const updateAvailable = !!latest && compareVersions(latest.tag_name, currentVersion) > 0;
 ---
 
-<Base title="Pembaruan — Referensi EV">
+<Base title="Pembaruan — EVKita">
   <header class="site-header">
     <div class="container admin-header">
       <div class="admin-title">Admin <span>CMS</span></div>
@@ -52,6 +53,24 @@ const latest = releases[0];
         <span class="l">Versi terbaru</span>
       </div>
     </div>
+
+    {!error && latest && (
+      <div class={`panel upd-status ${updateAvailable ? "is-outdated" : "is-current"}`}>
+        {updateAvailable ? (
+          <Fragment>
+            <strong>Pembaruan tersedia: {latest.tag_name}.</strong> Pasang di server lewat SSH:
+            <pre><code>cd /home/evkita.com/evkita
+bash deploy.sh</code></pre>
+            <span class="upd-note">
+              <code>deploy.sh</code> mem-backup <code>data/</code> dan <code>.env</code> lebih dulu,
+              jadi konten CMS dan kredensial admin tidak hilang.
+            </span>
+          </Fragment>
+        ) : (
+          <strong>Sudah memakai versi terbaru.</strong>
+        )}
+      </div>
+    )}
 
     {error && (
       <div class="panel upd-error">

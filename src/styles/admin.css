@@ -535,3 +535,24 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.upd-status {
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+
+.upd-status.is-outdated {
+  border-color: var(--accent) !important;
+}
+
+.upd-status pre {
+  margin: 10px 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.upd-status .upd-note {
+  color: var(--text-muted);
+}

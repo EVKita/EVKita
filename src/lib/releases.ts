@@ -47,3 +47,22 @@ export async function fetchReleases(
     return { releases: [], error: "Tidak dapat terhubung ke GitHub API." };
   }
 }
+
+/**
+ * Bandingkan dua versi semver sederhana (tanpa pra-rilis).
+ * Mengembalikan angka positif kalau `a` lebih baru dari `b`.
+ */
+export function compareVersions(a: string, b: string): number {
+  const parse = (v: string) =>
+    String(v)
+      .replace(/^v/, "")
+      .split(".")
+      .map((n) => Number.parseInt(n, 10) || 0);
+  const x = parse(a);
+  const y = parse(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    const d = (x[i] || 0) - (y[i] || 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+}
