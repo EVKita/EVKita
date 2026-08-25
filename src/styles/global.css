@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --bg: #f6f7fa;
   --bg-soft: #ffffff;
   --bg-card: #ffffff;
@@ -16,6 +17,7 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #0e1116;
   --bg-soft: #161a21;
   --bg-card: #161a21;
@@ -181,6 +183,24 @@ a:hover {
 .theme-toggle:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Tampilkan label tema yang akan dituju, bukan tema yang sedang aktif. */
+.theme-toggle .th-to-light {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle .th-to-dark {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle .th-to-light {
+  display: inline;
 }
 
 /* ===== Ticker ===== */

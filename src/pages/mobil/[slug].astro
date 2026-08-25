@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
+import ThemeToggle from "../../components/ThemeToggle.astro";
 import { readContent } from "../../lib/store";
 import { carSVG, defaultColor } from "../../lib/cars-ui.js";
 
@@ -56,6 +57,7 @@ const priceText = car.priceText || (car.price != null ? "Rp " + car.price : "Har
         <a href="/#berita">Berita</a>
         <a href="/#tentang">Tentang</a>
       </nav>
+      <ThemeToggle />
     </div>
   </header>
 

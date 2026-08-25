@@ -1,0 +1,12 @@
+---
+/**
+ * Label tombol ditentukan lewat CSS, bukan JavaScript: skrip tema berjalan di
+ * <head> saat tombol ini belum ada di DOM, jadi kalau labelnya diatur JS ia
+ * akan sempat berkedip salah. Kedua label dirender, CSS memilih yang sesuai
+ * dengan `data-theme` di <html>.
+ */
+---
+<button id="themeToggle" class="theme-toggle" type="button" aria-label="Ganti tema terang atau gelap">
+  <span class="th-to-dark"><span aria-hidden="true">☾</span> Gelap</span>
+  <span class="th-to-light"><span aria-hidden="true">☀</span> Terang</span>
+</button>

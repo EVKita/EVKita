@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
 import { readContent } from "../lib/store";
 
 const content = readContent();
@@ -22,7 +23,7 @@ const { site, cars, motors, spklu, bengkel, berita } = content;
         <a href="#berita">Berita</a>
         <a href="#tentang">Tentang</a>
       </nav>
-      <button id="themeToggle" class="theme-toggle" type="button">Gelap</button>
+      <ThemeToggle />
     </div>
   </header>
 
