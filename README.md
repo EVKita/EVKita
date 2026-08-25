@@ -113,11 +113,13 @@ Untuk update di server, jalankan:
 
 ```bash
 cd /home/user/evkita
-./deploy.sh          # pasang rilis terbaru
-./deploy.sh 1.2.3    # pasang versi tertentu
+bash deploy.sh          # pasang rilis terbaru
+bash deploy.sh 1.2.3    # pasang versi tertentu
 ```
 
 `deploy.sh` mengunduh zip, mem-backup `data/` dan `.env`, mengekstrak, lalu restart PM2 — sehingga konten admin tidak hilang saat update.
+
+> **Repo private:** set `GITHUB_TOKEN` (token dengan izin `Contents: read`) di server sebelum menjalankan `deploy.sh`, mis. `export GITHUB_TOKEN=github_pat_…`. Kalau repo public, tidak perlu token.
 
 Halaman **Admin → Pembaruan** (`/admin/update`) menampilkan daftar rilis GitHub beserta changelog, versi terpasang vs terbaru, dan tombol unduh.
 

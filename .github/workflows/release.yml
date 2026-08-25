@@ -74,6 +74,7 @@ jobs:
           V="${{ steps.version.outputs.new }}"
           rm -rf release && mkdir -p release
           cp -r dist node_modules package.json package-lock.json ecosystem.config.cjs .env.example deploy.sh release/ 2>/dev/null || true
+          chmod +x release/deploy.sh
           mkdir -p release/data
           if [ -f data/content.json ]; then cp data/content.json release/data/content.json; fi
           find release -name ".git" -type d -prune -exec rm -rf {} + 2>/dev/null || true
