@@ -1,0 +1,181 @@
+---
+import Base from "../../layouts/Base.astro";
+import { readContent } from "../../lib/store";
+import { carSVG, defaultColor } from "../../lib/cars-ui.js";
+
+const { cars, site } = readContent();
+const slug = String(Astro.params.slug || "");
+const car = cars.find((c) => c.id === slug);
+
+if (!car) {
+  return Astro.redirect("/");
+}
+
+const media = [car.image, ...(car.gallery || [])].filter(Boolean);
+
+const lower = (s) => String(s).toLowerCase();
+const fmtRange = car.rangeKm != null ? `${car.rangeKm} km` : "—";
+const fmtBattery = car.batteryKwh != null ? `${car.batteryKwh} kWh` : "—";
+const fmtPower = car.powerHp != null ? `${car.powerHp} hp` : "—";
+
+const description =
+  car.description ||
+  `${car.brand} ${car.name} adalah mobil listrik ${lower(car.bodyType)} dengan jarak tempuh ${fmtRange}${car.rangeStandard ? " (" + car.rangeStandard + ")" : ""}, baterai ${fmtBattery}, dan tenaga ${fmtPower}.`;
+
+const highlights =
+  car.highlights && car.highlights.length
+    ? car.highlights
+    : [
+        `${fmtRange} jarak tempuh${car.rangeStandard ? " (" + car.rangeStandard + ")" : ""}`,
+        `${fmtBattery} kapasitas baterai`,
+        `${fmtPower} tenaga maksimum`,
+        `${car.variants} varian tersedia`,
+      ];
+
+const related = cars
+  .filter((c) => c.id !== car.id && (c.brand === car.brand || c.bodyType === car.bodyType))
+  .slice(0, 4);
+
+const priceText = car.priceText || (car.price != null ? "Rp " + car.price : "Harga belum tersedia");
+---
+
+<Base
+  title={`${car.brand} ${car.name} — ${site.brandText}`}
+  description={car.tagline || description}
+  theme={{ primary: site.themePrimary, secondary: site.themeSecondary }}
+>
+  <header class="masthead">
+    <div class="container masthead-inner">
+      <a href="/" class="logo">
+        <span class="logo-mark">EV</span>
+        <span class="logo-text">{site.brandText}<em>.com</em></span>
+      </a>
+      <nav class="main-nav">
+        <a href="/">Mobil Listrik</a>
+        <a href="/#spklu">SPKLU</a>
+        <a href="/#berita">Berita</a>
+        <a href="/#tentang">Tentang</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container detail">
+    <a href="/" class="back-link">← Semua mobil</a>
+
+    <div class="detail-hero">
+      <div class="detail-media">
+        {car.video ? (
+          <div class="detail-main">
+            <video class="detail-video" src={car.video} poster={media[0] || undefined} controls muted loop playsinline preload="metadata"></video>
+          </div>
+        ) : media.length ? (
+          <>
+            <div class="detail-main">
+              <img id="detail-main-img" src={media[0]} alt={`${car.brand} ${car.name}`} />
+            </div>
+            {media.length > 1 ? (
+              <div class="detail-thumbs">
+                {media.map((src) => (
+                  <button type="button" class="detail-thumb" data-src={src}>
+                    <img src={src} alt="" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <div class="detail-svg" set:html={carSVG(car, defaultColor(car))} />
+        )}
+      </div>
+
+      <div class="detail-info">
+        <div class="detail-brand">{car.brand}</div>
+        <h1>{car.name}</h1>
+        {car.tagline ? <p class="detail-tagline">{car.tagline}</p> : null}
+
+        <div class="detail-price">
+          {car.price != null ? priceText : <span class="na">Harga belum tersedia</span>}
+          <span class="detail-price-note">mulai dari</span>
+        </div>
+
+        <div class="detail-stats">
+          <div class="dstat"><span class="num">{fmtRange}</span><span class="label">Jarak tempuh</span></div>
+          <div class="dstat"><span class="num">{fmtBattery}</span><span class="label">Baterai</span></div>
+          <div class="dstat"><span class="num">{fmtPower}</span><span class="label">Tenaga</span></div>
+          <div class="dstat"><span class="num">{car.variants}</span><span class="label">Varian</span></div>
+        </div>
+
+        <div class="detail-badges">
+          <span class="card-body">{car.bodyType}</span>
+          {car.stale ? <span class="badge-stale">Data lama</span> : null}
+        </div>
+      </div>
+    </div>
+
+    <section class="detail-section">
+      <h2>Deskripsi</h2>
+      <p class="detail-text">{description}</p>
+    </section>
+
+    <section class="detail-section">
+      <h2>Keunggulan</h2>
+      <div class="highlights">
+        {highlights.map((h) => <div class="highlight"><span class="dot">◆</span>{h}</div>)}
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Spesifikasi</h2>
+      <div class="spec-table">
+        <div class="spec-row"><span class="k">Merek</span><span class="v">{car.brand}</span></div>
+        <div class="spec-row"><span class="k">Model</span><span class="v">{car.name}</span></div>
+        <div class="spec-row"><span class="k">Tipe bodi</span><span class="v">{car.bodyType}</span></div>
+        <div class="spec-row"><span class="k">Jarak tempuh</span><span class="v">{fmtRange}{car.rangeStandard ? ` (${car.rangeStandard})` : ""}</span></div>
+        <div class="spec-row"><span class="k">Kapasitas baterai</span><span class="v">{fmtBattery}</span></div>
+        <div class="spec-row"><span class="k">Tenaga</span><span class="v">{fmtPower}</span></div>
+        <div class="spec-row"><span class="k">Harga</span><span class="v">{priceText}</span></div>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <h2>Varian</h2>
+      <div class="variant-list">
+        {(car.variantNames && car.variantNames.length ? car.variantNames : ["Standard"]).map((v) => (
+          <span class="variant-pill">{v}</span>
+        ))}
+      </div>
+    </section>
+
+    {related.length ? (
+      <section class="detail-section">
+        <h2>Mobil terkait</h2>
+        <div class="related-grid">
+          {related.map((r) => (
+            <a class="related-card" href={`/mobil/${r.id}`}>
+              <span class="related-brand">{r.brand}</span>
+              <span class="related-name">{r.name}</span>
+              <span class="related-meta">{r.bodyType} · {r.rangeKm != null ? r.rangeKm + " km" : "—"}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ) : null}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>{site.footerTitle}</strong> — {site.footerDesc}</p>
+      <p><a href={site.footerSourceUrl} target="_blank" rel="noopener">{site.footerSourceText}</a></p>
+      <p class="fine">{site.footerNote}</p>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll(".detail-thumb").forEach((t) => {
+      t.addEventListener("click", () => {
+        const main = document.getElementById("detail-main-img");
+        if (main && t.dataset.src) main.src = t.dataset.src;
+      });
+    });
+  </script>
+</Base>

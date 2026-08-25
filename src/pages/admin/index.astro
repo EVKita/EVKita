@@ -1,0 +1,194 @@
+---
+import Base from "../../layouts/Base.astro";
+import "../../styles/admin.css";
+import { isAuthed } from "../../lib/auth";
+
+if (!isAuthed(Astro.cookies)) {
+  return Astro.redirect("/admin/login");
+}
+---
+
+<Base title="Admin CMS — Referensi EV">
+  <header class="site-header">
+    <div class="container admin-header">
+      <div class="admin-title">Admin <span>CMS</span></div>
+      <div class="admin-actions">
+        <a href="/admin/update" class="btn btn-ghost btn-sm">Pembaruan</a>
+        <a href="/" class="btn btn-ghost btn-sm" style="color: var(--text);">Lihat Situs</a>
+        <button id="logout" class="btn btn-ghost btn-sm" type="button">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="admin-wrap">
+    <h1>Kelola Konten</h1>
+
+    <nav class="admin-tabs">
+      <button class="tab active" data-tab="overview" type="button">Ringkasan</button>
+      <button class="tab" data-tab="cars" type="button">Mobil</button>
+      <button class="tab" data-tab="motors" type="button">Motor</button>
+      <button class="tab" data-tab="spklu" type="button">SPKLU</button>
+      <button class="tab" data-tab="bengkel" type="button">Bengkel</button>
+      <button class="tab" data-tab="berita" type="button">Berita</button>
+      <button class="tab" data-tab="site" type="button">Teks &amp; Tema</button>
+    </nav>
+
+    <section id="tab-overview" class="tab-panel">
+      <div class="stat-cards" id="overview-stats"></div>
+      <h2 class="sub-head">Mobil terbaru</h2>
+      <div class="panel" id="overview-recent"></div>
+    </section>
+
+    <section id="tab-cars" class="tab-panel" hidden>
+      <div class="cars-toolbar">
+        <input type="search" id="car-search" placeholder="Cari merek atau model…" autocomplete="off" />
+        <button id="add-car" class="btn btn-primary" type="button">+ Tambah Mobil</button>
+      </div>
+      <div class="panel" id="car-list"></div>
+    </section>
+
+    <section id="tab-motors" class="tab-panel" hidden>
+      <div class="cars-toolbar">
+        <input type="search" id="motor-search" placeholder="Cari merek atau model…" autocomplete="off" />
+        <button id="add-motor" class="btn btn-primary" type="button">+ Tambah Motor</button>
+      </div>
+      <div class="panel" id="motor-list"></div>
+    </section>
+
+    <section id="tab-spklu" class="tab-panel" hidden>
+      <div class="cars-toolbar">
+        <input type="search" id="spklu-search" placeholder="Cari SPKLU…" autocomplete="off" />
+        <button id="add-spklu" class="btn btn-primary" type="button">+ Tambah SPKLU</button>
+      </div>
+      <div class="panel" id="spklu-list"></div>
+    </section>
+
+    <section id="tab-bengkel" class="tab-panel" hidden>
+      <div class="cars-toolbar">
+        <input type="search" id="bengkel-search" placeholder="Cari bengkel…" autocomplete="off" />
+        <button id="add-bengkel" class="btn btn-primary" type="button">+ Tambah Bengkel</button>
+      </div>
+      <div class="panel" id="bengkel-list"></div>
+    </section>
+
+    <section id="tab-berita" class="tab-panel" hidden>
+      <div class="cars-toolbar">
+        <input type="search" id="berita-search" placeholder="Cari berita…" autocomplete="off" />
+        <button id="add-berita" class="btn btn-primary" type="button">+ Tambah Berita</button>
+      </div>
+      <div class="panel" id="berita-list"></div>
+    </section>
+
+    <section id="tab-site" class="tab-panel" hidden>
+      <form id="site-form">
+        <div class="panel">
+          <h2 class="sub-head">Identitas &amp; Tema</h2>
+          <div class="field-grid">
+            <div class="field"><label>Nama Brand</label><input name="brandText" /></div>
+            <div class="field"><label>Warna Utama</label><input type="color" name="themePrimary" /></div>
+            <div class="field"><label>Warna Sekunder</label><input type="color" name="themeSecondary" /></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 16px;">
+          <h2 class="sub-head">Teks Halaman</h2>
+          <div class="field-grid">
+            <div class="field"><label>Hero — Eyebrow</label><input name="heroEyebrow" /></div>
+            <div class="field"><label>Hero — Judul</label><input name="heroTitle" /></div>
+            <div class="field full"><label>Hero — Deskripsi</label><textarea name="heroSub"></textarea></div>
+            <div class="field"><label>Tentang — Judul</label><input name="aboutTitle" /></div>
+            <div class="field full"><label>Tentang — Isi</label><textarea name="aboutText"></textarea></div>
+            <div class="field"><label>Footer — Judul</label><input name="footerTitle" /></div>
+            <div class="field"><label>Footer — Deskripsi</label><input name="footerDesc" /></div>
+            <div class="field"><label>Footer — Teks Sumber</label><input name="footerSourceText" /></div>
+            <div class="field"><label>Footer — URL Sumber</label><input name="footerSourceUrl" /></div>
+            <div class="field full"><label>Footer — Catatan</label><input name="footerNote" /></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Simpan Teks &amp; Tema</button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div id="car-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modal-title">Tambah Mobil</h3>
+        <button id="close-modal" class="btn btn-ghost btn-sm" type="button">Tutup</button>
+      </div>
+      <form id="car-form">
+        <div class="field-grid">
+          <div class="field"><label>Merek</label><input name="brand" required /></div>
+          <div class="field"><label>Nama Model</label><input name="name" required /></div>
+          <div class="field"><label>Tipe Bodi</label><select name="bodyType"></select></div>
+          <div class="field">
+            <label>Standar Jarak</label>
+            <select name="rangeStandard"><option value="">—</option></select>
+          </div>
+          <div class="field"><label>Jarak Tempuh (km)</label><input name="rangeKm" type="number" /></div>
+          <div class="field"><label>Baterai (kWh)</label><input name="batteryKwh" type="number" step="any" /></div>
+          <div class="field"><label>Tenaga (hp)</label><input name="powerHp" type="number" /></div>
+          <div class="field"><label>Harga (angka, Rp)</label><input name="price" type="number" /></div>
+          <div class="field"><label>Harga (teks)</label><input name="priceText" placeholder="Rp 415 jt" /></div>
+          <div class="field full"><label>Tagline (opsional)</label><input name="tagline" placeholder="Crossover listrik serbaguna" /></div>
+          <div class="field full"><label>Deskripsi (opsional — kosongkan untuk teks otomatis)</label><textarea name="description"></textarea></div>
+          <div class="field full"><label>Keunggulan (satu per baris)</label><textarea name="highlights" placeholder="Jarak 420 km (WLTP)"></textarea></div>
+          <div class="field full">
+            <label>Varian (pisahkan dengan koma)</label>
+            <input name="variantNames" placeholder="Standard, Premium" />
+          </div>
+          <div class="field full">
+            <label>Warna (hex, pisahkan koma — kosongkan untuk palet default)</label>
+            <input name="colors" placeholder="#f2f4f7, #c3cad4" />
+          </div>
+          <div class="field full">
+            <label>Video (URL, opsional)</label>
+            <input name="video" placeholder="https://…/video.mp4" />
+          </div>
+          <div class="field full">
+            <label>Gambar Utama (opsional)</label>
+            <input type="file" name="imageFile" accept="image/*" />
+            <img id="image-preview" alt="" />
+            <label class="check-row" style="margin-top: 8px;">
+              <input type="checkbox" name="removeImage" /> Hapus gambar utama
+            </label>
+          </div>
+          <div class="field full">
+            <label>Galeri Tambahan (opsional, bisa pilih beberapa)</label>
+            <input type="file" name="galleryFiles" accept="image/*" multiple />
+            <div id="gallery-list" class="gallery-list"></div>
+          </div>
+          <div class="field full">
+            <label class="check-row"><input type="checkbox" name="stale" /> Tandai "Data lama"</label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Simpan</button>
+          <button type="button" id="cancel-modal" class="btn btn-ghost">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="dir-modal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="dir-modal-title">Tambah</h3>
+        <button id="close-dir-modal" class="btn btn-ghost btn-sm" type="button">Tutup</button>
+      </div>
+      <form id="dir-form">
+        <div class="field-grid" id="dir-fields"></div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Simpan</button>
+          <button type="button" id="cancel-dir-modal" class="btn btn-ghost">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="../../scripts/admin.js"></script>
+</Base>

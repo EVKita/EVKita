@@ -1,0 +1,47 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  theme?: { primary?: string; secondary?: string };
+}
+
+const {
+  title = "EVKita",
+  description = "Basis data mobil listrik yang dijual di Indonesia: spesifikasi, jarak tempuh, baterai, tenaga, dan harga.",
+  theme,
+} = Astro.props;
+
+const themeStyle = theme?.primary
+  ? `--accent:${theme.primary};--accent-2:${theme.secondary || theme.primary};--accent-grad:linear-gradient(135deg,${theme.primary},${theme.secondary || theme.primary})`
+  : "";
+---
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem("evkita-theme");
+          if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.setAttribute("data-theme", "dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body style={themeStyle}>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,126 @@
+---
+import Base from "../../layouts/Base.astro";
+import "../../styles/admin.css";
+import { isAuthed } from "../../lib/auth";
+import { markdownToHtml } from "../../lib/markdown";
+import fs from "node:fs";
+import path from "node:path";
+
+if (!isAuthed(Astro.cookies)) {
+  return Astro.redirect("/admin/login");
+}
+
+const REPO = process.env.GITHUB_REPO || "EVKita/EVKita";
+
+let currentVersion = "dev";
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf8"));
+  currentVersion = pkg.version || "dev";
+} catch {
+  /* ignore */
+}
+
+interface Release {
+  tag_name: string;
+  name: string;
+  published_at: string;
+  body: string;
+  html_url: string;
+  assets: { name: string; browser_download_url: string }[];
+}
+
+interface ReleasesCache {
+  repo: string;
+  at: number;
+  data: Release[];
+}
+
+let cache: ReleasesCache | null = null;
+
+let releases: Release[] = [];
+let error: string | null = null;
+
+if (cache && cache.repo === REPO && Date.now() - cache.at < 5 * 60 * 1000) {
+  releases = cache.data;
+} else {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=20`, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "evkita-cms",
+      },
+    });
+    if (res.ok) {
+      releases = (await res.json()) as Release[];
+      cache = { repo: REPO, at: Date.now(), data: releases };
+    } else {
+      error = `GitHub API merespons status ${res.status}.`;
+    }
+  } catch {
+    error = "Tidak dapat terhubung ke GitHub API.";
+  }
+}
+
+const latest = releases[0];
+---
+
+<Base title="Pembaruan — Referensi EV">
+  <header class="site-header">
+    <div class="container admin-header">
+      <div class="admin-title">Admin <span>CMS</span></div>
+      <div class="admin-actions">
+        <a href="/admin" class="btn btn-ghost btn-sm">Konten</a>
+        <a href="/" class="btn btn-ghost btn-sm">Lihat Situs</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="admin-wrap">
+    <h1>Pembaruan</h1>
+    <p class="upd-sub">Rilis aplikasi dari GitHub — versi &amp; changelog.</p>
+
+    <div class="stat-cards upd-versions">
+      <div class="stat-card">
+        <span class="n">v{currentVersion}</span>
+        <span class="l">Versi terpasang</span>
+      </div>
+      <div class="stat-card">
+        <span class="n">{latest?.tag_name || "—"}</span>
+        <span class="l">Versi terbaru</span>
+      </div>
+    </div>
+
+    {error && (
+      <div class="panel upd-error">
+        <strong>Gagal memuat rilis.</strong> {error}{" "}
+        <a href={`https://github.com/${REPO}/releases`} target="_blank" rel="noopener">Buka di GitHub</a>.
+      </div>
+    )}
+
+    {!error && releases.length === 0 && (
+      <div class="panel">Belum ada rilis. Rilis pertama dibuat otomatis saat kamu push ke branch <code>main</code>.</div>
+    )}
+
+    {!error && releases.map((r) => (
+      <article class="panel upd-release">
+        <div class="upd-head">
+          <h2 class="sub-head">{r.tag_name}</h2>
+          <span class="upd-date">
+            {r.published_at
+              ? new Date(r.published_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+              : ""}
+          </span>
+        </div>
+        <div class="upd-body" set:html={markdownToHtml(r.body || "*Tidak ada catatan rilis.*")} />
+        <div class="upd-actions">
+          {r.assets.filter((a) => a.name.endsWith(".zip")).map((a) => (
+            <a class="btn btn-primary btn-sm" href={a.browser_download_url} target="_blank" rel="noopener">
+              Unduh {a.name}
+            </a>
+          ))}
+          <a class="btn btn-ghost btn-sm" href={r.html_url} target="_blank" rel="noopener">Lihat di GitHub</a>
+        </div>
+      </article>
+    ))}
+  </div>
+</Base>
