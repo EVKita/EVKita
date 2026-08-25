@@ -8,3 +8,4 @@ release/
 .backup-*/
 Open Code server.docx
 .update/
+data/backups/

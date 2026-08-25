@@ -1,194 +1,392 @@
 ---
 import Base from "../layouts/Base.astro";
-import ThemeToggle from "../components/ThemeToggle.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
 import { readContent } from "../lib/store";
+import { carSVG, defaultColor } from "../lib/cars-ui.js";
 
 const content = readContent();
-const { site, cars, motors, spklu, bengkel, berita } = content;
+const { site } = content;
+
+/**
+ * Kendaraan berstatus draft hanya untuk penyunting — halaman publik tidak
+ * boleh menampilkannya, termasuk di baris unggulan maupun data katalog yang
+ * disuntik ke klien.
+ */
+const isLive = (v: any) => v && v.status !== "draft";
+const cars = (content.cars || []).filter(isLive);
+const motors = site.showMotor ? (content.motors || []).filter(isLive) : [];
+const spklu = content.spklu || [];
+const bengkel = content.bengkel || [];
+const berita = content.berita || [];
+
+/** Item bertanda `featured` naik ke atas — sisanya menjaga urutan aslinya. */
+const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
+
+const featured = [
+  ...cars.filter((c: any) => c.featured).map((c: any) => ({ ...c, kind: "mobil" })),
+  ...motors.filter((c: any) => c.featured).map((c: any) => ({ ...c, kind: "motor" })),
+].slice(0, 8);
+
+function fmtPrice(v: any) {
+  if (v.priceText) return v.priceText;
+  if (v.price == null) return "Harga belum tersedia";
+  if (v.price >= 1_000_000_000) return "Rp " + (v.price / 1_000_000_000).toFixed(2).replace(".", ",") + " M";
+  return "Rp " + Math.round(v.price / 1_000_000) + " jt";
+}
+
+const heroTitle = site.heroTitle || `Katalog kendaraan listrik ${site.brandText || ""}`.trim();
+const heroSub = site.heroSub || "Bandingkan jarak tempuh, baterai, tenaga, dan harga dalam satu tempat.";
+
+const seoTitle = site.seoTitle || `${site.brandText || "EVKita"} — ${heroTitle}`;
+const seoDesc = site.seoDescription || heroSub;
+
+const spkluList = byFeatured(spklu);
+const bengkelList = byFeatured(bengkel);
+const beritaList = byFeatured(berita);
+
+/** Baris meta kartu direktori: hanya yang terisi, supaya kartu tidak bolong. */
+function metaRows(pairs: [string, any][]) {
+  return pairs.filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "");
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: `${site.brandText || "EVKita"}${site.brandSuffix || ""}`,
+  description: seoDesc,
+};
 ---
 
-<Base title={`${site.brandText} — ${site.heroTitle}`} description={site.heroSub} theme={{ primary: site.themePrimary, secondary: site.themeSecondary }}>
-  <header class="masthead">
-    <div class="container masthead-inner">
-      <a href="/" class="logo">
-        <span class="logo-mark">EV</span>
-        <span class="logo-text">{site.brandText}<em>.com</em></span>
-      </a>
-      <nav class="main-nav">
-        <a href="/" class="active">Beranda</a>
-        <a href="#daftar" data-navmode="mobil">Mobil Listrik</a>
-        <a href="#daftar" data-navmode="motor">Motor Listrik</a>
-        <a href="#spklu">SPKLU</a>
-        <a href="#bengkel">Bengkel</a>
-        <a href="#berita">Berita</a>
-        <a href="#tentang">Tentang</a>
-      </nav>
-      <ThemeToggle />
-    </div>
-  </header>
+<Base
+  title={seoTitle}
+  description={seoDesc}
+  keywords={site.seoKeywords}
+  ogImage={site.seoOgImage || site.heroImage}
+  theme={{
+    primary: site.themePrimary,
+    secondary: site.themeSecondary,
+    radius: site.themeRadius,
+    font: site.themeFont,
+    mode: site.themeMode,
+  }}
+>
+  <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
-  <section class="hero">
-    <div class="container">
-      <p class="hero-eyebrow">{site.heroEyebrow}</p>
-      <h1>{site.heroTitle}</h1>
-      <p class="hero-sub">{site.heroSub}</p>
-      <div class="hero-stats" id="heroStats"></div>
+  <SiteHeader site={site} active="beranda" />
+
+  <section class={`hero${site.heroImage ? " has-image" : ""}`}>
+    {site.heroImage ? (
+      <div class="hero-bg" style={`background-image:url(${JSON.stringify(site.heroImage)})`} aria-hidden="true"></div>
+    ) : (
+      <div class="hero-glow" aria-hidden="true"></div>
+    )}
+    <div class="container hero-inner">
+      {site.heroEyebrow ? <p class="hero-eyebrow reveal">{site.heroEyebrow}</p> : null}
+      <h1 class="hero-title reveal">{heroTitle}</h1>
+      <p class="hero-sub reveal">{heroSub}</p>
+
+      {site.heroCtaText || site.heroCtaAltText ? (
+        <div class="hero-cta reveal">
+          {site.heroCtaText ? (
+            <a class="btn btn-primary btn-lg" href={site.heroCtaUrl || "#daftar"}>{site.heroCtaText}</a>
+          ) : null}
+          {site.heroCtaAltText ? (
+            <a class="btn btn-outline btn-lg" href={site.heroCtaAltUrl || "#tentang"}>{site.heroCtaAltText}</a>
+          ) : null}
+        </div>
+      ) : null}
+
+      {site.showHeroStats ? <div class="hero-stats reveal" id="heroStats"></div> : null}
     </div>
   </section>
 
-  <main id="daftar" class="container">
-    <div class="mode-toggle" id="modeToggle" style="margin-bottom: 14px;">
-      <button type="button" class="mode-btn active" data-mode="mobil">Mobil</button>
-      <button type="button" class="mode-btn" data-mode="motor">Motor</button>
-    </div>
+  <main id="konten">
+    {featured.length ? (
+      <section class="section featured-section">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Unggulan</h2>
+              <p class="section-note">Pilihan redaksi dari katalog</p>
+            </div>
+            <a class="section-link" href="#daftar">Lihat semua →</a>
+          </div>
+          <div class="feature-rail">
+            {featured.map((f: any) => (
+              <a class="feature-card" href={f.kind === "mobil" ? `/mobil/${f.id}` : "#daftar"}>
+                <div class="feature-media">
+                  {f.image ? (
+                    <img src={f.image} alt={`${f.brand} ${f.name}`} loading="lazy" />
+                  ) : (
+                    <div class="feature-svg" set:html={carSVG(f, defaultColor(f))} />
+                  )}
+                  <span class="feature-badge">Unggulan</span>
+                </div>
+                <div class="feature-body">
+                  <span class="feature-brand">{f.brand}</span>
+                  <h3 class="feature-name">{f.name}</h3>
+                  <p class="feature-meta">
+                    {[f.bodyType, f.rangeKm != null ? `${f.rangeKm} km` : null, f.batteryKwh != null ? `${f.batteryKwh} kWh` : null]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  <span class="feature-price">{fmtPrice(f)}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    ) : null}
 
-    <div class="chips-row" id="bodyChips"></div>
+    <section class="section catalog" id="daftar">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">{site.katalogTitle || "Katalog Kendaraan Listrik"}</h2>
+            {site.katalogNote ? <p class="section-note">{site.katalogNote}</p> : null}
+          </div>
+          {site.showMotor ? (
+            <div class="mode-toggle" id="modeToggle" role="tablist" aria-label="Jenis kendaraan">
+              <button type="button" class="mode-btn active" data-mode="mobil" role="tab" aria-selected="true">Mobil</button>
+              <button type="button" class="mode-btn" data-mode="motor" role="tab" aria-selected="false">Motor</button>
+            </div>
+          ) : null}
+        </div>
 
-    <div class="toolbar">
-      <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-          <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm8 16-4-4" />
-        </svg>
-        <input type="search" id="search" placeholder="Cari merek atau model…" autocomplete="off" />
-      </div>
+        <div class="chips-row" id="bodyChips" role="group" aria-label="Filter cepat tipe bodi"></div>
 
-      <div class="filter-row">
-        <label class="select-field">
-          <span>Merek</span>
-          <select id="filterBrand"></select>
-        </label>
+        <div class="toolbar" id="toolbar">
+          <div class="toolbar-top">
+            <div class="search-wrap">
+              <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm8 16-4-4" />
+              </svg>
+              <input type="search" id="search" placeholder="Cari merek, model, atau tag…" autocomplete="off" aria-label="Cari kendaraan" />
+            </div>
 
-        <label class="select-field">
-          <span>Tipe Bodi</span>
-          <select id="filterBody"></select>
-        </label>
+            <div class="view-switch" id="viewSwitch" role="group" aria-label="Tampilan daftar">
+              <button type="button" data-view="grid" class="active" aria-label="Tampilan kisi" title="Kisi">▦</button>
+              <button type="button" data-view="list" aria-label="Tampilan daftar" title="Daftar">☰</button>
+            </div>
 
-        <label class="select-field">
-          <span>Rentang Harga</span>
-          <select id="filterPrice"></select>
-        </label>
+            <button id="filterToggle" class="btn btn-ghost btn-sm filter-toggle" type="button" aria-expanded="false" aria-controls="filterRow">
+              Filter
+            </button>
+          </div>
 
-        <label class="select-field">
-          <span>Urutkan</span>
-          <select id="sortBy">
-            <option value="brand">Merek (A–Z)</option>
-            <option value="priceAsc">Harga terendah</option>
-            <option value="priceDesc">Harga tertinggi</option>
-            <option value="rangeDesc" selected>Jarak terjauh</option>
-            <option value="batteryDesc">Baterai terbesar</option>
-            <option value="powerDesc">Tenaga terbesar</option>
-          </select>
-        </label>
+          <div class="filter-row" id="filterRow">
+            <label class="select-field">
+              <span>Merek</span>
+              <select id="filterBrand"></select>
+            </label>
 
-        <button id="resetFilters" class="btn-reset" type="button">Reset</button>
-      </div>
-    </div>
+            <label class="select-field">
+              <span>Tipe Bodi</span>
+              <select id="filterBody"></select>
+            </label>
 
-    <div class="result-bar">
-      <span id="resultCount"></span>
-    </div>
+            <label class="select-field">
+              <span>Rentang Harga</span>
+              <select id="filterPrice"></select>
+            </label>
 
-    <div class="grid" id="grid"></div>
-    <div class="empty" id="empty" hidden>
-      <p>Tidak ada model yang cocok dengan filter.</p>
-      <button id="emptyReset" class="btn-reset" type="button">Reset semua filter</button>
-    </div>
+            <label class="select-field">
+              <span>Jarak Tempuh</span>
+              <select id="filterRange"></select>
+            </label>
 
-    <section id="spklu" class="dir-section">
-      <div class="section-head">
-        <h2>SPKLU Indonesia</h2>
-        <span class="section-note">Jaringan pengisian daya publik</span>
-      </div>
-      <div class="dir-grid">
-        {spklu.map((s) => (
-          <a class="dir-card" href={s.website} target="_blank" rel="noopener">
-            <span class="dir-badge">SPKLU</span>
-            <h4>{s.name}</h4>
-            <p class="dir-operator">{s.operator}</p>
-            <p class="dir-meta">{s.area}{s.power ? ` · ${s.power} kW` : ""}</p>
-            <span class="dir-link">Kunjungi Situs →</span>
-          </a>
-        ))}
+            <label class="select-field">
+              <span>Baterai</span>
+              <select id="filterBattery"></select>
+            </label>
+
+            <label class="select-field">
+              <span>Urutkan</span>
+              <select id="sortBy">
+                <option value="brand">Merek (A–Z)</option>
+                <option value="priceAsc">Harga terendah</option>
+                <option value="priceDesc">Harga tertinggi</option>
+                <option value="rangeDesc" selected>Jarak terjauh</option>
+                <option value="batteryDesc">Baterai terbesar</option>
+                <option value="powerDesc">Tenaga terbesar</option>
+                <option value="newest">Terbaru diperbarui</option>
+              </select>
+            </label>
+
+            <button id="resetFilters" class="btn-reset" type="button">Reset</button>
+          </div>
+        </div>
+
+        <div class="result-bar">
+          <span id="resultCount" class="result-count" aria-live="polite"></span>
+          <span id="activeFilters" class="active-filters"></span>
+        </div>
+
+        <div class="grid" id="grid"></div>
+        <div class="empty" id="empty" hidden>
+          <p class="empty-title">Tidak ada model yang cocok</p>
+          <p>Coba longgarkan filter atau ubah kata kunci pencarian.</p>
+          <button id="emptyReset" class="btn btn-outline btn-sm" type="button">Reset semua filter</button>
+        </div>
       </div>
     </section>
 
-    <section id="bengkel" class="dir-section">
-      <div class="section-head">
-        <h2>Bengkel &amp; Servis EV</h2>
-        <span class="section-note">Mobil &amp; motor listrik</span>
-      </div>
-      <div class="dir-grid">
-        {bengkel.map((b) => (
-          <a class="dir-card" href={b.website} target="_blank" rel="noopener">
-            <span class="dir-badge">{b.type}</span>
-            <h4>{b.name}</h4>
-            <p class="dir-operator">{b.brand}</p>
-            <p class="dir-meta">{b.area}</p>
-            <span class="dir-link">Kunjungi Situs →</span>
-          </a>
-        ))}
-      </div>
-    </section>
+    {site.showSpklu && spkluList.length ? (
+      <section class="section dir-section" id="spklu">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">{site.spkluTitle || "SPKLU Indonesia"}</h2>
+              {site.spkluNote ? <p class="section-note">{site.spkluNote}</p> : null}
+            </div>
+          </div>
+          <div class="dir-grid">
+            {spkluList.map((s: any) => (
+              <article class={`dir-card${s.featured ? " is-featured" : ""}`}>
+                <div class="dir-top">
+                  <span class="dir-badge">SPKLU</span>
+                  {s.featured ? <span class="badge badge-featured">Pilihan</span> : null}
+                </div>
+                <h3 class="dir-title">{s.name}</h3>
+                {s.operator ? <p class="dir-sub">{s.operator}</p> : null}
+                <ul class="dir-meta-list">
+                  {metaRows([
+                    ["Lokasi", s.area],
+                    ["Alamat", s.address],
+                    ["Daya", s.power ? `${s.power} kW` : ""],
+                    ["Konektor", s.connector],
+                    ["Jumlah unit", s.count != null ? `${s.count} unit` : ""],
+                    ["Jam", s.hours],
+                    ["Tarif", s.price],
+                  ]).map(([k, v]) => (
+                    <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
+                  ))}
+                </ul>
+                {s.note ? <p class="dir-note">{s.note}</p> : null}
+                <div class="dir-actions">
+                  {s.website ? <a class="dir-link" href={s.website} target="_blank" rel="noopener">Situs resmi →</a> : null}
+                  {s.mapUrl ? <a class="dir-link ghost" href={s.mapUrl} target="_blank" rel="noopener">Buka peta</a> : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    ) : null}
 
-    <section id="berita" class="dir-section">
-      <div class="section-head">
-        <h2>Berita Terkini</h2>
-        <span class="section-note">Mobil &amp; motor listrik</span>
-      </div>
-      <div class="news-list">
-        {berita.map((n) => (
-          <a class="news-item" href={n.url} target="_blank" rel="noopener">
-            <span class="news-source">{n.source}</span>
-            <h4>{n.title}</h4>
-            <span class="news-date">{n.date}</span>
-            <span class="dir-link">Baca Berita →</span>
-          </a>
-        ))}
-      </div>
-    </section>
+    {site.showBengkel && bengkelList.length ? (
+      <section class="section dir-section" id="bengkel">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">{site.bengkelTitle || "Bengkel & Servis EV"}</h2>
+              {site.bengkelNote ? <p class="section-note">{site.bengkelNote}</p> : null}
+            </div>
+          </div>
+          <div class="dir-grid">
+            {bengkelList.map((b: any) => (
+              <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
+                <div class="dir-top">
+                  <span class="dir-badge">{b.type || "Bengkel"}</span>
+                  {b.featured ? <span class="badge badge-featured">Pilihan</span> : null}
+                </div>
+                <h3 class="dir-title">{b.name}</h3>
+                {b.brand ? <p class="dir-sub">{b.brand}</p> : null}
+                <ul class="dir-meta-list">
+                  {metaRows([
+                    ["Lokasi", b.area],
+                    ["Alamat", b.address],
+                    ["Telepon", b.phone],
+                    ["Jam", b.hours],
+                    ["Layanan", b.services],
+                  ]).map(([k, v]) => (
+                    <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
+                  ))}
+                </ul>
+                {b.note ? <p class="dir-note">{b.note}</p> : null}
+                <div class="dir-actions">
+                  {b.website ? <a class="dir-link" href={b.website} target="_blank" rel="noopener">Situs resmi →</a> : null}
+                  {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>Telepon</a> : null}
+                  {b.mapUrl ? <a class="dir-link ghost" href={b.mapUrl} target="_blank" rel="noopener">Buka peta</a> : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    ) : null}
 
-    <section id="tentang" class="about">
-      <h2>{site.aboutTitle}</h2>
-      <p>{site.aboutText}</p>
-    </section>
+    {site.showBerita && beritaList.length ? (
+      <section class="section news-section" id="berita">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">{site.beritaTitle || "Berita Terkini"}</h2>
+              {site.beritaNote ? <p class="section-note">{site.beritaNote}</p> : null}
+            </div>
+          </div>
+          <div class="news-grid">
+            {beritaList.map((n: any) => (
+              <a class={`news-card${n.featured ? " is-featured" : ""}`} href={n.url || "#"} target={n.url ? "_blank" : undefined} rel={n.url ? "noopener" : undefined}>
+                {n.image ? (
+                  <div class="news-thumb"><img src={n.image} alt="" loading="lazy" /></div>
+                ) : null}
+                <div class="news-body">
+                  <div class="news-top">
+                    {n.source ? <span class="news-source">{n.source}</span> : null}
+                    {n.featured ? <span class="badge badge-featured">Sorotan</span> : null}
+                  </div>
+                  <h3 class="news-title">{n.title}</h3>
+                  {n.excerpt ? <p class="news-excerpt">{n.excerpt}</p> : null}
+                  <div class="news-foot">
+                    {n.date ? <span class="news-date">{n.date}</span> : <span></span>}
+                    <span class="dir-link">Baca →</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    ) : null}
+
+    {site.showAbout && (site.aboutTitle || site.aboutText) ? (
+      <section class="section about-section" id="tentang">
+        <div class="container">
+          <div class="about-card">
+            {site.aboutTitle ? <h2>{site.aboutTitle}</h2> : null}
+            {site.aboutText ? <p>{site.aboutText}</p> : null}
+          </div>
+        </div>
+      </section>
+    ) : null}
   </main>
 
-  <footer id="sumber" class="site-footer">
-    <div class="container footer-grid">
-      <div>
-        <div class="footer-brand">
-          <span class="logo-mark">EV</span>
-          <span class="logo-text">{site.brandText}<em>.com</em></span>
-        </div>
-        <p class="footer-about">{site.footerDesc}</p>
-      </div>
-      <div>
-        <h4>Quick Links</h4>
-        <ul>
-          <li><a href="/">Beranda</a></li>
-          <li><a href="#daftar">Mobil Listrik</a></li>
-          <li><a href="#spklu">SPKLU</a></li>
-          <li><a href="#berita">Berita</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Sumber Data</h4>
-        <ul>
-          <li>
-            <a href={site.footerSourceUrl} target="_blank" rel="noopener">{site.footerSourceText}</a>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <h4>Catatan</h4>
-        <p class="footer-about">{site.footerNote}</p>
+  <!-- Panel bandingkan: kerangka statis, isinya dirender app.js -->
+  <div class="compare-dock" id="compareDock" hidden>
+    <div class="container compare-dock-inner">
+      <div class="compare-dock-items" id="compareItems"></div>
+      <div class="compare-dock-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="compareClear">Kosongkan</button>
+        <button type="button" class="btn btn-primary btn-sm" id="compareOpen">Bandingkan</button>
       </div>
     </div>
-    <div class="container copyright">
-      <span>© 2026 {site.brandText} — {site.footerTitle}.</span>
-      <span>Harga &amp; spesifikasi dapat berubah sewaktu-waktu.</span>
+  </div>
+
+  <div class="compare-modal" id="compareModal" hidden>
+    <div class="compare-modal-backdrop" data-compare-close></div>
+    <div class="compare-modal-box" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
+      <div class="compare-modal-head">
+        <h2 id="compareTitle">Perbandingan Spesifikasi</h2>
+        <button type="button" class="compare-close" data-compare-close aria-label="Tutup perbandingan">✕</button>
+      </div>
+      <div class="compare-modal-body" id="compareBody"></div>
     </div>
-  </footer>
+  </div>
+
+  <SiteFooter site={site} />
 
   <script define:vars={{ cars, motors }}>
     window.__EV_CARS__ = cars;

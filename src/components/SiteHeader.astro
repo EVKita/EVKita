@@ -1,0 +1,103 @@
+---
+import ThemeToggle from "./ThemeToggle.astro";
+
+/**
+ * Header dipakai beranda dan halaman detail. `base` diisi "/" dari halaman
+ * detail supaya tautan jangkar tetap mengarah ke beranda, dan "" dari beranda
+ * supaya kliknya tidak memuat ulang halaman.
+ */
+interface Props {
+  site: Record<string, any>;
+  base?: string;
+  active?: string;
+}
+
+const { site, base = "", active = "" } = Astro.props;
+
+const brand = site.brandText || "EVKita";
+const suffix = site.brandSuffix || "";
+const mark = (site.logoMark || brand.slice(0, 2) || "EV").slice(0, 3);
+
+const links = [
+  { id: "beranda", label: "Beranda", href: base || "/", mode: "" },
+  { id: "mobil", label: "Mobil Listrik", href: `${base}#daftar`, mode: "mobil" },
+  site.showMotor ? { id: "motor", label: "Motor Listrik", href: `${base}#daftar`, mode: "motor" } : null,
+  site.showSpklu ? { id: "spklu", label: "SPKLU", href: `${base}#spklu`, mode: "" } : null,
+  site.showBengkel ? { id: "bengkel", label: "Bengkel", href: `${base}#bengkel`, mode: "" } : null,
+  site.showBerita ? { id: "berita", label: "Berita", href: `${base}#berita`, mode: "" } : null,
+  site.showAbout ? { id: "tentang", label: "Tentang", href: `${base}#tentang`, mode: "" } : null,
+].filter(Boolean) as { id: string; label: string; href: string; mode: string }[];
+---
+
+<a class="skip-link" href="#konten">Langsung ke konten</a>
+
+<header class="masthead" id="masthead">
+  <div class="container masthead-inner">
+    <a href="/" class="logo" aria-label={`${brand}${suffix} — beranda`}>
+      {site.logoImage ? (
+        <img class="logo-img" src={site.logoImage} alt="" width="40" height="40" />
+      ) : (
+        <span class="logo-mark">{mark}</span>
+      )}
+      <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="mainNav" aria-label="Buka menu navigasi">
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </button>
+
+    <nav class="main-nav" id="mainNav" aria-label="Navigasi utama">
+      {links.map((l) => (
+        <a
+          href={l.href}
+          class={active === l.id ? "active" : undefined}
+          data-navmode={l.mode || undefined}
+        >{l.label}</a>
+      ))}
+    </nav>
+
+    <span class="header-theme"><ThemeToggle /></span>
+  </div>
+</header>
+<div class="nav-backdrop" id="navBackdrop" hidden></div>
+
+<script>
+  // Navigasi mobile: sebelumnya menu hanya disembunyikan CSS tanpa cara
+  // membukanya, jadi di layar kecil situs praktis tidak punya navigasi.
+  (function () {
+    const toggle = document.getElementById("navToggle");
+    const nav = document.getElementById("mainNav");
+    const backdrop = document.getElementById("navBackdrop");
+    const header = document.getElementById("masthead");
+    if (!toggle || !nav) return;
+
+    function setOpen(open: boolean) {
+      document.body.classList.toggle("nav-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.setAttribute("aria-label", open ? "Tutup menu navigasi" : "Buka menu navigasi");
+      if (backdrop) backdrop.hidden = !open;
+    }
+
+    toggle.addEventListener("click", () => setOpen(!document.body.classList.contains("nav-open")));
+    if (backdrop) backdrop.addEventListener("click", () => setOpen(false));
+    nav.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest("a")) setOpen(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") setOpen(false);
+    });
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 900) setOpen(false);
+    });
+
+    // Header dipertegas begitu halaman digulir supaya batas antara konten
+    // dan bilah navigasi tetap terbaca di atas hero bergambar.
+    if (header) {
+      const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+    }
+  })();
+</script>

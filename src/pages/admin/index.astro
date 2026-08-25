@@ -8,187 +8,704 @@ if (!isAuthed(Astro.cookies)) {
 }
 ---
 
-<Base title="Admin CMS — EVKita">
-  <header class="site-header">
-    <div class="container admin-header">
-      <div class="admin-title">Admin <span>CMS</span></div>
-      <div class="admin-actions">
-        <a href="/admin/update" class="btn btn-ghost btn-sm">Pembaruan</a>
-        <a href="/" class="btn btn-ghost btn-sm" style="color: var(--text);">Lihat Situs</a>
-        <button id="logout" class="btn btn-ghost btn-sm" type="button">Logout</button>
+<Base title="Admin CMS — EVKita" bodyClass="admin-ui">
+  <div id="admin-app" class="admin-app">
+    <!-- Lapisan gelap khusus mode drawer (≤900px); klik untuk menutup sidebar. -->
+    <div id="sidebar-scrim" class="sidebar-scrim"></div>
+
+    <aside id="admin-sidebar" class="admin-sidebar">
+      <div class="sidebar-brand">
+        <span class="sidebar-logo">EV</span>
+        <span class="sidebar-brand-text">
+          <strong>EVKita</strong>
+          <small>Panel Admin</small>
+        </span>
       </div>
-    </div>
-  </header>
 
-  <div class="admin-wrap">
-    <h1>Kelola Konten</h1>
+      <nav class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-group-label">Ringkasan</div>
+          <button class="nav-item active" data-view="dashboard" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+            </span>
+            <span class="nav-item-label">Dasbor</span>
+            <span class="nav-item-count" data-count="dashboard"></span>
+          </button>
+        </div>
 
-    <nav class="admin-tabs">
-      <button class="tab active" data-tab="overview" type="button">Ringkasan</button>
-      <button class="tab" data-tab="cars" type="button">Mobil</button>
-      <button class="tab" data-tab="motors" type="button">Motor</button>
-      <button class="tab" data-tab="spklu" type="button">SPKLU</button>
-      <button class="tab" data-tab="bengkel" type="button">Bengkel</button>
-      <button class="tab" data-tab="berita" type="button">Berita</button>
-      <button class="tab" data-tab="site" type="button">Teks &amp; Tema</button>
-    </nav>
+        <div class="nav-group">
+          <div class="nav-group-label">Kendaraan</div>
+          <button class="nav-item" data-view="cars" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M4 17v-4.2a2 2 0 0 1 .2-.9l2-4A2 2 0 0 1 8 6.8h8a2 2 0 0 1 1.8 1.1l2 4a2 2 0 0 1 .2.9V17"/><path d="M4 13h16"/><circle cx="7.5" cy="17.5" r="1.6"/><circle cx="16.5" cy="17.5" r="1.6"/></svg>
+            </span>
+            <span class="nav-item-label">Mobil</span>
+            <span class="nav-item-count" data-count="cars"></span>
+          </button>
+          <button class="nav-item" data-view="motors" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M8 17h6l3-6h-4l-2-3H8"/><path d="M14 8h3"/></svg>
+            </span>
+            <span class="nav-item-label">Motor</span>
+            <span class="nav-item-count" data-count="motors"></span>
+          </button>
+        </div>
 
-    <section id="tab-overview" class="tab-panel">
-      <div class="stat-cards" id="overview-stats"></div>
-      <h2 class="sub-head">Mobil terbaru</h2>
-      <div class="panel" id="overview-recent"></div>
-    </section>
+        <div class="nav-group">
+          <div class="nav-group-label">Direktori</div>
+          <button class="nav-item" data-view="spklu" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
+            </span>
+            <span class="nav-item-label">SPKLU</span>
+            <span class="nav-item-count" data-count="spklu"></span>
+          </button>
+          <button class="nav-item" data-view="bengkel" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 5 5l-8.4 8.4a2.5 2.5 0 0 1-3.5-3.5l8.4-8.4Z"/><path d="M18.5 3.5 21 6l-2 2-2.5-2.5 2-2Z"/></svg>
+            </span>
+            <span class="nav-item-label">Bengkel</span>
+            <span class="nav-item-count" data-count="bengkel"></span>
+          </button>
+          <button class="nav-item" data-view="berita" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12a1 1 0 0 1 1 1v12a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5Z"/><path d="M19 20a2 2 0 0 0 2-2v-7h-4"/><path d="M7 9h6M7 13h6M7 17h4"/></svg>
+            </span>
+            <span class="nav-item-label">Berita</span>
+            <span class="nav-item-count" data-count="berita"></span>
+          </button>
+        </div>
 
-    <section id="tab-cars" class="tab-panel" hidden>
-      <div class="cars-toolbar">
-        <input type="search" id="car-search" placeholder="Cari merek atau model…" autocomplete="off" />
-        <button id="add-car" class="btn btn-primary" type="button">+ Tambah Mobil</button>
+        <div class="nav-group">
+          <div class="nav-group-label">Situs</div>
+          <button class="nav-item" data-view="site" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+            </span>
+            <span class="nav-item-label">Pengaturan Situs</span>
+            <span class="nav-item-count" data-count="site"></span>
+          </button>
+          <button class="nav-item" data-view="media" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 16-5-5-6 6-2-2-5 5"/></svg>
+            </span>
+            <span class="nav-item-label">Media</span>
+            <span class="nav-item-count" data-count="media"></span>
+          </button>
+          <button class="nav-item" data-view="backups" type="button">
+            <span class="nav-item-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/><path d="M4 11.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+            </span>
+            <span class="nav-item-label">Cadangan</span>
+            <span class="nav-item-count" data-count="backups"></span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="sidebar-foot">
+        <a href="/admin/update" class="nav-item nav-item-link">
+          <span class="nav-item-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg>
+          </span>
+          <span class="nav-item-label">Pembaruan</span>
+        </a>
+        <a href="/" class="nav-item nav-item-link" target="_blank" rel="noopener">
+          <span class="nav-item-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+          </span>
+          <span class="nav-item-label">Lihat Situs</span>
+        </a>
       </div>
-      <div class="panel" id="car-list"></div>
-    </section>
+    </aside>
 
-    <section id="tab-motors" class="tab-panel" hidden>
-      <div class="cars-toolbar">
-        <input type="search" id="motor-search" placeholder="Cari merek atau model…" autocomplete="off" />
-        <button id="add-motor" class="btn btn-primary" type="button">+ Tambah Motor</button>
+    <header id="admin-topbar" class="admin-topbar">
+      <button id="sidebar-toggle" class="btn btn-icon" type="button" aria-label="Ciutkan menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+
+      <div class="topbar-search">
+        <svg class="topbar-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input
+          id="global-search"
+          type="search"
+          placeholder="Cari apa saja — mobil, motor, SPKLU, bengkel, berita…"
+          autocomplete="off"
+          aria-label="Pencarian global"
+        />
+        <span class="kbd">⌘K</span>
       </div>
-      <div class="panel" id="motor-list"></div>
-    </section>
 
-    <section id="tab-spklu" class="tab-panel" hidden>
-      <div class="cars-toolbar">
-        <input type="search" id="spklu-search" placeholder="Cari SPKLU…" autocomplete="off" />
-        <button id="add-spklu" class="btn btn-primary" type="button">+ Tambah SPKLU</button>
+      <div class="topbar-right">
+        <span id="save-state" class="save-state">Siap</span>
+        <button id="themeToggle" class="btn btn-icon" type="button" aria-label="Ganti tema terang/gelap" title="Ganti tema">
+          <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+          <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+        </button>
+        <button id="logout" class="btn btn-ghost btn-sm" type="button">Keluar</button>
       </div>
-      <div class="panel" id="spklu-list"></div>
-    </section>
+    </header>
 
-    <section id="tab-bengkel" class="tab-panel" hidden>
-      <div class="cars-toolbar">
-        <input type="search" id="bengkel-search" placeholder="Cari bengkel…" autocomplete="off" />
-        <button id="add-bengkel" class="btn btn-primary" type="button">+ Tambah Bengkel</button>
-      </div>
-      <div class="panel" id="bengkel-list"></div>
-    </section>
+    <main id="admin-main" class="admin-main">
+      <!-- ===== Dasbor ===== -->
+      <section class="view" data-view="dashboard">
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">Dasbor</h1>
+            <p class="view-sub">Ringkasan isi situs dan hal yang perlu dibereskan.</p>
+          </div>
+        </div>
 
-    <section id="tab-berita" class="tab-panel" hidden>
-      <div class="cars-toolbar">
-        <input type="search" id="berita-search" placeholder="Cari berita…" autocomplete="off" />
-        <button id="add-berita" class="btn btn-primary" type="button">+ Tambah Berita</button>
-      </div>
-      <div class="panel" id="berita-list"></div>
-    </section>
+        <div id="dash-stats"></div>
 
-    <section id="tab-site" class="tab-panel" hidden>
-      <form id="site-form">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title">Sebaran Data</h2>
+            </div>
+            <div class="panel-body" id="dash-charts"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title">Perlu Dilengkapi</h2>
+            </div>
+            <div class="panel-body" id="dash-health"></div>
+          </div>
+        </div>
+
         <div class="panel">
-          <h2 class="sub-head">Identitas &amp; Tema</h2>
-          <div class="field-grid">
-            <div class="field"><label>Nama Brand</label><input name="brandText" /></div>
-            <div class="field"><label>Warna Utama</label><input type="color" name="themePrimary" /></div>
-            <div class="field"><label>Warna Sekunder</label><input type="color" name="themeSecondary" /></div>
+          <div class="panel-head">
+            <h2 class="panel-title">Terakhir Diubah</h2>
+          </div>
+          <div class="panel-body" id="dash-recent"></div>
+        </div>
+      </section>
+
+      <!-- ===== Mobil ===== -->
+      <section class="view" data-view="cars" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">Mobil Listrik</h1>
+            <p class="view-sub">Kelola katalog mobil: spesifikasi, harga, galeri, dan varian.</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="add-cars" class="btn btn-primary" type="button">+ Tambah Mobil</button>
+          </div>
+        </div>
+        <div id="cars-toolbar"></div>
+        <div id="cars-list" class="item-list"></div>
+      </section>
+
+      <!-- ===== Motor ===== -->
+      <section class="view" data-view="motors" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">Motor Listrik</h1>
+            <p class="view-sub">Kelola katalog motor listrik dengan skema yang sama seperti mobil.</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="add-motors" class="btn btn-primary" type="button">+ Tambah Motor</button>
+          </div>
+        </div>
+        <div id="motors-toolbar"></div>
+        <div id="motors-list" class="item-list"></div>
+      </section>
+
+      <!-- ===== SPKLU ===== -->
+      <section class="view" data-view="spklu" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">SPKLU</h1>
+            <p class="view-sub">Direktori stasiun pengisian kendaraan listrik umum.</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="add-spklu" class="btn btn-primary" type="button">+ Tambah SPKLU</button>
+          </div>
+        </div>
+        <div id="spklu-toolbar"></div>
+        <div id="spklu-list" class="item-list"></div>
+      </section>
+
+      <!-- ===== Bengkel ===== -->
+      <section class="view" data-view="bengkel" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">Bengkel &amp; Servis</h1>
+            <p class="view-sub">Direktori bengkel resmi maupun umum untuk kendaraan listrik.</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="add-bengkel" class="btn btn-primary" type="button">+ Tambah Bengkel</button>
+          </div>
+        </div>
+        <div id="bengkel-toolbar"></div>
+        <div id="bengkel-list" class="item-list"></div>
+      </section>
+
+      <!-- ===== Berita ===== -->
+      <section class="view" data-view="berita" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">Berita</h1>
+            <p class="view-sub">Kumpulan tautan berita yang tampil di beranda.</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="add-berita" class="btn btn-primary" type="button">+ Tambah Berita</button>
+          </div>
+        </div>
+        <div id="berita-toolbar"></div>
+        <div id="berita-list" class="item-list"></div>
+      </section>
+
+      <!-- ===== Pengaturan Situs ===== -->
+      <section class="view" data-view="site" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">Pengaturan Situs</h1>
+            <p class="view-sub">Identitas, tema, teks halaman, SEO, dan kontak.</p>
           </div>
         </div>
 
-        <div class="panel" style="margin-top: 16px;">
-          <h2 class="sub-head">Teks Halaman</h2>
-          <div class="field-grid">
-            <div class="field"><label>Hero — Eyebrow</label><input name="heroEyebrow" /></div>
-            <div class="field"><label>Hero — Judul</label><input name="heroTitle" /></div>
-            <div class="field full"><label>Hero — Deskripsi</label><textarea name="heroSub"></textarea></div>
-            <div class="field"><label>Tentang — Judul</label><input name="aboutTitle" /></div>
-            <div class="field full"><label>Tentang — Isi</label><textarea name="aboutText"></textarea></div>
-            <div class="field"><label>Footer — Judul</label><input name="footerTitle" /></div>
-            <div class="field"><label>Footer — Deskripsi</label><input name="footerDesc" /></div>
-            <div class="field"><label>Footer — Teks Sumber</label><input name="footerSourceText" /></div>
-            <div class="field"><label>Footer — URL Sumber</label><input name="footerSourceUrl" /></div>
-            <div class="field full"><label>Footer — Catatan</label><input name="footerNote" /></div>
+        <form id="site-form">
+          <!-- Identitas -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>Identitas</h2>
+              <p>Nama dan logo yang tampil di header serta footer situs.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="s-brandText">Nama Brand</label>
+                <input id="s-brandText" name="brandText" placeholder="ReferensiID" />
+              </div>
+              <div class="field">
+                <label for="s-brandSuffix">Akhiran Brand</label>
+                <input id="s-brandSuffix" name="brandSuffix" placeholder=".com" />
+                <span class="hint">Ditempel di belakang nama brand, mis. “.com”.</span>
+              </div>
+              <div class="field">
+                <label for="s-logoMark">Inisial Logo</label>
+                <input id="s-logoMark" name="logoMark" maxlength="4" placeholder="EV" />
+                <span class="hint">Dipakai kalau gambar logo kosong. Maksimal 4 huruf.</span>
+              </div>
+              <div class="field full" data-image-field="logoImage">
+                <label>Gambar Logo</label>
+                <div class="dropzone" data-dropzone></div>
+                <input type="hidden" name="logoImage" />
+                <span class="hint">PNG transparan disarankan. Klik atau seret berkas ke kotak.</span>
+              </div>
+            </div>
           </div>
+
+          <!-- Tema & Tampilan -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>Tema &amp; Tampilan</h2>
+              <p>Warna, sudut membulat, huruf, dan mode terang/gelap bawaan.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field color-field">
+                <label for="s-themePrimary">Warna Utama</label>
+                <input id="s-themePrimary" type="color" name="themePrimary" />
+              </div>
+              <div class="field color-field">
+                <label for="s-themeSecondary">Warna Sekunder</label>
+                <input id="s-themeSecondary" type="color" name="themeSecondary" />
+                <span class="hint">Dipakai sebagai ujung gradien aksen.</span>
+              </div>
+              <div class="field">
+                <label for="s-themeMode">Mode Tema Bawaan</label>
+                <select id="s-themeMode" name="themeMode">
+                  <option value="auto">Ikuti Sistem</option>
+                  <option value="light">Terang</option>
+                  <option value="dark">Gelap</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="s-themeFont">Jenis Huruf</label>
+                <select id="s-themeFont" name="themeFont">
+                  <option value="Inter">Inter</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Manrope">Manrope</option>
+                  <option value="Figtree">Figtree</option>
+                  <option value="Outfit">Outfit</option>
+                  <option value="Rubik">Rubik</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Nunito">Nunito</option>
+                  <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                  <option value="Space Grotesk">Space Grotesk</option>
+                </select>
+              </div>
+              <div class="field full range-field">
+                <label for="s-themeRadius">Sudut Membulat</label>
+                <input id="s-themeRadius" type="range" name="themeRadius" min="0" max="32" step="1" />
+                <output class="range-value" for="s-themeRadius"></output>
+                <span class="hint">0 = kotak tegas, 32 = sangat membulat.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>Hero</h2>
+              <p>Bagian paling atas beranda — kalimat pembuka dan tombol ajakan.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="s-heroEyebrow">Teks Kecil di Atas Judul</label>
+                <input id="s-heroEyebrow" name="heroEyebrow" placeholder="Basis data kendaraan listrik" />
+              </div>
+              <div class="field">
+                <label for="s-heroTitle">Judul Hero</label>
+                <input id="s-heroTitle" name="heroTitle" />
+              </div>
+              <div class="field full">
+                <label for="s-heroSub">Deskripsi Hero</label>
+                <textarea id="s-heroSub" name="heroSub" rows="3"></textarea>
+              </div>
+              <div class="field full" data-image-field="heroImage">
+                <label>Gambar Hero</label>
+                <div class="dropzone" data-dropzone></div>
+                <input type="hidden" name="heroImage" />
+              </div>
+              <div class="field">
+                <label for="s-heroCtaText">Tombol Utama — Teks</label>
+                <input id="s-heroCtaText" name="heroCtaText" placeholder="Lihat Katalog" />
+              </div>
+              <div class="field">
+                <label for="s-heroCtaUrl">Tombol Utama — Tautan</label>
+                <input id="s-heroCtaUrl" name="heroCtaUrl" placeholder="#katalog" />
+              </div>
+              <div class="field">
+                <label for="s-heroCtaAltText">Tombol Kedua — Teks</label>
+                <input id="s-heroCtaAltText" name="heroCtaAltText" placeholder="Cari SPKLU" />
+              </div>
+              <div class="field">
+                <label for="s-heroCtaAltUrl">Tombol Kedua — Tautan</label>
+                <input id="s-heroCtaAltUrl" name="heroCtaAltUrl" placeholder="#spklu" />
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="showHeroStats" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>Tampilkan angka statistik di hero</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seksi Beranda -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>Seksi Beranda</h2>
+              <p>Judul, catatan singkat, dan saklar tampil untuk tiap seksi.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="s-katalogTitle">Katalog — Judul</label>
+                <input id="s-katalogTitle" name="katalogTitle" />
+              </div>
+              <div class="field">
+                <label for="s-katalogNote">Katalog — Catatan</label>
+                <input id="s-katalogNote" name="katalogNote" />
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="showMotor" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>Tampilkan seksi Motor Listrik</span>
+                </label>
+              </div>
+
+              <div class="field">
+                <label for="s-spkluTitle">SPKLU — Judul</label>
+                <input id="s-spkluTitle" name="spkluTitle" />
+              </div>
+              <div class="field">
+                <label for="s-spkluNote">SPKLU — Catatan</label>
+                <input id="s-spkluNote" name="spkluNote" />
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="showSpklu" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>Tampilkan seksi SPKLU</span>
+                </label>
+              </div>
+
+              <div class="field">
+                <label for="s-bengkelTitle">Bengkel — Judul</label>
+                <input id="s-bengkelTitle" name="bengkelTitle" />
+              </div>
+              <div class="field">
+                <label for="s-bengkelNote">Bengkel — Catatan</label>
+                <input id="s-bengkelNote" name="bengkelNote" />
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="showBengkel" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>Tampilkan seksi Bengkel</span>
+                </label>
+              </div>
+
+              <div class="field">
+                <label for="s-beritaTitle">Berita — Judul</label>
+                <input id="s-beritaTitle" name="beritaTitle" />
+              </div>
+              <div class="field">
+                <label for="s-beritaNote">Berita — Catatan</label>
+                <input id="s-beritaNote" name="beritaNote" />
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="showBerita" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>Tampilkan seksi Berita</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tentang -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>Tentang</h2>
+              <p>Penjelasan singkat tentang situs, tampil di bawah katalog.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field full">
+                <label for="s-aboutTitle">Judul</label>
+                <input id="s-aboutTitle" name="aboutTitle" />
+              </div>
+              <div class="field full">
+                <label for="s-aboutText">Isi</label>
+                <textarea id="s-aboutText" name="aboutText" rows="4"></textarea>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="showAbout" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>Tampilkan seksi Tentang</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- SEO -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>SEO</h2>
+              <p>Judul dan deskripsi yang muncul di hasil pencarian serta pratinjau tautan.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field full">
+                <label for="s-seoTitle">Judul Halaman</label>
+                <input id="s-seoTitle" name="seoTitle" />
+                <span class="hint">Idealnya di bawah 60 karakter.</span>
+              </div>
+              <div class="field full">
+                <label for="s-seoDescription">Deskripsi Meta</label>
+                <textarea id="s-seoDescription" name="seoDescription" rows="3"></textarea>
+                <span class="hint">Idealnya 120–160 karakter.</span>
+              </div>
+              <div class="field full">
+                <label for="s-seoKeywords">Kata Kunci</label>
+                <input id="s-seoKeywords" name="seoKeywords" placeholder="mobil listrik, spklu, harga ev" />
+                <span class="hint">Pisahkan dengan koma.</span>
+              </div>
+              <div class="field full" data-image-field="seoOgImage">
+                <label>Gambar Pratinjau (OG Image)</label>
+                <div class="dropzone" data-dropzone></div>
+                <input type="hidden" name="seoOgImage" />
+                <span class="hint">Ukuran ideal 1200×630 piksel.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kontak & Sosial -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>Kontak &amp; Sosial</h2>
+              <p>Ditampilkan di footer. Kosongkan yang tidak dipakai.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="s-contactEmail">Email</label>
+                <input id="s-contactEmail" type="email" name="contactEmail" />
+              </div>
+              <div class="field">
+                <label for="s-contactPhone">Telepon</label>
+                <input id="s-contactPhone" name="contactPhone" />
+              </div>
+              <div class="field full">
+                <label for="s-contactAddress">Alamat</label>
+                <input id="s-contactAddress" name="contactAddress" />
+              </div>
+              <div class="field">
+                <label for="s-socialInstagram">Instagram</label>
+                <input id="s-socialInstagram" name="socialInstagram" placeholder="https://instagram.com/…" />
+              </div>
+              <div class="field">
+                <label for="s-socialYoutube">YouTube</label>
+                <input id="s-socialYoutube" name="socialYoutube" placeholder="https://youtube.com/@…" />
+              </div>
+              <div class="field">
+                <label for="s-socialTiktok">TikTok</label>
+                <input id="s-socialTiktok" name="socialTiktok" placeholder="https://tiktok.com/@…" />
+              </div>
+              <div class="field">
+                <label for="s-socialFacebook">Facebook</label>
+                <input id="s-socialFacebook" name="socialFacebook" placeholder="https://facebook.com/…" />
+              </div>
+              <div class="field">
+                <label for="s-socialX">X (Twitter)</label>
+                <input id="s-socialX" name="socialX" placeholder="https://x.com/…" />
+              </div>
+              <div class="field">
+                <label for="s-socialWhatsapp">WhatsApp</label>
+                <input id="s-socialWhatsapp" name="socialWhatsapp" placeholder="628xxxxxxxxxx" />
+                <span class="hint">Nomor dengan kode negara, tanpa tanda plus.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2>Footer</h2>
+              <p>Teks penutup di bagian paling bawah halaman.</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="s-footerTitle">Judul</label>
+                <input id="s-footerTitle" name="footerTitle" />
+              </div>
+              <div class="field">
+                <label for="s-footerDesc">Deskripsi</label>
+                <input id="s-footerDesc" name="footerDesc" />
+              </div>
+              <div class="field">
+                <label for="s-footerSourceText">Teks Sumber</label>
+                <input id="s-footerSourceText" name="footerSourceText" />
+              </div>
+              <div class="field">
+                <label for="s-footerSourceUrl">URL Sumber</label>
+                <input id="s-footerSourceUrl" name="footerSourceUrl" />
+              </div>
+              <div class="field full">
+                <label for="s-footerNote">Catatan</label>
+                <input id="s-footerNote" name="footerNote" />
+              </div>
+            </div>
+          </div>
+
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Simpan Teks &amp; Tema</button>
+            <span class="form-actions-note">Perubahan baru tersimpan setelah ditekan.</span>
+            <button type="submit" class="btn btn-primary">Simpan</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ===== Media ===== -->
+      <section class="view" data-view="media" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">Media</h1>
+            <p class="view-sub">Semua gambar yang dipakai di situs, dikumpulkan dari seluruh konten.</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="media-refresh" class="btn btn-outline btn-sm" type="button">Muat Ulang</button>
           </div>
         </div>
-      </form>
-    </section>
+        <div id="media-toolbar" class="toolbar">
+          <div class="toolbar-search">
+            <input id="media-search" class="search-input" type="search" placeholder="Cari nama berkas…" autocomplete="off" />
+          </div>
+        </div>
+        <div id="media-grid"></div>
+      </section>
+
+      <!-- ===== Cadangan ===== -->
+      <section class="view" data-view="backups" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">Cadangan</h1>
+            <p class="view-sub">
+              Setiap kali konten disimpan, salinan otomatis dibuat. Pilih salah satu untuk
+              mengembalikan seluruh isi situs ke kondisi saat itu.
+            </p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-body" id="backups-list"></div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <div id="car-modal" class="modal-backdrop">
-    <div class="modal">
+  <!-- ===== Modal kendaraan ===== -->
+  <div id="vehicle-modal" class="modal-backdrop">
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
       <div class="modal-head">
-        <h3 id="modal-title">Tambah Mobil</h3>
-        <button id="close-modal" class="btn btn-ghost btn-sm" type="button">Tutup</button>
+        <h3 class="modal-title" id="vehicle-modal-title">Tambah Mobil</h3>
+        <button type="button" class="modal-close" id="vehicle-modal-close" aria-label="Tutup">&times;</button>
       </div>
-      <form id="car-form">
-        <div class="field-grid">
-          <div class="field"><label>Merek</label><input name="brand" required /></div>
-          <div class="field"><label>Nama Model</label><input name="name" required /></div>
-          <div class="field"><label>Tipe Bodi</label><select name="bodyType"></select></div>
-          <div class="field">
-            <label>Standar Jarak</label>
-            <select name="rangeStandard"><option value="">—</option></select>
-          </div>
-          <div class="field"><label>Jarak Tempuh (km)</label><input name="rangeKm" type="number" /></div>
-          <div class="field"><label>Baterai (kWh)</label><input name="batteryKwh" type="number" step="any" /></div>
-          <div class="field"><label>Tenaga (hp)</label><input name="powerHp" type="number" /></div>
-          <div class="field"><label>Harga (angka, Rp)</label><input name="price" type="number" /></div>
-          <div class="field"><label>Harga (teks)</label><input name="priceText" placeholder="Rp 415 jt" /></div>
-          <div class="field full"><label>Tagline (opsional)</label><input name="tagline" placeholder="Crossover listrik serbaguna" /></div>
-          <div class="field full"><label>Deskripsi (opsional — kosongkan untuk teks otomatis)</label><textarea name="description"></textarea></div>
-          <div class="field full"><label>Keunggulan (satu per baris)</label><textarea name="highlights" placeholder="Jarak 420 km (WLTP)"></textarea></div>
-          <div class="field full">
-            <label>Varian (pisahkan dengan koma)</label>
-            <input name="variantNames" placeholder="Standard, Premium" />
-          </div>
-          <div class="field full">
-            <label>Warna (hex, pisahkan koma — kosongkan untuk palet default)</label>
-            <input name="colors" placeholder="#f2f4f7, #c3cad4" />
-          </div>
-          <div class="field full">
-            <label>Video (URL, opsional)</label>
-            <input name="video" placeholder="https://…/video.mp4" />
-          </div>
-          <div class="field full">
-            <label>Gambar Utama (opsional)</label>
-            <input type="file" name="imageFile" accept="image/*" />
-            <img id="image-preview" alt="" />
-            <label class="check-row" style="margin-top: 8px;">
-              <input type="checkbox" name="removeImage" /> Hapus gambar utama
-            </label>
-          </div>
-          <div class="field full">
-            <label>Galeri Tambahan (opsional, bisa pilih beberapa)</label>
-            <input type="file" name="galleryFiles" accept="image/*" multiple />
-            <div id="gallery-list" class="gallery-list"></div>
-          </div>
-          <div class="field full">
-            <label class="check-row"><input type="checkbox" name="stale" /> Tandai "Data lama"</label>
-          </div>
+      <form id="vehicle-form">
+        <div class="modal-tabs" role="tablist">
+          <button type="button" class="modal-tab active" data-mtab="dasar">Dasar</button>
+          <button type="button" class="modal-tab" data-mtab="spesifikasi">Spesifikasi</button>
+          <button type="button" class="modal-tab" data-mtab="media">Media</button>
+          <button type="button" class="modal-tab" data-mtab="varian">Varian</button>
+          <button type="button" class="modal-tab" data-mtab="lanjutan">Lanjutan</button>
         </div>
-        <div class="form-actions">
+        <div class="modal-body">
+          <div class="modal-pane" data-mpane="dasar"></div>
+          <div class="modal-pane" data-mpane="spesifikasi" hidden></div>
+          <div class="modal-pane" data-mpane="media" hidden></div>
+          <div class="modal-pane" data-mpane="varian" hidden></div>
+          <div class="modal-pane" data-mpane="lanjutan" hidden></div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" id="vehicle-cancel" data-close-modal>Batal</button>
           <button type="submit" class="btn btn-primary">Simpan</button>
-          <button type="button" id="cancel-modal" class="btn btn-ghost">Batal</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- ===== Modal direktori (SPKLU / bengkel / berita) ===== -->
   <div id="dir-modal" class="modal-backdrop">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dir-modal-title">
       <div class="modal-head">
-        <h3 id="dir-modal-title">Tambah</h3>
-        <button id="close-dir-modal" class="btn btn-ghost btn-sm" type="button">Tutup</button>
+        <h3 class="modal-title" id="dir-modal-title">Tambah</h3>
+        <button type="button" class="modal-close" id="dir-modal-close" aria-label="Tutup">&times;</button>
       </div>
       <form id="dir-form">
-        <div class="field-grid" id="dir-fields"></div>
-        <div class="form-actions">
+        <div class="modal-body">
+          <div id="dir-fields" class="field-grid"></div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" id="dir-cancel" data-close-modal>Batal</button>
           <button type="submit" class="btn btn-primary">Simpan</button>
-          <button type="button" id="cancel-dir-modal" class="btn btn-ghost">Batal</button>
         </div>
       </form>
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <!-- ===== Dialog konfirmasi ===== -->
+  <div id="confirm-modal" class="modal-backdrop">
+    <div class="modal modal-sm">
+      <div class="modal-head"><h3 class="modal-title" id="confirm-title"></h3></div>
+      <div class="modal-body"><p id="confirm-text"></p></div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="confirm-cancel">Batal</button>
+        <button type="button" class="btn btn-danger" id="confirm-ok">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack" class="toast-stack"></div>
 
   <script src="../../scripts/admin.js"></script>
 </Base>

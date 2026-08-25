@@ -4,21 +4,79 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
-  theme?: { primary?: string; secondary?: string };
+  /**
+   * `radius`, `font`, dan `mode` opsional: halaman admin dan /install memakai
+   * layout ini tanpa mengirim tema sama sekali, jadi semuanya harus punya
+   * nilai bawaan yang aman.
+   */
+  theme?: {
+    primary?: string;
+    secondary?: string;
+    radius?: string | number;
+    font?: string;
+    mode?: string;
+  };
+  keywords?: string;
+  ogImage?: string;
+  ogType?: string;
+  bodyClass?: string;
 }
 
 const {
   title = "EVKita",
   description = "Basis data mobil listrik yang dijual di Indonesia: spesifikasi, jarak tempuh, baterai, tenaga, dan harga.",
   theme,
+  keywords = "",
+  ogImage = "",
+  ogType = "website",
+  bodyClass = "",
 } = Astro.props;
 
-const themeStyle = theme?.primary
-  ? `--accent:${theme.primary};--accent-2:${theme.secondary || theme.primary};--accent-grad:linear-gradient(135deg,${theme.primary},${theme.secondary || theme.primary})`
-  : "";
+/**
+ * Nama font dibatasi daftar putih: nilainya datang dari panel admin dan
+ * langsung disusun jadi URL Google Fonts, jadi teks bebas tidak boleh lewat.
+ */
+const FONTS: Record<string, string> = {
+  Inter: "Inter:wght@400;500;600;700;800;900",
+  Poppins: "Poppins:wght@400;500;600;700;800",
+  Manrope: "Manrope:wght@400;500;600;700;800",
+  Figtree: "Figtree:wght@400;500;600;700;800;900",
+  Outfit: "Outfit:wght@400;500;600;700;800",
+  Rubik: "Rubik:wght@400;500;600;700;800",
+  Montserrat: "Montserrat:wght@400;500;600;700;800",
+  Nunito: "Nunito:wght@400;500;600;700;800",
+  "Plus Jakarta Sans": "Plus+Jakarta+Sans:wght@400;500;600;700;800",
+  "Space Grotesk": "Space+Grotesk:wght@400;500;600;700",
+};
+
+const fontName = theme?.font && FONTS[theme.font] ? theme.font : "Inter";
+const fontQuery = FONTS[fontName];
+const fontHref = `https://fonts.googleapis.com/css2?family=${fontQuery}&display=swap`;
+
+const radiusRaw = theme?.radius === undefined || theme?.radius === null ? "" : String(theme.radius).trim();
+const radiusNum = Number(radiusRaw.replace(/px$/i, ""));
+const radius = Number.isFinite(radiusNum) && radiusRaw !== "" ? Math.min(36, Math.max(0, radiusNum)) : null;
+
+const themeMode = theme?.mode === "light" || theme?.mode === "dark" ? theme.mode : "auto";
+
+const styleParts: string[] = [];
+if (theme?.primary) {
+  const p = theme.primary;
+  const s = theme.secondary || theme.primary;
+  styleParts.push(`--accent:${p}`);
+  styleParts.push(`--accent-2:${s}`);
+  styleParts.push(`--accent-grad:linear-gradient(135deg,${p},${s})`);
+}
+if (radius !== null) {
+  styleParts.push(`--radius:${radius}px`);
+  styleParts.push(`--radius-sm:${Math.max(4, Math.round(radius * 0.6))}px`);
+  styleParts.push(`--radius-lg:${Math.round(radius * 1.6)}px`);
+}
+styleParts.push(`--font-sans:"${fontName}",system-ui,-apple-system,"Segoe UI",sans-serif`);
+const themeStyle = styleParts.join(";");
 ---
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme-mode={themeMode}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -35,6 +93,20 @@ const themeStyle = theme?.primary
         var KEY = "evkita-theme";
         var el = document.documentElement;
 
+        // Animasi masuk (.reveal) menyembunyikan konten lewat CSS dan baru
+        // memunculkannya dari JavaScript. Kalau berkas skripnya gagal dimuat,
+        // seluruh isi halaman ikut tak terlihat — padahal HTML-nya sudah utuh
+        // dari server. Karena itu penyembunyiannya baru berlaku setelah kelas
+        // ini terpasang, dan ada jaring pengaman yang membuka paksa apa pun
+        // yang masih tersembunyi beberapa saat setelah halaman selesai dimuat.
+        el.classList.add("js");
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            var sisa = document.querySelectorAll(".reveal:not(.in)");
+            for (var i = 0; i < sisa.length; i++) sisa[i].classList.add("in");
+          }, 2000);
+        });
+
         function apply(mode) {
           if (mode === "dark") {
             el.setAttribute("data-theme", "dark");
@@ -50,8 +122,13 @@ const themeStyle = theme?.primary
           stored = localStorage.getItem(KEY);
         } catch (e) {}
 
+        // Pemilik situs bisa mengunci tema lewat panel admin (themeMode).
+        // Pilihan pembaca tetap menang supaya tombol tema tidak terasa rusak.
+        var forced = el.getAttribute("data-theme-mode");
+        var locked = forced === "light" || forced === "dark";
+
         var mq = window.matchMedia("(prefers-color-scheme: dark)");
-        apply(stored || (mq.matches ? "dark" : "light"));
+        apply(stored || (locked ? forced : mq.matches ? "dark" : "light"));
 
         // Selama pembaca belum memilih sendiri, ikuti setelan sistem kalau
         // setelan itu berubah saat halaman terbuka.
@@ -60,7 +137,7 @@ const themeStyle = theme?.primary
           try {
             picked = localStorage.getItem(KEY);
           } catch (err) {}
-          if (!picked) apply(e.matches ? "dark" : "light");
+          if (!picked && !locked) apply(e.matches ? "dark" : "light");
         };
         if (mq.addEventListener) mq.addEventListener("change", onSystemChange);
         else if (mq.addListener) mq.addListener(onSystemChange);
@@ -79,14 +156,18 @@ const themeStyle = theme?.primary
       })();
     </script>
     <meta name="description" content={description} />
+    {keywords ? <meta name="keywords" content={keywords} /> : null}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+    <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href={fontHref} rel="stylesheet" />
+    <slot name="head" />
   </head>
-  <body style={themeStyle}>
+  <body style={themeStyle} class={bodyClass}>
     <slot />
   </body>
 </html>

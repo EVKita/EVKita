@@ -1,183 +1,420 @@
 ---
 import Base from "../../layouts/Base.astro";
-import ThemeToggle from "../../components/ThemeToggle.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
 import { readContent } from "../../lib/store";
 import { carSVG, defaultColor } from "../../lib/cars-ui.js";
 
-const { cars, site } = readContent();
+const content = readContent();
+const site = content.site;
 const slug = String(Astro.params.slug || "");
-const car = cars.find((c) => c.id === slug);
 
+const isLive = (v: any) => v && v.status !== "draft";
+const cars = (content.cars || []).filter(isLive);
+const car = cars.find((c: any) => c.id === slug);
+
+/**
+ * Slug motor sengaja dialihkan ke katalog dengan mode motor: halaman detail
+ * ini khusus mobil, dan memaksa 404 untuk tautan yang datanya jelas ada
+ * hanya akan terasa seperti situs rusak.
+ */
 if (!car) {
-  return Astro.redirect("/");
+  const motor = (content.motors || []).filter(isLive).find((m: any) => m.id === slug);
+  if (motor) {
+    return Astro.redirect(`/?mode=motor&q=${encodeURIComponent(motor.name)}#daftar`, 302);
+  }
+  // Kendaraan draft/terhapus harus menjawab 404 sungguhan supaya mesin
+  // pencari melepas URL-nya, bukan diam-diam dilempar ke beranda.
+  Astro.response.status = 404;
 }
 
-const media = [car.image, ...(car.gallery || [])].filter(Boolean);
+const lower = (s: any) => String(s || "").toLowerCase();
+const fmt = (v: any, unit: string) => (v !== null && v !== undefined && v !== "" ? `${v} ${unit}`.trim() : "");
 
-const lower = (s) => String(s).toLowerCase();
-const fmtRange = car.rangeKm != null ? `${car.rangeKm} km` : "—";
-const fmtBattery = car.batteryKwh != null ? `${car.batteryKwh} kWh` : "—";
-const fmtPower = car.powerHp != null ? `${car.powerHp} hp` : "—";
+const fmtRange = car ? fmt(car.rangeKm, "km") : "";
+const fmtBattery = car ? fmt(car.batteryKwh, "kWh") : "";
+const fmtPower = car ? fmt(car.powerHp, "hp") : "";
 
-const description =
-  car.description ||
-  `${car.brand} ${car.name} adalah mobil listrik ${lower(car.bodyType)} dengan jarak tempuh ${fmtRange}${car.rangeStandard ? " (" + car.rangeStandard + ")" : ""}, baterai ${fmtBattery}, dan tenaga ${fmtPower}.`;
+const media: string[] = car ? [car.image, ...(car.gallery || [])].filter(Boolean) : [];
 
-const highlights =
-  car.highlights && car.highlights.length
+const description = car
+  ? car.description ||
+    `${car.brand} ${car.name} adalah mobil listrik ${lower(car.bodyType)}${fmtRange ? ` dengan jarak tempuh ${fmtRange}` : ""}${car.rangeStandard ? ` (${car.rangeStandard})` : ""}${fmtBattery ? `, baterai ${fmtBattery}` : ""}${fmtPower ? `, dan tenaga ${fmtPower}` : ""}.`
+  : "";
+
+const highlights = car
+  ? car.highlights && car.highlights.length
     ? car.highlights
     : [
-        `${fmtRange} jarak tempuh${car.rangeStandard ? " (" + car.rangeStandard + ")" : ""}`,
-        `${fmtBattery} kapasitas baterai`,
-        `${fmtPower} tenaga maksimum`,
-        `${car.variants} varian tersedia`,
-      ];
+        fmtRange ? `${fmtRange} jarak tempuh${car.rangeStandard ? ` (${car.rangeStandard})` : ""}` : "",
+        fmtBattery ? `${fmtBattery} kapasitas baterai` : "",
+        fmtPower ? `${fmtPower} tenaga maksimum` : "",
+        car.variants ? `${car.variants} varian tersedia` : "",
+      ].filter(Boolean)
+  : [];
 
-const related = cars
-  .filter((c) => c.id !== car.id && (c.brand === car.brand || c.bodyType === car.bodyType))
-  .slice(0, 4);
+const related = car
+  ? cars
+      .filter((c: any) => c.id !== car.id && (c.brand === car.brand || c.bodyType === car.bodyType))
+      .slice(0, 4)
+  : [];
 
-const priceText = car.priceText || (car.price != null ? "Rp " + car.price : "Harga belum tersedia");
+const priceText = car ? car.priceText || (car.price != null ? "Rp " + Number(car.price).toLocaleString("id-ID") : "") : "";
+
+/** Baris spesifikasi baku; yang kosong dibuang sebelum dirender. */
+const specRows = car
+  ? [
+      ["Merek", car.brand],
+      ["Model", car.name],
+      ["Tipe bodi", car.bodyType],
+      ["Tahun", car.year],
+      ["Jarak tempuh", fmtRange ? `${fmtRange}${car.rangeStandard ? ` (${car.rangeStandard})` : ""}` : ""],
+      ["Kapasitas baterai", fmtBattery],
+      ["Tenaga", fmtPower],
+      ["Torsi", fmt(car.torqueNm, "Nm")],
+      ["Akselerasi 0–100 km/j", fmt(car.accelSec, "detik")],
+      ["Kecepatan puncak", fmt(car.topSpeedKph, "km/j")],
+      ["Penggerak", car.driveType],
+      ["Jumlah kursi", car.seats != null ? `${car.seats} kursi` : ""],
+      ["Pengisian cepat DC", fmt(car.chargeDcKw, "kW")],
+      ["Pengisian AC", fmt(car.chargeAcKw, "kW")],
+      ["Waktu pengisian", car.chargeTime],
+      ["Garansi", car.warranty],
+      ["Harga", priceText],
+      ...(car.specs || []).map((s: any) => [s.label, s.value]),
+    ].filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "")
+  : [];
+
+const stats = car
+  ? [
+      [fmtRange || "—", "Jarak tempuh"],
+      [fmtBattery || "—", "Baterai"],
+      [fmtPower || "—", "Tenaga"],
+      [
+        car.accelSec != null ? `${car.accelSec} dtk` : car.variants ? String(car.variants) : "—",
+        car.accelSec != null ? "0–100 km/j" : "Varian",
+      ],
+    ]
+  : [];
+
+const ogImage = car ? car.image || site.seoOgImage : site.seoOgImage;
+
+const jsonLd = car
+  ? {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: `${car.brand} ${car.name}`,
+      brand: { "@type": "Brand", name: car.brand },
+      description,
+      ...(media.length ? { image: media } : {}),
+      category: car.bodyType,
+      ...(car.price != null
+        ? {
+            offers: {
+              "@type": "Offer",
+              price: car.price,
+              priceCurrency: "IDR",
+              availability: "https://schema.org/InStock",
+            },
+          }
+        : {}),
+      additionalProperty: [
+        car.rangeKm != null ? { "@type": "PropertyValue", name: "Jarak tempuh", value: car.rangeKm, unitText: "km" } : null,
+        car.batteryKwh != null ? { "@type": "PropertyValue", name: "Kapasitas baterai", value: car.batteryKwh, unitText: "kWh" } : null,
+        car.powerHp != null ? { "@type": "PropertyValue", name: "Tenaga", value: car.powerHp, unitText: "hp" } : null,
+      ].filter(Boolean),
+    }
+  : null;
+
+const pageTitle = car ? `${car.brand} ${car.name} — ${site.brandText || "EVKita"}` : `Halaman tidak ditemukan — ${site.brandText || "EVKita"}`;
+const themeProps = {
+  primary: site.themePrimary,
+  secondary: site.themeSecondary,
+  radius: site.themeRadius,
+  font: site.themeFont,
+  mode: site.themeMode,
+};
 ---
 
 <Base
-  title={`${car.brand} ${car.name} — ${site.brandText}`}
-  description={car.tagline || description}
-  theme={{ primary: site.themePrimary, secondary: site.themeSecondary }}
+  title={pageTitle}
+  description={car ? car.tagline || description : "Halaman yang kamu cari tidak tersedia."}
+  keywords={car ? [car.brand, car.name, car.bodyType, ...(car.tags || [])].filter(Boolean).join(", ") : site.seoKeywords}
+  ogImage={ogImage}
+  ogType={car ? "product" : "website"}
+  theme={themeProps}
 >
-  <header class="masthead">
-    <div class="container masthead-inner">
-      <a href="/" class="logo">
-        <span class="logo-mark">EV</span>
-        <span class="logo-text">{site.brandText}<em>.com</em></span>
-      </a>
-      <nav class="main-nav">
-        <a href="/">Mobil Listrik</a>
-        <a href="/#spklu">SPKLU</a>
-        <a href="/#berita">Berita</a>
-        <a href="/#tentang">Tentang</a>
+  {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="mobil" />
+
+  {!car ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>Mobil tidak ditemukan</h1>
+      <p class="notfound-text">
+        Halaman ini mungkin sudah dihapus atau belum dipublikasikan. Coba cari lagi lewat katalog.
+      </p>
+      <a class="btn btn-primary" href="/#daftar">Buka katalog</a>
+    </main>
+  ) : (
+    <main class="container detail" id="konten">
+      <nav class="breadcrumb" aria-label="Remah roti">
+        <a href="/">Beranda</a>
+        <span aria-hidden="true">/</span>
+        <a href="/#daftar">Mobil Listrik</a>
+        <span aria-hidden="true">/</span>
+        <span class="breadcrumb-current">{car.brand} {car.name}</span>
       </nav>
-      <ThemeToggle />
-    </div>
-  </header>
 
-  <main class="container detail">
-    <a href="/" class="back-link">← Semua mobil</a>
-
-    <div class="detail-hero">
-      <div class="detail-media">
-        {car.video ? (
-          <div class="detail-main">
-            <video class="detail-video" src={car.video} poster={media[0] || undefined} controls muted loop playsinline preload="metadata"></video>
-          </div>
-        ) : media.length ? (
-          <>
+      <div class="detail-hero">
+        <div class="detail-media">
+          {car.video ? (
             <div class="detail-main">
-              <img id="detail-main-img" src={media[0]} alt={`${car.brand} ${car.name}`} />
+              <video class="detail-video" src={car.video} poster={media[0] || undefined} controls muted loop playsinline preload="metadata"></video>
             </div>
-            {media.length > 1 ? (
-              <div class="detail-thumbs">
-                {media.map((src) => (
-                  <button type="button" class="detail-thumb" data-src={src}>
-                    <img src={src} alt="" loading="lazy" />
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div class="detail-svg" set:html={carSVG(car, defaultColor(car))} />
-        )}
+          ) : media.length ? (
+            <button type="button" class="detail-main detail-main-btn" id="detailMainBtn" aria-label="Perbesar gambar">
+              <img id="detail-main-img" src={media[0]} alt={`${car.brand} ${car.name}`} />
+              <span class="zoom-hint" aria-hidden="true">⤢</span>
+            </button>
+          ) : (
+            <div class="detail-svg" set:html={carSVG(car, defaultColor(car))} />
+          )}
+
+          {media.length > 1 ? (
+            <div class="detail-thumbs">
+              {media.map((src, i) => (
+                <button type="button" class={`detail-thumb${i === 0 ? " active" : ""}`} data-src={src} data-index={i} aria-label={`Foto ${i + 1}`}>
+                  <img src={src} alt="" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div class="detail-info">
+          <div class="detail-info-top">
+            <div class="detail-brand">{car.brand}</div>
+            {car.featured ? <span class="badge badge-featured">Unggulan</span> : null}
+          </div>
+          <h1>{car.name}</h1>
+          {car.tagline ? <p class="detail-tagline">{car.tagline}</p> : null}
+
+          <div class="detail-price">
+            {priceText ? <span>{priceText}</span> : <span class="na">Harga belum tersedia</span>}
+            {priceText ? <span class="detail-price-note">mulai dari</span> : null}
+          </div>
+
+          <div class="detail-stats">
+            {stats.map(([n, l]) => (
+              <div class="dstat"><span class="num">{n}</span><span class="label">{l}</span></div>
+            ))}
+          </div>
+
+          <div class="detail-badges">
+            <span class="badge badge-accent">{car.bodyType}</span>
+            {car.year ? <span class="badge badge-muted">{car.year}</span> : null}
+            {car.driveType ? <span class="badge badge-muted">{car.driveType}</span> : null}
+            {car.stale ? <span class="badge badge-stale">Data lama</span> : null}
+          </div>
+
+          <div class="share-row">
+            <button type="button" class="btn btn-outline btn-sm" id="shareBtn" data-title={`${car.brand} ${car.name}`}>
+              Bagikan
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="copyBtn">Salin tautan</button>
+            <span class="share-status" id="shareStatus" role="status" aria-live="polite"></span>
+          </div>
+        </div>
       </div>
 
-      <div class="detail-info">
-        <div class="detail-brand">{car.brand}</div>
-        <h1>{car.name}</h1>
-        {car.tagline ? <p class="detail-tagline">{car.tagline}</p> : null}
+      {description ? (
+        <section class="detail-section">
+          <h2>Deskripsi</h2>
+          <p class="detail-text">{description}</p>
+        </section>
+      ) : null}
 
-        <div class="detail-price">
-          {car.price != null ? priceText : <span class="na">Harga belum tersedia</span>}
-          <span class="detail-price-note">mulai dari</span>
-        </div>
+      {highlights.length ? (
+        <section class="detail-section">
+          <h2>Keunggulan</h2>
+          <div class="highlights">
+            {highlights.map((h: string) => (
+              <div class="highlight"><span class="dot" aria-hidden="true">◆</span>{h}</div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
-        <div class="detail-stats">
-          <div class="dstat"><span class="num">{fmtRange}</span><span class="label">Jarak tempuh</span></div>
-          <div class="dstat"><span class="num">{fmtBattery}</span><span class="label">Baterai</span></div>
-          <div class="dstat"><span class="num">{fmtPower}</span><span class="label">Tenaga</span></div>
-          <div class="dstat"><span class="num">{car.variants}</span><span class="label">Varian</span></div>
-        </div>
+      {specRows.length ? (
+        <section class="detail-section">
+          <h2>Spesifikasi</h2>
+          <div class="spec-table">
+            {specRows.map(([k, v]) => (
+              <div class="spec-row"><span class="k">{k}</span><span class="v">{v}</span></div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
-        <div class="detail-badges">
-          <span class="card-body">{car.bodyType}</span>
-          {car.stale ? <span class="badge-stale">Data lama</span> : null}
-        </div>
-      </div>
+      {car.variantNames && car.variantNames.length ? (
+        <section class="detail-section">
+          <h2>Varian</h2>
+          <div class="variant-list">
+            {car.variantNames.map((v: string) => <span class="variant-pill">{v}</span>)}
+          </div>
+        </section>
+      ) : null}
+
+      {car.tags && car.tags.length ? (
+        <section class="detail-section">
+          <h2>Tag</h2>
+          <div class="tag-row">
+            {car.tags.map((t: string) => (
+              <a class="tag-pill" href={`/?q=${encodeURIComponent(t)}#daftar`}>#{t}</a>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {related.length ? (
+        <section class="detail-section">
+          <h2>Mobil terkait</h2>
+          <div class="related-grid">
+            {related.map((r: any) => (
+              <a class="related-card" href={`/mobil/${r.id}`}>
+                <div class="related-media">
+                  {r.image ? (
+                    <img src={r.image} alt="" loading="lazy" />
+                  ) : (
+                    <div class="related-svg" set:html={carSVG(r, defaultColor(r))} />
+                  )}
+                </div>
+                <span class="related-brand">{r.brand}</span>
+                <span class="related-name">{r.name}</span>
+                <span class="related-meta">
+                  {[r.bodyType, r.rangeKm != null ? `${r.rangeKm} km` : null].filter(Boolean).join(" · ")}
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </main>
+  )}
+
+  {car && media.length ? (
+    <div class="lightbox" id="lightbox" hidden>
+      <button type="button" class="lightbox-close" data-lb-close aria-label="Tutup">✕</button>
+      <button type="button" class="lightbox-nav prev" data-lb-prev aria-label="Sebelumnya">‹</button>
+      <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+      <button type="button" class="lightbox-nav next" data-lb-next aria-label="Berikutnya">›</button>
+      <div class="lightbox-count" id="lightboxCount"></div>
     </div>
+  ) : null}
 
-    <section class="detail-section">
-      <h2>Deskripsi</h2>
-      <p class="detail-text">{description}</p>
-    </section>
-
-    <section class="detail-section">
-      <h2>Keunggulan</h2>
-      <div class="highlights">
-        {highlights.map((h) => <div class="highlight"><span class="dot">◆</span>{h}</div>)}
-      </div>
-    </section>
-
-    <section class="detail-section">
-      <h2>Spesifikasi</h2>
-      <div class="spec-table">
-        <div class="spec-row"><span class="k">Merek</span><span class="v">{car.brand}</span></div>
-        <div class="spec-row"><span class="k">Model</span><span class="v">{car.name}</span></div>
-        <div class="spec-row"><span class="k">Tipe bodi</span><span class="v">{car.bodyType}</span></div>
-        <div class="spec-row"><span class="k">Jarak tempuh</span><span class="v">{fmtRange}{car.rangeStandard ? ` (${car.rangeStandard})` : ""}</span></div>
-        <div class="spec-row"><span class="k">Kapasitas baterai</span><span class="v">{fmtBattery}</span></div>
-        <div class="spec-row"><span class="k">Tenaga</span><span class="v">{fmtPower}</span></div>
-        <div class="spec-row"><span class="k">Harga</span><span class="v">{priceText}</span></div>
-      </div>
-    </section>
-
-    <section class="detail-section">
-      <h2>Varian</h2>
-      <div class="variant-list">
-        {(car.variantNames && car.variantNames.length ? car.variantNames : ["Standard"]).map((v) => (
-          <span class="variant-pill">{v}</span>
-        ))}
-      </div>
-    </section>
-
-    {related.length ? (
-      <section class="detail-section">
-        <h2>Mobil terkait</h2>
-        <div class="related-grid">
-          {related.map((r) => (
-            <a class="related-card" href={`/mobil/${r.id}`}>
-              <span class="related-brand">{r.brand}</span>
-              <span class="related-name">{r.name}</span>
-              <span class="related-meta">{r.bodyType} · {r.rangeKm != null ? r.rangeKm + " km" : "—"}</span>
-            </a>
-          ))}
-        </div>
-      </section>
-    ) : null}
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p><strong>{site.footerTitle}</strong> — {site.footerDesc}</p>
-      <p><a href={site.footerSourceUrl} target="_blank" rel="noopener">{site.footerSourceText}</a></p>
-      <p class="fine">{site.footerNote}</p>
-    </div>
-  </footer>
+  <SiteFooter site={site} base="/" />
 
   <script>
-    document.querySelectorAll(".detail-thumb").forEach((t) => {
-      t.addEventListener("click", () => {
-        const main = document.getElementById("detail-main-img");
-        if (main && t.dataset.src) main.src = t.dataset.src;
-      });
-    });
+    // Galeri + lightbox sederhana. Sumber gambar dibaca dari tombol thumbnail
+    // yang sudah dirender server, jadi tidak ada data yang perlu disuntik.
+    (function () {
+      const thumbs = Array.from(document.querySelectorAll<HTMLButtonElement>(".detail-thumb"));
+      const mainImg = document.getElementById("detail-main-img") as HTMLImageElement | null;
+      const lb = document.getElementById("lightbox");
+      const lbImg = document.getElementById("lightboxImg") as HTMLImageElement | null;
+      const lbCount = document.getElementById("lightboxCount");
+
+      const sources = thumbs.length
+        ? thumbs.map((t) => t.dataset.src || "")
+        : mainImg
+          ? [mainImg.src]
+          : [];
+      let index = 0;
+
+      function select(i: number) {
+        if (!sources.length) return;
+        index = (i + sources.length) % sources.length;
+        if (mainImg) mainImg.src = sources[index];
+        thumbs.forEach((t, n) => t.classList.toggle("active", n === index));
+        if (lbImg) lbImg.src = sources[index];
+        if (lbCount) lbCount.textContent = `${index + 1} / ${sources.length}`;
+      }
+
+      thumbs.forEach((t, i) =>
+        t.addEventListener("click", () => {
+          select(i);
+        })
+      );
+
+      function openLb() {
+        if (!lb || !sources.length) return;
+        select(index);
+        lb.hidden = false;
+        document.body.classList.add("modal-open");
+      }
+      function closeLb() {
+        if (!lb) return;
+        lb.hidden = true;
+        document.body.classList.remove("modal-open");
+      }
+
+      const mainBtn = document.getElementById("detailMainBtn");
+      if (mainBtn) mainBtn.addEventListener("click", openLb);
+
+      if (lb) {
+        lb.addEventListener("click", (e) => {
+          const t = e.target as HTMLElement;
+          if (t.closest("[data-lb-close]") || t === lb) closeLb();
+          else if (t.closest("[data-lb-prev]")) select(index - 1);
+          else if (t.closest("[data-lb-next]")) select(index + 1);
+        });
+        document.addEventListener("keydown", (e) => {
+          if (lb.hidden) return;
+          if (e.key === "Escape") closeLb();
+          if (e.key === "ArrowLeft") select(index - 1);
+          if (e.key === "ArrowRight") select(index + 1);
+        });
+      }
+
+      // Bagikan / salin tautan
+      const status = document.getElementById("shareStatus");
+      const say = (msg: string) => {
+        if (!status) return;
+        status.textContent = msg;
+        setTimeout(() => {
+          if (status.textContent === msg) status.textContent = "";
+        }, 2500);
+      };
+
+      const copy = async () => {
+        try {
+          await navigator.clipboard.writeText(location.href);
+          say("Tautan disalin ✓");
+        } catch {
+          say("Gagal menyalin tautan");
+        }
+      };
+
+      const copyBtn = document.getElementById("copyBtn");
+      if (copyBtn) copyBtn.addEventListener("click", copy);
+
+      const shareBtn = document.getElementById("shareBtn");
+      if (shareBtn) {
+        shareBtn.addEventListener("click", async () => {
+          const title = shareBtn.dataset.title || document.title;
+          if (navigator.share) {
+            try {
+              await navigator.share({ title, url: location.href });
+              return;
+            } catch {
+              // Pembatalan oleh pengguna bukan kegagalan — jatuh ke salin tautan.
+            }
+          }
+          copy();
+        });
+      }
+    })();
   </script>
 </Base>
