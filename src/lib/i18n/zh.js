@@ -572,6 +572,9 @@ export default {
   "err.userNotFound": "找不到该用户。",
   "err.lastOwner": "至少需要保留一位所有者。",
   "err.uploadNoFile": "没有收到图片文件。",
+  "err.uploadTooBig": "文件太大。上限为 {mb} MB。",
+  "err.uploadNotImage": "该文件不是可读取的图片。请换一个文件。",
+  "err.contentTooBig": "内容太大，无法保存。上限为 {mb} MB。",
   "err.uploadType": "不支持 {type} 类型的文件。请使用 JPG、PNG、WebP 或 GIF。",
 
   /* ---------- Tambahan editor & umum ---------- */

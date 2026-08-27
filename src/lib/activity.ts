@@ -1,6 +1,6 @@
-import fs from "node:fs";
 import path from "node:path";
 import type { User } from "./users";
+import { readJson, writeJsonAtomic } from "./jsonfile";
 
 /**
  * Log aktivitas panel admin: siapa mengubah apa, kapan.
@@ -40,14 +40,27 @@ export interface ActivityEntry {
 }
 
 export function listActivity(limit = 50): ActivityEntry[] {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(FILE(), "utf8"));
-    const list = Array.isArray(parsed) ? parsed : parsed?.entries;
-    if (!Array.isArray(list)) return [];
-    return list.slice(0, Math.max(0, limit));
-  } catch {
-    return [];
-  }
+  const res = readJson<any>(FILE());
+  if (res.status !== "ok") return [];
+  const list = Array.isArray(res.data) ? res.data : res.data?.entries;
+  if (!Array.isArray(list)) return [];
+  return list.slice(0, Math.max(0, limit));
+}
+
+/**
+ * Memindahkan log yang penuh ke berkas arsip per bulan, bukan membuangnya.
+ *
+ * Batas 200 entri masuk akal untuk menjaga ukuran berkas, tapi begitu ada
+ * pencatatan yang ramai — percobaan masuk yang gagal, misalnya — jejak audit
+ * yang sesungguhnya bisa terkubur dalam hitungan menit.
+ */
+function archive(entries: ActivityEntry[]): void {
+  if (!entries.length) return;
+  const month = String(entries[0].at || "").slice(0, 7) || "arsip";
+  const file = path.join(DATA_DIR(), `activity-${month}.json`);
+  const before = readJson<any>(file);
+  const existing = before.status === "ok" && Array.isArray(before.data?.entries) ? before.data.entries : [];
+  writeJsonAtomic(file, { version: 1, entries: [...entries, ...existing].slice(0, 5000) });
 }
 
 export function logActivity(
@@ -64,9 +77,11 @@ export function logActivity(
       action,
       meta,
     };
-    const entries = [entry, ...listActivity(MAX_ENTRIES)].slice(0, MAX_ENTRIES);
-    fs.mkdirSync(DATA_DIR(), { recursive: true });
-    fs.writeFileSync(FILE(), JSON.stringify({ version: 1, entries }, null, 2), "utf8");
+    const all = [entry, ...listActivity(MAX_ENTRIES + 1)];
+    const entries = all.slice(0, MAX_ENTRIES);
+    const overflow = all.slice(MAX_ENTRIES);
+    if (overflow.length) archive(overflow);
+    writeJsonAtomic(FILE(), { version: 1, entries });
   } catch {
     // Pencatatan bersifat best-effort — kegagalannya tidak boleh menggagalkan aksi utama.
   }

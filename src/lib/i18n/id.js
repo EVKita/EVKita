@@ -578,6 +578,9 @@ export default {
   "err.userNotFound": "Pengguna tidak ditemukan.",
   "err.lastOwner": "Harus ada minimal satu pemilik.",
   "err.uploadNoFile": "Tidak ada berkas gambar yang dikirim.",
+  "err.uploadTooBig": "Berkas terlalu besar. Maksimal {mb} MB.",
+  "err.uploadNotImage": "Isi berkas itu bukan gambar yang bisa dibaca. Coba berkas lain.",
+  "err.contentTooBig": "Data konten terlalu besar untuk disimpan. Maksimal {mb} MB.",
   "err.uploadType": "Tipe berkas {type} tidak didukung. Pakai JPG, PNG, WebP, atau GIF.",
 
   /* ---------- Tambahan editor & umum ---------- */

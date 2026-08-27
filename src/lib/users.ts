@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
-import fs from "node:fs";
 import path from "node:path";
 import { getEnv } from "./env";
+import { readJson, writeJsonAtomic } from "./jsonfile";
 
 /**
  * Penyimpanan pengguna panel admin.
@@ -124,21 +124,50 @@ function normalizeUser(raw: any): User {
   };
 }
 
+/**
+ * Dinaikkan kalau berkas akun ADA tapi tidak terbaca. Nilainya sengaja disimpan
+ * di modul, bukan dilempar dari `readFile()`: hampir semua pemanggil hanya
+ * ingin daftar akun, dan yang berhak memutuskan "berhenti" cuma jalur tulis.
+ */
+let usersFileCorrupt = "";
+
 function readFile(): User[] {
-  try {
-    const raw = fs.readFileSync(USERS_FILE(), "utf8");
-    const parsed = JSON.parse(raw);
-    const list = Array.isArray(parsed) ? parsed : parsed?.users;
-    if (!Array.isArray(list)) return [];
-    return list.map(normalizeUser).filter((u) => u.username && u.password);
-  } catch {
+  const res = readJson<any>(USERS_FILE());
+
+  if (res.status === "corrupt") {
+    // JANGAN mengembalikan daftar kosong diam-diam. "Kosong" akan memicu
+    // seedFromEnv() dan menulis ulang berkasnya berisi satu akun saja —
+    // seluruh akun lain lenyap tanpa satu pun pesan.
+    usersFileCorrupt = res.error;
+    console.error(
+      `[evkita] data/users.json ada tapi tidak bisa dibaca (${res.error}). ` +
+        `Semua penulisan akun dihentikan supaya berkasnya tidak tertimpa. ` +
+        `Pulihkan dari .backup-* lalu jalankan ulang aplikasi.`
+    );
     return [];
   }
+
+  usersFileCorrupt = "";
+  if (res.status === "missing") return [];
+
+  const list = Array.isArray(res.data) ? res.data : res.data?.users;
+  if (!Array.isArray(list)) return [];
+  return list.map(normalizeUser).filter((u) => u.username && u.password);
+}
+
+/** Berkas akun sedang rusak? Selama benar, tidak ada yang boleh menulisinya. */
+export function usersFileIsUnreadable(): boolean {
+  readFile();
+  return usersFileCorrupt !== "";
 }
 
 function writeFile(users: User[]): void {
-  fs.mkdirSync(DATA_DIR(), { recursive: true });
-  fs.writeFileSync(USERS_FILE(), JSON.stringify({ version: 1, users }, null, 2), "utf8");
+  if (usersFileCorrupt) {
+    throw new Error(
+      `data/users.json tidak terbaca (${usersFileCorrupt}); penulisan dibatalkan agar isinya tidak hilang.`
+    );
+  }
+  writeJsonAtomic(USERS_FILE(), { version: 1, users });
 }
 
 /**
@@ -183,6 +212,10 @@ function seedFromEnv(): User[] {
 export function listUsers(): User[] {
   const existing = readFile();
   if (existing.length) return existing;
+  // Pemindahan dari .env hanya untuk berkas yang memang belum pernah ada.
+  // Berkas yang rusak tidak boleh memicunya — itu persis skenario kehilangan
+  // data yang dijaga readFile() di atas.
+  if (usersFileCorrupt) return [];
   return seedFromEnv();
 }
 
@@ -209,7 +242,11 @@ export function listPublicUsers(): PublicUser[] {
  * berkas yang benar-benar ada di disk.
  */
 export function hasAnyUser(): boolean {
-  return readFile().length > 0;
+  const found = readFile().length > 0;
+  // Berkas yang rusak dihitung SEBAGAI ADA. Kalau tidak, satu berkas akun yang
+  // terpotong akan membuka kembali wizard pemasangan untuk publik — tepat pada
+  // saat pemilik paling tidak berdaya.
+  return found || usersFileCorrupt !== "";
 }
 
 export function findById(id: string): User | null {

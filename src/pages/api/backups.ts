@@ -29,8 +29,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const snapshot = readBackup(name);
   if (!snapshot) return apiError("backups.failTitle", 404);
 
-  // writeContent mencadangkan isi saat ini lebih dulu, jadi pemulihan pun bisa dibatalkan.
-  const content = writeContent(snapshot);
+  // Pemulihan SELALU mencadangkan isi saat ini lebih dulu, mengabaikan jeda
+  // antar-cadangan — kalau tidak, memulihkan versi yang salah tidak bisa
+  // dibatalkan karena isi sebelumnya tidak pernah tersimpan.
+  const content = writeContent(snapshot, { snapshotAlways: true });
   logActivity(me, "backup.restore", { name });
   return json({ ok: true, content });
 };

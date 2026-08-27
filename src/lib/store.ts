@@ -1,10 +1,27 @@
 import fs from "node:fs";
 import path from "node:path";
+import { readJson, writeJsonAtomic } from "./jsonfile";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "content.json");
 const BACKUP_DIR = path.join(DATA_DIR, "backups");
-const MAX_BACKUPS = 20;
+
+/**
+ * Jarak minimum antar cadangan otomatis.
+ *
+ * Panel menyimpan otomatis 1,2 detik setelah ketikan berhenti, dan dulu SETIAP
+ * penyimpanan membuat satu cadangan dengan batas 20 berkas. Akibatnya mengisi
+ * 20 field pada satu mobil — pekerjaan lima menit — sudah cukup untuk menghapus
+ * seluruh cadangan yang dibuat sebelum sesi itu dimulai. Jaring pengaman yang
+ * dirancang menyelamatkan "satu kesalahan simpan" justru paling rapuh persis
+ * ketika ia dibutuhkan: 20 cadangan tersisa berisi kesalahan yang sama.
+ */
+const SNAPSHOT_MIN_GAP_MS = 10 * 60 * 1000;
+
+/** Berapa cadangan terbaru yang selalu disimpan, seberapa pun rapatnya. */
+const KEEP_RECENT = 10;
+/** Berapa hari ke belakang yang disimpan satu cadangan per harinya. */
+const KEEP_DAYS = 14;
 
 /**
  * Skema `site` sengaja datar (satu level, semua string) supaya form admin bisa
@@ -261,34 +278,88 @@ function normalize(content: any): any {
 }
 
 export function readContent(): any {
+  const res = readJson<any>(DATA_FILE);
+  if (res.status === "ok") return normalize(res.data);
+  if (res.status === "corrupt") {
+    console.error(
+      `[evkita] data/content.json ada tapi tidak bisa dibaca (${res.error}). ` +
+        `Situs tampil kosong sampai berkasnya dipulihkan dari data/backups/.`
+    );
+  }
+  return normalize({});
+}
+
+function backupNames(): string[] {
   try {
-    let raw = fs.readFileSync(DATA_FILE, "utf8");
-    if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1);
-    return normalize(JSON.parse(raw));
+    return fs
+      .readdirSync(BACKUP_DIR)
+      .filter((f) => f.startsWith("content-") && f.endsWith(".json"))
+      .sort();
   } catch {
-    return normalize({});
+    return [];
   }
 }
 
 /**
- * Menyimpan salinan konten lama sebelum ditimpa. Panel admin sekarang bisa
- * mengubah banyak hal sekaligus, jadi satu kesalahan simpan tidak boleh
- * berarti kehilangan data permanen.
+ * Menyisakan cadangan yang benar-benar berguna, bukan sekadar yang terbaru.
+ *
+ * Dua lapis: sepuluh cadangan terakhir (untuk membatalkan kesalahan yang baru
+ * saja terjadi), ditambah satu cadangan per hari selama dua minggu (untuk
+ * pertanyaan "seperti apa isinya Selasa lalu?"). Tanpa lapis kedua, satu sesi
+ * penyuntingan panjang tetap akan mengubur seluruh riwayat.
  */
-function snapshot(): void {
+function prune(): void {
+  const files = backupNames();
+  const keep = new Set<string>();
+
+  const newestFirst = [...files].reverse();
+  for (const f of newestFirst.slice(0, KEEP_RECENT)) keep.add(f);
+
+  const days = new Set<string>();
+  for (const f of newestFirst) {
+    // "content-2026-08-27T06-02-52-293Z.json" -> "2026-08-27"
+    const day = f.slice(8, 18);
+    if (days.has(day)) continue;
+    if (days.size >= KEEP_DAYS) break;
+    days.add(day);
+    keep.add(f);
+  }
+
+  for (const f of files) {
+    if (keep.has(f)) continue;
+    try {
+      fs.unlinkSync(path.join(BACKUP_DIR, f));
+    } catch {
+      /* sudah hilang duluan */
+    }
+  }
+}
+
+/**
+ * Menyimpan salinan konten lama sebelum ditimpa.
+ *
+ * `force` dipakai jalur pemulihan cadangan: memulihkan harus SELALU menyisakan
+ * jejak isi sebelumnya, berapa pun jaraknya dari cadangan terakhir — kalau
+ * tidak, pemulihan yang salah sasaran tidak bisa dibatalkan.
+ */
+function snapshot(force = false): void {
   try {
     if (!fs.existsSync(DATA_FILE)) return;
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
+
+    if (!force) {
+      const latest = backupNames().pop();
+      if (latest) {
+        const age = Date.now() - fs.statSync(path.join(BACKUP_DIR, latest)).mtimeMs;
+        // Autosave beruntun tidak menghasilkan cadangan baru. Isi terakhir
+        // tetap aman: content.json sendiri yang menyimpannya.
+        if (age < SNAPSHOT_MIN_GAP_MS) return;
+      }
+    }
+
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     fs.copyFileSync(DATA_FILE, path.join(BACKUP_DIR, `content-${stamp}.json`));
-
-    const files = fs
-      .readdirSync(BACKUP_DIR)
-      .filter((f) => f.startsWith("content-") && f.endsWith(".json"))
-      .sort();
-    for (const f of files.slice(0, Math.max(0, files.length - MAX_BACKUPS))) {
-      fs.unlinkSync(path.join(BACKUP_DIR, f));
-    }
+    prune();
   } catch {
     // Cadangan bersifat best-effort — kegagalannya tidak boleh menggagalkan simpan.
   }
@@ -312,18 +383,14 @@ export function listBackups(): { name: string; size: number; time: string }[] {
 
 export function readBackup(name: string): any | null {
   if (!/^content-[\w.-]+\.json$/.test(name)) return null;
-  try {
-    const raw = fs.readFileSync(path.join(BACKUP_DIR, name), "utf8");
-    return normalize(JSON.parse(raw));
-  } catch {
-    return null;
-  }
+  const res = readJson<any>(path.join(BACKUP_DIR, name));
+  return res.status === "ok" ? normalize(res.data) : null;
 }
 
-export function writeContent(content: any): any {
+export function writeContent(content: any, options: { snapshotAlways?: boolean } = {}): any {
   const normalized = normalize(content);
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  snapshot();
-  fs.writeFileSync(DATA_FILE, JSON.stringify(normalized, null, 2), "utf8");
+  snapshot(options.snapshotAlways === true);
+  writeJsonAtomic(DATA_FILE, normalized);
   return normalized;
 }

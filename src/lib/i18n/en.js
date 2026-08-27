@@ -573,6 +573,9 @@ export default {
   "err.userNotFound": "User not found.",
   "err.lastOwner": "There must be at least one owner.",
   "err.uploadNoFile": "No image file was sent.",
+  "err.uploadTooBig": "That file is too large. The limit is {mb} MB.",
+  "err.uploadNotImage": "That file is not a readable image. Try a different one.",
+  "err.contentTooBig": "The content is too large to save. The limit is {mb} MB.",
   "err.uploadType": "File type {type} is not supported. Use JPG, PNG, WebP, or GIF.",
 
   /* ---------- Tambahan editor & umum ---------- */
