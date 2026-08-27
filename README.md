@@ -7,6 +7,12 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
 - Halaman utama: daftar mobil listrik dengan pencarian, filter, pengurutan, gambar siluet yang bisa diganti warna, dan pemilih varian.
 - CMS admin di `/admin`:
   - Login admin (username + password, session cookie bertanda tangan HMAC).
+  - **Banyak pengguna dengan tiga peran** (Pemilik / Admin / Editor), masing-masing
+    dengan profil sendiri: nama, foto, email, dan ganti kata sandi.
+  - **Tiga bahasa antarmuka**: Indonesia (bawaan), Inggris, dan Mandarin —
+    bisa diganti seketika tanpa memuat ulang halaman.
+  - Dasbor dengan sapaan personal, skor kelengkapan data, aksi cepat, dan
+    log aktivitas (siapa mengubah apa, kapan).
   - Kelola semua konten: mobil, motor listrik, SPKLU, bengkel, berita.
   - Tambah / edit / hapus model mobil &amp; motor (merek, tipe bodi, spesifikasi, varian, warna, harga, video).
   - Upload gambar per mobil (disimpan di `data/uploads/` dan disajikan lewat `/api/uploads/...`); mobil tanpa gambar memakai siluet yang bisa diganti warna.
@@ -19,11 +25,16 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
 ├── astro.config.mjs
 ├── package.json
 ├── .env                     (dibuat otomatis oleh wizard /install)
+├── tools/i18n-check.mjs     (penjaga sinkronisasi terjemahan)
 ├── data/
-│   └── content.json         (data konten yang dikelola CMS)
+│   ├── content.json         (data konten yang dikelola CMS)
+│   ├── users.json           (akun panel, kata sandi ter-hash scrypt)
+│   └── activity.json        (log aktivitas panel)
 └── src/
     ├── layouts/Base.astro
-    ├── lib/auth.ts          (session & password)
+    ├── lib/auth.ts          (session bertanda tangan + identitas pengguna)
+    ├── lib/users.ts         (akun, peran, hash kata sandi)
+    ├── lib/i18n/            (kamus id / en / zh + runtime terjemahan)
     ├── lib/store.ts         (baca/tulis content.json)
     ├── pages/
     │   ├── index.astro
@@ -158,5 +169,7 @@ Halaman **Admin → Pembaruan** (`/admin/update`) menampilkan daftar rilis GitHu
 - `data/content.json` menyimpan seluruh konten dan ditulis ulang setiap penyimpanan.
 - Autentikasi memakai cookie httpOnly bertanda tangan HMAC dengan `SESSION_SECRET`.
 - Aplikasi tidak punya kredensial bawaan: sebelum wizard `/install` dijalankan, login admin selalu ditolak dan cookie sesi apa pun dianggap tidak sah.
+- Kata sandi disimpan sebagai hash `scrypt` di `data/users.json`, bukan teks polos di `.env`. Pemasangan lama dipindahkan otomatis sekali jalan saat aplikasi pertama kali dijalankan setelah pembaruan ini — tidak perlu instal ulang, tapi semua orang harus login sekali lagi karena bentuk token sesinya berubah.
+- Pembatasan peran diberlakukan **di server** (`can(user, ...)`), bukan hanya disembunyikan di antarmuka: Editor benar-benar ditolak saat memanggil `/api/users`, `/api/backups`, dan `/api/update`.
 - Cookie sesi dikirim dengan flag `Secure` saat diakses lewat HTTPS.
 - Untuk skala lebih besar, pertimbangkan memindahkan penyimpanan ke database.

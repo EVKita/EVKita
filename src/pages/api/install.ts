@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import fs from "node:fs";
 import path from "node:path";
 import { isInstalled, writeEnvFile, getEnv } from "../../lib/env";
+import { createUser, PASSWORD_MIN } from "../../lib/users";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -48,16 +49,26 @@ export const POST: APIRoute = async ({ request }) => {
   const secret = String(body?.secret || "").trim();
 
   if (username.length < 3) return json({ ok: false, error: "Username minimal 3 karakter." }, 400);
-  if (password.length < 8) return json({ ok: false, error: "Password minimal 8 karakter." }, 400);
+  if (password.length < PASSWORD_MIN) {
+    return json({ ok: false, error: `Password minimal ${PASSWORD_MIN} karakter.` }, 400);
+  }
   if (secret.length < 16) return json({ ok: false, error: "Kunci keamanan minimal 16 karakter." }, 400);
 
+  // Kata sandi TIDAK ikut ke .env lagi. Akun pertama langsung dibuat di
+  // data/users.json dengan kata sandi ter-hash; .env hanya menyimpan kunci
+  // sesi dan setelan server.
   writeEnvFile({
-    ADMIN_USERNAME: username,
-    ADMIN_PASSWORD: password,
     SESSION_SECRET: secret,
     GITHUB_REPO: getEnv("GITHUB_REPO", "EVKita/EVKita"),
     PORT: getEnv("PORT", "4321"),
     HOST: getEnv("HOST", "127.0.0.1"),
+  });
+
+  createUser({
+    username,
+    password,
+    name: username.charAt(0).toUpperCase() + username.slice(1),
+    role: "owner",
   });
 
   return json({ ok: true });

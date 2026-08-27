@@ -2335,8 +2335,10 @@
   transition: border-color var(--adm-t), background var(--adm-t), color var(--adm-t);
 }
 
+/* --dz-text diisi admin.js sesuai bahasa panel; nilai bawaannya dipakai kalau
+   JavaScript belum sempat berjalan. */
 .dropzone:empty::after {
-  content: "Klik atau seret gambar ke sini";
+  content: var(--dz-text, "Klik atau seret gambar ke sini");
 }
 
 .dropzone:hover {
@@ -4074,4 +4076,561 @@ body:has(.modal-backdrop.open) .fab {
 
 .admin-ui .view-switch {
   flex-shrink: 0;
+}
+
+/* =========================================================================
+   20. Akun: bahasa, profil, pengguna, sapaan dasbor
+
+   Bagian ini menemani panel multibahasa dan multi-pengguna. Ukuran teks
+   sengaja tidak dikunci di piksel mati untuk label yang diterjemahkan —
+   Bahasa Inggris kira-kira 15% lebih panjang dari Bahasa Indonesia, dan
+   Mandarin jauh lebih pendek, jadi semua yang berisi terjemahan diberi
+   ruang tumbuh (flex-wrap, min-width: 0) alih-alih lebar tetap.
+   ========================================================================= */
+
+/* --- Pemilih bahasa --- */
+.lang-menu {
+  position: relative;
+}
+
+.lang-toggle {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.lang-switch {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  display: none;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r);
+  box-shadow: var(--adm-shadow-md);
+}
+
+.lang-menu.open .lang-switch {
+  display: flex;
+}
+
+.lang-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--adm-r-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--adm-t);
+}
+
+.lang-opt:hover {
+  background: var(--adm-hover);
+}
+
+.lang-opt.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink, var(--accent));
+  font-weight: 700;
+}
+
+.lang-short {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 26px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--adm-surface-2);
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.lang-opt.active .lang-short {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* Di halaman masuk pemilih bahasa tampil mendatar, bukan sebagai menu. */
+.lang-switch-inline {
+  position: static;
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+  padding: 4px;
+  gap: 2px;
+}
+
+.lang-switch-inline .lang-label {
+  display: none;
+}
+
+.login-top {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Avatar --- */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--accent-grad);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-lg {
+  width: 60px;
+  height: 60px;
+  font-size: 20px;
+}
+
+/* --- Cip akun di bilah atas --- */
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 180px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--adm-t), border-color var(--adm-t);
+}
+
+.account-chip:hover {
+  background: var(--adm-hover);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.account-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Titik penanda di sidebar (mis. pembaruan tersedia) --- */
+.nav-item-dot {
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: var(--accent);
+  flex: none;
+}
+
+/* =========================================================================
+   Sapaan dasbor
+   ========================================================================= */
+
+.hello-card {
+  position: relative;
+  margin-bottom: var(--adm-gap);
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 62%),
+    var(--bg-card);
+  box-shadow: var(--adm-shadow-sm);
+  overflow: hidden;
+}
+
+.hello-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.hello-avatar {
+  flex: none;
+}
+
+.hello-text {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.hello-eyebrow {
+  margin: 0 0 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.hello-title {
+  margin: 0 0 6px;
+  font-size: clamp(20px, 2.4vw, 27px);
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  line-height: 1.2;
+}
+
+.hello-sub {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* --- Cincin skor kelengkapan --- */
+.hello-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+}
+
+.score-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  border-radius: 999px;
+  /* --pct diisi dari JavaScript; nilainya persentase kelengkapan data. */
+  background: conic-gradient(
+    var(--accent) calc(var(--pct, 0) * 1%),
+    color-mix(in srgb, var(--text) 10%, transparent) 0
+  );
+}
+
+.score-ring::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 999px;
+  background: var(--bg-card);
+}
+
+.score-ring span {
+  position: relative;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+}
+
+.score-text strong {
+  font-weight: 700;
+}
+
+/* --- Aksi cepat --- */
+.hello-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.hello-actions-label {
+  margin-right: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.quick-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--adm-t), border-color var(--adm-t), transform var(--adm-t);
+}
+
+.quick-action svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  opacity: 0.75;
+}
+
+.quick-action:hover {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  color: var(--accent-ink, var(--accent));
+  transform: translateY(-1px);
+}
+
+.quick-action-link {
+  margin-left: auto;
+}
+
+@media (max-width: 720px) {
+  .hello-score {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  /* Label mengambil satu baris penuh: kalau ikut mengalir bersama tombol,
+     baris pertama jadi lebih pendek dari sisanya dan terlihat berantakan. */
+  .hello-actions-label {
+    flex: 1 0 100%;
+    margin-right: 0;
+  }
+
+  .quick-action-link {
+    margin-left: 0;
+  }
+}
+
+/* =========================================================================
+   Log aktivitas
+   ========================================================================= */
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-item:last-child {
+  border-bottom: 0;
+}
+
+.activity-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.activity-body {
+  min-width: 0;
+}
+
+.activity-text {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* =========================================================================
+   Halaman Profil Saya
+   ========================================================================= */
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: var(--adm-gap);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  background:
+    radial-gradient(120% 160% at 100% 0%, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 60%),
+    var(--bg-card);
+  flex-wrap: wrap;
+}
+
+.profile-hero-text {
+  min-width: 0;
+}
+
+.profile-hero-text h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.profile-hero-text p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.profile-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* Tiap kartu di halaman profil adalah formulir tersendiri: gagal di satu
+   bagian tidak membatalkan bagian lain yang sudah benar. Karena kartunya lebih
+   dari satu, baris tombolnya TIDAK boleh memakai bilah lengket seperti di
+   Pengaturan Situs — tiga bilah mengambang sekaligus akan menutupi isi. */
+.view[data-view="profile"] .form-actions {
+  position: static;
+  margin-top: 16px;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Tiap kartu di halaman profil adalah formulir tersendiri: gagal di satu
+   bagian tidak membatalkan bagian lain yang sudah benar. */
+.view[data-view="profile"] .form-section {
+  margin-bottom: var(--adm-gap);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  background: var(--bg-card);
+}
+
+.view[data-view="profile"] .form-section:last-child {
+  margin-bottom: 0;
+}
+
+/* =========================================================================
+   Halaman Pengguna
+   ========================================================================= */
+
+.role-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin-bottom: var(--adm-gap);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  background: var(--adm-surface);
+}
+
+.role-legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.role-legend-item .row-meta {
+  min-width: 0;
+  line-height: 1.5;
+}
+
+.badge-role-owner {
+  background: var(--accent-soft);
+  color: var(--accent-ink, var(--accent));
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.badge-role-admin {
+  background: color-mix(in srgb, var(--adm-ok) 14%, transparent);
+  color: var(--adm-ok);
+  border-color: color-mix(in srgb, var(--adm-ok) 32%, transparent);
+}
+
+.badge-role-editor {
+  background: var(--adm-surface-2);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.row-thumb-avatar {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+}
+
+.row-you {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* =========================================================================
+   Kepadatan tampilan (preferensi per pengguna)
+   ========================================================================= */
+
+.admin-app.density-compact {
+  --adm-gap: 11px;
+}
+
+.density-compact .item-row {
+  padding-block: 6px;
+}
+
+.density-compact .stat-card {
+  padding: 11px 13px;
+}
+
+.density-compact .stat-num {
+  font-size: 21px;
+}
+
+.density-compact .panel-body {
+  padding: 12px 14px;
+}
+
+.density-compact .hello-card {
+  padding: 16px;
 }

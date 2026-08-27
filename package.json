@@ -5,9 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node tools/i18n-check.mjs && astro build",
     "preview": "astro preview",
-    "start": "node ./dist/server/entry.mjs"
+    "start": "node ./dist/server/entry.mjs",
+    "i18n:check": "node tools/i18n-check.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^9.1.0",

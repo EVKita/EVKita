@@ -2,22 +2,37 @@
 import Base from "../../layouts/Base.astro";
 import AdminSidebar from "../../components/AdminSidebar.astro";
 import "../../styles/admin.css";
-import { isAuthed } from "../../lib/auth";
+import { currentUser } from "../../lib/auth";
+import { makeT, localeMeta, LOCALES } from "../../lib/i18n/index.js";
 
-if (!isAuthed(Astro.cookies)) {
+const me = currentUser(Astro.cookies);
+if (!me) {
   return Astro.redirect("/admin/login");
 }
+
+/**
+ * Bahasa panel diambil dari profil pengguna, bukan dari cookie: cookie hanya
+ * cerminan supaya halaman lain yang tidak mengenal sesi tetap tahu bahasanya.
+ * Dengan begitu satu orang bisa memakai Bahasa Inggris tanpa mengubah tampilan
+ * rekannya yang memakai Bahasa Indonesia di peramban yang sama.
+ */
+const locale = me.locale;
+const t = makeT(locale);
+const lang = localeMeta(locale);
+const isAdmin = me.role === "owner" || me.role === "admin";
+
+const FONTS = ["Inter", "Poppins", "Manrope", "Figtree", "Outfit", "Rubik", "Montserrat", "Nunito", "Plus Jakarta Sans", "Space Grotesk"];
 ---
 
-<Base title="Admin CMS — EVKita" bodyClass="admin-ui">
-  <div id="admin-app" class="admin-app">
+<Base title={`${t("topbar.adminPanel")} — EVKita`} bodyClass="admin-ui" lang={lang.html}>
+  <div id="admin-app" class="admin-app" class:list={[{ "density-compact": me.density === "compact" }]}>
     <!-- Lapisan gelap khusus mode drawer (≤900px); klik untuk menutup sidebar. -->
     <div id="sidebar-scrim" class="sidebar-scrim"></div>
 
-    <AdminSidebar mode="app" active="dashboard" />
+    <AdminSidebar mode="app" active="dashboard" locale={locale} role={me.role} />
 
     <header id="admin-topbar" class="admin-topbar">
-      <button id="sidebar-toggle" class="btn btn-icon" type="button" aria-label="Ciutkan menu">
+      <button id="sidebar-toggle" class="btn btn-icon" type="button" aria-label={t("nav.collapse")} data-i18n-aria="nav.collapse">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       </button>
 
@@ -26,55 +41,81 @@ if (!isAuthed(Astro.cookies)) {
         <input
           id="global-search"
           type="search"
-          placeholder="Cari apa saja — mobil, motor, SPKLU, bengkel, berita…"
+          placeholder={t("topbar.searchPlaceholder")}
+          data-i18n-ph="topbar.searchPlaceholder"
           autocomplete="off"
-          aria-label="Pencarian global"
+          aria-label={t("topbar.searchLabel")}
+          data-i18n-aria="topbar.searchLabel"
         />
         <span class="kbd">⌘K</span>
       </div>
 
       <div class="topbar-right">
-        <span id="save-state" class="save-state">Siap</span>
-        <button id="themeToggle" class="btn btn-icon" type="button" aria-label="Ganti tema terang/gelap" title="Ganti tema">
+        <span id="save-state" class="save-state" data-i18n="save.ready">{t("save.ready")}</span>
+
+        <!-- Pemilih bahasa. Isinya digambar ulang oleh admin.js supaya pilihan
+             yang aktif selalu tersorot setelah bahasa berganti. -->
+        <div id="lang-menu" class="lang-menu">
+          <button id="lang-toggle" class="btn btn-icon lang-toggle" type="button" aria-label={t("topbar.languageLabel")} data-i18n-aria="topbar.languageLabel" title={t("topbar.language")}>
+            {lang.short}
+          </button>
+          <div id="lang-switch" class="lang-switch">
+            {LOCALES.map((l) => (
+              <button type="button" class:list={["lang-opt", { active: l.code === locale }]} data-lang={l.code} lang={l.html} title={l.label}>
+                <span class="lang-short">{l.short}</span>
+                <span class="lang-label">{l.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <button id="themeToggle" class="btn btn-icon" type="button" aria-label={t("topbar.themeToggle")} data-i18n-aria="topbar.themeToggle" title={t("topbar.themeToggle")} data-i18n-title="topbar.themeToggle">
           <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
           <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
         </button>
-        <button id="logout" class="btn btn-ghost btn-sm" type="button">Keluar</button>
+
+        <button id="account-chip" class="account-chip" type="button" title={t("nav.profile")}></button>
+        <button id="logout" class="btn btn-ghost btn-sm" type="button" data-i18n="topbar.logout">{t("topbar.logout")}</button>
       </div>
     </header>
 
     <main id="admin-main" class="admin-main">
       <!-- ===== Dasbor ===== -->
       <section class="view" data-view="dashboard">
-        <div class="view-head">
-          <div>
-            <h1 class="view-title">Dasbor</h1>
-            <p class="view-sub">Ringkasan isi situs dan hal yang perlu dibereskan.</p>
-          </div>
-        </div>
+        <!-- Sapaan, skor kelengkapan, dan aksi cepat. Digambar admin.js karena
+             isinya bergantung pada profil dan konten yang baru dimuat. -->
+        <div id="dash-hello"></div>
 
         <div id="dash-stats"></div>
 
         <div class="grid-2">
           <div class="panel">
             <div class="panel-head">
-              <h2 class="panel-title">Sebaran Data</h2>
+              <h2 class="panel-title" data-i18n="dash.charts.title">{t("dash.charts.title")}</h2>
             </div>
             <div class="panel-body" id="dash-charts"></div>
           </div>
           <div class="panel">
             <div class="panel-head">
-              <h2 class="panel-title">Perlu Dilengkapi</h2>
+              <h2 class="panel-title" data-i18n="dash.health.title">{t("dash.health.title")}</h2>
             </div>
             <div class="panel-body" id="dash-health"></div>
           </div>
         </div>
 
-        <div class="panel">
-          <div class="panel-head">
-            <h2 class="panel-title">Terakhir Diubah</h2>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title" data-i18n="dash.recent.title">{t("dash.recent.title")}</h2>
+            </div>
+            <div class="panel-body" id="dash-recent"></div>
           </div>
-          <div class="panel-body" id="dash-recent"></div>
+          <div class="panel">
+            <div class="panel-head">
+              <h2 class="panel-title" data-i18n="dash.activity.title">{t("dash.activity.title")}</h2>
+            </div>
+            <div class="panel-body" id="dash-activity"></div>
+          </div>
         </div>
       </section>
 
@@ -82,11 +123,11 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view" data-view="cars" hidden>
         <div class="view-head">
           <div>
-            <h1 class="view-title">Mobil Listrik</h1>
-            <p class="view-sub">Kelola katalog mobil: spesifikasi, harga, galeri, dan varian.</p>
+            <h1 class="view-title" data-i18n="view.cars.title">{t("view.cars.title")}</h1>
+            <p class="view-sub" data-i18n="view.cars.sub">{t("view.cars.sub")}</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-cars" class="btn btn-primary" type="button" data-add="cars">+ Tambah Mobil</button>
+            <button id="add-cars" class="btn btn-primary" type="button" data-add="cars" data-i18n="view.cars.add">{t("view.cars.add")}</button>
           </div>
         </div>
         <div id="cars-toolbar"></div>
@@ -97,11 +138,11 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view" data-view="motors" hidden>
         <div class="view-head">
           <div>
-            <h1 class="view-title">Motor Listrik</h1>
-            <p class="view-sub">Kelola katalog motor listrik dengan skema yang sama seperti mobil.</p>
+            <h1 class="view-title" data-i18n="view.motors.title">{t("view.motors.title")}</h1>
+            <p class="view-sub" data-i18n="view.motors.sub">{t("view.motors.sub")}</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-motors" class="btn btn-primary" type="button" data-add="motors">+ Tambah Motor</button>
+            <button id="add-motors" class="btn btn-primary" type="button" data-add="motors" data-i18n="view.motors.add">{t("view.motors.add")}</button>
           </div>
         </div>
         <div id="motors-toolbar"></div>
@@ -112,11 +153,11 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view" data-view="spklu" hidden>
         <div class="view-head">
           <div>
-            <h1 class="view-title">SPKLU</h1>
-            <p class="view-sub">Direktori stasiun pengisian kendaraan listrik umum.</p>
+            <h1 class="view-title" data-i18n="view.spklu.title">{t("view.spklu.title")}</h1>
+            <p class="view-sub" data-i18n="view.spklu.sub">{t("view.spklu.sub")}</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-spklu" class="btn btn-primary" type="button" data-add="spklu">+ Tambah SPKLU</button>
+            <button id="add-spklu" class="btn btn-primary" type="button" data-add="spklu" data-i18n="view.spklu.add">{t("view.spklu.add")}</button>
           </div>
         </div>
         <div id="spklu-toolbar"></div>
@@ -127,11 +168,11 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view" data-view="bengkel" hidden>
         <div class="view-head">
           <div>
-            <h1 class="view-title">Bengkel &amp; Servis</h1>
-            <p class="view-sub">Direktori bengkel resmi maupun umum untuk kendaraan listrik.</p>
+            <h1 class="view-title" data-i18n="view.bengkel.title">{t("view.bengkel.title")}</h1>
+            <p class="view-sub" data-i18n="view.bengkel.sub">{t("view.bengkel.sub")}</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-bengkel" class="btn btn-primary" type="button" data-add="bengkel">+ Tambah Bengkel</button>
+            <button id="add-bengkel" class="btn btn-primary" type="button" data-add="bengkel" data-i18n="view.bengkel.add">{t("view.bengkel.add")}</button>
           </div>
         </div>
         <div id="bengkel-toolbar"></div>
@@ -142,11 +183,11 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view" data-view="berita" hidden>
         <div class="view-head">
           <div>
-            <h1 class="view-title">Berita</h1>
-            <p class="view-sub">Kumpulan tautan berita yang tampil di beranda.</p>
+            <h1 class="view-title" data-i18n="view.berita.title">{t("view.berita.title")}</h1>
+            <p class="view-sub" data-i18n="view.berita.sub">{t("view.berita.sub")}</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-berita" class="btn btn-primary" type="button" data-add="berita">+ Tambah Berita</button>
+            <button id="add-berita" class="btn btn-primary" type="button" data-add="berita" data-i18n="view.berita.add">{t("view.berita.add")}</button>
           </div>
         </div>
         <div id="berita-toolbar"></div>
@@ -157,8 +198,8 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view" data-view="site" hidden>
         <div class="view-head">
           <div>
-            <h1 class="view-title">Pengaturan Situs</h1>
-            <p class="view-sub">Identitas, tema, teks halaman, SEO, dan kontak.</p>
+            <h1 class="view-title" data-i18n="view.site.title">{t("view.site.title")}</h1>
+            <p class="view-sub" data-i18n="view.site.sub">{t("view.site.sub")}</p>
           </div>
         </div>
 
@@ -166,29 +207,29 @@ if (!isAuthed(Astro.cookies)) {
           <!-- Identitas -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>Identitas</h2>
-              <p>Nama dan logo yang tampil di header serta footer situs.</p>
+              <h2 data-i18n="site.identity">{t("site.identity")}</h2>
+              <p data-i18n="site.identity.desc">{t("site.identity.desc")}</p>
             </div>
             <div class="field-grid">
               <div class="field">
-                <label for="s-brandText">Nama Brand</label>
+                <label for="s-brandText" data-i18n="site.brandText">{t("site.brandText")}</label>
                 <input id="s-brandText" name="brandText" placeholder="ReferensiID" />
               </div>
               <div class="field">
-                <label for="s-brandSuffix">Akhiran Brand</label>
+                <label for="s-brandSuffix" data-i18n="site.brandSuffix">{t("site.brandSuffix")}</label>
                 <input id="s-brandSuffix" name="brandSuffix" placeholder=".com" />
-                <span class="hint">Ditempel di belakang nama brand, mis. “.com”.</span>
+                <span class="hint" data-i18n="site.brandSuffix.hint">{t("site.brandSuffix.hint")}</span>
               </div>
               <div class="field">
-                <label for="s-logoMark">Inisial Logo</label>
+                <label for="s-logoMark" data-i18n="site.logoMark">{t("site.logoMark")}</label>
                 <input id="s-logoMark" name="logoMark" maxlength="4" placeholder="EV" />
-                <span class="hint">Dipakai kalau gambar logo kosong. Maksimal 4 huruf.</span>
+                <span class="hint" data-i18n="site.logoMark.hint">{t("site.logoMark.hint")}</span>
               </div>
               <div class="field full" data-image-field="logoImage">
-                <label>Gambar Logo</label>
+                <label data-i18n="site.logoImage">{t("site.logoImage")}</label>
                 <div class="dropzone" data-dropzone></div>
                 <input type="hidden" name="logoImage" />
-                <span class="hint">PNG transparan disarankan. Klik atau seret berkas ke kotak.</span>
+                <span class="hint" data-i18n="site.logoImage.hint">{t("site.logoImage.hint")}</span>
               </div>
             </div>
           </div>
@@ -196,47 +237,38 @@ if (!isAuthed(Astro.cookies)) {
           <!-- Tema & Tampilan -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>Tema &amp; Tampilan</h2>
-              <p>Warna, sudut membulat, huruf, dan mode terang/gelap bawaan.</p>
+              <h2 data-i18n="site.theme">{t("site.theme")}</h2>
+              <p data-i18n="site.theme.desc">{t("site.theme.desc")}</p>
             </div>
             <div class="field-grid">
               <div class="field color-field">
-                <label for="s-themePrimary">Warna Utama</label>
+                <label for="s-themePrimary" data-i18n="site.themePrimary">{t("site.themePrimary")}</label>
                 <input id="s-themePrimary" type="color" name="themePrimary" />
               </div>
               <div class="field color-field">
-                <label for="s-themeSecondary">Warna Sekunder</label>
+                <label for="s-themeSecondary" data-i18n="site.themeSecondary">{t("site.themeSecondary")}</label>
                 <input id="s-themeSecondary" type="color" name="themeSecondary" />
-                <span class="hint">Dipakai sebagai ujung gradien aksen.</span>
+                <span class="hint" data-i18n="site.themeSecondary.hint">{t("site.themeSecondary.hint")}</span>
               </div>
               <div class="field">
-                <label for="s-themeMode">Mode Tema Bawaan</label>
+                <label for="s-themeMode" data-i18n="site.themeMode">{t("site.themeMode")}</label>
                 <select id="s-themeMode" name="themeMode">
-                  <option value="auto">Ikuti Sistem</option>
-                  <option value="light">Terang</option>
-                  <option value="dark">Gelap</option>
+                  <option value="auto" data-i18n="site.themeMode.auto">{t("site.themeMode.auto")}</option>
+                  <option value="light" data-i18n="site.themeMode.light">{t("site.themeMode.light")}</option>
+                  <option value="dark" data-i18n="site.themeMode.dark">{t("site.themeMode.dark")}</option>
                 </select>
               </div>
               <div class="field">
-                <label for="s-themeFont">Jenis Huruf</label>
+                <label for="s-themeFont" data-i18n="site.themeFont">{t("site.themeFont")}</label>
                 <select id="s-themeFont" name="themeFont">
-                  <option value="Inter">Inter</option>
-                  <option value="Poppins">Poppins</option>
-                  <option value="Manrope">Manrope</option>
-                  <option value="Figtree">Figtree</option>
-                  <option value="Outfit">Outfit</option>
-                  <option value="Rubik">Rubik</option>
-                  <option value="Montserrat">Montserrat</option>
-                  <option value="Nunito">Nunito</option>
-                  <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
-                  <option value="Space Grotesk">Space Grotesk</option>
+                  {FONTS.map((f) => <option value={f}>{f}</option>)}
                 </select>
               </div>
               <div class="field full range-field">
-                <label for="s-themeRadius">Sudut Membulat</label>
+                <label for="s-themeRadius" data-i18n="site.themeRadius">{t("site.themeRadius")}</label>
                 <input id="s-themeRadius" type="range" name="themeRadius" min="0" max="32" step="1" />
                 <output class="range-value" for="s-themeRadius"></output>
-                <span class="hint">0 = kotak tegas, 32 = sangat membulat.</span>
+                <span class="hint" data-i18n="site.themeRadius.hint">{t("site.themeRadius.hint")}</span>
               </div>
             </div>
           </div>
@@ -244,48 +276,48 @@ if (!isAuthed(Astro.cookies)) {
           <!-- Hero -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>Hero</h2>
-              <p>Bagian paling atas beranda — kalimat pembuka dan tombol ajakan.</p>
+              <h2 data-i18n="site.hero">{t("site.hero")}</h2>
+              <p data-i18n="site.hero.desc">{t("site.hero.desc")}</p>
             </div>
             <div class="field-grid">
               <div class="field">
-                <label for="s-heroEyebrow">Teks Kecil di Atas Judul</label>
-                <input id="s-heroEyebrow" name="heroEyebrow" placeholder="Basis data kendaraan listrik" />
+                <label for="s-heroEyebrow" data-i18n="site.heroEyebrow">{t("site.heroEyebrow")}</label>
+                <input id="s-heroEyebrow" name="heroEyebrow" placeholder={t("site.heroEyebrow.ph")} data-i18n-ph="site.heroEyebrow.ph" />
               </div>
               <div class="field">
-                <label for="s-heroTitle">Judul Hero</label>
+                <label for="s-heroTitle" data-i18n="site.heroTitle">{t("site.heroTitle")}</label>
                 <input id="s-heroTitle" name="heroTitle" />
               </div>
               <div class="field full">
-                <label for="s-heroSub">Deskripsi Hero</label>
+                <label for="s-heroSub" data-i18n="site.heroSub">{t("site.heroSub")}</label>
                 <textarea id="s-heroSub" name="heroSub" rows="3"></textarea>
               </div>
               <div class="field full" data-image-field="heroImage">
-                <label>Gambar Hero</label>
+                <label data-i18n="site.heroImage">{t("site.heroImage")}</label>
                 <div class="dropzone" data-dropzone></div>
                 <input type="hidden" name="heroImage" />
               </div>
               <div class="field">
-                <label for="s-heroCtaText">Tombol Utama — Teks</label>
-                <input id="s-heroCtaText" name="heroCtaText" placeholder="Lihat Katalog" />
+                <label for="s-heroCtaText" data-i18n="site.heroCtaText">{t("site.heroCtaText")}</label>
+                <input id="s-heroCtaText" name="heroCtaText" placeholder={t("site.heroCtaText.ph")} data-i18n-ph="site.heroCtaText.ph" />
               </div>
               <div class="field">
-                <label for="s-heroCtaUrl">Tombol Utama — Tautan</label>
+                <label for="s-heroCtaUrl" data-i18n="site.heroCtaUrl">{t("site.heroCtaUrl")}</label>
                 <input id="s-heroCtaUrl" name="heroCtaUrl" placeholder="#katalog" />
               </div>
               <div class="field">
-                <label for="s-heroCtaAltText">Tombol Kedua — Teks</label>
-                <input id="s-heroCtaAltText" name="heroCtaAltText" placeholder="Cari SPKLU" />
+                <label for="s-heroCtaAltText" data-i18n="site.heroCtaAltText">{t("site.heroCtaAltText")}</label>
+                <input id="s-heroCtaAltText" name="heroCtaAltText" placeholder={t("site.heroCtaAltText.ph")} data-i18n-ph="site.heroCtaAltText.ph" />
               </div>
               <div class="field">
-                <label for="s-heroCtaAltUrl">Tombol Kedua — Tautan</label>
+                <label for="s-heroCtaAltUrl" data-i18n="site.heroCtaAltUrl">{t("site.heroCtaAltUrl")}</label>
                 <input id="s-heroCtaAltUrl" name="heroCtaAltUrl" placeholder="#spklu" />
               </div>
               <div class="field full">
                 <label class="switch-row">
                   <input type="checkbox" name="showHeroStats" />
                   <span class="switch" aria-hidden="true"></span>
-                  <span>Tampilkan angka statistik di hero</span>
+                  <span data-i18n="site.showHeroStats">{t("site.showHeroStats")}</span>
                 </label>
               </div>
             </div>
@@ -294,71 +326,71 @@ if (!isAuthed(Astro.cookies)) {
           <!-- Seksi Beranda -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>Seksi Beranda</h2>
-              <p>Judul, catatan singkat, dan saklar tampil untuk tiap seksi.</p>
+              <h2 data-i18n="site.sections">{t("site.sections")}</h2>
+              <p data-i18n="site.sections.desc">{t("site.sections.desc")}</p>
             </div>
             <div class="field-grid">
               <div class="field">
-                <label for="s-katalogTitle">Katalog — Judul</label>
+                <label for="s-katalogTitle" data-i18n="site.katalogTitle">{t("site.katalogTitle")}</label>
                 <input id="s-katalogTitle" name="katalogTitle" />
               </div>
               <div class="field">
-                <label for="s-katalogNote">Katalog — Catatan</label>
+                <label for="s-katalogNote" data-i18n="site.katalogNote">{t("site.katalogNote")}</label>
                 <input id="s-katalogNote" name="katalogNote" />
               </div>
               <div class="field full">
                 <label class="switch-row">
                   <input type="checkbox" name="showMotor" />
                   <span class="switch" aria-hidden="true"></span>
-                  <span>Tampilkan seksi Motor Listrik</span>
+                  <span data-i18n="site.showMotor">{t("site.showMotor")}</span>
                 </label>
               </div>
 
               <div class="field">
-                <label for="s-spkluTitle">SPKLU — Judul</label>
+                <label for="s-spkluTitle" data-i18n="site.spkluTitle">{t("site.spkluTitle")}</label>
                 <input id="s-spkluTitle" name="spkluTitle" />
               </div>
               <div class="field">
-                <label for="s-spkluNote">SPKLU — Catatan</label>
+                <label for="s-spkluNote" data-i18n="site.spkluNote">{t("site.spkluNote")}</label>
                 <input id="s-spkluNote" name="spkluNote" />
               </div>
               <div class="field full">
                 <label class="switch-row">
                   <input type="checkbox" name="showSpklu" />
                   <span class="switch" aria-hidden="true"></span>
-                  <span>Tampilkan seksi SPKLU</span>
+                  <span data-i18n="site.showSpklu">{t("site.showSpklu")}</span>
                 </label>
               </div>
 
               <div class="field">
-                <label for="s-bengkelTitle">Bengkel — Judul</label>
+                <label for="s-bengkelTitle" data-i18n="site.bengkelTitle">{t("site.bengkelTitle")}</label>
                 <input id="s-bengkelTitle" name="bengkelTitle" />
               </div>
               <div class="field">
-                <label for="s-bengkelNote">Bengkel — Catatan</label>
+                <label for="s-bengkelNote" data-i18n="site.bengkelNote">{t("site.bengkelNote")}</label>
                 <input id="s-bengkelNote" name="bengkelNote" />
               </div>
               <div class="field full">
                 <label class="switch-row">
                   <input type="checkbox" name="showBengkel" />
                   <span class="switch" aria-hidden="true"></span>
-                  <span>Tampilkan seksi Bengkel</span>
+                  <span data-i18n="site.showBengkel">{t("site.showBengkel")}</span>
                 </label>
               </div>
 
               <div class="field">
-                <label for="s-beritaTitle">Berita — Judul</label>
+                <label for="s-beritaTitle" data-i18n="site.beritaTitle">{t("site.beritaTitle")}</label>
                 <input id="s-beritaTitle" name="beritaTitle" />
               </div>
               <div class="field">
-                <label for="s-beritaNote">Berita — Catatan</label>
+                <label for="s-beritaNote" data-i18n="site.beritaNote">{t("site.beritaNote")}</label>
                 <input id="s-beritaNote" name="beritaNote" />
               </div>
               <div class="field full">
                 <label class="switch-row">
                   <input type="checkbox" name="showBerita" />
                   <span class="switch" aria-hidden="true"></span>
-                  <span>Tampilkan seksi Berita</span>
+                  <span data-i18n="site.showBerita">{t("site.showBerita")}</span>
                 </label>
               </div>
             </div>
@@ -367,23 +399,23 @@ if (!isAuthed(Astro.cookies)) {
           <!-- Tentang -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>Tentang</h2>
-              <p>Penjelasan singkat tentang situs, tampil di bawah katalog.</p>
+              <h2 data-i18n="site.about">{t("site.about")}</h2>
+              <p data-i18n="site.about.desc">{t("site.about.desc")}</p>
             </div>
             <div class="field-grid">
               <div class="field full">
-                <label for="s-aboutTitle">Judul</label>
+                <label for="s-aboutTitle" data-i18n="site.aboutTitle">{t("site.aboutTitle")}</label>
                 <input id="s-aboutTitle" name="aboutTitle" />
               </div>
               <div class="field full">
-                <label for="s-aboutText">Isi</label>
+                <label for="s-aboutText" data-i18n="site.aboutText">{t("site.aboutText")}</label>
                 <textarea id="s-aboutText" name="aboutText" rows="4"></textarea>
               </div>
               <div class="field full">
                 <label class="switch-row">
                   <input type="checkbox" name="showAbout" />
                   <span class="switch" aria-hidden="true"></span>
-                  <span>Tampilkan seksi Tentang</span>
+                  <span data-i18n="site.showAbout">{t("site.showAbout")}</span>
                 </label>
               </div>
             </div>
@@ -392,30 +424,30 @@ if (!isAuthed(Astro.cookies)) {
           <!-- SEO -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>SEO</h2>
-              <p>Judul dan deskripsi yang muncul di hasil pencarian serta pratinjau tautan.</p>
+              <h2 data-i18n="site.seo">{t("site.seo")}</h2>
+              <p data-i18n="site.seo.desc">{t("site.seo.desc")}</p>
             </div>
             <div class="field-grid">
               <div class="field full">
-                <label for="s-seoTitle">Judul Halaman</label>
+                <label for="s-seoTitle" data-i18n="site.seoTitle">{t("site.seoTitle")}</label>
                 <input id="s-seoTitle" name="seoTitle" />
-                <span class="hint">Idealnya di bawah 60 karakter.</span>
+                <span class="hint" data-i18n="site.seoTitle.hint">{t("site.seoTitle.hint")}</span>
               </div>
               <div class="field full">
-                <label for="s-seoDescription">Deskripsi Meta</label>
+                <label for="s-seoDescription" data-i18n="site.seoDescription">{t("site.seoDescription")}</label>
                 <textarea id="s-seoDescription" name="seoDescription" rows="3"></textarea>
-                <span class="hint">Idealnya 120–160 karakter.</span>
+                <span class="hint" data-i18n="site.seoDescription.hint">{t("site.seoDescription.hint")}</span>
               </div>
               <div class="field full">
-                <label for="s-seoKeywords">Kata Kunci</label>
+                <label for="s-seoKeywords" data-i18n="site.seoKeywords">{t("site.seoKeywords")}</label>
                 <input id="s-seoKeywords" name="seoKeywords" placeholder="mobil listrik, spklu, harga ev" />
-                <span class="hint">Pisahkan dengan koma.</span>
+                <span class="hint" data-i18n="site.seoKeywords.hint">{t("site.seoKeywords.hint")}</span>
               </div>
               <div class="field full" data-image-field="seoOgImage">
-                <label>Gambar Pratinjau (OG Image)</label>
+                <label data-i18n="site.seoOgImage">{t("site.seoOgImage")}</label>
                 <div class="dropzone" data-dropzone></div>
                 <input type="hidden" name="seoOgImage" />
-                <span class="hint">Ukuran ideal 1200×630 piksel.</span>
+                <span class="hint" data-i18n="site.seoOgImage.hint">{t("site.seoOgImage.hint")}</span>
               </div>
             </div>
           </div>
@@ -423,20 +455,20 @@ if (!isAuthed(Astro.cookies)) {
           <!-- Kontak & Sosial -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>Kontak &amp; Sosial</h2>
-              <p>Ditampilkan di footer. Kosongkan yang tidak dipakai.</p>
+              <h2 data-i18n="site.contact">{t("site.contact")}</h2>
+              <p data-i18n="site.contact.desc">{t("site.contact.desc")}</p>
             </div>
             <div class="field-grid">
               <div class="field">
-                <label for="s-contactEmail">Email</label>
+                <label for="s-contactEmail" data-i18n="site.contactEmail">{t("site.contactEmail")}</label>
                 <input id="s-contactEmail" type="email" name="contactEmail" />
               </div>
               <div class="field">
-                <label for="s-contactPhone">Telepon</label>
+                <label for="s-contactPhone" data-i18n="site.contactPhone">{t("site.contactPhone")}</label>
                 <input id="s-contactPhone" name="contactPhone" />
               </div>
               <div class="field full">
-                <label for="s-contactAddress">Alamat</label>
+                <label for="s-contactAddress" data-i18n="site.contactAddress">{t("site.contactAddress")}</label>
                 <input id="s-contactAddress" name="contactAddress" />
               </div>
               <div class="field">
@@ -462,7 +494,7 @@ if (!isAuthed(Astro.cookies)) {
               <div class="field">
                 <label for="s-socialWhatsapp">WhatsApp</label>
                 <input id="s-socialWhatsapp" name="socialWhatsapp" placeholder="628xxxxxxxxxx" />
-                <span class="hint">Nomor dengan kode negara, tanpa tanda plus.</span>
+                <span class="hint" data-i18n="site.socialWhatsapp.hint">{t("site.socialWhatsapp.hint")}</span>
               </div>
             </div>
           </div>
@@ -470,36 +502,36 @@ if (!isAuthed(Astro.cookies)) {
           <!-- Footer -->
           <div class="form-section">
             <div class="form-section-head">
-              <h2>Footer</h2>
-              <p>Teks penutup di bagian paling bawah halaman.</p>
+              <h2 data-i18n="site.footer">{t("site.footer")}</h2>
+              <p data-i18n="site.footer.desc">{t("site.footer.desc")}</p>
             </div>
             <div class="field-grid">
               <div class="field">
-                <label for="s-footerTitle">Judul</label>
+                <label for="s-footerTitle" data-i18n="site.footerTitle">{t("site.footerTitle")}</label>
                 <input id="s-footerTitle" name="footerTitle" />
               </div>
               <div class="field">
-                <label for="s-footerDesc">Deskripsi</label>
+                <label for="s-footerDesc" data-i18n="site.footerDesc">{t("site.footerDesc")}</label>
                 <input id="s-footerDesc" name="footerDesc" />
               </div>
               <div class="field">
-                <label for="s-footerSourceText">Teks Sumber</label>
+                <label for="s-footerSourceText" data-i18n="site.footerSourceText">{t("site.footerSourceText")}</label>
                 <input id="s-footerSourceText" name="footerSourceText" />
               </div>
               <div class="field">
-                <label for="s-footerSourceUrl">URL Sumber</label>
+                <label for="s-footerSourceUrl" data-i18n="site.footerSourceUrl">{t("site.footerSourceUrl")}</label>
                 <input id="s-footerSourceUrl" name="footerSourceUrl" />
               </div>
               <div class="field full">
-                <label for="s-footerNote">Catatan</label>
+                <label for="s-footerNote" data-i18n="site.footerNote">{t("site.footerNote")}</label>
                 <input id="s-footerNote" name="footerNote" />
               </div>
             </div>
           </div>
 
           <div class="form-actions">
-            <span class="form-actions-note">Perubahan baru tersimpan setelah ditekan.</span>
-            <button type="submit" class="btn btn-primary">Simpan</button>
+            <span class="form-actions-note" data-i18n="site.saveNote">{t("site.saveNote")}</span>
+            <button type="submit" class="btn btn-primary" data-i18n="common.save">{t("common.save")}</button>
           </div>
         </form>
       </section>
@@ -508,16 +540,16 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view" data-view="media" hidden>
         <div class="view-head">
           <div>
-            <h1 class="view-title">Media</h1>
-            <p class="view-sub">Semua gambar yang dipakai di situs, dikumpulkan dari seluruh konten.</p>
+            <h1 class="view-title" data-i18n="view.media.title">{t("view.media.title")}</h1>
+            <p class="view-sub" data-i18n="view.media.sub">{t("view.media.sub")}</p>
           </div>
           <div class="view-head-actions">
-            <button id="media-refresh" class="btn btn-outline btn-sm" type="button">Muat Ulang</button>
+            <button id="media-refresh" class="btn btn-outline btn-sm" type="button" data-i18n="common.refresh">{t("common.refresh")}</button>
           </div>
         </div>
         <div id="media-toolbar" class="toolbar">
           <div class="toolbar-search">
-            <input id="media-search" class="search-input" type="search" placeholder="Cari nama berkas…" autocomplete="off" />
+            <input id="media-search" class="search-input" type="search" placeholder={t("media.searchPh")} data-i18n-ph="media.searchPh" autocomplete="off" />
           </div>
         </div>
         <div id="media-grid"></div>
@@ -531,17 +563,17 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view view-editor" data-view="editor" hidden>
         <div class="editor-bar" id="editor-bar">
           <div class="editor-bar-row">
-            <button type="button" class="btn btn-icon editor-back" id="editor-back" aria-label="Kembali ke daftar">
+            <button type="button" class="btn btn-icon editor-back" id="editor-back" aria-label={t("editor.back")} data-i18n-aria="editor.back">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18 9 12l6-6"/></svg>
             </button>
             <div class="editor-titles">
               <span class="editor-eyebrow" id="editor-eyebrow"></span>
-              <h1 class="editor-title" id="editor-title">Tambah Mobil</h1>
+              <h1 class="editor-title" id="editor-title"></h1>
             </div>
             <div class="editor-bar-actions">
-              <button type="button" class="btn btn-ghost editor-cancel" id="editor-cancel">Batal</button>
-              <button type="button" class="btn btn-outline" id="editor-save-add" hidden>Simpan &amp; Tambah Lagi</button>
-              <button type="submit" form="vehicle-form" class="btn btn-primary" id="editor-save">Simpan</button>
+              <button type="button" class="btn btn-ghost editor-cancel" id="editor-cancel" data-i18n="common.cancel">{t("common.cancel")}</button>
+              <button type="button" class="btn btn-outline" id="editor-save-add" hidden data-i18n="editor.saveAndAdd">{t("editor.saveAndAdd")}</button>
+              <button type="submit" form="vehicle-form" class="btn btn-primary" id="editor-save" data-i18n="common.save">{t("common.save")}</button>
             </div>
           </div>
           <p class="editor-sub" id="editor-sub"></p>
@@ -550,9 +582,9 @@ if (!isAuthed(Astro.cookies)) {
 
         <div class="editor-layout">
           <aside class="editor-rail">
-            <nav class="editor-nav" id="editor-nav" aria-label="Bagian formulir"></nav>
+            <nav class="editor-nav" id="editor-nav" aria-label={t("editor.navLabel")} data-i18n-aria="editor.navLabel"></nav>
             <div class="editor-preview">
-              <div class="editor-preview-label">Pratinjau di katalog</div>
+              <div class="editor-preview-label" data-i18n="editor.previewLabel">{t("editor.previewLabel")}</div>
               <div class="item-row" id="vehicle-preview"></div>
             </div>
           </aside>
@@ -571,16 +603,38 @@ if (!isAuthed(Astro.cookies)) {
       <section class="view" data-view="backups" hidden>
         <div class="view-head">
           <div>
-            <h1 class="view-title">Cadangan</h1>
-            <p class="view-sub">
-              Setiap kali konten disimpan, salinan otomatis dibuat. Pilih salah satu untuk
-              mengembalikan seluruh isi situs ke kondisi saat itu.
-            </p>
+            <h1 class="view-title" data-i18n="view.backups.title">{t("view.backups.title")}</h1>
+            <p class="view-sub" data-i18n="view.backups.sub">{t("view.backups.sub")}</p>
           </div>
         </div>
         <div class="panel">
           <div class="panel-body" id="backups-list"></div>
         </div>
+      </section>
+
+      <!-- ===== Profil Saya ===== -->
+      <section class="view view-narrow" data-view="profile" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title" data-i18n="profile.title">{t("profile.title")}</h1>
+            <p class="view-sub" data-i18n="profile.sub">{t("profile.sub")}</p>
+          </div>
+        </div>
+        <div id="profile-root"></div>
+      </section>
+
+      <!-- ===== Pengguna ===== -->
+      <section class="view" data-view="users" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title" data-i18n="users.title">{t("users.title")}</h1>
+            <p class="view-sub" data-i18n="users.sub">{t("users.sub")}</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="add-user" class="btn btn-primary" type="button" hidden={!isAdmin} data-requires-admin data-i18n="users.add">{t("users.add")}</button>
+          </div>
+        </div>
+        <div id="users-root"></div>
       </section>
     </main>
   </div>
@@ -589,16 +643,35 @@ if (!isAuthed(Astro.cookies)) {
   <div id="dir-modal" class="modal-backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dir-modal-title">
       <div class="modal-head">
-        <h3 class="modal-title" id="dir-modal-title">Tambah</h3>
-        <button type="button" class="modal-close" id="dir-modal-close" aria-label="Tutup">&times;</button>
+        <h3 class="modal-title" id="dir-modal-title"></h3>
+        <button type="button" class="modal-close" id="dir-modal-close" aria-label={t("common.close")} data-i18n-aria="common.close">&times;</button>
       </div>
       <form id="dir-form">
         <div class="modal-body">
           <div id="dir-fields" class="field-grid"></div>
         </div>
         <div class="modal-foot">
-          <button type="button" class="btn btn-ghost" id="dir-cancel" data-close-modal>Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
+          <button type="button" class="btn btn-ghost" id="dir-cancel" data-close-modal data-i18n="common.cancel">{t("common.cancel")}</button>
+          <button type="submit" class="btn btn-primary" data-i18n="common.save">{t("common.save")}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Modal pengguna ===== -->
+  <div id="user-modal" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
+      <div class="modal-head">
+        <h3 class="modal-title" id="user-modal-title"></h3>
+        <button type="button" class="modal-close" aria-label={t("common.close")} data-i18n-aria="common.close">&times;</button>
+      </div>
+      <form id="user-form">
+        <div class="modal-body">
+          <div id="user-fields" class="field-grid"></div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close-modal data-i18n="common.cancel">{t("common.cancel")}</button>
+          <button type="submit" class="btn btn-primary" data-i18n="common.save">{t("common.save")}</button>
         </div>
       </form>
     </div>
@@ -610,8 +683,8 @@ if (!isAuthed(Astro.cookies)) {
       <div class="modal-head"><h3 class="modal-title" id="confirm-title"></h3></div>
       <div class="modal-body"><p id="confirm-text"></p></div>
       <div class="modal-foot">
-        <button type="button" class="btn btn-ghost" id="confirm-cancel">Batal</button>
-        <button type="button" class="btn btn-danger" id="confirm-ok">Hapus</button>
+        <button type="button" class="btn btn-ghost" id="confirm-cancel" data-i18n="common.cancel">{t("common.cancel")}</button>
+        <button type="button" class="btn btn-danger" id="confirm-ok"></button>
       </div>
     </div>
   </div>
@@ -619,7 +692,7 @@ if (!isAuthed(Astro.cookies)) {
   <!-- Tombol tambah melayang: hanya tampil di layar sempit, isinya mengikuti halaman aktif. -->
   <button id="quick-add" class="fab" type="button" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-    <span class="fab-label">Tambah</span>
+    <span class="fab-label" data-i18n="common.add">{t("common.add")}</span>
   </button>
 
   <div id="toast-stack" class="toast-stack"></div>

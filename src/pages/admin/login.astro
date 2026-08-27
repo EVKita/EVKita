@@ -1,43 +1,80 @@
 ---
 import Base from "../../layouts/Base.astro";
 import "../../styles/admin.css";
-import { isAuthed } from "../../lib/auth";
+import { isAuthed, LOCALE_COOKIE } from "../../lib/auth";
+import { makeT, localeMeta, normalizeLocale, LOCALES } from "../../lib/i18n/index.js";
 
 if (isAuthed(Astro.cookies)) {
   return Astro.redirect("/admin");
 }
+
+/**
+ * Halaman ini dibuka sebelum ada sesi, jadi bahasanya diambil dari cookie
+ * `evkita_lang` — yang ditulis saat seseorang memilih bahasa di panel atau
+ * berhasil masuk. Tanpa cookie, bawaannya tetap Bahasa Indonesia.
+ */
+const locale = normalizeLocale(Astro.cookies.get(LOCALE_COOKIE)?.value);
+const t = makeT(locale);
+const lang = localeMeta(locale);
+
+const texts = {
+  required: t("login.required"),
+  wrong: t("login.wrong"),
+  offline: t("login.offline"),
+  processing: t("login.processing"),
+  redirecting: t("login.redirecting"),
+  submit: t("login.submit"),
+  show: t("login.showPassword"),
+  hide: t("login.hidePassword"),
+};
 ---
 
-<Base title="Masuk Admin — EVKita" bodyClass="admin-ui">
+<Base title={`${t("login.pageTitle")} — EVKita`} bodyClass="admin-ui" lang={lang.html}>
   <div class="login-page">
-    <button id="themeToggle" class="btn btn-icon login-theme" type="button" aria-label="Ganti tema terang/gelap" title="Ganti tema">
-      <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
-      <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
-    </button>
+    <div class="login-top">
+      <div class="lang-switch lang-switch-inline">
+        {LOCALES.map((l) => (
+          <a
+            class:list={["lang-opt", { active: l.code === locale }]}
+            href={`/admin/login?lang=${l.code}`}
+            data-set-lang={l.code}
+            lang={l.html}
+            title={l.label}
+          >
+            <span class="lang-short">{l.short}</span>
+            <span class="lang-label">{l.label}</span>
+          </a>
+        ))}
+      </div>
+      <button id="themeToggle" class="btn btn-icon" type="button" aria-label={t("topbar.themeToggle")} title={t("topbar.themeToggle")}>
+        <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+        <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+    </div>
 
     <div class="login-card">
       <div class="login-brand">
         <span class="login-logo">EV</span>
         <span class="login-brand-text">
           <strong>EVKita</strong>
-          <span>Panel Admin</span>
+          <span>{t("topbar.adminPanel")}</span>
         </span>
       </div>
 
-      <h1 class="login-title">Selamat datang kembali</h1>
-      <p class="login-desc">Masuk untuk mengelola konten website.</p>
+      <h1 class="login-title">{t("login.title")}</h1>
+      <p class="login-desc">{t("login.desc")}</p>
 
       <form id="login-form" class="login-form" novalidate>
         <div class="field">
-          <label for="username">Nama Pengguna</label>
+          <label for="username">{t("login.username")}</label>
           <input type="text" id="username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required />
         </div>
 
         <div class="field">
-          <label for="password">Kata Sandi</label>
+          <label for="password">{t("login.password")}</label>
           <div class="login-pass">
             <input type="password" id="password" name="password" autocomplete="current-password" required />
-            <button type="button" class="login-eye" id="toggle-pass" aria-label="Tampilkan kata sandi" aria-pressed="false">
+            <button type="button" class="login-eye" id="toggle-pass" aria-label={t("login.showPassword")} aria-pressed="false">
               <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
               <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" hidden><path d="M3 3l18 18"/><path d="M10.6 6.2A9.8 9.8 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3.3 3.9M6.6 6.7A16.7 16.7 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 4.2-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
             </button>
@@ -49,14 +86,14 @@ if (isAuthed(Astro.cookies)) {
           <span id="login-error-text"></span>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block" id="login-btn">Masuk</button>
+        <button type="submit" class="btn btn-primary btn-block" id="login-btn">{t("login.submit")}</button>
       </form>
 
-      <p class="login-foot">Halaman ini hanya untuk pengelola situs.</p>
+      <p class="login-foot">{t("login.foot")}</p>
     </div>
   </div>
 
-  <script>
+  <script define:vars={{ texts, cookieName: LOCALE_COOKIE }}>
     const form = document.getElementById("login-form");
     const errorBox = document.getElementById("login-error");
     const errorText = document.getElementById("login-error-text");
@@ -66,6 +103,16 @@ if (isAuthed(Astro.cookies)) {
     const eyeBtn = document.getElementById("toggle-pass");
 
     userInput.focus();
+
+    // Pemilih bahasa: cukup tulis cookie lalu muat ulang. Halaman ini dirender
+    // server, jadi seluruh teksnya ikut berganti tanpa kamus di sisi klien.
+    document.querySelectorAll("[data-set-lang]").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.cookie = `${cookieName}=${a.getAttribute("data-set-lang")}; path=/; max-age=31536000; samesite=lax`;
+        location.href = "/admin/login";
+      });
+    });
 
     function showError(msg) {
       errorText.textContent = msg;
@@ -86,7 +133,7 @@ if (isAuthed(Astro.cookies)) {
       const shown = passInput.type === "text";
       passInput.type = shown ? "password" : "text";
       eyeBtn.setAttribute("aria-pressed", String(!shown));
-      eyeBtn.setAttribute("aria-label", shown ? "Tampilkan kata sandi" : "Sembunyikan kata sandi");
+      eyeBtn.setAttribute("aria-label", shown ? texts.show : texts.hide);
       eyeBtn.querySelector(".eye-open").hidden = !shown;
       eyeBtn.querySelector(".eye-off").hidden = shown;
       passInput.focus();
@@ -99,12 +146,12 @@ if (isAuthed(Astro.cookies)) {
       clearError();
 
       if (!userInput.value.trim() || !passInput.value) {
-        showError("Nama pengguna dan kata sandi wajib diisi.");
+        showError(texts.required);
         return;
       }
 
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Memproses…';
+      btn.innerHTML = '<span class="spinner"></span> ' + texts.processing;
 
       try {
         const res = await fetch("/api/auth/login", {
@@ -117,18 +164,18 @@ if (isAuthed(Astro.cookies)) {
         });
         const data = await res.json();
         if (data.ok) {
-          btn.innerHTML = "Berhasil, mengalihkan…";
+          btn.textContent = texts.redirecting;
           location.href = "/admin";
           return;
         }
-        showError(data.error || "Nama pengguna atau kata sandi salah.");
+        showError(texts.wrong);
         passInput.select();
       } catch {
-        showError("Tidak bisa menghubungi server. Coba lagi.");
+        showError(texts.offline);
       }
 
       btn.disabled = false;
-      btn.textContent = "Masuk";
+      btn.textContent = texts.submit;
     });
   </script>
 </Base>

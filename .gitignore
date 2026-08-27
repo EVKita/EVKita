@@ -8,5 +8,7 @@ release/
 .backup-*/
 Open Code server.docx
 .update/
+data/users.json
+data/activity.json
 data/backups/
 .claude/

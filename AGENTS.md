@@ -109,3 +109,64 @@ atau perubahannya tidak menyentuh apa pun yang ikut ke dalam paket rilis
   dan `SESSION_SECRET` hanya boleh berasal dari `.env`, yang dibuat oleh
   wizard di `/install`.
 - Jalankan `npm run build` sebelum mengklaim sebuah perubahan selesai.
+
+---
+
+## Panel admin: multibahasa & pengguna
+
+Panel admin (`/admin`, `/admin/login`, `/admin/update`) berbahasa **Indonesia,
+Inggris, dan Mandarin**. Bahasa Indonesia tetap bawaan.
+
+### Aturan yang tidak boleh dilanggar
+
+**Setiap kali menambah atau mengubah teks apa pun di panel admin — halaman
+baru, tombol baru, label field, pesan toast, pesan galat API, judul dialog —
+teks itu WAJIB:**
+
+1. punya kunci di **ketiga** kamus: `src/lib/i18n/id.js`, `en.js`, `zh.js`;
+2. dipanggil lewat `t("kunci")`, bukan ditulis langsung di kode;
+3. lolos `npm run i18n:check`.
+
+`npm run build` menjalankan pemeriksaan itu lebih dulu, jadi build akan **gagal**
+kalau ada terjemahan yang tertinggal. Jangan mencoba menyiasatinya.
+
+Ini berlaku dua arah: menambah fitur baru berarti menambah tiga terjemahan;
+menghapus fitur berarti menghapus kuncinya dari ketiga kamus.
+
+### Cara kerjanya
+
+- Kamus adalah objek datar `kunci → teks`. Placeholder ditulis `{nama}` dan
+  diisi lewat argumen kedua: `t("toast.deleted", { name: judul })`.
+- `src/lib/i18n/index.js` berisi `makeT()`, format tanggal/angka per bahasa, dan
+  daftar bahasa. Berkas ini JavaScript polos supaya bisa dipakai **dua tempat**:
+  frontmatter `.astro` (dirender server) dan `src/scripts/admin.js` (browser).
+- Teks yang dirender server diberi atribut `data-i18n="kunci"` (atau
+  `data-i18n-ph`, `data-i18n-title`, `data-i18n-aria`). `applyStaticI18n()` di
+  `admin.js` memakai atribut itu untuk mengganti bahasa **tanpa memuat ulang
+  halaman**. Kalau menambah markup statis, jangan lupa atributnya.
+- Daftar yang mengandung teks (label field, filter, urutan) ditulis sebagai
+  **fungsi**, bukan konstanta — supaya dibaca ulang setiap render.
+- Pesan galat dari API dikirim sebagai **kunci** (`errorKey`), bukan kalimat
+  jadi, lalu diterjemahkan klien lewat `apiMessage()`.
+
+### Yang TIDAK diterjemahkan
+
+Nilai yang tersimpan di `data/content.json` dan ikut tampil di situs publik yang
+berbahasa Indonesia: tipe bodi (`Hatchback`, `Skuter`), standar pengujian, nama
+merek, dan label preset spesifikasi. Menerjemahkannya akan mengubah isi
+database. Pola `match` di halaman Pembaruan juga tidak diterjemahkan — ia
+dicocokkan ke keluaran `deploy.sh` yang selalu Bahasa Indonesia.
+
+### Pengguna & peran
+
+- Akun panel disimpan di **`data/users.json`** (kata sandi ter-hash `scrypt`),
+  bukan lagi di `.env`. Pemasangan lama dipindahkan otomatis sekali jalan dari
+  `ADMIN_USERNAME`/`ADMIN_PASSWORD`; setelah `data/users.json` ada, isi `.env`
+  diabaikan. Berkas ini ikut dicadangkan `deploy.sh`, jadi selamat melewati
+  pembaruan versi.
+- Tiga peran: **Pemilik** → **Admin** → **Editor**. Editor hanya boleh mengurus
+  konten dan pengaturan situs; halaman Pengguna, Cadangan, dan Pembaruan
+  tertutup untuknya **di server**, bukan cuma disembunyikan di antarmuka.
+  Menambah endpoint baru yang sensitif berarti menambah `can(me, ...)` di sana.
+- Token sesi membawa id pengguna (`<userId>.<acak>.<tanda tangan>`), jadi panel
+  tahu siapa yang login. Log aktivitas ada di `data/activity.json`.

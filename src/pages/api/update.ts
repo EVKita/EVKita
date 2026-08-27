@@ -2,7 +2,9 @@ import type { APIRoute } from "astro";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
-import { isAuthed } from "../../lib/auth";
+import { currentUser } from "../../lib/auth";
+import { can } from "../../lib/users";
+import { logActivity } from "../../lib/activity";
 import { getEnv } from "../../lib/env";
 
 /**
@@ -145,12 +147,16 @@ function currentState() {
 }
 
 export const GET: APIRoute = ({ cookies }) => {
-  if (!isAuthed(cookies)) return json({ ok: false, error: "Unauthorized" }, 401);
+  const me = currentUser(cookies);
+  if (!me) return json({ ok: false, errorKey: "err.unauthorized", error: "Unauthorized" }, 401);
+  if (!can(me, "update")) return json({ ok: false, errorKey: "err.forbidden", error: "Forbidden" }, 403);
   return json({ ok: true, ...currentState(), log: readLogTail() });
 };
 
 export const POST: APIRoute = ({ cookies }) => {
-  if (!isAuthed(cookies)) return json({ ok: false, error: "Unauthorized" }, 401);
+  const me = currentUser(cookies);
+  if (!me) return json({ ok: false, errorKey: "err.unauthorized", error: "Unauthorized" }, 401);
+  if (!can(me, "update")) return json({ ok: false, errorKey: "err.forbidden", error: "Forbidden" }, 403);
 
   if (!fs.existsSync(deployScript())) {
     return json(
@@ -171,6 +177,8 @@ export const POST: APIRoute = ({ cookies }) => {
     statusFile(),
     JSON.stringify({ startedAt: Date.now(), fromVersion: installedVersion() }),
   );
+
+  logActivity(me, "update.start", { version: installedVersion() });
 
   // PM2 mematikan SELURUH pohon proses aplikasi lama setiap kali memuat ulang
   // (opsi `treekill`, aktif secara bawaan). Proses deploy adalah anak dari

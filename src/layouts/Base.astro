@@ -20,6 +20,9 @@ interface Props {
   ogImage?: string;
   ogType?: string;
   bodyClass?: string;
+  /** Kode bahasa untuk atribut <html lang>. Panel admin mengirim bahasa
+      pilihan penggunanya; situs publik tetap Bahasa Indonesia. */
+  lang?: string;
 }
 
 const {
@@ -30,6 +33,7 @@ const {
   ogImage = "",
   ogType = "website",
   bodyClass = "",
+  lang = "id",
 } = Astro.props;
 
 /**
@@ -76,7 +80,7 @@ styleParts.push(`--font-sans:"${fontName}",system-ui,-apple-system,"Segoe UI",sa
 const themeStyle = styleParts.join(";");
 ---
 <!DOCTYPE html>
-<html lang="id" data-theme-mode={themeMode}>
+<html lang={lang} data-theme-mode={themeMode}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
