@@ -1,0 +1,209 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { cardHTML, defaultSort } from "../../lib/card-html.js";
+import { PER_PAGE, pageCount, pageSlice, pageHref, pageWindow } from "../../lib/pagination.js";
+import { siteOrigin, canonicalUrl, absoluteUrl } from "../../lib/site-url";
+
+/**
+ * Katalog yang dirender server, berhalaman, dan setiap halamannya punya alamat.
+ *
+ * Beranda merender 12 kartu lalu menyerahkan sisanya ke `app.js`. Itu bagus
+ * untuk pembaca yang menjalankan JavaScript — tapi berarti 16 mobil berikutnya
+ * tidak punya satu pun alamat yang bisa didatangi perayap, dan pembaca tanpa
+ * JavaScript berhenti di kartu kedua belas dengan filter yang tidak berfungsi.
+ *
+ * Halaman ini sengaja TIDAK menggantikan katalog beranda, dan sengaja tidak
+ * menaruh nomor halaman di sana. Beranda menampilkan seluruh katalog begitu
+ * skripnya jalan; menempelkan "Halaman 1 dari 3" di bawah daftar yang sudah
+ * memuat semuanya hanya akan berbohong. Dua tampilan, dua tugas: beranda untuk
+ * menjelajah, /katalog untuk menyusuri sampai habis.
+ *
+ * Kartunya dibangun `card-html.js` — modul yang sama dengan beranda dan
+ * `app.js`, jadi tidak ada markup kartu yang bisa berselisih.
+ */
+
+const content = readContent();
+const site = content.site;
+
+const isLive = (v: any) => v && v.status !== "draft";
+const cars = defaultSort((content.cars || []).filter(isLive));
+
+const total = cars.length;
+const jumlahHalaman = pageCount(total, PER_PAGE);
+
+const raw = Astro.params.hal;
+
+/**
+ * `[...hal]` juga cocok untuk "/katalog/2/3". Yang seperti itu bukan halaman
+ * yang salah nomor, melainkan alamat yang tidak pernah ada — 404, bukan
+ * dialihkan ke halaman pertama.
+ */
+const segmen = raw === undefined || raw === "" ? [] : String(raw).split("/");
+let halaman: number | null = null;
+if (segmen.length === 0) {
+  halaman = 1;
+} else if (segmen.length === 1 && /^[1-9]\d*$/.test(segmen[0])) {
+  halaman = Number(segmen[0]);
+}
+
+/* Satu halaman, satu alamat: "/katalog/1" adalah "/katalog". */
+if (halaman === 1 && segmen.length === 1) {
+  return Astro.redirect("/katalog", 301);
+}
+
+const adaHalaman = halaman !== null && halaman >= 1 && halaman <= jumlahHalaman;
+if (!adaHalaman) {
+  Astro.response.status = 404;
+}
+
+const nomor = adaHalaman ? (halaman as number) : 1;
+const daftar = adaHalaman ? pageSlice(cars, nomor, PER_PAGE) : [];
+const gridHtml = daftar.map((c: any) => cardHTML(c, { linkable: true })).join("");
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+const prevHref = adaHalaman && nomor > 1 ? pageHref(nomor - 1) : "";
+const nextHref = adaHalaman && nomor < jumlahHalaman ? pageHref(nomor + 1) : "";
+const window = adaHalaman ? pageWindow(nomor, jumlahHalaman) : [];
+
+/** Nomor urut kartu pertama dan terakhir di halaman ini, untuk "1–12 dari 28". */
+const dari = (nomor - 1) * PER_PAGE + 1;
+const sampai = Math.min(nomor * PER_PAGE, total);
+
+const brand = site.brandText || "EVKita";
+const pageTitle = adaHalaman
+  ? nomor === 1
+    ? `Katalog Mobil Listrik di Indonesia — ${brand}`
+    : `Katalog Mobil Listrik — Halaman ${nomor} dari ${jumlahHalaman} — ${brand}`
+  : `Halaman tidak ditemukan — ${brand}`;
+
+const metaDesc = adaHalaman
+  ? nomor === 1
+    ? `Daftar lengkap ${total} mobil listrik yang dijual di Indonesia beserta jarak tempuh, kapasitas baterai, tenaga, dan harganya.`
+    : `Mobil listrik ke-${dari} sampai ke-${sampai} dari ${total} model yang dijual di Indonesia, lengkap dengan spesifikasi dan harganya.`
+  : "Halaman yang kamu cari tidak tersedia.";
+
+const jsonLd = adaHalaman
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "ItemList",
+          name: `Katalog mobil listrik — halaman ${nomor}`,
+          url: canonical,
+          numberOfItems: daftar.length,
+          itemListElement: daftar.map((c: any, i: number) => ({
+            "@type": "ListItem",
+            // Posisi dihitung dari seluruh katalog, bukan dari halaman ini:
+            // mobil ke-13 tetap ke-13 walau ia yang pertama di halaman dua.
+            position: dari + i,
+            name: `${c.brand} ${c.name}`,
+            url: absoluteUrl(Astro.url, `/mobil/${c.id}`),
+          })),
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: "Katalog", item: `${origin}/katalog` },
+            ...(nomor > 1 ? [{ "@type": "ListItem", position: 3, name: `Halaman ${nomor}` }] : []),
+          ],
+        },
+      ],
+    }
+  : null;
+
+const themeProps = {
+  primary: site.themePrimary,
+  secondary: site.themeSecondary,
+  radius: site.themeRadius,
+  font: site.themeFont,
+  mode: site.themeMode,
+};
+---
+
+<Base title={pageTitle} description={metaDesc} keywords={site.seoKeywords} ogImage={site.seoOgImage} theme={themeProps}>
+  {/* rel prev/next memberi tahu mesin pencari bahwa halaman-halaman ini satu
+      rangkaian, bukan tumpukan halaman berisi daftar yang mirip-mirip. */}
+  {prevHref ? <link slot="head" rel="prev" href={absoluteUrl(Astro.url, prevHref)} /> : null}
+  {nextHref ? <link slot="head" rel="next" href={absoluteUrl(Astro.url, nextHref)} /> : null}
+  {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="mobil" />
+
+  {!adaHalaman ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>Halaman katalog tidak ada</h1>
+      <p class="notfound-text">
+        Katalog ini hanya punya {jumlahHalaman} halaman. Mulai lagi dari halaman pertama.
+      </p>
+      <a class="btn btn-primary" href="/katalog">Buka katalog</a>
+    </main>
+  ) : (
+    <main class="container katalog" id="konten">
+      <nav class="breadcrumb" aria-label="Remah roti">
+        <a href="/">Beranda</a>
+        <span aria-hidden="true">/</span>
+        {nomor === 1 ? (
+          <span class="breadcrumb-current">Katalog</span>
+        ) : (
+          <>
+            <a href="/katalog">Katalog</a>
+            <span aria-hidden="true">/</span>
+            <span class="breadcrumb-current">Halaman {nomor}</span>
+          </>
+        )}
+      </nav>
+
+      <header class="katalog-head">
+        <h1>{nomor === 1 ? "Katalog mobil listrik di Indonesia" : `Katalog mobil listrik — halaman ${nomor}`}</h1>
+        <p class="katalog-lead">
+          Menampilkan <strong>{dari}–{sampai}</strong> dari <strong>{total}</strong> model.
+          Urutannya dari jarak tempuh terjauh.
+          {" "}<a href="/#daftar">Cari dan saring di beranda →</a>
+        </p>
+      </header>
+
+      <div class="grid" set:html={gridHtml} />
+
+      {jumlahHalaman > 1 ? (
+        <nav class="pager" aria-label="Halaman katalog">
+          {prevHref ? (
+            <a class="pager-arrow" href={prevHref} rel="prev">← Sebelumnya</a>
+          ) : (
+            <span class="pager-arrow is-off" aria-hidden="true">← Sebelumnya</span>
+          )}
+
+          <ol class="pager-nums">
+            {window.map((n) =>
+              n === "…" ? (
+                <li class="pager-gap" aria-hidden="true">…</li>
+              ) : (
+                <li>
+                  {n === nomor ? (
+                    <span class="pager-num is-current" aria-current="page">{n}</span>
+                  ) : (
+                    <a class="pager-num" href={pageHref(n as number)}>{n}</a>
+                  )}
+                </li>
+              )
+            )}
+          </ol>
+
+          {nextHref ? (
+            <a class="pager-arrow" href={nextHref} rel="next">Berikutnya →</a>
+          ) : (
+            <span class="pager-arrow is-off" aria-hidden="true">Berikutnya →</span>
+          )}
+        </nav>
+      ) : null}
+    </main>
+  )}
+
+  <SiteFooter site={site} base="/" />
+</Base>

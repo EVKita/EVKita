@@ -2974,6 +2974,94 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
   color: var(--accent-ink);
 }
 
+/* ===== Halaman katalog berhalaman ===== */
+
+.katalog {
+  padding: 28px 20px clamp(40px, 6vw, 72px);
+}
+
+.katalog-head {
+  margin-bottom: clamp(20px, 3vw, 30px);
+}
+
+.katalog-head h1 {
+  font-size: clamp(24px, 4vw, 38px);
+  line-height: 1.15;
+}
+
+.katalog-lead {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.katalog-lead a {
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.catalog-all {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: clamp(28px, 4vw, 44px);
+}
+
+.pager-nums {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+}
+
+.pager-num,
+.pager-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+a.pager-num:hover,
+a.pager-arrow:hover {
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
+}
+
+.pager-num.is-current {
+  border-color: var(--accent-ink);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+/* Panah yang tidak menuju ke mana-mana tetap ada supaya barisnya tidak
+   melompat saat pindah halaman — tapi jelas terlihat mati. */
+.pager-arrow.is-off {
+  opacity: 0.4;
+}
+
+.pager-gap {
+  padding: 0 4px;
+  color: var(--text-muted);
+}
+
 /* ===== Kalkulator ===== */
 
 .kalk {

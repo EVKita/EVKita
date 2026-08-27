@@ -6,6 +6,7 @@ import { readContent } from "../lib/store";
 import { carSVG, defaultColor } from "../lib/cars-ui.js";
 import { safeUrl } from "../lib/url.js";
 import { cardHTML, defaultSort } from "../lib/card-html.js";
+import { PER_PAGE } from "../lib/pagination.js";
 import { siteOrigin } from "../lib/site-url";
 
 const content = readContent();
@@ -69,7 +70,8 @@ function metaRows(pairs: [string, any][]) {
  */
 const canonical = `${siteOrigin(Astro.url)}/`;
 
-const SSR_CARDS = 12;
+/* Sama dengan isi satu halaman /katalog — dua tempat, satu angka. */
+const SSR_CARDS = PER_PAGE;
 const initialCards = defaultSort(cars).slice(0, SSR_CARDS);
 const initialGrid = initialCards.map((c: any) => cardHTML(c, { linkable: true })).join("");
 
@@ -293,6 +295,17 @@ const jsonLd = {
           <p>Coba longgarkan filter atau ubah kata kunci pencarian.</p>
           <button id="emptyReset" class="btn btn-outline btn-sm" type="button">Reset semua filter</button>
         </div>
+
+        {/* Tanpa JavaScript, katalog di atas berhenti di kartu ke-12 dan
+            filternya tidak berfungsi. Tautan ini yang membawa pembaca — dan
+            perayap — ke seluruh katalog yang dirender server dan berhalaman.
+            Sengaja tanpa nomor halaman: begitu app.js jalan, daftar di atas
+            memuat semuanya, dan "halaman 1 dari 3" di bawahnya akan berbohong. */}
+        {cars.length > SSR_CARDS ? (
+          <p class="catalog-all">
+            <a class="btn btn-outline" href="/katalog">Buka katalog lengkap →</a>
+          </p>
+        ) : null}
       </div>
     </section>
 

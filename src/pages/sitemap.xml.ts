@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { readContent } from "../lib/store";
 import { siteOrigin } from "../lib/site-url";
 import { comparePairs } from "../lib/compare-pairs.js";
+import { PER_PAGE, pageCount, pageHref } from "../lib/pagination.js";
 
 /**
  * Peta situs yang dirakit saat diminta, bukan saat build.
@@ -24,6 +25,12 @@ export const GET: APIRoute = ({ url }) => {
   ];
 
   const liveCars = (content.cars || []).filter(isLive);
+
+  // Setiap halaman katalog diumumkan sendiri-sendiri: itulah satu-satunya cara
+  // perayap sampai ke mobil ke-13 dan seterusnya tanpa menjalankan JavaScript.
+  for (let hal = 1; hal <= pageCount(liveCars.length, PER_PAGE); hal++) {
+    entries.push({ loc: `${origin}${pageHref(hal)}`, priority: hal === 1 ? "0.9" : "0.6" });
+  }
 
   for (const car of liveCars) {
     entries.push({
