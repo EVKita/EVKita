@@ -1,0 +1,155 @@
+---
+/**
+ * Sidebar panel admin, dipakai bersama oleh /admin dan /admin/update supaya
+ * kedua halaman punya kerangka yang persis sama.
+ *
+ * `mode="app"`  — dipakai /admin: tiap item berupa tombol `data-view`, yang
+ *                 ditangani admin.js untuk berpindah tampilan tanpa memuat
+ *                 ulang halaman.
+ * `mode="link"` — dipakai halaman admin lain yang tidak memuat admin.js:
+ *                 tiap item jadi tautan biasa ke alamat hash /admin, yang
+ *                 tetap dikenali admin.js saat halaman itu terbuka.
+ */
+interface Props {
+  mode?: "app" | "link";
+  active?: string;
+}
+
+const { mode = "app", active = "dashboard" } = Astro.props;
+
+const NAV = [
+  {
+    label: "Ringkasan",
+    items: [
+      {
+        view: "dashboard",
+        label: "Dasbor",
+        icon: `<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>`,
+      },
+    ],
+  },
+  {
+    label: "Kendaraan",
+    items: [
+      {
+        view: "cars",
+        label: "Mobil",
+        icon: `<path d="M5 17h14M4 17v-4.2a2 2 0 0 1 .2-.9l2-4A2 2 0 0 1 8 6.8h8a2 2 0 0 1 1.8 1.1l2 4a2 2 0 0 1 .2.9V17"/><path d="M4 13h16"/><circle cx="7.5" cy="17.5" r="1.6"/><circle cx="16.5" cy="17.5" r="1.6"/>`,
+      },
+      {
+        view: "motors",
+        label: "Motor",
+        icon: `<circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M8 17h6l3-6h-4l-2-3H8"/><path d="M14 8h3"/>`,
+      },
+    ],
+  },
+  {
+    label: "Direktori",
+    items: [
+      { view: "spklu", label: "SPKLU", icon: `<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>` },
+      {
+        view: "bengkel",
+        label: "Bengkel",
+        icon: `<path d="M14.7 6.3a4 4 0 0 0 5 5l-8.4 8.4a2.5 2.5 0 0 1-3.5-3.5l8.4-8.4Z"/><path d="M18.5 3.5 21 6l-2 2-2.5-2.5 2-2Z"/>`,
+      },
+      {
+        view: "berita",
+        label: "Berita",
+        icon: `<path d="M4 5h12a1 1 0 0 1 1 1v12a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5Z"/><path d="M19 20a2 2 0 0 0 2-2v-7h-4"/><path d="M7 9h6M7 13h6M7 17h4"/>`,
+      },
+    ],
+  },
+  {
+    label: "Situs",
+    items: [
+      {
+        view: "site",
+        label: "Pengaturan Situs",
+        icon: `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>`,
+      },
+      {
+        view: "media",
+        label: "Media",
+        icon: `<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 16-5-5-6 6-2-2-5 5"/>`,
+      },
+      {
+        view: "backups",
+        label: "Cadangan",
+        icon: `<ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/><path d="M4 11.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>`,
+      },
+    ],
+  },
+];
+
+const UPDATE_ICON = `<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/>`;
+const SITE_ICON = `<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>`;
+
+const isApp = mode === "app";
+const SVG_ATTRS = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-width": "1.8",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round",
+} as const;
+---
+
+<aside id="admin-sidebar" class="admin-sidebar">
+  <div class="sidebar-brand">
+    <span class="sidebar-logo">EV</span>
+    <span class="sidebar-brand-text">
+      <strong>EVKita</strong>
+      <small>Panel Admin</small>
+    </span>
+  </div>
+
+  <nav class="sidebar-nav">
+    {NAV.map((group) => (
+      <div class="nav-group">
+        <div class="nav-group-label">{group.label}</div>
+        {group.items.map((item) =>
+          isApp ? (
+            <button
+              class:list={["nav-item", { active: active === item.view }]}
+              data-view={item.view}
+              type="button"
+            >
+              <span class="nav-item-icon" aria-hidden="true">
+                <svg {...SVG_ATTRS} set:html={item.icon} />
+              </span>
+              <span class="nav-item-label">{item.label}</span>
+              <span class="nav-item-count" data-count={item.view}></span>
+            </button>
+          ) : (
+            <a class="nav-item nav-item-link" href={`/admin#/${item.view}`}>
+              <span class="nav-item-icon" aria-hidden="true">
+                <svg {...SVG_ATTRS} set:html={item.icon} />
+              </span>
+              <span class="nav-item-label">{item.label}</span>
+            </a>
+          )
+        )}
+      </div>
+    ))}
+  </nav>
+
+  <div class="sidebar-foot">
+    <a
+      href="/admin/update"
+      class:list={["nav-item", "nav-item-link", { active: active === "update" }]}
+      aria-current={active === "update" ? "page" : undefined}
+    >
+      <span class="nav-item-icon" aria-hidden="true">
+        <svg {...SVG_ATTRS} set:html={UPDATE_ICON} />
+      </span>
+      <span class="nav-item-label">Pembaruan</span>
+    </a>
+    <a href="/" class="nav-item nav-item-link" target="_blank" rel="noopener">
+      <span class="nav-item-icon" aria-hidden="true">
+        <svg {...SVG_ATTRS} set:html={SITE_ICON} />
+      </span>
+      <span class="nav-item-label">Lihat Situs</span>
+    </a>
+  </div>
+</aside>

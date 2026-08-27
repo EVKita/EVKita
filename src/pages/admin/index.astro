@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
+import AdminSidebar from "../../components/AdminSidebar.astro";
 import "../../styles/admin.css";
 import { isAuthed } from "../../lib/auth";
 
@@ -13,111 +14,7 @@ if (!isAuthed(Astro.cookies)) {
     <!-- Lapisan gelap khusus mode drawer (≤900px); klik untuk menutup sidebar. -->
     <div id="sidebar-scrim" class="sidebar-scrim"></div>
 
-    <aside id="admin-sidebar" class="admin-sidebar">
-      <div class="sidebar-brand">
-        <span class="sidebar-logo">EV</span>
-        <span class="sidebar-brand-text">
-          <strong>EVKita</strong>
-          <small>Panel Admin</small>
-        </span>
-      </div>
-
-      <nav class="sidebar-nav">
-        <div class="nav-group">
-          <div class="nav-group-label">Ringkasan</div>
-          <button class="nav-item active" data-view="dashboard" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-            </span>
-            <span class="nav-item-label">Dasbor</span>
-            <span class="nav-item-count" data-count="dashboard"></span>
-          </button>
-        </div>
-
-        <div class="nav-group">
-          <div class="nav-group-label">Kendaraan</div>
-          <button class="nav-item" data-view="cars" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M4 17v-4.2a2 2 0 0 1 .2-.9l2-4A2 2 0 0 1 8 6.8h8a2 2 0 0 1 1.8 1.1l2 4a2 2 0 0 1 .2.9V17"/><path d="M4 13h16"/><circle cx="7.5" cy="17.5" r="1.6"/><circle cx="16.5" cy="17.5" r="1.6"/></svg>
-            </span>
-            <span class="nav-item-label">Mobil</span>
-            <span class="nav-item-count" data-count="cars"></span>
-          </button>
-          <button class="nav-item" data-view="motors" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M8 17h6l3-6h-4l-2-3H8"/><path d="M14 8h3"/></svg>
-            </span>
-            <span class="nav-item-label">Motor</span>
-            <span class="nav-item-count" data-count="motors"></span>
-          </button>
-        </div>
-
-        <div class="nav-group">
-          <div class="nav-group-label">Direktori</div>
-          <button class="nav-item" data-view="spklu" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
-            </span>
-            <span class="nav-item-label">SPKLU</span>
-            <span class="nav-item-count" data-count="spklu"></span>
-          </button>
-          <button class="nav-item" data-view="bengkel" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 5 5l-8.4 8.4a2.5 2.5 0 0 1-3.5-3.5l8.4-8.4Z"/><path d="M18.5 3.5 21 6l-2 2-2.5-2.5 2-2Z"/></svg>
-            </span>
-            <span class="nav-item-label">Bengkel</span>
-            <span class="nav-item-count" data-count="bengkel"></span>
-          </button>
-          <button class="nav-item" data-view="berita" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12a1 1 0 0 1 1 1v12a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5Z"/><path d="M19 20a2 2 0 0 0 2-2v-7h-4"/><path d="M7 9h6M7 13h6M7 17h4"/></svg>
-            </span>
-            <span class="nav-item-label">Berita</span>
-            <span class="nav-item-count" data-count="berita"></span>
-          </button>
-        </div>
-
-        <div class="nav-group">
-          <div class="nav-group-label">Situs</div>
-          <button class="nav-item" data-view="site" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
-            </span>
-            <span class="nav-item-label">Pengaturan Situs</span>
-            <span class="nav-item-count" data-count="site"></span>
-          </button>
-          <button class="nav-item" data-view="media" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 16-5-5-6 6-2-2-5 5"/></svg>
-            </span>
-            <span class="nav-item-label">Media</span>
-            <span class="nav-item-count" data-count="media"></span>
-          </button>
-          <button class="nav-item" data-view="backups" type="button">
-            <span class="nav-item-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/><path d="M4 11.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
-            </span>
-            <span class="nav-item-label">Cadangan</span>
-            <span class="nav-item-count" data-count="backups"></span>
-          </button>
-        </div>
-      </nav>
-
-      <div class="sidebar-foot">
-        <a href="/admin/update" class="nav-item nav-item-link">
-          <span class="nav-item-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg>
-          </span>
-          <span class="nav-item-label">Pembaruan</span>
-        </a>
-        <a href="/" class="nav-item nav-item-link" target="_blank" rel="noopener">
-          <span class="nav-item-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
-          </span>
-          <span class="nav-item-label">Lihat Situs</span>
-        </a>
-      </div>
-    </aside>
+    <AdminSidebar mode="app" active="dashboard" />
 
     <header id="admin-topbar" class="admin-topbar">
       <button id="sidebar-toggle" class="btn btn-icon" type="button" aria-label="Ciutkan menu">

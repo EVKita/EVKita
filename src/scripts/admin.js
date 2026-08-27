@@ -34,8 +34,9 @@ const RANGE_STANDARDS = ["", "WLTP", "NEDC", "CLTC", "EPA", "Klaim pabrikan"];
 const DRIVE_TYPES = ["", "FWD", "RWD", "AWD", "4WD"];
 const STATUS_OPTS = [["published", "Terbit"], ["draft", "Draf"]];
 
-/* Saran merek untuk field Merek. Digabung dengan merek yang sudah ada di data;
-   field-nya tetap teks bebas, daftar ini hanya mempercepat pengetikan. */
+/* Saran merek untuk field Merek. Digabung dengan merek yang sudah ada di data
+   lalu ditampilkan sebagai daftar pilihan yang bisa dicari. Field-nya tetap
+   teks bebas: merek yang belum ada di daftar boleh diketik langsung. */
 const BRAND_SUGGESTIONS = {
   cars: ["Aion", "BMW", "BYD", "Chery", "Citroen", "Denza", "DFSK", "Geely", "Honda", "Hyundai", "Jetour", "Kia", "Lexus", "Maxus", "Mercedes-Benz", "MG", "Mini", "Mitsubishi", "Neta", "Nissan", "Polestar", "Seres", "Tesla", "Toyota", "VinFast", "Volvo", "Wuling"],
   motors: ["Alva", "Charged", "Davigo", "Electrum", "Exotic", "Gesits", "Honda", "Maka Motors", "Niu", "Polytron", "Rakata", "Selis", "Smoot", "United", "Uwinfly", "Viar", "Volta", "Yamaha"],
@@ -60,7 +61,7 @@ const SECTION_KEYS = EDITOR_SECTIONS.map((x) => x.k);
 
 /**
  * Field kendaraan per pane modal. `t` = tipe kontrol, `full` = selebar grid,
- * `list` = id datalist untuk saran ketik.
+ * `src` = kunci daftar saran untuk kontrol `combo`.
  *
  * Dibuat per koleksi karena mobil dan motor tidak berbagi seluruh spesifikasi:
  * motor tidak punya penggerak roda maupun jumlah kursi, dan pilihan tipe
@@ -72,7 +73,7 @@ function vehicleFields(col) {
   const one = motor ? "motor" : "mobil";
   return {
     dasar: [
-      { k: "brand", l: "Merek", t: "text", req: true, ph: motor ? "mis. Polytron" : "mis. Hyundai", list: "brand-list" },
+      { k: "brand", l: "Merek", t: "combo", req: true, ph: motor ? "mis. Polytron" : "mis. Hyundai", src: "brand", hint: "Pilih dari daftar, atau ketik merek baru." },
       { k: "name", l: "Nama Model", t: "text", req: true, ph: motor ? "mis. Fox 500" : "mis. Ioniq 5" },
       { k: "bodyType", l: motor ? "Tipe Motor" : "Tipe Bodi", t: "select", opts: motor ? MOTOR_BODY_TYPES : CAR_BODY_TYPES },
       { k: "year", l: "Tahun Model", t: "number", ph: "2025" },
@@ -606,7 +607,6 @@ function fieldHtml(def, value, prefix) {
   const cls = "field" + (def.full || def.t === "textarea" ? " full" : "");
   const hint = def.hint ? `<div class="hint">${esc(def.hint)}</div>` : "";
   const ph = def.ph ? ` placeholder="${esc(def.ph)}"` : "";
-  const list = def.list ? ` list="${esc(def.list)}" autocomplete="off"` : "";
   const req = def.req ? " *" : "";
   const label = `<label for="${esc(id)}">${esc(def.l)}${req}</label>`;
 
@@ -633,12 +633,14 @@ function fieldHtml(def, value, prefix) {
     control = `<select id="${esc(id)}" name="${esc(def.k)}">${optionsHtml(def.opts, value)}</select>`;
   } else if (def.t === "number") {
     control = `<input type="number" step="${esc(def.step || "any")}" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value === null || value === undefined ? "" : value)}"${ph} />`;
+  } else if (def.t === "combo") {
+    control = comboHtml(id, def, value);
   } else if (def.t === "tags") {
     const v = Array.isArray(value) ? value.join(", ") : value;
     control = `<input type="text" id="${esc(id)}" name="${esc(def.k)}" value="${esc(v)}"${ph} />`;
   } else {
     const type = def.t === "url" ? "url" : def.t === "date" ? "date" : "text";
-    control = `<input type="${type}" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph}${list} />`;
+    control = `<input type="${type}" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph} />`;
   }
   return `<div class="${cls}" data-field="${esc(def.k)}">${label}${control}${hint}</div>`;
 }
@@ -650,6 +652,223 @@ function readField(form, def) {
   if (def.t === "number") return numOrNull(el.value);
   if (def.t === "tags") return splitList(el.value);
   return String(el.value || "").trim();
+}
+
+/* ------------------------------------------------------------------ *
+ * 7b. Combobox: daftar pilihan yang bisa dicari + ketik bebas
+ *
+ * Dipakai field Merek. Isi daftarnya tidak ikut dicetak ke HTML melainkan
+ * diambil dari `comboSources`, yang diisi ulang tiap kali editor dibuka
+ * supaya merek yang baru ditambahkan langsung ikut muncul.
+ *
+ * Panel sengaja TIDAK terbuka saat field menerima fokus. Editor memfokuskan
+ * Merek secara otomatis begitu halaman tambah kendaraan dibuka, dan panel
+ * yang ikut terbuka sendiri di situ menutupi separuh formulir — persis
+ * kelakuan `<datalist>` bawaan browser yang diganti kontrol ini.
+ * ------------------------------------------------------------------ */
+
+const comboSources = {};
+const COMBO_LABEL = { brand: "merek" };
+
+function comboLabel(key) {
+  return COMBO_LABEL[key] || "pilihan";
+}
+
+function comboHtml(id, def, value) {
+  const key = def.src || def.k;
+  const ph = def.ph ? ` placeholder="${esc(def.ph)}"` : "";
+  return `<div class="combo" data-combo="${esc(key)}" data-combo-filter="0">
+    <input type="text" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph}
+      role="combobox" aria-expanded="false" aria-controls="${esc(id)}-pop" aria-autocomplete="list"
+      autocomplete="off" spellcheck="false" data-combo-input />
+    <button type="button" class="combo-caret" tabindex="-1" aria-hidden="true" data-combo-caret>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="combo-pop" id="${esc(id)}-pop" role="listbox" data-combo-pop hidden></div>
+  </div>`;
+}
+
+function comboItems(box) {
+  const src = comboSources[box.getAttribute("data-combo")];
+  return Array.isArray(src) ? src : [];
+}
+
+/* Yang diawali kata pencarian didahulukan, baru yang cocok di tengah teks. */
+function comboMatches(box, q) {
+  const s = String(q || "").trim().toLowerCase();
+  const all = comboItems(box);
+  if (!s) return all.slice();
+  const head = [];
+  const rest = [];
+  all.forEach((o) => {
+    const i = String(o).toLowerCase().indexOf(s);
+    if (i === 0) head.push(o);
+    else if (i > 0) rest.push(o);
+  });
+  return head.concat(rest);
+}
+
+/* Tandai potongan teks yang cocok supaya terlihat kenapa sebuah baris muncul. */
+function comboMark(text, q) {
+  const s = String(q || "").trim();
+  if (!s) return esc(text);
+  const i = String(text).toLowerCase().indexOf(s.toLowerCase());
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + s.length)) + "</mark>" + esc(text.slice(i + s.length));
+}
+
+function renderCombo(box) {
+  const input = box.querySelector("[data-combo-input]");
+  const pop = box.querySelector("[data-combo-pop]");
+  if (!input || !pop) return;
+
+  const label = comboLabel(box.getAttribute("data-combo"));
+  const q = box.getAttribute("data-combo-filter") === "1" ? input.value : "";
+  const cur = input.value.trim().toLowerCase();
+  const list = comboMatches(box, q);
+  const total = comboItems(box).length;
+
+  if (!list.length) {
+    pop.innerHTML = `<div class="combo-empty">
+      <strong>Tidak ada ${esc(label)} yang cocok</strong>
+      <span>“${esc(input.value.trim())}” tetap bisa dipakai — cukup lanjut mengisi.</span>
+    </div>`;
+    input.removeAttribute("aria-activedescendant");
+    return;
+  }
+
+  const popId = pop.id;
+  pop.innerHTML = `<div class="combo-list" role="presentation">${list.map((o, i) => {
+    const on = String(o).toLowerCase() === cur;
+    return `<button type="button" class="combo-opt${on ? " is-on" : ""}" role="option" tabindex="-1"
+      id="${esc(popId)}-o${i}" aria-selected="${on ? "true" : "false"}" data-combo-val="${esc(o)}">
+      <span class="combo-opt-text">${comboMark(o, q)}</span>
+      ${on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>' : ""}
+    </button>`;
+  }).join("")}</div>
+  <div class="combo-foot">
+    <span>${list.length} dari ${total} ${esc(label)}</span>
+    <span>Ketik untuk mencari · ${esc(label)} baru boleh langsung diketik</span>
+  </div>`;
+
+  setComboActive(box, pop.querySelector(".combo-opt.is-on") || pop.querySelector(".combo-opt"), true);
+}
+
+function setComboActive(box, opt, instant) {
+  const pop = box.querySelector("[data-combo-pop]");
+  const input = box.querySelector("[data-combo-input]");
+  if (!pop || !opt) return;
+  pop.querySelectorAll(".combo-opt.is-active").forEach((el) => el.classList.remove("is-active"));
+  opt.classList.add("is-active");
+  opt.scrollIntoView({ block: "nearest", behavior: instant ? "auto" : "smooth" });
+  if (input) input.setAttribute("aria-activedescendant", opt.id);
+}
+
+function moveCombo(box, delta) {
+  const opts = [...box.querySelectorAll(".combo-opt")];
+  if (!opts.length) return;
+  const at = opts.findIndex((o) => o.classList.contains("is-active"));
+  const next = at < 0 ? (delta > 0 ? 0 : opts.length - 1) : (at + delta + opts.length) % opts.length;
+  setComboActive(box, opts[next]);
+}
+
+function openCombo(box, opts) {
+  const input = box.querySelector("[data-combo-input]");
+  if (!input) return;
+  closeCombos(box);
+  box.setAttribute("data-combo-filter", opts && opts.filter ? "1" : "0");
+  box.classList.add("is-open");
+  input.setAttribute("aria-expanded", "true");
+  const pop = box.querySelector("[data-combo-pop]");
+  if (pop) pop.hidden = false;
+  renderCombo(box);
+}
+
+function closeCombo(box) {
+  if (!box.classList.contains("is-open")) return;
+  box.classList.remove("is-open");
+  const input = box.querySelector("[data-combo-input]");
+  const pop = box.querySelector("[data-combo-pop]");
+  if (input) {
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+  }
+  if (pop) { pop.hidden = true; pop.innerHTML = ""; }
+}
+
+function closeCombos(except) {
+  $$(".combo.is-open").forEach((box) => { if (box !== except) closeCombo(box); });
+}
+
+function chooseCombo(box, value) {
+  const input = box.querySelector("[data-combo-input]");
+  if (!input) return;
+  input.value = value;
+  closeCombo(box);
+  input.focus();
+  /* Event buatan sendiri: penanganannya di bawah mengabaikan yang tidak
+     berasal dari ketikan, jadi panel tidak terbuka lagi setelah memilih. */
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/* Dipanggil paling awal dari penanganan papan ketik global. `true` berarti
+   tombolnya sudah dipakai combobox dan tidak boleh diteruskan. */
+function comboKeydown(e) {
+  const input = e.target.closest && e.target.closest("[data-combo-input]");
+  if (!input) return false;
+  const box = input.closest(".combo");
+  if (!box) return false;
+  const open = box.classList.contains("is-open");
+
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (!open) openCombo(box, { filter: false });
+    else moveCombo(box, e.key === "ArrowDown" ? 1 : -1);
+    return true;
+  }
+  if (e.key === "Enter") {
+    if (!open) return false; // biarkan Enter menyimpan formulir seperti biasa
+    e.preventDefault();
+    const act = box.querySelector(".combo-opt.is-active");
+    if (act) chooseCombo(box, act.getAttribute("data-combo-val"));
+    else closeCombo(box);
+    return true;
+  }
+  if (e.key === "Escape") {
+    if (!open) return false; // Escape berikutnya baru meninggalkan editor
+    e.preventDefault();
+    e.stopPropagation();
+    closeCombo(box);
+    return true;
+  }
+  if (e.key === "Tab" && open) closeCombo(box);
+  return false;
+}
+
+/* Dipanggil paling awal dari penanganan klik global. Klik di luar combobox
+   mana pun menutup panel yang sedang terbuka. */
+function comboClick(e) {
+  const opt = e.target.closest("[data-combo-val]");
+  if (opt) {
+    const box = opt.closest(".combo");
+    if (box) { chooseCombo(box, opt.getAttribute("data-combo-val")); return true; }
+  }
+
+  const box = e.target.closest(".combo");
+  if (!box) { closeCombos(null); return false; }
+
+  if (e.target.closest("[data-combo-caret]")) {
+    if (box.classList.contains("is-open")) closeCombo(box);
+    else openCombo(box, { filter: false });
+    const input = box.querySelector("[data-combo-input]");
+    if (input) input.focus();
+    return true;
+  }
+  if (e.target.closest("[data-combo-input]") && !box.classList.contains("is-open")) {
+    openCombo(box, { filter: false });
+    return true;
+  }
+  return false;
 }
 
 function imagePreviewHtml(url, extraAttr) {
@@ -724,6 +943,7 @@ function readRepeater(root, name) {
 
 function setView(view, opts) {
   if (!VIEWS.includes(view)) view = "dashboard";
+  closeCombos(null);
   if (view !== "editor") { vehicleCtx = null; editorTouched = false; }
   activeView = view;
   syncQuickAdd();
@@ -1465,10 +1685,9 @@ function scrollToSection(key) {
 }
 
 /* Saran merek: gabungan merek yang sudah dipakai di koleksi ini dan daftar bawaan. */
-function brandListHtml(col) {
+function brandOptions(col) {
   const used = uniqVals(content[col] || [], "brand");
-  const all = [...new Set([...used, ...(BRAND_SUGGESTIONS[col] || [])])].sort((a, b) => a.localeCompare(b, "id"));
-  return `<datalist id="brand-list">${all.map((b) => `<option value="${esc(b)}"></option>`).join("")}</datalist>`;
+  return [...new Set([...used, ...(BRAND_SUGGESTIONS[col] || [])])].sort((a, b) => a.localeCompare(b, "id"));
 }
 
 function specPresetHtml(col) {
@@ -1499,7 +1718,8 @@ function renderVehicleSections(item) {
       <div class="editor-section-body">${inner}</div>`;
   };
 
-  fill("dasar", `${brandListHtml(col)}<div class="field-grid">
+  comboSources.brand = brandOptions(col);
+  fill("dasar", `<div class="field-grid">
     ${defs.dasar.map((d) => fieldHtml(d, item[d.k], "v")).join("")}
   </div>`);
 
@@ -2210,6 +2430,9 @@ function parseRef(ref) {
 function bindEvents() {
   /* --- Navigasi --- */
   document.addEventListener("click", (e) => {
+    /* Combobox lebih dulu: klik di luar panel yang terbuka ikut menutupnya. */
+    if (comboClick(e)) return;
+
     const nav = e.target.closest(".nav-item[data-view]");
     if (nav) {
       e.preventDefault();
@@ -2221,6 +2444,9 @@ function bindEvents() {
     if (stat) { setView(stat.getAttribute("data-goto")); return; }
 
     if (e.target.closest("#sidebar-toggle")) { toggleSidebar(); return; }
+
+    /* Lapisan gelap di belakang drawer: klik di mana pun padanya menutup sidebar. */
+    if (e.target.id === "sidebar-scrim") { $("admin-app").classList.remove("sidebar-open"); return; }
 
     if (e.target.closest("#logout")) {
       e.preventDefault();
@@ -2437,6 +2663,13 @@ function bindEvents() {
     const t = e.target;
     if (t.closest && t.closest("#vehicle-form, #dir-form")) editorTouched = true;
 
+    /* Panel combobox hanya bereaksi pada ketikan sungguhan: memilih dari
+       daftar juga memicu event ini, dan panelnya harus tetap tertutup. */
+    if (e.isTrusted && t.matches && t.matches("[data-combo-input]")) {
+      openCombo(t.closest(".combo"), { filter: true });
+      /* sengaja tidak return: pratinjau editor ikut perlu diperbarui */
+    }
+
     const search = t.closest && t.closest("[data-search]");
     if (search) {
       const col = search.getAttribute("data-col");
@@ -2648,6 +2881,9 @@ function bindEvents() {
 
   /* --- Papan ketik --- */
   document.addEventListener("keydown", (e) => {
+    /* Combobox lebih dulu: panah, Enter, dan Escape miliknya sendiri. */
+    if (comboKeydown(e)) return;
+
     const mod = e.ctrlKey || e.metaKey;
     const key = String(e.key || "").toLowerCase();
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) ||
