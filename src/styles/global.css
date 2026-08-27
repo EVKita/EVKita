@@ -20,7 +20,7 @@
   --accent-grad: linear-gradient(135deg, #ff3d2e, #ff8a00);
   --accent-soft: rgba(255, 61, 46, 0.09);
   --radius: 16px;
-  --shadow: 0 10px 30px rgba(13, 17, 24, 0.09);
+  --shadow: 0 1px 2px rgba(13, 17, 24, 0.05), 0 12px 32px rgba(13, 17, 24, 0.08);
   --header-bg: rgba(255, 255, 255, 0.86);
   --danger: #e5484d;
 
@@ -31,8 +31,8 @@
   --radius-sm: 10px;
   --radius-lg: 26px;
   --radius-pill: 999px;
-  --shadow-sm: 0 2px 8px rgba(13, 17, 24, 0.06);
-  --shadow-lg: 0 24px 60px rgba(13, 17, 24, 0.14);
+  --shadow-sm: 0 1px 2px rgba(13, 17, 24, 0.05), 0 4px 12px rgba(13, 17, 24, 0.05);
+  --shadow-lg: 0 2px 6px rgba(13, 17, 24, 0.06), 0 28px 64px rgba(13, 17, 24, 0.14);
   --ring: 0 0 0 3px var(--accent-soft);
   --on-accent: #ffffff;
   --accent-ink: var(--accent);
@@ -43,6 +43,17 @@
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --maxw: 1220px;
   --ease: cubic-bezier(0.22, 0.9, 0.3, 1);
+  /* Pegas halus untuk gerak yang "mahal": laci, panel, dan tombol. */
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.24, 1.02);
+
+  /* Tinggi header dipakai ulang oleh scroll-padding dan toolbar sticky, jadi
+     nilainya hanya ditulis sekali di sini. */
+  --header-h: 68px;
+  /* Lekuk aman perangkat berponi (iPhone). Nol di perangkat lain. */
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
 }
 
 /* Warna aksen bisa diganti pemilik situs, jadi turunan lembutnya dihitung
@@ -62,13 +73,13 @@
   --text: #eef1f7;
   --text-muted: #9aa4b6;
   --header-bg: rgba(11, 14, 20, 0.82);
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px rgba(0, 0, 0, 0.45);
 
   --bg-elev: #171d29;
   --bg-tint: #101520;
   --border-soft: #1d2432;
-  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 26px 70px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.45), 0 30px 72px rgba(0, 0, 0, 0.6);
   --accent-soft: rgba(255, 255, 255, 0.08);
 }
 
@@ -107,8 +118,14 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 84px;
+  scroll-padding-top: calc(var(--header-h) + 16px);
   -webkit-text-size-adjust: 100%;
+  /* Dipasang di <html>, bukan <body>: nilai overflow <html> yang menentukan
+     perilaku viewport. `clip` (bukan `hidden`) supaya tidak ada kontainer
+     gulir baru yang membuat header dan toolbar `position: sticky` menempel
+     ke elemen — bukan ke viewport. Ini yang menahan laci navigasi dan elemen
+     berhias lain agar tidak menciptakan gulir mendatar di ponsel. */
+  overflow-x: clip;
 }
 
 body {
@@ -117,15 +134,18 @@ body {
   color: var(--text);
   line-height: 1.6;
   font-size: 16px;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  /* `clip`, bukan `hidden`: `overflow:hidden` menjadikan <body> kontainer
-     gulir sendiri, dan itu membuat header serta toolbar position:sticky
-     menempel ke <body> — bukan ke viewport. */
-  overflow-x: clip;
+  -moz-osx-font-smoothing: grayscale;
+  /* Sorotan biru bawaan Android/iOS saat menyentuh tautan dimatikan; keadaan
+     tekan sudah punya gaya sendiri di komponen masing-masing. */
+  -webkit-tap-highlight-color: transparent;
 }
 
-body.modal-open,
-body.nav-open {
+/* Kunci gulir saat laci/modal terbuka dipasang di <html>. Di <body> ia akan
+   menjadikan <body> kontainer gulir dan melepaskan semua elemen sticky. */
+html.nav-open,
+html.modal-open {
   overflow: hidden;
 }
 
@@ -184,7 +204,9 @@ textarea {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 0 20px;
+  /* `max()` dengan lekuk aman: di ponsel berponi yang dimiringkan, isi tidak
+     tertutup takik layar; di perangkat lain nilainya tetap 20px. */
+  padding-inline: max(20px, var(--safe-l)) max(20px, var(--safe-r));
 }
 
 .sr-only {
@@ -342,10 +364,11 @@ textarea {
   top: 0;
   z-index: 80;
   background: var(--header-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border-bottom: 1px solid transparent;
-  transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  padding-top: var(--safe-t);
+  transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease);
 }
 
 .masthead.scrolled {
@@ -356,9 +379,16 @@ textarea {
 .masthead-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 68px;
+  gap: 12px;
+  height: var(--header-h);
+}
+
+.masthead-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .logo {
@@ -368,6 +398,7 @@ textarea {
   color: var(--text);
   font-weight: 800;
   flex-shrink: 0;
+  border-radius: var(--radius-sm);
 }
 
 .logo:hover {
@@ -443,8 +474,9 @@ textarea {
 .theme-toggle {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 9px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--bg-elev);
@@ -452,7 +484,7 @@ textarea {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
+  transition: border-color 0.18s var(--ease), color 0.18s var(--ease), background 0.18s var(--ease);
 }
 
 .theme-toggle:hover {
@@ -460,26 +492,20 @@ textarea {
   color: var(--accent-ink);
 }
 
+.theme-toggle:active {
+  background: var(--bg-tint);
+}
+
 .th-to-dark {
   display: inline-flex;
+  align-items: center;
   gap: 6px;
 }
 
 .th-to-light {
   display: none;
+  align-items: center;
   gap: 6px;
-}
-
-/* Di layar sempit tombol tema cukup ikonnya saja — ruang header terbatas. */
-@media (max-width: 420px) {
-  .theme-toggle {
-    padding: 8px 11px;
-    font-size: 0;
-  }
-
-  .theme-toggle span[aria-hidden="true"] {
-    font-size: 14px;
-  }
 }
 
 [data-theme="dark"] .th-to-dark {
@@ -490,48 +516,295 @@ textarea {
   display: inline-flex;
 }
 
+/* Di layar sempit tombol tema cukup ikonnya saja — ruang header terbatas.
+   Ukuran tetap 42×42 supaya sasaran sentuhnya tidak menyusut. */
+@media (max-width: 480px) {
+  .theme-toggle {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .theme-toggle span[aria-hidden="true"] {
+    font-size: 15px;
+  }
+}
+
+/* ===== Tombol hamburger ===== */
 .nav-toggle {
   display: none;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 5px;
   width: 42px;
   height: 42px;
-  padding: 0 10px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-elev);
+  color: var(--text);
   cursor: pointer;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
+}
+
+.nav-toggle:active {
+  background: var(--bg-tint);
+}
+
+.nav-toggle-bars {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 12px;
 }
 
 .nav-toggle-bar {
+  position: absolute;
+  left: 0;
   display: block;
   height: 2px;
   width: 100%;
   border-radius: 2px;
-  background: var(--text);
-  transition: transform 0.25s var(--ease), opacity 0.2s var(--ease);
+  background: currentColor;
+  transition: transform 0.32s var(--ease-spring), opacity 0.16s linear;
 }
 
+.nav-toggle-bar:nth-child(1) { top: 0; }
+.nav-toggle-bar:nth-child(2) { top: 5px; }
+.nav-toggle-bar:nth-child(3) { top: 10px; }
+
 body.nav-open .nav-toggle-bar:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
+  transform: translateY(5px) rotate(45deg);
 }
 
 body.nav-open .nav-toggle-bar:nth-child(2) {
   opacity: 0;
+  transform: scaleX(0.4);
 }
 
 body.nav-open .nav-toggle-bar:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
+  transform: translateY(-5px) rotate(-45deg);
 }
 
+/* ===== Laci navigasi mobile ===== */
 .nav-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 70;
-  background: rgba(6, 9, 14, 0.5);
-  backdrop-filter: blur(2px);
+  z-index: 90;
+  background: rgba(6, 9, 14, 0.52);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.32s var(--ease), visibility 0.32s var(--ease);
 }
+
+body.nav-open .nav-backdrop {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Laci digeser dengan `transform`, bukan disembunyikan `display: none`, supaya
+   gerak masuk DAN keluarnya sama halus. Posisi diam-nya ditulis sebagai
+   deklarasi biasa (bukan keyframe ber-`fill-mode`), jadi kalau animasi tidak
+   pernah dijalankan browser laci tetap mendarat di tempat yang benar.
+   Yang menahan laci di luar layar agar tidak membuat halaman bisa digeser
+   mendatar adalah `overflow-x: clip` di <html>. */
+.nav-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  width: min(340px, 86vw);
+  padding: max(14px, var(--safe-t)) max(14px, var(--safe-r)) max(14px, var(--safe-b)) 14px;
+  background: var(--bg-soft);
+  border-left: 1px solid var(--border);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  visibility: hidden;
+  transform: translateX(100%);
+  transition: transform 0.36s var(--ease-spring), visibility 0.36s var(--ease-spring);
+}
+
+body.nav-open .nav-drawer {
+  visibility: visible;
+  transform: none;
+}
+
+.nav-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 4px 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.nav-drawer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.nav-drawer-brand .logo-mark,
+.nav-drawer-brand .logo-img {
+  width: 36px;
+  height: 36px;
+}
+
+.nav-drawer-brand .logo-text {
+  font-size: 17px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-elev);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.18s var(--ease), border-color 0.18s var(--ease), transform 0.18s var(--ease);
+}
+
+.nav-close:hover {
+  color: var(--text);
+  border-color: var(--accent-ink);
+}
+
+.nav-close:active {
+  transform: scale(0.94);
+}
+
+.nav-drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+}
+
+.nav-drawer-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  /* Butir menu menyusul masuk satu per satu — hanya saat membuka. Saat
+     menutup, tundaannya dinolkan supaya laci tidak terasa lambat pergi. */
+  opacity: 0;
+  transform: translateX(16px);
+  transition: opacity 0.28s var(--ease), transform 0.4s var(--ease-spring),
+    background 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+body.nav-open .nav-drawer-link {
+  opacity: 1;
+  transform: none;
+  /* Urutan mengikuti daftar `transition` di atas: hanya opacity dan transform
+     yang ditunda; latar dan warna tetap seketika supaya sentuhan terasa
+     langsung menjawab. */
+  transition-delay: calc(90ms + var(--i, 0) * 34ms), calc(90ms + var(--i, 0) * 34ms), 0s, 0s;
+}
+
+.nav-drawer-link:hover,
+.nav-drawer-link:active {
+  background: var(--bg-tint);
+  text-decoration: none;
+}
+
+.nav-drawer-link.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.nav-drawer-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tint);
+  color: var(--text-muted);
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+.nav-drawer-link.active .nav-drawer-icon {
+  background: var(--accent-grad);
+  color: var(--on-accent);
+}
+
+.nav-drawer-link:hover .nav-drawer-icon {
+  color: var(--text);
+}
+
+.nav-drawer-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.nav-drawer-label {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.nav-drawer-note {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.nav-drawer-link.active .nav-drawer-note {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.nav-drawer-chevron {
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
+}
+
+.nav-drawer-link:hover .nav-drawer-chevron {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.nav-drawer-foot {
+  margin-top: auto;
+  padding: 14px 4px 4px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.nav-drawer-foot .theme-toggle {
+  width: 100%;
+  height: auto;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+
 
 /* ===== Hero ===== */
 .hero {
@@ -904,7 +1177,7 @@ body.nav-open .nav-toggle-bar:nth-child(3) {
 
 .toolbar {
   position: sticky;
-  top: 68px;
+  top: var(--header-h);
   z-index: 40;
   display: flex;
   flex-direction: column;
@@ -1524,7 +1797,7 @@ body.nav-open .nav-toggle-bar:nth-child(3) {
   right: 0;
   bottom: 0;
   z-index: 75;
-  padding: 12px 0;
+  padding: 12px 0 calc(12px + var(--safe-b));
   background: var(--header-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -2124,8 +2397,8 @@ body.nav-open .nav-toggle-bar:nth-child(3) {
 
 .back-to-top {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  right: calc(20px + var(--safe-r));
+  bottom: calc(20px + var(--safe-b));
   z-index: 60;
   width: 46px;
   height: 46px;
@@ -2147,7 +2420,7 @@ body.nav-open .nav-toggle-bar:nth-child(3) {
 
 /* Saat dok bandingkan muncul, tombol naik supaya tidak saling menimpa. */
 body:has(.compare-dock:not([hidden])) .back-to-top {
-  bottom: 88px;
+  bottom: calc(88px + var(--safe-b));
 }
 
 /* ===== Halaman detail ===== */
@@ -2680,10 +2953,29 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
   transform: none;
 }
 
-.hero .reveal:nth-child(2) { transition-delay: 0.05s; }
-.hero .reveal:nth-child(3) { transition-delay: 0.1s; }
-.hero .reveal:nth-child(4) { transition-delay: 0.15s; }
-.hero .reveal:nth-child(5) { transition-delay: 0.2s; }
+/* Isi hero memakai animasi CSS murni, bukan `.reveal` yang menunggu JavaScript.
+   `.reveal` menyembunyikan elemen sampai skrip katalog selesai dimuat — untuk
+   konten paling atas halaman itu berarti judul sempat kosong di koneksi lambat.
+   Animasi di bawah berjalan langsung saat halaman dirender. */
+.enter {
+  animation: enter-rise 0.55s var(--ease) both;
+}
+
+.hero-inner .enter:nth-child(2) { animation-delay: 0.06s; }
+.hero-inner .enter:nth-child(3) { animation-delay: 0.12s; }
+.hero-inner .enter:nth-child(4) { animation-delay: 0.18s; }
+.hero-inner .enter:nth-child(5) { animation-delay: 0.24s; }
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 
 /* ===== Kompatibilitas (dipakai halaman admin lawas & /install) ===== */
 .site-header {
@@ -2705,59 +2997,14 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
 }
 
 @media (max-width: 900px) {
-  html {
-    scroll-padding-top: 76px;
+  /* Navigasi mendatar diganti laci; laci hidup di luar <header> supaya tidak
+     terkurung containing block milik backdrop-filter header. */
+  .main-nav {
+    display: none;
   }
 
   .nav-toggle {
-    display: flex;
-    order: 3;
-  }
-
-  /* Laci ditutup dengan `display:none`, bukan digeser keluar layar: elemen
-     fixed yang menonjol ke kanan tetap menambah lebar gulir dokumen, dan itu
-     membuat seluruh halaman bisa digeser mendatar di ponsel. */
-  .main-nav {
-    display: none;
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 90;
-    width: min(300px, 84vw);
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    margin: 0;
-    padding: 84px 18px 24px;
-    background: var(--bg-soft);
-    border-left: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-    overflow-y: auto;
-  }
-
-  body.nav-open .main-nav {
-    display: flex;
-    animation: nav-slide-in 0.28s var(--ease);
-  }
-
-  @keyframes nav-slide-in {
-    from {
-      transform: translateX(103%);
-    }
-    to {
-      transform: none;
-    }
-  }
-
-  .main-nav a {
-    padding: 12px 14px;
-    font-size: 15px;
-    border-radius: var(--radius-sm);
-  }
-
-  .toolbar {
-    top: 60px;
+    display: inline-flex;
   }
 
   .grid.as-list .card {
@@ -2778,8 +3025,8 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
 }
 
 @media (max-width: 760px) {
-  .masthead-inner {
-    height: 60px;
+  :root {
+    --header-h: 60px;
   }
 
   .filter-toggle {
@@ -2795,6 +3042,57 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
     display: grid;
   }
 
+  /* Kotak pencarian mendapat barisnya sendiri. Berbagi baris dengan pengalih
+     tampilan dan tombol Filter menyisakan lebar yang terlalu sempit — teks
+     placeholder-nya sampai terpotong di tengah kata. */
+  .toolbar-top {
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    flex: 1 0 100%;
+  }
+
+  .filter-toggle {
+    margin-left: auto;
+  }
+
+  /* Sasaran sentuh minimal ~44px. */
+  .view-switch button {
+    width: 44px;
+    height: 38px;
+    font-size: 15px;
+  }
+
+  .filter-toggle {
+    min-height: 40px;
+  }
+
+  /* Chip tipe bodi digeser mendatar, bukan dibungkus jadi tiga baris yang
+     memakan hampir seluruh layar sebelum kartu pertama terlihat. */
+  .chips-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    margin-inline: calc(-1 * max(20px, var(--safe-l))) calc(-1 * max(20px, var(--safe-r)));
+    padding-inline: max(20px, var(--safe-l)) max(20px, var(--safe-r));
+    padding-bottom: 2px;
+    /* Tepi kanan dibuat memudar supaya jelas masih ada chip lain di sebelahnya. */
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 34px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 34px), transparent 100%);
+  }
+
+  .chips-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip {
+    flex: 0 0 auto;
+    padding: 9px 14px;
+    scroll-snap-align: start;
+  }
+
   .footer-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
@@ -2806,7 +3104,28 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
 
 @media (max-width: 560px) {
   .container {
-    padding: 0 14px;
+    padding-inline: max(16px, var(--safe-l)) max(16px, var(--safe-r));
+  }
+
+  .chips-row {
+    margin-inline: calc(-1 * max(16px, var(--safe-l))) calc(-1 * max(16px, var(--safe-r)));
+    padding-inline: max(16px, var(--safe-l)) max(16px, var(--safe-r));
+  }
+
+  /* Hero tidak perlu jarak sebesar di desktop — katalog jadi lebih cepat
+     terlihat tanpa harus menggulir jauh. */
+  .hero {
+    padding-bottom: 34px;
+  }
+
+  .hero-inner {
+    gap: 14px;
+  }
+
+  /* Dua kolom tetap: `auto-fit` menyisakan satu kotak sendirian di baris kedua
+     saat spesifikasi berjumlah genap tapi ganjil per baris. */
+  .detail-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .grid {
@@ -2871,6 +3190,48 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
 
   .hero-stats {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===== Perangkat sentuh =====
+   Di layar sentuh tidak ada kursor, tapi browser tetap menyalakan `:hover`
+   setelah ketukan — kartu jadi "tersangkut" terangkat sampai pengguna
+   mengetuk tempat lain. Efek angkatnya dimatikan dan diganti umpan balik
+   tekan yang terasa langsung. */
+@media (hover: none) {
+  .card:hover,
+  .dir-card:hover,
+  .news-card:hover,
+  .feature-card:hover,
+  .related-card:hover,
+  .btn:hover,
+  .social-link:hover,
+  .back-to-top:hover {
+    transform: none;
+  }
+
+  .card:active,
+  .dir-card:active,
+  .news-card:active,
+  .feature-card:active,
+  .related-card:active {
+    transform: scale(0.985);
+  }
+
+  .btn:active,
+  .chip:active,
+  .mode-btn:active {
+    transform: scale(0.96);
+  }
+
+  /* Bilah gulir baris unggulan disembunyikan: di ponsel ia hanya memakan
+     ruang, geseran jarinya sudah cukup jelas. */
+  .feature-rail {
+    scrollbar-width: none;
+  }
+
+  .feature-rail::-webkit-scrollbar {
+    display: none;
   }
 }
 

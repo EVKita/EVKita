@@ -19,21 +19,35 @@ const suffix = site.brandSuffix || "";
 const mark = (site.logoMark || brand.slice(0, 2) || "EV").slice(0, 3);
 
 const links = [
-  { id: "beranda", label: "Beranda", href: base || "/", mode: "" },
-  { id: "mobil", label: "Mobil Listrik", href: `${base}#daftar`, mode: "mobil" },
-  site.showMotor ? { id: "motor", label: "Motor Listrik", href: `${base}#daftar`, mode: "motor" } : null,
-  site.showSpklu ? { id: "spklu", label: "SPKLU", href: `${base}#spklu`, mode: "" } : null,
-  site.showBengkel ? { id: "bengkel", label: "Bengkel", href: `${base}#bengkel`, mode: "" } : null,
-  site.showBerita ? { id: "berita", label: "Berita", href: `${base}#berita`, mode: "" } : null,
-  site.showAbout ? { id: "tentang", label: "Tentang", href: `${base}#tentang`, mode: "" } : null,
-].filter(Boolean) as { id: string; label: string; href: string; mode: string }[];
+  { id: "beranda", label: "Beranda", href: base || "/", mode: "", note: "Ringkasan katalog" },
+  { id: "mobil", label: "Mobil Listrik", href: `${base}#daftar`, mode: "mobil", note: "Spesifikasi & harga" },
+  site.showMotor ? { id: "motor", label: "Motor Listrik", href: `${base}#daftar`, mode: "motor", note: "Roda dua listrik" } : null,
+  site.showSpklu ? { id: "spklu", label: "SPKLU", href: `${base}#spklu`, mode: "", note: "Lokasi pengisian" } : null,
+  site.showBengkel ? { id: "bengkel", label: "Bengkel", href: `${base}#bengkel`, mode: "", note: "Servis & perawatan" } : null,
+  site.showBerita ? { id: "berita", label: "Berita", href: `${base}#berita`, mode: "", note: "Kabar terbaru" } : null,
+  site.showAbout ? { id: "tentang", label: "Tentang", href: `${base}#tentang`, mode: "", note: "Tentang situs ini" } : null,
+].filter(Boolean) as { id: string; label: string; href: string; mode: string; note: string }[];
+
+/**
+ * Ikon laci digambar sebagai path stroke 24×24 supaya ikut warna teks dan
+ * tidak menambah permintaan jaringan.
+ */
+const ICONS: Record<string, string> = {
+  beranda: "M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z",
+  mobil: "M4 16v-3.2L5.8 8A2 2 0 0 1 7.7 6.7h8.6A2 2 0 0 1 18.2 8L20 12.8V16M4 16h16M4 16v2.3M20 16v2.3M7.5 12.8h9",
+  motor: "M6.5 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm11 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM9 15h5l3-6M13 9h4M6 9h3l2 3",
+  spklu: "M13 3 5.5 13.5H11L10 21l7.5-10.5H12z",
+  bengkel: "M14.5 4.5a4.5 4.5 0 0 0-5.9 5.6l-4.2 4.2a2 2 0 0 0 2.9 2.9l4.2-4.2a4.5 4.5 0 0 0 5.6-5.9L15 9.5 12.6 9l-.5-2.4z",
+  berita: "M4 5h12v14H5.5A1.5 1.5 0 0 1 4 17.5zM16 9h3v8.5a1.5 1.5 0 0 1-3 0zM7 8.5h6M7 12h6M7 15.5h4",
+  tentang: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 11v5M12 7.8v.4",
+};
 ---
 
 <a class="skip-link" href="#konten">Langsung ke konten</a>
 
 <header class="masthead" id="masthead">
   <div class="container masthead-inner">
-    <a href="/" class="logo" aria-label={`${brand}${suffix} — beranda`}>
+    <a href={base || "/"} class="logo" aria-label={`${brand}${suffix} — beranda`}>
       {site.logoImage ? (
         <img class="logo-img" src={site.logoImage} alt="" width="40" height="40" />
       ) : (
@@ -42,13 +56,7 @@ const links = [
       <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
     </a>
 
-    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="mainNav" aria-label="Buka menu navigasi">
-      <span class="nav-toggle-bar"></span>
-      <span class="nav-toggle-bar"></span>
-      <span class="nav-toggle-bar"></span>
-    </button>
-
-    <nav class="main-nav" id="mainNav" aria-label="Navigasi utama">
+    <nav class="main-nav" aria-label="Navigasi utama">
       {links.map((l) => (
         <a
           href={l.href}
@@ -58,44 +66,180 @@ const links = [
       ))}
     </nav>
 
-    <span class="header-theme"><ThemeToggle /></span>
+    <div class="masthead-actions">
+      <span class="header-theme"><ThemeToggle /></span>
+
+      <button
+        class="nav-toggle"
+        id="navToggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="navDrawer"
+        aria-label="Buka menu navigasi"
+      >
+        <span class="nav-toggle-bars" aria-hidden="true">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </span>
+      </button>
+    </div>
   </div>
 </header>
-<div class="nav-backdrop" id="navBackdrop" hidden></div>
+
+<!--
+  Laci mobile sengaja berada DI LUAR <header>. `.masthead` memakai
+  `backdrop-filter`, dan elemen ber-backdrop-filter menjadi containing block
+  bagi turunan `position: fixed` — laci di dalam header jadi terkurung setinggi
+  header (~60px) dan tampak terpotong. Sebagai saudara <header>, containing
+  block-nya kembali ke viewport.
+-->
+<div class="nav-backdrop" id="navBackdrop"></div>
+
+<aside class="nav-drawer" id="navDrawer" aria-label="Menu navigasi" aria-hidden="true">
+  <div class="nav-drawer-head">
+    <span class="nav-drawer-brand">
+      {site.logoImage ? (
+        <img class="logo-img" src={site.logoImage} alt="" width="36" height="36" />
+      ) : (
+        <span class="logo-mark">{mark}</span>
+      )}
+      <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
+    </span>
+    <button class="nav-close" id="navClose" type="button" aria-label="Tutup menu navigasi">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m6 6 12 12M18 6 6 18" />
+      </svg>
+    </button>
+  </div>
+
+  <nav class="nav-drawer-nav" id="navDrawerNav">
+    {links.map((l, i) => (
+      <a
+        href={l.href}
+        class={`nav-drawer-link${active === l.id ? " active" : ""}`}
+        data-navmode={l.mode || undefined}
+        style={`--i:${i}`}
+      >
+        <span class="nav-drawer-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d={ICONS[l.id] || ICONS.tentang} />
+          </svg>
+        </span>
+        <span class="nav-drawer-text">
+          <span class="nav-drawer-label">{l.label}</span>
+          <span class="nav-drawer-note">{l.note}</span>
+        </span>
+        <span class="nav-drawer-chevron" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7" />
+          </svg>
+        </span>
+      </a>
+    ))}
+  </nav>
+
+  <div class="nav-drawer-foot">
+    <ThemeToggle />
+  </div>
+</aside>
 
 <script>
-  // Navigasi mobile: sebelumnya menu hanya disembunyikan CSS tanpa cara
-  // membukanya, jadi di layar kecil situs praktis tidak punya navigasi.
+  // Navigasi mobile. Laci berada di luar <header> (lihat komentar di markup),
+  // jadi cukup dibuka-tutup lewat kelas di <html> dan <body>.
   (function () {
     const toggle = document.getElementById("navToggle");
-    const nav = document.getElementById("mainNav");
+    const drawer = document.getElementById("navDrawer");
     const backdrop = document.getElementById("navBackdrop");
+    const closeBtn = document.getElementById("navClose");
     const header = document.getElementById("masthead");
-    if (!toggle || !nav) return;
+    if (!toggle || !drawer) return;
+
+    const root = document.documentElement;
+    let lastFocus: HTMLElement | null = null;
+
+    const focusables = () =>
+      Array.from(
+        drawer.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+      ).filter((el) => el.offsetParent !== null);
 
     function setOpen(open: boolean) {
+      const already = document.body.classList.contains("nav-open");
+      if (already === open) return;
+
       document.body.classList.toggle("nav-open", open);
+      // Kunci gulir dipasang di <html>, bukan <body>: `overflow: hidden` di
+      // <body> membuatnya jadi kontainer gulir sendiri, dan header serta
+      // toolbar `position: sticky` ikut lepas dari viewport.
+      root.classList.toggle("nav-open", open);
       toggle.setAttribute("aria-expanded", String(open));
       toggle.setAttribute("aria-label", open ? "Tutup menu navigasi" : "Buka menu navigasi");
-      if (backdrop) backdrop.hidden = !open;
+      drawer.setAttribute("aria-hidden", String(!open));
+
+      if (open) {
+        lastFocus = document.activeElement as HTMLElement;
+        // Fokus baru dipindah setelah animasi masuk mulai supaya pembaca layar
+        // tidak membacakan laci saat posisinya masih di luar layar.
+        requestAnimationFrame(() => focusables()[0]?.focus());
+      } else {
+        lastFocus?.focus?.();
+        lastFocus = null;
+      }
     }
 
     toggle.addEventListener("click", () => setOpen(!document.body.classList.contains("nav-open")));
-    if (backdrop) backdrop.addEventListener("click", () => setOpen(false));
-    nav.addEventListener("click", (e) => {
+    closeBtn?.addEventListener("click", () => setOpen(false));
+    backdrop?.addEventListener("click", () => setOpen(false));
+
+    drawer.addEventListener("click", (e) => {
       if ((e.target as HTMLElement).closest("a")) setOpen(false);
     });
+
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") setOpen(false);
+      if (!document.body.classList.contains("nav-open")) return;
+
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+
+      // Jebakan fokus: selama laci terbuka, Tab tidak boleh keluar darinya.
+      if (e.key === "Tab") {
+        const items = focusables();
+        if (!items.length) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     });
-    window.addEventListener("resize", () => {
-      if (window.innerWidth > 900) setOpen(false);
-    });
+
+    // Kalau layar melebar sampai navigasi penuh muncul kembali, laci ditutup
+    // supaya tidak ada dua navigasi aktif sekaligus.
+    const wide = window.matchMedia("(min-width: 901px)");
+    const onWide = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) setOpen(false);
+    };
+    if (wide.addEventListener) wide.addEventListener("change", onWide);
+    else if ((wide as any).addListener) (wide as any).addListener(onWide);
 
     // Header dipertegas begitu halaman digulir supaya batas antara konten
     // dan bilah navigasi tetap terbaca di atas hero bergambar.
     if (header) {
-      const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 8);
+      let ticking = false;
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          header.classList.toggle("scrolled", window.scrollY > 8);
+          ticking = false;
+        });
+      };
       onScroll();
       window.addEventListener("scroll", onScroll, { passive: true });
     }

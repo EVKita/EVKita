@@ -175,7 +175,7 @@ const themeProps = {
             </div>
           ) : media.length ? (
             <button type="button" class="detail-main detail-main-btn" id="detailMainBtn" aria-label="Perbesar gambar">
-              <img id="detail-main-img" src={media[0]} alt={`${car.brand} ${car.name}`} />
+              <img id="detail-main-img" src={media[0]} alt={`${car.brand} ${car.name}`} fetchpriority="high" decoding="async" />
               <span class="zoom-hint" aria-hidden="true">⤢</span>
             </button>
           ) : (
@@ -186,7 +186,7 @@ const themeProps = {
             <div class="detail-thumbs">
               {media.map((src, i) => (
                 <button type="button" class={`detail-thumb${i === 0 ? " active" : ""}`} data-src={src} data-index={i} aria-label={`Foto ${i + 1}`}>
-                  <img src={src} alt="" loading="lazy" />
+                  <img src={src} alt="" loading="lazy" decoding="async" />
                 </button>
               ))}
             </div>
@@ -286,7 +286,7 @@ const themeProps = {
               <a class="related-card" href={`/mobil/${r.id}`}>
                 <div class="related-media">
                   {r.image ? (
-                    <img src={r.image} alt="" loading="lazy" />
+                    <img src={r.image} alt="" loading="lazy" decoding="async" />
                   ) : (
                     <div class="related-svg" set:html={carSVG(r, defaultColor(r))} />
                   )}
@@ -353,11 +353,13 @@ const themeProps = {
         select(index);
         lb.hidden = false;
         document.body.classList.add("modal-open");
+        document.documentElement.classList.add("modal-open");
       }
       function closeLb() {
         if (!lb) return;
         lb.hidden = true;
         document.body.classList.remove("modal-open");
+        document.documentElement.classList.remove("modal-open");
       }
 
       const mainBtn = document.getElementById("detailMainBtn");

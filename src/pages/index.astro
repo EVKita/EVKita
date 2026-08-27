@@ -82,12 +82,12 @@ const jsonLd = {
       <div class="hero-glow" aria-hidden="true"></div>
     )}
     <div class="container hero-inner">
-      {site.heroEyebrow ? <p class="hero-eyebrow reveal">{site.heroEyebrow}</p> : null}
-      <h1 class="hero-title reveal">{heroTitle}</h1>
-      <p class="hero-sub reveal">{heroSub}</p>
+      {site.heroEyebrow ? <p class="hero-eyebrow enter">{site.heroEyebrow}</p> : null}
+      <h1 class="hero-title enter">{heroTitle}</h1>
+      <p class="hero-sub enter">{heroSub}</p>
 
       {site.heroCtaText || site.heroCtaAltText ? (
-        <div class="hero-cta reveal">
+        <div class="hero-cta enter">
           {site.heroCtaText ? (
             <a class="btn btn-primary btn-lg" href={site.heroCtaUrl || "#daftar"}>{site.heroCtaText}</a>
           ) : null}
@@ -97,7 +97,7 @@ const jsonLd = {
         </div>
       ) : null}
 
-      {site.showHeroStats ? <div class="hero-stats reveal" id="heroStats"></div> : null}
+      {site.showHeroStats ? <div class="hero-stats enter" id="heroStats"></div> : null}
     </div>
   </section>
 
@@ -117,7 +117,7 @@ const jsonLd = {
               <a class="feature-card" href={f.kind === "mobil" ? `/mobil/${f.id}` : "#daftar"}>
                 <div class="feature-media">
                   {f.image ? (
-                    <img src={f.image} alt={`${f.brand} ${f.name}`} loading="lazy" />
+                    <img src={f.image} alt={`${f.brand} ${f.name}`} loading="lazy" decoding="async" />
                   ) : (
                     <div class="feature-svg" set:html={carSVG(f, defaultColor(f))} />
                   )}

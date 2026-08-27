@@ -170,7 +170,7 @@ function visualHTML(c, linkable) {
   const image = safeUrl(c.image);
   if (image) {
     return `<div class="car-visual">
-      ${openLink}<div class="car-svg car-photo-wrap"><img class="car-photo" src="${image}" alt="${esc(c.brand + " " + c.name)}" loading="lazy" /></div>${closeLink}
+      ${openLink}<div class="car-svg car-photo-wrap"><img class="car-photo" src="${image}" alt="${esc(c.brand + " " + c.name)}" loading="lazy" decoding="async" /></div>${closeLink}
       ${variantRow}
     </div>`;
   }
@@ -501,7 +501,7 @@ function renderCompareTable() {
   const head = items
     .map((c) => {
       const visual = c.image
-        ? `<img src="${safeUrl(c.image)}" alt="" loading="lazy" />`
+        ? `<img src="${safeUrl(c.image)}" alt="" loading="lazy" decoding="async" />`
         : `<div class="compare-svg">${carSVG(c, defaultColor(c))}</div>`;
       return `<th scope="col">
         <div class="compare-head-card">
@@ -544,6 +544,7 @@ function openCompare() {
   renderCompareTable();
   modal.hidden = false;
   document.body.classList.add("modal-open");
+  document.documentElement.classList.add("modal-open");
 }
 
 function closeCompare() {
@@ -551,6 +552,7 @@ function closeCompare() {
   if (!modal) return;
   modal.hidden = true;
   document.body.classList.remove("modal-open");
+  document.documentElement.classList.remove("modal-open");
 }
 
 /* ===== Animasi masuk & toolbar lengket ===== */
