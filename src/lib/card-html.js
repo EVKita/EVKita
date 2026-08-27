@@ -94,8 +94,20 @@ export function visualHTML(c, opts) {
 
   const video = safeUrl(c.video);
   if (video) {
+    /*
+     * `preload="none"`, bukan `"metadata"`.
+     *
+     * Video kendaraan masih dilayani domain pabrikan, dan `preload="metadata"`
+     * membuat SETIAP kartu bervideo menembak domain itu begitu halaman dimuat —
+     * lima kartu di beranda berarti empat domain pihak ketiga tahu alamat IP
+     * pembaca sebelum ada satu pun tombol putar ditekan.
+     *
+     * Yang dulu didapat dari metadata cuma bingkai pertama sebagai poster.
+     * Sejak gambarnya disimpan sendiri, `poster` sudah menunjuk berkas kita
+     * sendiri — jadi menundanya tidak menghilangkan apa pun yang terlihat.
+     */
     return `<div class="car-visual">
-      ${openLink}<div class="car-svg car-photo-wrap"><video class="car-photo" src="${video}" poster="${safeUrl(c.image)}" controls muted loop playsinline preload="metadata"></video></div>${closeLink}
+      ${openLink}<div class="car-svg car-photo-wrap"><video class="car-photo" src="${video}" poster="${safeUrl(c.image)}" controls muted loop playsinline preload="none"></video></div>${closeLink}
       ${variantRow}
     </div>`;
   }

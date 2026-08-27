@@ -27,9 +27,23 @@ const CSP = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "script-src 'self' 'unsafe-inline'",
-  // Gambar kendaraan saat ini di-hotlink dari domain pabrikan, jadi img-src
-  // belum bisa dikunci ke 'self'. Kalau gambar sudah disimpan sendiri, baris
-  // ini yang pertama harus diperketat.
+  /*
+   * Gambar kendaraan sekarang disimpan sendiri di `public/gambar/`, dan baris
+   * ini dulu ditandai sebagai yang pertama harus diperketat begitu itu terjadi.
+   * Ia tetap TIDAK diperketat, dan alasannya sudah berbeda dari sebelumnya:
+   *
+   *   1. Panel memang membolehkan penyunting menempelkan URL gambar dari mana
+   *      saja — itu fitur, bukan celah. Mengunci ke 'self' mengubahnya jadi
+   *      kotak kosong tanpa penjelasan apa pun selain galat di konsol.
+   *   2. Dua kendaraan gambarnya tidak bisa diambil ulang dan masih memakai
+   *      URL aslinya (lihat tests/gambar.test.ts).
+   *   3. Video masih seluruhnya dari domain pabrikan; `media-src` karena itu
+   *      juga belum bisa dikunci.
+   *
+   * Yang sudah didapat tanpa mengubah baris ini nyata dan tidak bergantung
+   * padanya: 38 dari 40 gambar tidak lagi memanggil domain pihak ketiga sama
+   * sekali, jadi alamat IP pembaca tidak lagi dibagikan ke 24 domain.
+   */
   "img-src 'self' data: https:",
   "media-src 'self' https:",
   "connect-src 'self'",

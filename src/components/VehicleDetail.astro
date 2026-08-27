@@ -304,7 +304,11 @@ const themeProps = {
         <div class="detail-media">
           {car.video ? (
             <div class="detail-main">
-              <video class="detail-video" src={safeUrl(car.video)} poster={media[0] || undefined} controls muted loop playsinline preload="metadata"></video>
+              {/* preload="none" dengan alasan yang sama seperti di card-html.js:
+                  video masih dari domain pabrikan, dan posternya kini berkas
+                  kita sendiri — jadi menunda muatannya tidak menghilangkan apa
+                  pun yang terlihat. */}
+              <video class="detail-video" src={safeUrl(car.video)} poster={media[0] || undefined} controls muted loop playsinline preload="none"></video>
             </div>
           ) : media.length ? (
             <button type="button" class="detail-main detail-main-btn" id="detailMainBtn" aria-label="Perbesar gambar">
