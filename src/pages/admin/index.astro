@@ -189,7 +189,7 @@ if (!isAuthed(Astro.cookies)) {
             <p class="view-sub">Kelola katalog mobil: spesifikasi, harga, galeri, dan varian.</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-cars" class="btn btn-primary" type="button">+ Tambah Mobil</button>
+            <button id="add-cars" class="btn btn-primary" type="button" data-add="cars">+ Tambah Mobil</button>
           </div>
         </div>
         <div id="cars-toolbar"></div>
@@ -204,7 +204,7 @@ if (!isAuthed(Astro.cookies)) {
             <p class="view-sub">Kelola katalog motor listrik dengan skema yang sama seperti mobil.</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-motors" class="btn btn-primary" type="button">+ Tambah Motor</button>
+            <button id="add-motors" class="btn btn-primary" type="button" data-add="motors">+ Tambah Motor</button>
           </div>
         </div>
         <div id="motors-toolbar"></div>
@@ -219,7 +219,7 @@ if (!isAuthed(Astro.cookies)) {
             <p class="view-sub">Direktori stasiun pengisian kendaraan listrik umum.</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-spklu" class="btn btn-primary" type="button">+ Tambah SPKLU</button>
+            <button id="add-spklu" class="btn btn-primary" type="button" data-add="spklu">+ Tambah SPKLU</button>
           </div>
         </div>
         <div id="spklu-toolbar"></div>
@@ -234,7 +234,7 @@ if (!isAuthed(Astro.cookies)) {
             <p class="view-sub">Direktori bengkel resmi maupun umum untuk kendaraan listrik.</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-bengkel" class="btn btn-primary" type="button">+ Tambah Bengkel</button>
+            <button id="add-bengkel" class="btn btn-primary" type="button" data-add="bengkel">+ Tambah Bengkel</button>
           </div>
         </div>
         <div id="bengkel-toolbar"></div>
@@ -249,7 +249,7 @@ if (!isAuthed(Astro.cookies)) {
             <p class="view-sub">Kumpulan tautan berita yang tampil di beranda.</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-berita" class="btn btn-primary" type="button">+ Tambah Berita</button>
+            <button id="add-berita" class="btn btn-primary" type="button" data-add="berita">+ Tambah Berita</button>
           </div>
         </div>
         <div id="berita-toolbar"></div>
@@ -648,17 +648,21 @@ if (!isAuthed(Astro.cookies)) {
   <div id="vehicle-modal" class="modal-backdrop">
     <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
       <div class="modal-head">
-        <h3 class="modal-title" id="vehicle-modal-title">Tambah Mobil</h3>
+        <div class="modal-head-text">
+          <h3 class="modal-title" id="vehicle-modal-title">Tambah Mobil</h3>
+          <p class="modal-sub" id="vehicle-modal-sub"></p>
+        </div>
         <button type="button" class="modal-close" id="vehicle-modal-close" aria-label="Tutup">&times;</button>
       </div>
       <form id="vehicle-form">
         <div class="modal-tabs" role="tablist">
-          <button type="button" class="modal-tab active" data-mtab="dasar">Dasar</button>
-          <button type="button" class="modal-tab" data-mtab="spesifikasi">Spesifikasi</button>
-          <button type="button" class="modal-tab" data-mtab="media">Media</button>
-          <button type="button" class="modal-tab" data-mtab="varian">Varian</button>
-          <button type="button" class="modal-tab" data-mtab="lanjutan">Lanjutan</button>
+          <button type="button" class="modal-tab active" data-mtab="dasar">Dasar <span class="tab-count"></span></button>
+          <button type="button" class="modal-tab" data-mtab="spesifikasi">Spesifikasi <span class="tab-count"></span></button>
+          <button type="button" class="modal-tab" data-mtab="media">Media <span class="tab-count"></span></button>
+          <button type="button" class="modal-tab" data-mtab="varian">Varian <span class="tab-count"></span></button>
+          <button type="button" class="modal-tab" data-mtab="lanjutan">Lanjutan <span class="tab-count"></span></button>
         </div>
+        <div class="editor-meter" id="vehicle-meter"></div>
         <div class="modal-body">
           <div class="modal-pane" data-mpane="dasar"></div>
           <div class="modal-pane" data-mpane="spesifikasi" hidden></div>
@@ -668,6 +672,7 @@ if (!isAuthed(Astro.cookies)) {
         </div>
         <div class="modal-foot">
           <button type="button" class="btn btn-ghost" id="vehicle-cancel" data-close-modal>Batal</button>
+          <button type="button" class="btn btn-outline" id="vehicle-save-add" hidden>Simpan &amp; Tambah Lagi</button>
           <button type="submit" class="btn btn-primary">Simpan</button>
         </div>
       </form>
@@ -704,6 +709,12 @@ if (!isAuthed(Astro.cookies)) {
       </div>
     </div>
   </div>
+
+  <!-- Tombol tambah melayang: hanya tampil di layar sempit, isinya mengikuti halaman aktif. -->
+  <button id="quick-add" class="fab" type="button" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span class="fab-label">Tambah</span>
+  </button>
 
   <div id="toast-stack" class="toast-stack"></div>
 

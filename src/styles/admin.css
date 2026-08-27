@@ -1612,6 +1612,10 @@
   }
 }
 
+.modal {
+  max-height: calc(100dvh - 80px);
+}
+
 .modal.modal-lg {
   max-width: 940px;
 }
@@ -1623,6 +1627,7 @@
 .modal form {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
 }
 
@@ -1633,6 +1638,17 @@
   gap: 12px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
+}
+
+.modal-head-text {
+  min-width: 0;
+}
+
+.modal-sub {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.45;
 }
 
 .modal-title {
@@ -1668,6 +1684,8 @@
 }
 
 .modal-body {
+  flex: 1;
+  min-height: 0;
   padding: 20px;
   overflow-y: auto;
 }
@@ -1740,8 +1758,120 @@
   background: var(--accent);
 }
 
+.modal-tab .tab-count {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--adm-surface-2);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 1px;
+}
+
+.modal-tab .tab-count:empty {
+  display: none;
+}
+
+.modal-tab .tab-count.is-empty {
+  opacity: 0.55;
+}
+
 .modal-pane[hidden] {
   display: none;
+}
+
+/* --- Meter kelengkapan editor --- */
+.editor-meter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.editor-meter:empty {
+  display: none;
+}
+
+.editor-meter-bar {
+  flex: 1;
+  min-width: 0;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--adm-surface-2);
+  overflow: hidden;
+}
+
+.editor-meter-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 220ms ease;
+}
+
+.editor-meter.low .editor-meter-bar > span {
+  background: #f0883e;
+}
+
+.editor-meter.mid .editor-meter-bar > span {
+  background: #d6b04a;
+}
+
+.editor-meter-text {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.editor-meter-text strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* --- Chip saran (mis. baris spesifikasi siap pakai) --- */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+
+.chip-row-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-right: 2px;
+}
+
+.chip {
+  padding: 5px 10px;
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: border-color var(--adm-t), color var(--adm-t), background var(--adm-t);
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  border-style: solid;
+  color: var(--text);
+  background: var(--adm-surface-2);
+}
+
+.chip:focus-visible {
+  outline: none;
+  box-shadow: var(--adm-ring);
 }
 
 /* =========================================================================
@@ -1946,6 +2076,51 @@
   border: 1px dashed var(--border);
   border-radius: var(--adm-r-lg);
   background: var(--bg-card);
+}
+
+.empty-state-cta {
+  margin-top: 12px;
+}
+
+/* --- Tombol tambah melayang (layar sempit) --- */
+.fab {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 90;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 20px 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent-grad);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: var(--adm-shadow-lg);
+  cursor: pointer;
+}
+
+.fab svg {
+  width: 20px;
+  height: 20px;
+}
+
+.fab:focus-visible {
+  outline: none;
+  box-shadow: var(--adm-ring), var(--adm-shadow-lg);
+}
+
+.fab[hidden] {
+  display: none !important;
+}
+
+/* Selama modal editor terbuka, tombol melayang tidak boleh menutupi apa pun. */
+body:has(.modal-backdrop.open) .fab {
+  display: none !important;
 }
 
 .empty-state-icon {
@@ -2553,25 +2728,61 @@
   .modal.modal-lg,
   .modal.modal-sm {
     max-width: none;
-    min-height: 100dvh;
+    /* Tinggi dikunci ke layar supaya yang menggulir hanya isi formulir —
+       tab, meter, dan tombol Simpan tetap terlihat sepanjang pengisian. */
+    height: 100dvh;
+    max-height: 100dvh;
     border: none;
     border-radius: 0;
     margin: 0;
   }
 
+  .modal form {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .modal-head,
+  .modal-tabs,
+  .editor-meter,
+  .modal-foot {
+    flex: none;
+  }
+
   .modal-body {
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal-foot {
-    position: sticky;
-    bottom: 0;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
   }
 
+  .modal-tab {
+    min-height: 46px;
+  }
+
+  /* Sisi kanan digelapkan sedikit sebagai petunjuk bahwa deretan tab
+     masih bisa digeser. */
+  .modal-tabs {
+    padding-right: 24px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
+
+  /* Tombol melayang hanya berguna di layar sempit; disembunyikan saat modal terbuka. */
+  .fab {
+    display: inline-flex;
+  }
+
+  /* Toast harus lolos dari tombol tambah melayang — tombol aksinya sering
+     berada tepat di bawah FAB kalau tidak dinaikkan. */
   .toast-stack {
     left: 12px;
     right: 12px;
-    bottom: 12px;
+    bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   .toast {
@@ -2582,6 +2793,108 @@
 @media (max-width: 640px) {
   .field-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 16px adalah ambang batas Safari iOS: di bawahnya halaman ikut di-zoom
+     setiap kali sebuah input difokuskan. */
+  .field input,
+  .field select,
+  .field textarea,
+  .modal-pane input,
+  .modal-pane select,
+  .modal-pane textarea,
+  .repeater-row > input,
+  .repeater-row > select,
+  .search-input {
+    font-size: 16px;
+  }
+
+  .field input,
+  .field select,
+  .modal-pane input:not([type="checkbox"]):not([type="color"]),
+  .modal-pane select {
+    min-height: 46px;
+  }
+
+  .field textarea,
+  .modal-pane textarea {
+    min-height: 110px;
+  }
+
+  .modal-body {
+    padding: 16px 14px;
+  }
+
+  .modal-head,
+  .editor-meter {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .modal-foot {
+    padding-left: 14px;
+    padding-right: 14px;
+    flex-wrap: wrap;
+  }
+
+  .modal-foot .btn {
+    flex: 1 1 auto;
+    min-height: 46px;
+    justify-content: center;
+  }
+
+  .modal-foot #vehicle-save-add {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  .editor-meter-text {
+    font-size: 11.5px;
+  }
+
+  /* Baris repeater: dua input turun ke bawah, tombolnya tetap sebaris. */
+  .repeater-row {
+    flex-wrap: wrap;
+  }
+
+  .repeater-row > input,
+  .repeater-row > select,
+  .repeater-row > .color-field {
+    flex: 1 1 100%;
+    min-height: 44px;
+  }
+
+  .repeater-row .btn {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  .chip {
+    font-size: 13px;
+    padding: 7px 12px;
+  }
+
+  .modal-tab {
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 13px;
+  }
+
+  /* Tombol aksi baris daftar dibuat cukup besar untuk disentuh. */
+  .item-row .row-actions .btn {
+    min-height: 40px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .fab .fab-label {
+    display: none;
+  }
+
+  .fab {
+    min-width: 56px;
+    padding: 0;
+    justify-content: center;
   }
 
   .stat-grid {

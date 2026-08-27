@@ -26,46 +26,76 @@ const PAGE_SIZE = 24;
 const AUTOSAVE_MS = 1200;
 const HISTORY_MAX = 40;
 
-const BODY_TYPES = ["Hatchback", "Crossover", "SUV", "Sedan", "Coupe", "MPV", "Wagon", "Pikap", "Niaga", "Skuter", "Motor Sport", "Motor Bebek"];
+const CAR_BODY_TYPES = ["Hatchback", "Crossover", "SUV", "Sedan", "Coupe", "MPV", "Wagon", "Pikap", "Van", "Niaga"];
+const MOTOR_BODY_TYPES = ["Skuter", "Motor Bebek", "Motor Sport", "Moped", "Motor Trail", "Sepeda Listrik"];
 const RANGE_STANDARDS = ["", "WLTP", "NEDC", "CLTC", "EPA", "Klaim pabrikan"];
 const DRIVE_TYPES = ["", "FWD", "RWD", "AWD", "4WD"];
 const STATUS_OPTS = [["published", "Terbit"], ["draft", "Draf"]];
 
-/* Field kendaraan per pane modal. `t` = tipe kontrol, `full` = selebar grid. */
-const VEHICLE_PANES = {
-  dasar: [
-    { k: "brand", l: "Merek", t: "text", req: true, ph: "mis. Hyundai" },
-    { k: "name", l: "Nama Model", t: "text", req: true, ph: "mis. Ioniq 5" },
-    { k: "bodyType", l: "Tipe Bodi", t: "select", opts: BODY_TYPES },
-    { k: "year", l: "Tahun Model", t: "number", ph: "2025" },
-    { k: "status", l: "Status", t: "select", opts: STATUS_OPTS },
-    { k: "tagline", l: "Tagline", t: "text", ph: "Satu kalimat penjual" },
-    { k: "description", l: "Deskripsi", t: "textarea", full: true, rows: 5 },
-    { k: "tags", l: "Tag", t: "tags", full: true, hint: "Pisahkan dengan koma, mis. keluarga, irit, cepat" },
-    { k: "featured", l: "Tampilkan sebagai unggulan", t: "switch" },
-    { k: "stale", l: "Tandai sebagai data lama", t: "switch", hint: "Dipakai kalau data perlu diperiksa ulang" },
-  ],
-  spesifikasi: [
-    { k: "rangeKm", l: "Jarak Tempuh (km)", t: "number" },
-    { k: "rangeStandard", l: "Standar Pengujian", t: "select", opts: RANGE_STANDARDS },
-    { k: "batteryKwh", l: "Kapasitas Baterai (kWh)", t: "number", step: "0.1" },
-    { k: "powerHp", l: "Tenaga (hp)", t: "number" },
-    { k: "torqueNm", l: "Torsi (Nm)", t: "number" },
-    { k: "topSpeedKph", l: "Kecepatan Maksimum (km/jam)", t: "number" },
-    { k: "accelSec", l: "Akselerasi 0–100 km/jam (detik)", t: "number", step: "0.1" },
-    { k: "seats", l: "Jumlah Kursi", t: "number" },
-    { k: "driveType", l: "Penggerak", t: "select", opts: DRIVE_TYPES },
-    { k: "chargeDcKw", l: "Pengisian DC (kW)", t: "number" },
-    { k: "chargeAcKw", l: "Pengisian AC (kW)", t: "number" },
-    { k: "chargeTime", l: "Waktu Pengisian", t: "text", ph: "mis. 18 menit (10–80%)" },
-    { k: "warranty", l: "Garansi", t: "text", ph: "mis. 8 tahun / 160.000 km" },
-    { k: "price", l: "Harga (Rupiah, angka)", t: "number", hint: "Contoh: 415000000" },
-    { k: "priceText", l: "Harga (teks tampil)", t: "text", ph: "Rp 415 jt", hint: "Dikosongkan = dibuat otomatis dari angka harga" },
-  ],
-  media: [],
-  varian: [],
-  lanjutan: [],
+/* Saran merek untuk field Merek. Digabung dengan merek yang sudah ada di data;
+   field-nya tetap teks bebas, daftar ini hanya mempercepat pengetikan. */
+const BRAND_SUGGESTIONS = {
+  cars: ["Aion", "BMW", "BYD", "Chery", "Citroen", "Denza", "DFSK", "Geely", "Honda", "Hyundai", "Jetour", "Kia", "Lexus", "Maxus", "Mercedes-Benz", "MG", "Mini", "Mitsubishi", "Neta", "Nissan", "Polestar", "Seres", "Tesla", "Toyota", "VinFast", "Volvo", "Wuling"],
+  motors: ["Alva", "Charged", "Davigo", "Electrum", "Exotic", "Gesits", "Honda", "Maka Motors", "Niu", "Polytron", "Rakata", "Selis", "Smoot", "United", "Uwinfly", "Viar", "Volta", "Yamaha"],
 };
+
+/* Label spesifikasi yang lazim tapi tidak punya field baku. Tampil sebagai chip
+   di tab Spesifikasi supaya baris tambahan cukup satu klik. */
+const SPEC_PRESETS = {
+  cars: ["Dimensi (P×L×T)", "Jarak Sumbu Roda", "Ground Clearance", "Bobot Kosong", "Kapasitas Bagasi", "Ukuran Ban", "Tipe Baterai", "Jumlah Airbag", "Fitur Keselamatan", "Layar Infotainment", "Radius Putar"],
+  motors: ["Bobot", "Tipe Baterai", "Baterai Bisa Ditukar", "Daya Motor (Watt)", "Waktu Pengisian Penuh", "Rem Depan / Belakang", "Ukuran Ban", "Kapasitas Bagasi", "Mode Berkendara", "Suspensi", "Beban Maksimum"],
+};
+
+const VEHICLE_TABS = ["dasar", "spesifikasi", "media", "varian", "lanjutan"];
+
+/**
+ * Field kendaraan per pane modal. `t` = tipe kontrol, `full` = selebar grid,
+ * `list` = id datalist untuk saran ketik.
+ *
+ * Dibuat per koleksi karena mobil dan motor tidak berbagi seluruh spesifikasi:
+ * motor tidak punya penggerak roda maupun jumlah kursi, dan pilihan tipe
+ * bodinya berbeda. Field yang tidak ditampilkan juga tidak ikut ditulis saat
+ * simpan, sehingga nilai lama pada item yang sudah ada tetap utuh.
+ */
+function vehicleFields(col) {
+  const motor = col === "motors";
+  const one = motor ? "motor" : "mobil";
+  return {
+    dasar: [
+      { k: "brand", l: "Merek", t: "text", req: true, ph: motor ? "mis. Polytron" : "mis. Hyundai", list: "brand-list" },
+      { k: "name", l: "Nama Model", t: "text", req: true, ph: motor ? "mis. Fox 500" : "mis. Ioniq 5" },
+      { k: "bodyType", l: motor ? "Tipe Motor" : "Tipe Bodi", t: "select", opts: motor ? MOTOR_BODY_TYPES : CAR_BODY_TYPES },
+      { k: "year", l: "Tahun Model", t: "number", ph: "2025" },
+      { k: "status", l: "Status", t: "select", opts: STATUS_OPTS, hint: "Draf belum tampil di situs publik." },
+      { k: "tagline", l: "Tagline", t: "text", ph: "Satu kalimat penjual" },
+      { k: "description", l: "Deskripsi", t: "textarea", full: true, rows: 5, ph: `Ceritakan singkat tentang ${one} ini — posisinya di pasar, keunggulan utamanya.` },
+      { k: "tags", l: "Tag", t: "tags", full: true, hint: "Pisahkan dengan koma, mis. keluarga, irit, cepat" },
+      { k: "featured", l: "Tampilkan sebagai unggulan", t: "switch" },
+      { k: "stale", l: "Tandai sebagai data lama", t: "switch", hint: "Dipakai kalau data perlu diperiksa ulang" },
+    ],
+    spesifikasi: [
+      { k: "rangeKm", l: "Jarak Tempuh (km)", t: "number", ph: motor ? "80" : "450" },
+      { k: "rangeStandard", l: "Standar Pengujian", t: "select", opts: RANGE_STANDARDS },
+      { k: "batteryKwh", l: "Kapasitas Baterai (kWh)", t: "number", step: "0.1", ph: motor ? "2,4" : "58" },
+      { k: "powerHp", l: "Tenaga (hp)", t: "number" },
+      { k: "torqueNm", l: "Torsi (Nm)", t: "number" },
+      { k: "topSpeedKph", l: "Kecepatan Maksimum (km/jam)", t: "number" },
+      { k: "accelSec", l: motor ? "Akselerasi (detik)" : "Akselerasi 0–100 km/jam (detik)", t: "number", step: "0.1" },
+      ...(motor
+        ? []
+        : [
+          { k: "seats", l: "Jumlah Kursi", t: "number" },
+          { k: "driveType", l: "Penggerak", t: "select", opts: DRIVE_TYPES },
+        ]),
+      { k: "chargeDcKw", l: "Pengisian DC (kW)", t: "number" },
+      { k: "chargeAcKw", l: motor ? "Daya Pengisi Daya (kW)" : "Pengisian AC (kW)", t: "number" },
+      { k: "chargeTime", l: "Waktu Pengisian", t: "text", ph: motor ? "mis. 4 jam (0–100%)" : "mis. 18 menit (10–80%)" },
+      { k: "warranty", l: "Garansi", t: "text", ph: motor ? "mis. 3 tahun / baterai 2 tahun" : "mis. 8 tahun / 160.000 km" },
+      { k: "price", l: "Harga (Rupiah, angka)", t: "number", ph: motor ? "22000000" : "415000000", hint: "Cukup isi salah satu kolom harga — yang lain diisi otomatis." },
+      { k: "priceText", l: "Harga (teks tampil)", t: "text", ph: motor ? "Rp 22 jt" : "Rp 415 jt" },
+    ],
+  };
+}
 
 /* Field per koleksi direktori. Label Bahasa Indonesia, semua field skema tercakup. */
 const DIR_FIELDS = {
@@ -567,6 +597,7 @@ function fieldHtml(def, value, prefix) {
   const cls = "field" + (def.full || def.t === "textarea" ? " full" : "");
   const hint = def.hint ? `<div class="hint">${esc(def.hint)}</div>` : "";
   const ph = def.ph ? ` placeholder="${esc(def.ph)}"` : "";
+  const list = def.list ? ` list="${esc(def.list)}" autocomplete="off"` : "";
   const req = def.req ? " *" : "";
   const label = `<label for="${esc(id)}">${esc(def.l)}${req}</label>`;
 
@@ -598,7 +629,7 @@ function fieldHtml(def, value, prefix) {
     control = `<input type="text" id="${esc(id)}" name="${esc(def.k)}" value="${esc(v)}"${ph} />`;
   } else {
     const type = def.t === "url" ? "url" : def.t === "date" ? "date" : "text";
-    control = `<input type="${type}" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph} />`;
+    control = `<input type="${type}" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph}${list} />`;
   }
   return `<div class="${cls}" data-field="${esc(def.k)}">${label}${control}${hint}</div>`;
 }
@@ -685,6 +716,7 @@ function readRepeater(root, name) {
 function setView(view, opts) {
   if (!VIEWS.includes(view)) view = "dashboard";
   activeView = view;
+  syncQuickAdd();
   $$(".view").forEach((s) => {
     const match = s.getAttribute("data-view") === view;
     if (match) s.removeAttribute("hidden");
@@ -698,6 +730,23 @@ function setView(view, opts) {
   const app = $("admin-app");
   if (app) app.classList.remove("sidebar-open");
   if (view === "backups") loadBackups();
+}
+
+/* Tombol tambah melayang (hanya tampil di layar sempit) selalu menunjuk ke
+   koleksi yang sedang dibuka, jadi menambah item tidak perlu menggulir ke atas. */
+function syncQuickAdd() {
+  const fab = $("quick-add");
+  if (!fab) return;
+  if (COLLECTIONS.includes(activeView)) {
+    fab.hidden = false;
+    fab.setAttribute("data-add", activeView);
+    fab.setAttribute("aria-label", `Tambah ${COL_ONE[activeView]}`);
+    const label = fab.querySelector(".fab-label");
+    if (label) label.textContent = `Tambah ${COL_ONE[activeView]}`;
+  } else {
+    fab.hidden = true;
+    fab.removeAttribute("data-add");
+  }
 }
 
 function renderNavCounts() {
@@ -892,11 +941,15 @@ function renderDashHealth() {
     .join("")}</div>${issues.length > shown.length ? `<div class="row-meta">dan ${issues.length - shown.length} peringatan lain…</div>` : ""}`;
 }
 
-function emptyStateHtml(title, text, icon) {
+function emptyStateHtml(title, text, icon, cta) {
+  const action = cta
+    ? `<button type="button" class="btn btn-primary empty-state-cta" data-add="${esc(cta.col)}">${esc(cta.label)}</button>`
+    : "";
   return `<div class="empty-state">
     <div class="empty-state-icon">${esc(icon || "📄")}</div>
     <div class="empty-state-title">${esc(title)}</div>
     <div class="empty-state-text">${esc(text || "")}</div>
+    ${action}
   </div>`;
 }
 
@@ -1110,7 +1163,12 @@ function renderCollection(col) {
     setPagination(col, wrap, "");
     wrap.innerHTML = total
       ? emptyStateHtml("Tidak ada hasil", "Coba ubah kata kunci atau setel ulang filter di atas.", "🔍")
-      : emptyStateHtml(`Belum ada ${COL_LABEL[col].toLowerCase()}`, `Klik “+ Tambah ${COL_ONE[col]}” untuk membuat item pertama.`, "➕");
+      : emptyStateHtml(
+        `Belum ada ${COL_LABEL[col].toLowerCase()}`,
+        `Mulai dengan menambahkan ${COL_ONE[col].toLowerCase()} pertama. Isian wajibnya hanya merek dan nama model.`,
+        "➕",
+        { col, label: `+ Tambah ${COL_ONE[col]}` },
+      );
     syncToolbar(col);
     return;
   }
@@ -1134,7 +1192,7 @@ function renderCollection(col) {
 function blankItem(col) {
   if (isVehicle(col)) {
     return {
-      id: "", brand: "", name: "", bodyType: "Hatchback", tagline: "", description: "",
+      id: "", brand: "", name: "", bodyType: col === "motors" ? "Skuter" : "Hatchback", tagline: "", description: "",
       highlights: [], rangeKm: null, rangeStandard: null, batteryKwh: null, powerHp: null,
       torqueNm: null, topSpeedKph: null, accelSec: null, seats: null, year: null,
       driveType: "", chargeDcKw: null, chargeAcKw: null, chargeTime: "", warranty: "",
@@ -1238,11 +1296,26 @@ function moveItem(col, dragId, targetId) {
 function openVehicle(col, id) {
   const item = id ? findItem(col, id) : blankItem(col);
   if (!item) return;
-  vehicleCtx = { col, id: id || null, draft: { image: item.image || "", gallery: (item.gallery || []).slice() } };
+  vehicleCtx = {
+    col,
+    id: id || null,
+    defs: vehicleFields(col),
+    draft: { image: item.image || "", gallery: (item.gallery || []).slice() },
+  };
   editorTouched = false;
 
   const title = $("vehicle-modal-title");
   if (title) title.textContent = id ? `Edit ${COL_ONE[col]}: ${titleOf(col, item)}` : `Tambah ${COL_ONE[col]} Baru`;
+
+  const sub = $("vehicle-modal-sub");
+  if (sub) {
+    sub.textContent = id
+      ? "Perubahan langsung tersimpan begitu ditekan Simpan."
+      : "Hanya Merek dan Nama Model yang wajib. Sisanya bisa dilengkapi kapan saja.";
+  }
+
+  const again = $("vehicle-save-add");
+  if (again) again.hidden = !!id;
 
   renderVehiclePanes(item);
   setModalTab("vehicle-modal", "dasar");
@@ -1252,16 +1325,35 @@ function openVehicle(col, id) {
   if (first) setTimeout(() => first.focus(), 30);
 }
 
+/* Saran merek: gabungan merek yang sudah dipakai di koleksi ini dan daftar bawaan. */
+function brandListHtml(col) {
+  const used = uniqVals(content[col] || [], "brand");
+  const all = [...new Set([...used, ...(BRAND_SUGGESTIONS[col] || [])])].sort((a, b) => a.localeCompare(b, "id"));
+  return `<datalist id="brand-list">${all.map((b) => `<option value="${esc(b)}"></option>`).join("")}</datalist>`;
+}
+
+function specPresetHtml(col) {
+  const presets = SPEC_PRESETS[col] || [];
+  if (!presets.length) return "";
+  return `<div class="chip-row" aria-label="Tambah baris spesifikasi siap pakai">
+    <span class="chip-row-label">Cepat tambah:</span>
+    ${presets.map((label) => `<button type="button" class="chip" data-spec-preset="${esc(label)}">+ ${esc(label)}</button>`).join("")}
+  </div>`;
+}
+
 function renderVehiclePanes(item) {
   const form = $("vehicle-form");
   if (!form) return;
 
   const pane = (name) => form.querySelector(`.modal-pane[data-mpane="${name}"]`);
 
+  const col = vehicleCtx.col;
+  const defs = vehicleCtx.defs;
+
   const dasar = pane("dasar");
   if (dasar) {
-    dasar.innerHTML = `<div class="field-grid">
-      ${VEHICLE_PANES.dasar.map((d) => fieldHtml(d, item[d.k], "v")).join("")}
+    dasar.innerHTML = `${brandListHtml(col)}<div class="field-grid">
+      ${defs.dasar.map((d) => fieldHtml(d, item[d.k], "v")).join("")}
       <div class="field full">
         <label>Pratinjau kartu</label>
         <div class="item-row" id="vehicle-preview"></div>
@@ -1271,10 +1363,11 @@ function renderVehiclePanes(item) {
 
   const spek = pane("spesifikasi");
   if (spek) {
-    spek.innerHTML = `<div class="field-grid">${VEHICLE_PANES.spesifikasi.map((d) => fieldHtml(d, item[d.k], "v")).join("")}</div>
+    spek.innerHTML = `<div class="field-grid">${defs.spesifikasi.map((d) => fieldHtml(d, item[d.k], "v")).join("")}</div>
       <div class="form-section">
         <div class="form-section-head"><h4 class="panel-title">Baris spesifikasi tambahan</h4></div>
-        <div class="hint">Untuk data yang tidak tercakup field di atas, mis. “Ground clearance — 170 mm”.</div>
+        <div class="hint">Untuk data yang tidak tercakup field di atas. Tampil apa adanya di halaman detail.</div>
+        ${specPresetHtml(col)}
         ${repeaterHtml("specs", item.specs || [], "kv")}
       </div>`;
   }
@@ -1325,10 +1418,12 @@ function renderVehiclePanes(item) {
           <div class="field full">
             <label for="v-id">ID (dipakai di tautan halaman)</label>
             <input type="text" id="v-id" name="__id" value="${esc(item.id)}" readonly />
-            <div class="hint">ID dibuat otomatis dari merek &amp; nama saat item pertama kali disimpan.</div>
+            <div class="hint">${vehicleCtx.id
+              ? "ID tidak berubah lagi supaya tautan yang sudah tersebar tetap hidup."
+              : "Dibuat otomatis dari Merek &amp; Nama Model, dan ikut berubah selama item ini belum disimpan."}</div>
           </div>
           <div class="field">
-            <button type="button" class="btn btn-outline btn-sm" data-copy="${esc(item.id)}">Salin ID</button>
+            <button type="button" class="btn btn-outline btn-sm" data-copy-from="v-id">Salin ID</button>
           </div>
           <div class="field">
             <div class="hint">Terakhir diubah: ${esc(item.updatedAt ? formatDateTime(item.updatedAt) : "belum pernah")}</div>
@@ -1353,6 +1448,7 @@ function galleryHtml(list) {
 function refreshGallery() {
   const wrap = document.querySelector("#vehicle-form [data-gallery]");
   if (wrap && vehicleCtx) wrap.innerHTML = galleryHtml(vehicleCtx.draft.gallery);
+  updateVehicleMeter();
 }
 
 function refreshVehicleImage() {
@@ -1362,22 +1458,98 @@ function refreshVehicleImage() {
 }
 
 function updateVehiclePreview() {
-  const box = $("vehicle-preview");
   const form = $("vehicle-form");
-  if (!box || !form || !vehicleCtx) return;
+  if (!form || !vehicleCtx) return;
+
   const brand = (form.elements.brand && form.elements.brand.value) || "";
   const name = (form.elements.name && form.elements.name.value) || "";
-  const body = (form.elements.bodyType && form.elements.bodyType.value) || "";
-  const priceText = (form.elements.priceText && form.elements.priceText.value) || "";
-  const price = numOrNull(form.elements.price && form.elements.price.value);
-  const range = (form.elements.rangeKm && form.elements.rangeKm.value) || "";
-  const meta = [body, priceText || formatRupiah(price) || "Harga belum tersedia", range ? range + " km" : ""].filter(Boolean).join(" · ");
 
-  box.innerHTML = `<div class="row-thumb">${thumbInnerHtml(vehicleCtx.draft.image, brand + " " + name)}</div>
-    <div class="row-main">
-      <div class="row-title">${esc(`${brand} ${name}`.trim() || "Kendaraan baru")}</div>
-      <div class="row-meta">${esc(meta)}</div>
-    </div>`;
+  const box = $("vehicle-preview");
+  if (box) {
+    const body = (form.elements.bodyType && form.elements.bodyType.value) || "";
+    const priceText = (form.elements.priceText && form.elements.priceText.value) || "";
+    const price = numOrNull(form.elements.price && form.elements.price.value);
+    const range = (form.elements.rangeKm && form.elements.rangeKm.value) || "";
+    const meta = [body, priceText || formatRupiah(price) || "Harga belum tersedia", range ? range + " km" : ""].filter(Boolean).join(" · ");
+
+    box.innerHTML = `<div class="row-thumb">${thumbInnerHtml(vehicleCtx.draft.image, brand + " " + name)}</div>
+      <div class="row-main">
+        <div class="row-title">${esc(`${brand} ${name}`.trim() || (vehicleCtx.col === "motors" ? "Motor baru" : "Mobil baru"))}</div>
+        <div class="row-meta">${esc(meta)}</div>
+      </div>`;
+  }
+
+  // Item baru: ID ikut mengikuti ketikan sampai disimpan, jadi tidak ada kejutan.
+  const idInput = $("v-id");
+  if (idInput && !vehicleCtx.id) {
+    const slug = slugify(`${brand} ${name}`);
+    idInput.value = slug ? uniqueId(vehicleCtx.col, slug) : "";
+    idInput.placeholder = "otomatis dari merek & nama";
+  }
+
+  updateVehicleMeter(form);
+}
+
+/**
+ * Menghitung berapa banyak detail yang sudah terisi, per tab dan totalnya.
+ * Saklar (unggulan/data lama) tidak ikut dihitung karena "tidak dicentang"
+ * bukan berarti belum diisi.
+ */
+function vehicleStats(form) {
+  if (!vehicleCtx) return null;
+  const defs = vehicleCtx.defs;
+  const isFilled = (v) => (Array.isArray(v) ? v.length > 0 : v !== "" && v !== null && v !== undefined);
+  const countDefs = (list) => list.filter((d) => d.t !== "switch" && isFilled(readField(form, d))).length;
+  const totalDefs = (list) => list.filter((d) => d.t !== "switch").length;
+  const text = (key) => String((form.elements[key] && form.elements[key].value) || "").trim();
+
+  const panes = {
+    dasar: { filled: countDefs(defs.dasar), total: totalDefs(defs.dasar) },
+    spesifikasi: {
+      filled: countDefs(defs.spesifikasi) + (readRepeater(form, "specs").length ? 1 : 0),
+      total: totalDefs(defs.spesifikasi) + 1,
+    },
+    media: {
+      filled: (vehicleCtx.draft.image ? 1 : 0) + (vehicleCtx.draft.gallery.length ? 1 : 0) + (text("video") ? 1 : 0),
+      total: 3,
+    },
+    varian: { filled: readRepeater(form, "variantNames").length ? 1 : 0, total: 1 },
+    lanjutan: {
+      filled: (readRepeater(form, "colors").length ? 1 : 0) + (text("highlights") ? 1 : 0),
+      total: 2,
+    },
+  };
+
+  let filled = 0;
+  let total = 0;
+  for (const key of Object.keys(panes)) {
+    filled += panes[key].filled;
+    total += panes[key].total;
+  }
+  return { panes, filled, total, pct: total ? Math.round((filled / total) * 100) : 0 };
+}
+
+function updateVehicleMeter(form) {
+  const stats = vehicleStats(form || $("vehicle-form"));
+  if (!stats) return;
+
+  const meter = $("vehicle-meter");
+  if (meter) {
+    const tone = stats.pct >= 80 ? "good" : stats.pct >= 40 ? "mid" : "low";
+    meter.className = "editor-meter " + tone;
+    meter.innerHTML = `<div class="editor-meter-bar"><span style="width:${stats.pct}%"></span></div>
+      <div class="editor-meter-text"><strong>${stats.pct}% lengkap</strong> · ${stats.filled} dari ${stats.total} detail terisi</div>`;
+  }
+
+  const modal = $("vehicle-modal");
+  if (!modal) return;
+  for (const key of VEHICLE_TABS) {
+    const tab = modal.querySelector(`.modal-tab[data-mtab="${key}"] .tab-count`);
+    if (!tab) continue;
+    const p = stats.panes[key];
+    tab.textContent = `${p.filled}/${p.total}`;
+    tab.classList.toggle("is-empty", p.filled === 0);
+  }
 }
 
 function clearErrors(form) {
@@ -1406,15 +1578,16 @@ function setModalTab(modalId, tab) {
   });
 }
 
-function saveVehicle() {
+function saveVehicle(opts) {
   const form = $("vehicle-form");
   if (!form || !vehicleCtx) return;
-  const { col, id } = vehicleCtx;
+  const again = !!(opts && opts.again);
+  const { col, id, defs } = vehicleCtx;
   clearErrors(form);
 
   const data = {};
   for (const paneName of ["dasar", "spesifikasi"]) {
-    for (const def of VEHICLE_PANES[paneName]) data[def.k] = readField(form, def);
+    for (const def of defs[paneName]) data[def.k] = readField(form, def);
   }
 
   // Bantuan pengisian: harga teks dan angka saling melengkapi.
@@ -1452,10 +1625,29 @@ function saveVehicle() {
     content[col].push(data);
   }
 
-  closeModal($("vehicle-modal"));
+  const label = titleOf(col, data);
+  const savedId = id || data.id;
+  editorTouched = false;
   commit();
   saveNow();
-  toast(id ? "Perubahan disimpan" : "Item baru ditambahkan", "success");
+
+  // "Simpan & Tambah Lagi" menahan modal tetap terbuka dengan formulir kosong,
+  // supaya memasukkan katalog beberapa item berturut-turut tidak perlu klik ulang.
+  if (again) {
+    openVehicle(col, null);
+    toast(`“${label}” ditambahkan — lanjut isi ${COL_ONE[col].toLowerCase()} berikutnya`, "success");
+    return;
+  }
+
+  closeModal($("vehicle-modal"));
+  if (id) {
+    toast("Perubahan disimpan", "success");
+  } else {
+    toast(`“${label}” ditambahkan`, "success", {
+      label: "Buka lagi",
+      onClick: () => openEditor(col, savedId),
+    });
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -1948,10 +2140,15 @@ function bindEvents() {
 
     if (e.target.closest("#media-refresh")) { renderMedia(); toast("Daftar media dimuat ulang", "info"); return; }
 
+    if (e.target.closest("#vehicle-save-add")) { saveVehicle({ again: true }); return; }
+
     /* --- Salin ke papan klip --- */
-    const copy = e.target.closest("[data-copy]");
+    const copyFrom = e.target.closest("[data-copy-from]");
+    const copy = copyFrom || e.target.closest("[data-copy]");
     if (copy) {
-      const text = copy.getAttribute("data-copy");
+      const src = copyFrom ? $(copyFrom.getAttribute("data-copy-from")) : null;
+      const text = copyFrom ? (src ? src.value : "") : copy.getAttribute("data-copy");
+      if (!text) { toast("Belum ada ID untuk disalin", "info"); return; }
       if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast("Disalin ke papan klip", "success"), () => toast("Gagal menyalin", "error"));
       return;
     }
@@ -2031,6 +2228,35 @@ function bindEvents() {
       return;
     }
 
+    /* --- Chip spesifikasi siap pakai --- */
+    const preset = e.target.closest("[data-spec-preset]");
+    if (preset) {
+      const label = preset.getAttribute("data-spec-preset");
+      const rep = document.querySelector('#vehicle-form [data-rep="specs"]');
+      if (!rep) return;
+      const body = rep.querySelector("[data-rep-body]");
+      const existing = Array.from(body.querySelectorAll('[data-rk="label"]'));
+      const already = existing.find((i) => i.value.trim().toLowerCase() === label.toLowerCase());
+      if (already) {
+        already.focus();
+        toast(`Baris “${label}” sudah ada`, "info");
+        return;
+      }
+      // Baris kosong yang belum diisi dipakai ulang supaya tidak menumpuk.
+      const blank = existing.find((i) => !i.value.trim() && !i.closest(".repeater-row").querySelector('[data-rk="value"]').value.trim());
+      if (blank) {
+        blank.value = label;
+        blank.closest(".repeater-row").querySelector('[data-rk="value"]').focus();
+      } else {
+        body.insertAdjacentHTML("beforeend", repeaterRowHtml("specs", { label, value: "" }, "kv", body.children.length));
+        const val = body.lastElementChild.querySelector('[data-rk="value"]');
+        if (val) val.focus();
+      }
+      editorTouched = true;
+      updateVehicleMeter();
+      return;
+    }
+
     /* --- Repeater --- */
     const repAdd = e.target.closest("[data-rep-add]");
     if (repAdd) {
@@ -2042,11 +2268,12 @@ function bindEvents() {
       const last = body.lastElementChild;
       const input = last && last.querySelector("input:not([type=color])");
       if (input) input.focus();
+      updateVehicleMeter();
       return;
     }
 
     const repDel = e.target.closest("[data-rep-del]");
-    if (repDel) { repDel.closest(".repeater-row").remove(); return; }
+    if (repDel) { repDel.closest(".repeater-row").remove(); updateVehicleMeter(); return; }
 
     const repMove = e.target.closest("[data-rep-move]");
     if (repMove) {
