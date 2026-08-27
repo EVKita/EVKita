@@ -76,7 +76,9 @@ const verdicts = items.length >= 2 ? compareVerdicts(items) : [];
 const bodyTypes = [...new Set(items.map((v: any) => v.bodyType).filter(Boolean))];
 const bodyPhrase = joinPhrase(bodyTypes.map((b: string) => b.toLowerCase()));
 
-const isMotor = (v: any) => motors.some((m: any) => m.id === v.id);
+/* Sejak `normalizeCar()` memasang `kind`, jenis kendaraan dibaca dari objeknya
+   sendiri — bukan ditebak dengan menyisir ulang daftar motor. */
+const isMotor = (v: any) => v.kind === "motor";
 
 /* Menyandingkan mobil dengan motor tidak pernah disarankan situs ini, tapi
    alamatnya bisa saja diketik sendiri — dan kalimatnya tetap harus benar. */

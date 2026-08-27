@@ -51,13 +51,14 @@ export function priceLabel(c) {
 /**
  * Alamat halaman detail sebuah kendaraan.
  *
- * Satu tempat, dipakai kartu maupun tabel perbandingan: motor belum punya
- * halaman detailnya sendiri dan sementara ini ikut ke `/mobil/<id>`, yang
- * mengalihkannya ke katalog. Saat halaman motor lahir, yang berubah cukup
- * fungsi ini — bukan setiap tempat yang pernah menautkan kendaraan.
+ * Satu tempat, dipakai kartu, tabel perbandingan, kalkulator, dan beranda.
+ * Motor dan mobil bentuk objeknya identik — keduanya lewat `normalizeCar()` —
+ * jadi yang membedakannya adalah `kind`, yang dipasang saat konten dibaca
+ * (`store.ts`). Menebaknya dari data lain tidak mungkin: sebuah merek boleh
+ * menjual keduanya, dan sebuah id boleh sama bentuknya.
  */
 export function vehicleHref(c) {
-  return "/mobil/" + c.id;
+  return (c && c.kind === "motor" ? "/motor/" : "/mobil/") + c.id;
 }
 
 /**

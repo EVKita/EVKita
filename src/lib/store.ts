@@ -148,11 +148,19 @@ function specRows(v: unknown): { label: string; value: string }[] {
     .filter((r) => r.label || r.value);
 }
 
-function normalizeCar(c: any): any {
+/**
+ * @param kind Mobil atau motor. Bentuk objek keduanya identik, jadi tanpa
+ *   penanda ini tidak ada satu pun cara membedakannya di hilir — dan
+ *   `vehicleHref()` di `card-html.js` harus tahu, karena alamat halaman
+ *   detailnya berbeda. Nilainya selalu dihitung ulang dari koleksi asalnya,
+ *   jadi entri yang dipindahkan antar koleksi tidak bisa membawa nilai basi.
+ */
+function normalizeCar(c: any, kind: "mobil" | "motor"): any {
   const variantNames = strArr(c?.variantNames);
   const status = str(c?.status) === "draft" ? "draft" : "published";
   return {
     id: str(c?.id),
+    kind,
     brand: str(c?.brand),
     name: str(c?.name),
     bodyType: str(c?.bodyType) || "Hatchback",
@@ -287,8 +295,8 @@ function normalize(content: any): any {
   return {
     revision: str(content?.revision),
     site,
-    cars: ensureIds(asList(content?.cars).map(normalizeCar), "mobil", "name"),
-    motors: ensureIds(asList(content?.motors).map(normalizeCar), "motor", "name"),
+    cars: ensureIds(asList(content?.cars).map((c: any) => normalizeCar(c, "mobil")), "mobil", "name"),
+    motors: ensureIds(asList(content?.motors).map((c: any) => normalizeCar(c, "motor")), "motor", "name"),
     spklu: ensureIds(asList(content?.spklu).map(normalizeSpklu), "spklu", "name"),
     bengkel: ensureIds(asList(content?.bengkel).map(normalizeBengkel), "bengkel", "name"),
     berita: ensureIds(asList(content?.berita).map(normalizeBerita), "berita", "title"),

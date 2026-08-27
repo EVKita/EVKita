@@ -2586,6 +2586,22 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
   color: var(--accent-ink);
 }
 
+/* Merek dan tipe bodi kini punya halamannya sendiri, jadi keduanya jadi
+   tautan. Garis bawah baru muncul saat disentuh: di posisi ini ia bagian dari
+   identitas kendaraan, bukan navigasi yang minta diklik. */
+.detail-brand-link {
+  text-decoration: none;
+}
+
+.detail-brand-link:hover,
+a.badge-accent:hover {
+  text-decoration: underline;
+}
+
+a.badge-accent {
+  text-decoration: none;
+}
+
 .detail-info h1 {
   font-size: clamp(26px, 4vw, 42px);
   font-weight: 900;
@@ -3685,4 +3701,60 @@ a.pager-arrow:hover {
   .chips-row {
     display: none !important;
   }
+}
+
+/* ===== Halaman merek & tipe bodi ===== */
+
+/* Halaman kelompok memakai kerangka /katalog (.katalog, .katalog-head,
+   .katalog-lead, .grid) — yang baru di sini hanya daftar kelompoknya dan
+   seksi tautan silang di bawah kartu. */
+
+.koleksi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.koleksi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text);
+  transition: transform 0.22s var(--ease), border-color 0.22s var(--ease), box-shadow 0.22s var(--ease);
+}
+
+.koleksi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-ink);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+}
+
+.koleksi-card-label {
+  font-size: 16px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.koleksi-card-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.koleksi-section {
+  margin-top: clamp(28px, 4vw, 44px);
+}
+
+.koleksi-section h2 {
+  font-size: clamp(17px, 2.2vw, 21px);
+  margin-bottom: 12px;
+}
+
+.koleksi-section .katalog-lead {
+  margin-top: 12px;
 }

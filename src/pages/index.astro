@@ -5,7 +5,7 @@ import SiteFooter from "../components/SiteFooter.astro";
 import { readContent } from "../lib/store";
 import { carSVG, defaultColor } from "../lib/cars-ui.js";
 import { safeUrl } from "../lib/url.js";
-import { cardHTML, defaultSort } from "../lib/card-html.js";
+import { cardHTML, defaultSort, vehicleHref } from "../lib/card-html.js";
 import { PER_PAGE } from "../lib/pagination.js";
 import { siteOrigin } from "../lib/site-url";
 
@@ -27,9 +27,12 @@ const berita = content.berita || [];
 /** Item bertanda `featured` naik ke atas — sisanya menjaga urutan aslinya. */
 const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
 
+/* `kind` sudah dipasang `normalizeCar()` saat konten dibaca — tidak perlu
+   ditempel ulang di sini, dan menempelnya berarti ada dua tempat yang harus
+   sepakat soal hal yang sama. */
 const featured = [
-  ...cars.filter((c: any) => c.featured).map((c: any) => ({ ...c, kind: "mobil" })),
-  ...motors.filter((c: any) => c.featured).map((c: any) => ({ ...c, kind: "motor" })),
+  ...cars.filter((c: any) => c.featured),
+  ...motors.filter((c: any) => c.featured),
 ].slice(0, 8);
 
 function fmtPrice(v: any) {
@@ -83,7 +86,9 @@ const initialGrid = initialCards.map((c: any) => cardHTML(c, { linkable: true })
  * semuanya.
  */
 const KATALOG_FIELDS = [
-  "id", "brand", "name", "bodyType", "tagline", "tags",
+  // `kind` ikut karena `vehicleHref()` memakainya: tanpa itu kartu motor yang
+  // dirender ULANG di browser akan menautkan dirinya ke /mobil/.
+  "id", "kind", "brand", "name", "bodyType", "tagline", "tags",
   "rangeKm", "rangeStandard", "batteryKwh", "powerHp", "torqueNm",
   "topSpeedKph", "accelSec", "seats", "year", "driveType",
   "chargeDcKw", "chargeAcKw", "chargeTime", "warranty",
@@ -116,7 +121,7 @@ const jsonLd = {
         "@type": "ListItem",
         position: i + 1,
         name: `${v.brand} ${v.name}`,
-        url: `${canonical}mobil/${v.id}`,
+        url: `${siteOrigin(Astro.url)}${vehicleHref(v)}`,
       })),
     },
   ],
@@ -179,7 +184,7 @@ const jsonLd = {
           </div>
           <div class="feature-rail">
             {featured.map((f: any) => (
-              <a class="feature-card" href={f.kind === "mobil" ? `/mobil/${f.id}` : "#daftar"}>
+              <a class="feature-card" href={vehicleHref(f)}>
                 <div class="feature-media">
                   {f.image ? (
                     <img src={safeUrl(f.image)} alt={`${f.brand} ${f.name}`} loading="lazy" decoding="async" />

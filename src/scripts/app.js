@@ -124,7 +124,10 @@ function writeUrlState() {
 
 function cardHTML(c) {
   return buildCard(c, {
-    linkable: state.mode === "mobil",
+    // Dulu hanya mobil yang boleh ditautkan: motor belum punya halaman detail,
+    // jadi kartunya sengaja mati. Sejak /motor/<slug> ada, keduanya bisa —
+    // dan `vehicleHref()` yang tahu ke mana masing-masing pergi.
+    linkable: true,
     compare: state.compare,
     color: uiState.color,
     variant: uiState.variant,
@@ -572,7 +575,7 @@ function bindEvents() {
     const wrap = scope.querySelector(".car-visual");
     if (wrap) {
       wrap.outerHTML = buildVisual(c, {
-        linkable: state.mode === "mobil",
+        linkable: true,
         color: uiState.color,
         variant: uiState.variant,
       });

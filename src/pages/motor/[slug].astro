@@ -1,0 +1,39 @@
+---
+import VehicleDetail from "../../components/VehicleDetail.astro";
+import { readContent } from "../../lib/store";
+
+/**
+ * Halaman detail satu motor listrik.
+ *
+ * Dua belas motor di katalog ini selama ini tidak punya satu pun alamat: yang
+ * bisa didatangi hanyalah beranda dalam mode motor, dan itu satu halaman untuk
+ * dua belas kendaraan. Perayap tidak pernah melihat spesifikasinya, dan
+ * pembaca tidak punya apa pun untuk dibagikan selain alamat beranda.
+ *
+ * Isinya dipakai bersama halaman mobil lewat `VehicleDetail.astro` — data
+ * keduanya melewati `normalizeCar()` yang sama, jadi tidak ada alasan
+ * halamannya berbeda.
+ */
+const content = readContent();
+const slug = String(Astro.params.slug || "");
+
+/* Saklar "tampilkan motor" di panel mematikan seluruh sisi publik motor, bukan
+   cuma seksinya di beranda: halaman detail yang tetap hidup padahal katalognya
+   disembunyikan adalah pintu belakang ke konten yang sengaja ditutup. */
+const isLive = (v: any) => v && v.status !== "draft";
+const motors = content.site.showMotor ? (content.motors || []).filter(isLive) : [];
+const motor = motors.find((m: any) => m.id === slug);
+
+if (!motor) {
+  /* Kebalikan dari pengalihan di `/mobil/[slug]`: alamat yang salah kamar
+     dibetulkan, bukan dijawab 404. Tanpa ini, satu-satunya yang menanggung
+     kesalahan ketik adalah pembacanya. */
+  const car = (content.cars || []).filter(isLive).find((c: any) => c.id === slug);
+  if (car) {
+    return Astro.redirect(`/mobil/${encodeURIComponent(car.id)}`, 301);
+  }
+  Astro.response.status = 404;
+}
+---
+
+<VehicleDetail site={content.site} vehicle={motor || null} pool={motors} kind="motor" />

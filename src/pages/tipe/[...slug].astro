@@ -1,0 +1,40 @@
+---
+import KoleksiPage from "../../components/KoleksiPage.astro";
+import { readContent } from "../../lib/store";
+import { groupByField, findGroup } from "../../lib/taxonomy.js";
+
+/**
+ * `/tipe` dan `/tipe/<tipe-bodi>`.
+ *
+ * Pasangan `/merek/*`: pertanyaannya berbentuk sama ("tunjukkan semua yang
+ * begini") dan jawabannya dirakit komponen yang sama. Yang dicari orang di sini
+ * biasanya bukan merek melainkan bentuk — "SUV listrik", "hatchback listrik
+ * murah" — dan itu pertanyaan yang tidak pernah punya halaman di situs ini.
+ */
+const content = readContent();
+const site = content.site;
+
+const isLive = (v: any) => v && v.status !== "draft";
+const pool = [
+  ...(content.cars || []).filter(isLive),
+  ...(site.showMotor ? (content.motors || []).filter(isLive) : []),
+];
+
+const raw = Astro.params.slug;
+const segmen = raw === undefined || raw === "" ? [] : String(raw).split("/");
+
+const groups = groupByField(pool, "bodyType");
+const group = segmen.length === 1 ? findGroup(groups, segmen[0]) : null;
+
+/* Satu halaman, satu alamat — sama seperti di `/merek`. */
+if (group && segmen[0] !== group.slug) {
+  return Astro.redirect(`/tipe/${group.slug}`, 301);
+}
+
+const mode = segmen.length === 0 ? "indeks" : group ? "kelompok" : "hilang";
+if (mode === "hilang") {
+  Astro.response.status = 404;
+}
+---
+
+<KoleksiPage site={site} jenis="tipe" pool={pool} mode={mode} group={group} />

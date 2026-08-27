@@ -3,6 +3,8 @@ import { readContent } from "../lib/store";
 import { siteOrigin } from "../lib/site-url";
 import { comparePairs } from "../lib/compare-pairs.js";
 import { PER_PAGE, pageCount, pageHref } from "../lib/pagination.js";
+import { groupByField } from "../lib/taxonomy.js";
+import { vehicleHref } from "../lib/card-html.js";
 
 /**
  * Peta situs yang dirakit saat diminta, bukan saat build.
@@ -25,6 +27,10 @@ export const GET: APIRoute = ({ url }) => {
   ];
 
   const liveCars = (content.cars || []).filter(isLive);
+  /* Saklar "tampilkan motor" mematikan seluruh sisi publik motor. Peta situs
+     harus ikut diam, bukan mengumumkan alamat yang menjawab 404. */
+  const liveMotors = content.site.showMotor ? (content.motors || []).filter(isLive) : [];
+  const semua = [...liveCars, ...liveMotors];
 
   // Setiap halaman katalog diumumkan sendiri-sendiri: itulah satu-satunya cara
   // perayap sampai ke mobil ke-13 dan seterusnya tanpa menjalankan JavaScript.
@@ -32,12 +38,31 @@ export const GET: APIRoute = ({ url }) => {
     entries.push({ loc: `${origin}${pageHref(hal)}`, priority: hal === 1 ? "0.9" : "0.6" });
   }
 
-  for (const car of liveCars) {
+  // Alamat halaman detail berasal dari `vehicleHref()`, satu-satunya tempat
+  // yang tahu bahwa motor tinggal di `/motor/`. Menyusunnya sendiri di sini
+  // berarti peta situs bisa berselisih dengan tautan di halamannya.
+  for (const v of semua) {
     entries.push({
-      loc: `${origin}/mobil/${encodeURIComponent(car.id)}`,
-      lastmod: car.updatedAt || undefined,
+      loc: `${origin}${vehicleHref(v)}`,
+      lastmod: v.updatedAt || undefined,
       priority: "0.8",
     });
+  }
+
+  /*
+   * Halaman merek dan tipe bodi.
+   *
+   * Inilah yang menjawab "mobil listrik BYD" dan "SUV listrik" — pertanyaan
+   * yang bentuknya jauh lebih sering diketik daripada nama satu model. Daftar
+   * kelompoknya diturunkan dari datanya sendiri, jadi merek yang baru
+   * ditambahkan lewat panel langsung ikut diumumkan tanpa ada yang perlu
+   * ingat memperbarui berkas ini.
+   */
+  for (const [basis, field] of [["merek", "brand"], ["tipe", "bodyType"]] as const) {
+    entries.push({ loc: `${origin}/${basis}`, priority: "0.7" });
+    for (const g of groupByField(semua, field)) {
+      entries.push({ loc: `${origin}/${basis}/${encodeURIComponent(g.slug)}`, priority: "0.7" });
+    }
   }
 
   /*
@@ -49,11 +74,19 @@ export const GET: APIRoute = ({ url }) => {
    * tiap mobil — bentuk bodi yang sama, harga yang berdekatan — karena itulah
    * perbandingan yang benar-benar dicari orang.
    *
-   * Motor belum ikut: halaman detailnya sendiri belum ada, jadi mengumumkan
-   * perbandingannya hanya mengirim perayap ke tautan yang berujung pengalihan.
+   * Motor kini ikut: sebelumnya ia sengaja dilewati karena halaman detailnya
+   * belum ada, sehingga setiap tautan perbandingan berujung di pengalihan.
+   * Alasan itu hilang begitu `/motor/<slug>` lahir.
+   *
+   * Mobil dan motor dipasangkan TERPISAH. Menyandingkan mobil dengan skuter
+   * memang menghasilkan halaman yang sah, tapi bukan perbandingan yang pernah
+   * ditimbang siapa pun — dan mengumumkannya hanya menghabiskan jatah
+   * perayapan.
    */
-  for (const pair of comparePairs(liveCars, 3)) {
-    entries.push({ loc: `${origin}/bandingkan/${encodeURIComponent(pair.slug)}`, priority: "0.6" });
+  for (const pool of [liveCars, liveMotors]) {
+    for (const pair of comparePairs(pool, 3)) {
+      entries.push({ loc: `${origin}/bandingkan/${encodeURIComponent(pair.slug)}`, priority: "0.6" });
+    }
   }
 
   const escapeXml = (s: string) =>

@@ -1,0 +1,48 @@
+---
+import KoleksiPage from "../../components/KoleksiPage.astro";
+import { readContent } from "../../lib/store";
+import { groupByField, findGroup } from "../../lib/taxonomy.js";
+
+/**
+ * `/merek` dan `/merek/<merek>`.
+ *
+ * "Mobil listrik BYD" adalah salah satu kalimat yang paling sering diketik
+ * orang, dan sampai sekarang situs ini menjawabnya dengan beranda ditambah dua
+ * dropdown — keadaan yang tidak punya alamat, jadi tidak bisa dibagikan dan
+ * tidak pernah dilihat perayap.
+ *
+ * Daftar mereknya diturunkan dari `content.json`, bukan ditulis di kode: merek
+ * yang baru ditambahkan lewat panel langsung punya halamannya sendiri.
+ */
+const content = readContent();
+const site = content.site;
+
+const isLive = (v: any) => v && v.status !== "draft";
+const pool = [
+  ...(content.cars || []).filter(isLive),
+  ...(site.showMotor ? (content.motors || []).filter(isLive) : []),
+];
+
+const raw = Astro.params.slug;
+const segmen = raw === undefined || raw === "" ? [] : String(raw).split("/");
+
+const groups = groupByField(pool, "brand");
+const group = segmen.length === 1 ? findGroup(groups, segmen[0]) : null;
+
+/**
+ * Satu halaman, satu alamat: `/merek/BYD` dan `/merek/byd` isinya sama persis,
+ * jadi yang bukan bentuk baku dialihkan permanen ke bentuk bakunya.
+ */
+if (group && segmen[0] !== group.slug) {
+  return Astro.redirect(`/merek/${group.slug}`, 301);
+}
+
+/* Alamat berlapis seperti "/merek/byd/seal" bukan merek yang salah eja,
+   melainkan halaman yang tidak pernah ada. */
+const mode = segmen.length === 0 ? "indeks" : group ? "kelompok" : "hilang";
+if (mode === "hilang") {
+  Astro.response.status = 404;
+}
+---
+
+<KoleksiPage site={site} jenis="merek" pool={pool} mode={mode} group={group} />
