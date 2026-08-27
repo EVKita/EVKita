@@ -37,6 +37,34 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
     return apiError("err.badJson");
   }
 
+  /**
+   * Pemeriksaan tabrakan.
+   *
+   * Panel mengirim kembali `revision` dari dokumen yang dimuatnya. Kalau isi di
+   * disk sudah berganti sejak saat itu, ada orang lain yang menyimpan lebih
+   * dulu — dan menerima kiriman ini berarti menghapus pekerjaan mereka tanpa
+   * satu pun peringatan. Jawabannya 409 beserta isi terbaru, supaya panel bisa
+   * menawarkan pilihan alih-alih menebak.
+   *
+   * `force` adalah pilihan sadar dari orang yang melihat peringatan itu dan
+   * memutuskan tetap menimpa.
+   */
+  const current = readContent();
+  const sent = String(body?.revision || "");
+  if (current.revision && sent !== current.revision && body?.force !== true) {
+    return json(
+      {
+        ok: false,
+        errorKey: "err.contentConflict",
+        errorVars: {},
+        error: "Konten sudah diubah orang lain sejak halaman ini dimuat.",
+        conflict: true,
+        content: current,
+      },
+      409
+    );
+  }
+
   const content = writeContent(body);
   logActivity(me, "content.save");
   return json({ ok: true, content });

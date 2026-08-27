@@ -502,11 +502,20 @@ function confirmDialog(opts) {
   const titleEl = $("confirm-title");
   const textEl = $("confirm-text");
   const okBtn = $("confirm-ok");
+  const cancelBtn = $("confirm-cancel");
   if (titleEl) titleEl.textContent = o.title;
   if (textEl) textEl.textContent = o.text;
   if (okBtn) {
     okBtn.textContent = o.okText;
     okBtn.className = "btn " + (o.danger ? "btn-danger" : "btn-primary");
+  }
+  if (cancelBtn) {
+    // Tombol batal biasanya cukup berbunyi "Batal", tapi pada dialog tabrakan
+    // ia adalah sebuah PILIHAN ("Muat ulang"), bukan jalan keluar. Kuncinya
+    // ikut diperbarui supaya applyStaticI18n() tidak menimpanya kembali saat
+    // bahasa berganti.
+    cancelBtn.textContent = o.cancelText || t("common.cancel");
+    cancelBtn.setAttribute("data-i18n", o.cancelKey || "common.cancel");
   }
   openModal(modal);
   if (okBtn) okBtn.focus();
@@ -614,7 +623,18 @@ async function saveNow() {
       body: JSON.stringify(content),
     });
     if (res.status === 401) { location.href = "/admin/login"; return; }
+
     const data = await res.json();
+
+    // Orang lain menyimpan lebih dulu. Menimpanya diam-diam berarti menghapus
+    // pekerjaan mereka tanpa ada yang tahu — jadi keputusannya diserahkan.
+    if (res.status === 409 && data && data.conflict) {
+      savingNow = false;
+      savePending = false;
+      await resolveConflict(data.content);
+      return;
+    }
+
     if (!data || !data.ok) throw new Error(apiMessage(data, "toast.serverRejected"));
     content = data.content;
     dirty = false;
@@ -627,6 +647,54 @@ async function saveNow() {
     savingNow = false;
     if (savePending) { savePending = false; saveNow(); }
   }
+}
+
+/**
+ * Menawarkan pilihan saat dokumen sudah berganti di server.
+ *
+ * Dua-duanya kehilangan sesuatu, dan itu memang tidak bisa dihindari — yang
+ * bisa dihindari adalah kehilangan itu terjadi tanpa seorang pun tahu.
+ */
+async function resolveConflict(serverContent) {
+  const timpa = await confirmDialog({
+    title: t("conflict.title"),
+    text: t("conflict.text"),
+    okText: t("conflict.overwrite"),
+    cancelText: t("conflict.reload"),
+    cancelKey: "conflict.reload",
+    danger: true,
+  });
+
+  if (timpa) {
+    // Pakai revisi terbaru dari server, lalu kirim ulang dengan izin eksplisit.
+    content.revision = serverContent.revision;
+    try {
+      const res = await fetch("/api/content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...content, force: true }),
+      });
+      const data = await res.json();
+      if (!data || !data.ok) throw new Error(apiMessage(data, "toast.serverRejected"));
+      content = data.content;
+      dirty = false;
+      setSaveState("saved");
+      renderAll();
+      toast(t("conflict.overwritten"), "success");
+    } catch (err) {
+      setSaveState("dirty");
+      toast(err.message, "error");
+    }
+    return;
+  }
+
+  // Membuang perubahan sendiri dan memakai isi terbaru dari server.
+  content = serverContent;
+  dirty = false;
+  resetHistory();
+  setSaveState("saved");
+  renderAll();
+  toast(t("conflict.reloaded"), "info");
 }
 
 async function uploadImage(file) {

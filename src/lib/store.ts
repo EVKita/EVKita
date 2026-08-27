@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfile";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -257,6 +258,22 @@ function ensureIds(list: any[], prefix: string, key: string): any[] {
   });
 }
 
+/**
+ * Penanda versi dokumen konten.
+ *
+ * Panel mengirim SELURUH dokumen setiap kali menyimpan, dan server dulu
+ * menerimanya apa adanya. Kalau dua orang membuka panel bersamaan, autosave
+ * orang pertama menghapus pekerjaan orang kedua yang sudah tersimpan — dan
+ * keduanya melihat status "Tersimpan". Sejak panel jadi multi-pengguna dengan
+ * tiga peran, itu bukan skenario teoretis lagi.
+ *
+ * Nilainya cukup berupa penanda acak; yang dibutuhkan hanya "apakah ini masih
+ * dokumen yang sama dengan yang kamu muat?", bukan urutan.
+ */
+function newRevision(): string {
+  return `${Date.now().toString(36)}-${crypto.randomBytes(4).toString("hex")}`;
+}
+
 function normalize(content: any): any {
   const src = content?.site || {};
   const site: Record<string, any> = {};
@@ -268,6 +285,7 @@ function normalize(content: any): any {
   }
 
   return {
+    revision: str(content?.revision),
     site,
     cars: ensureIds(asList(content?.cars).map(normalizeCar), "mobil", "name"),
     motors: ensureIds(asList(content?.motors).map(normalizeCar), "motor", "name"),
@@ -392,6 +410,9 @@ export function readBackup(name: string): any | null {
 
 export function writeContent(content: any, options: { snapshotAlways?: boolean } = {}): any {
   const normalized = normalize(content);
+  // Setiap penulisan menghasilkan revisi baru, termasuk pemulihan cadangan:
+  // panel lain yang sedang terbuka harus tahu bahwa dokumennya sudah berganti.
+  normalized.revision = newRevision();
   fs.mkdirSync(DATA_DIR, { recursive: true });
   snapshot(options.snapshotAlways === true);
   writeJsonAtomic(DATA_FILE, normalized);
