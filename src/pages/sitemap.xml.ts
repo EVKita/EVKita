@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { readContent } from "../lib/store";
 import { siteOrigin } from "../lib/site-url";
+import { comparePairs } from "../lib/compare-pairs.js";
 
 /**
  * Peta situs yang dirakit saat diminta, bukan saat build.
@@ -21,12 +22,30 @@ export const GET: APIRoute = ({ url }) => {
     { loc: `${origin}/`, priority: "1.0" },
   ];
 
-  for (const car of (content.cars || []).filter(isLive)) {
+  const liveCars = (content.cars || []).filter(isLive);
+
+  for (const car of liveCars) {
     entries.push({
       loc: `${origin}/mobil/${encodeURIComponent(car.id)}`,
       lastmod: car.updatedAt || undefined,
       priority: "0.8",
     });
+  }
+
+  /*
+   * Halaman perbandingan.
+   *
+   * Sengaja BUKAN semua pasangan yang mungkin: 28 mobil berarti 378 halaman,
+   * dan hampir semuanya menyandingkan kendaraan yang tidak pernah ditimbang
+   * bersamaan oleh siapa pun. Yang diumumkan hanya beberapa lawan terdekat
+   * tiap mobil — bentuk bodi yang sama, harga yang berdekatan — karena itulah
+   * perbandingan yang benar-benar dicari orang.
+   *
+   * Motor belum ikut: halaman detailnya sendiri belum ada, jadi mengumumkan
+   * perbandingannya hanya mengirim perayap ke tautan yang berujung pengalihan.
+   */
+  for (const pair of comparePairs(liveCars, 3)) {
+    entries.push({ loc: `${origin}/bandingkan/${encodeURIComponent(pair.slug)}`, priority: "0.6" });
   }
 
   const escapeXml = (s: string) =>

@@ -5,6 +5,8 @@ import SiteFooter from "../../components/SiteFooter.astro";
 import { readContent } from "../../lib/store";
 import { carSVG, defaultColor } from "../../lib/cars-ui.js";
 import { safeUrl } from "../../lib/url.js";
+import { compareSlug } from "../../lib/compare-html.js";
+import { rivalsFor } from "../../lib/compare-pairs.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 
 const content = readContent();
@@ -62,6 +64,21 @@ const related = car
   : [];
 
 const priceText = car ? car.priceText || (car.price != null ? "Rp " + Number(car.price).toLocaleString("id-ID") : "") : "";
+
+/**
+ * Perbandingan yang paling sering dicari untuk mobil ini.
+ *
+ * Halaman `/bandingkan/...` sudah ada di peta situs, tapi tanpa tautan dari
+ * sini ia jadi pulau: hanya bisa ditemukan lewat peta situs, dan pembaca yang
+ * sedang menimbang mobil ini tidak pernah diberi tahu bahwa perbandingannya
+ * ada. Lawannya dipilih dengan aturan yang sama dengan yang dipakai peta situs.
+ */
+const compareLinks = car
+  ? rivalsFor(car, cars, 3).map((r: any) => ({
+      slug: compareSlug([car.id, r.id]),
+      label: `${car.name} vs ${r.brand} ${r.name}`,
+    }))
+  : [];
 
 /** Baris spesifikasi baku; yang kosong dibuang sebelum dirender. */
 const specRows = car
@@ -344,6 +361,17 @@ const themeProps = {
           <div class="tag-row">
             {car.tags.map((t: string) => (
               <a class="tag-pill" href={`/?q=${encodeURIComponent(t)}#daftar`}>#{t}</a>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {compareLinks.length ? (
+        <section class="detail-section">
+          <h2>Bandingkan</h2>
+          <div class="tag-row">
+            {compareLinks.map((c) => (
+              <a class="tag-pill" href={`/bandingkan/${c.slug}`}>{c.label}</a>
             ))}
           </div>
         </section>

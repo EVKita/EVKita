@@ -1914,6 +1914,12 @@ body.nav-open .nav-drawer-link {
   font-size: 18px;
 }
 
+.compare-modal-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .compare-close {
   width: 34px;
   height: 34px;
@@ -2835,6 +2841,137 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
 .related-meta {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* ===== Halaman perbandingan ===== */
+
+.cmp {
+  padding: 28px 20px clamp(40px, 6vw, 72px);
+}
+
+.cmp-head {
+  margin-bottom: clamp(24px, 4vw, 40px);
+}
+
+.cmp-head h1 {
+  font-size: clamp(24px, 4vw, 38px);
+  line-height: 1.15;
+}
+
+.cmp-lead {
+  margin-top: 12px;
+  max-width: 80ch;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.cmp-section {
+  margin-bottom: clamp(28px, 4vw, 44px);
+}
+
+.cmp-section h2 {
+  font-size: clamp(18px, 2.4vw, 24px);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cmp-verdicts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  list-style: none;
+}
+
+.cmp-verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+}
+
+.cmp-verdict-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cmp-verdict-winner {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.cmp-verdict-winner:hover {
+  color: var(--accent-ink);
+}
+
+.cmp-verdict-value {
+  font-size: 13px;
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.cmp-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 80ch;
+}
+
+/* Tabelnya memakai markup bersama dengan modal beranda, yang di sana duduk di
+   dalam kotak ber-padding sendiri. Di halaman ini padding itu tidak perlu. */
+.cmp-table-wrap .compare-scroll {
+  padding: 0;
+}
+
+/* Di modal, lebar kolom dibatasi kotak modalnya. Halaman ini selebar layar,
+   jadi gambar ber-`aspect-ratio` di kepala kolom akan tumbuh sampai ratusan
+   piksel dan mendorong kolom lain menyempit. Batasnya dipasang di sini, bukan
+   di markup bersama, supaya modal tetap seperti semula. */
+.cmp-table-wrap .compare-head-card {
+  max-width: 240px;
+}
+
+/* Kolom label spesifikasi tidak perlu ikut melar. */
+.cmp-table-wrap .compare-table tbody th {
+  width: 1%;
+}
+
+/* Kepala tabel menempel di bawah header situs, bukan di puncak jendela — di
+   modal tidak ada header di atasnya, di halaman ini ada. Pola yang sama sudah
+   dipakai toolbar katalog. */
+.cmp-table-wrap .compare-table thead th {
+  top: var(--header-h);
+}
+
+.cmp-links,
+.cmp-others {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cmp-other {
+  display: inline-flex;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+.cmp-other:hover {
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
 }
 
 /* ===== Lightbox ===== */

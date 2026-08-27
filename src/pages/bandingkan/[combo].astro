@@ -1,0 +1,259 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { priceLabel, vehicleHref } from "../../lib/card-html.js";
+import {
+  MAX_COMPARE,
+  compareTableHTML,
+  compareSlug,
+  parseCompareSlug,
+  compareVerdicts,
+  verdictSentence,
+  joinPhrase,
+} from "../../lib/compare-html.js";
+import { rivalsFor } from "../../lib/compare-pairs.js";
+import { siteOrigin, canonicalUrl } from "../../lib/site-url";
+
+/**
+ * Halaman perbandingan yang punya alamatnya sendiri.
+ *
+ * Status perbandingan sudah lama tersimpan di URL beranda (`?banding=a,b`),
+ * tapi yang dihasilkannya hanyalah modal: tidak punya judul, tidak punya
+ * pratinjau tautan, dan isinya baru ada setelah JavaScript jalan. "BYD Seal vs
+ * Ioniq 5" adalah kalimat yang benar-benar diketik orang di mesin pencari, dan
+ * sampai sekarang situs ini tidak punya apa pun untuk menjawabnya.
+ *
+ * Tabelnya dirender server dari `src/lib/compare-html.js` — modul yang sama
+ * yang dipakai modal beranda di browser, jadi keduanya tidak bisa berselisih.
+ */
+
+const content = readContent();
+const site = content.site;
+
+const isLive = (v: any) => v && v.status !== "draft";
+const cars = (content.cars || []).filter(isLive);
+const motors = site.showMotor ? (content.motors || []).filter(isLive) : [];
+const pool = [...cars, ...motors];
+
+const wanted = parseCompareSlug(Astro.params.combo);
+
+/**
+ * Id yang tidak dikenal dibuang, bukan membuat seluruh halaman gagal: tautan
+ * lama bisa saja menyebut kendaraan yang sejak itu dihapus dari katalog, dan
+ * membandingkan dua dari tiga masih menjawab sebagian pertanyaan pembaca.
+ */
+const seen = new Set<string>();
+const items = wanted
+  .map((id) => pool.find((v: any) => v.id === id))
+  .filter((v: any) => {
+    if (!v || seen.has(v.id)) return false;
+    seen.add(v.id);
+    return true;
+  })
+  .slice(0, MAX_COMPARE);
+
+/**
+ * Satu perbandingan hanya boleh punya satu alamat. Urutan lain — juga id yang
+ * tadi dibuang — dialihkan permanen ke bentuk bakunya, supaya halaman yang
+ * isinya persis sama tidak terindeks berkali-kali dan saling mengencerkan.
+ */
+const canonicalSlug = items.length >= 2 ? compareSlug(items.map((v: any) => v.id)) : "";
+if (canonicalSlug && canonicalSlug !== String(Astro.params.combo)) {
+  return Astro.redirect(`/bandingkan/${canonicalSlug}`, 301);
+}
+
+if (items.length < 2) {
+  Astro.response.status = 404;
+}
+
+const names = items.map((v: any) => `${v.brand} ${v.name}`);
+const heading = names.join(" vs ");
+const verdicts = items.length >= 2 ? compareVerdicts(items) : [];
+
+/** Bentuk bodi yang dibandingkan, tanpa pengulangan: "SUV" atau "SUV dan Sedan". */
+const bodyTypes = [...new Set(items.map((v: any) => v.bodyType).filter(Boolean))];
+const bodyPhrase = joinPhrase(bodyTypes.map((b: string) => b.toLowerCase()));
+
+const isMotor = (v: any) => motors.some((m: any) => m.id === v.id);
+
+/* Menyandingkan mobil dengan motor tidak pernah disarankan situs ini, tapi
+   alamatnya bisa saja diketik sendiri — dan kalimatnya tetap harus benar. */
+const kindWord = items.every(isMotor) ? "motor listrik" : items.some(isMotor) ? "kendaraan listrik" : "mobil listrik";
+
+/**
+ * Kalimat pembuka dirakit dari datanya sendiri, bukan template kosong. Dua
+ * keunggulan yang paling sering jadi alasan orang memilih — jarak tempuh dan
+ * harga — disebut lebih dulu supaya pembaca dapat jawaban sebelum tabelnya.
+ */
+const lead = items.length >= 2
+  ? `Perbandingan spesifikasi ${joinPhrase(names)}, ${kindWord}${bodyPhrase ? ` ${bodyPhrase}` : ""} yang dijual di Indonesia. ` +
+    (verdicts.length
+      ? `${verdictSentence(verdicts)}.`
+      : "Angka keduanya berdampingan di tabel di bawah.")
+  : "";
+
+const metaDesc = items.length >= 2
+  ? `${heading}: bandingkan jarak tempuh, baterai, tenaga, waktu pengisian, dan harga berdampingan.`
+  : "Perbandingan yang kamu cari tidak tersedia.";
+
+const brand = site.brandText || "EVKita";
+const pageTitle = items.length >= 2 ? `${heading} — Perbandingan Spesifikasi | ${brand}` : `Perbandingan tidak ditemukan — ${brand}`;
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+const tableHtml = items.length >= 2 ? compareTableHTML(items, { linkHead: true }) : "";
+
+/**
+ * Perbandingan lain yang masuk akal dari kendaraan yang sedang dilihat.
+ * Selain berguna bagi pembaca, inilah yang membuat halaman-halaman ini saling
+ * tertaut — tanpa itu masing-masing hanya bisa ditemukan lewat peta situs.
+ */
+const others = items.length >= 2
+  ? (() => {
+      const out: { slug: string; label: string }[] = [];
+      const taken = new Set<string>([compareSlug(items.map((v: any) => v.id))]);
+      for (const base of items) {
+        // Lawan dicari di antara yang sejenis. Halaman yang menyandingkan mobil
+        // dengan motor memang boleh ada, tapi menyarankannya sendiri tidak.
+        for (const rival of rivalsFor(base, isMotor(base) ? motors : cars, 3)) {
+          const slug = compareSlug([base.id, rival.id]);
+          if (taken.has(slug)) continue;
+          taken.add(slug);
+          out.push({ slug, label: `${base.brand} ${base.name} vs ${rival.brand} ${rival.name}` });
+        }
+      }
+      return out.slice(0, 6);
+    })()
+  : [];
+
+const ogImage = items.find((v: any) => v.image)?.image || site.seoOgImage;
+
+const jsonLd = items.length >= 2
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "ItemList",
+          name: heading,
+          description: metaDesc,
+          url: canonical,
+          numberOfItems: items.length,
+          itemListElement: items.map((v: any, i: number) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: `${v.brand} ${v.name}`,
+            url: new URL(vehicleHref(v), origin).href,
+          })),
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: "Bandingkan", item: `${origin}/#daftar` },
+            { "@type": "ListItem", position: 3, name: heading },
+          ],
+        },
+      ],
+    }
+  : null;
+
+const themeProps = {
+  primary: site.themePrimary,
+  secondary: site.themeSecondary,
+  radius: site.themeRadius,
+  font: site.themeFont,
+  mode: site.themeMode,
+};
+---
+
+<Base
+  title={pageTitle}
+  description={metaDesc}
+  keywords={items.map((v: any) => `${v.brand} ${v.name}`).join(", ")}
+  ogImage={ogImage}
+  theme={themeProps}
+>
+  {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="mobil" />
+
+  {items.length < 2 ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>Perbandingan tidak ditemukan</h1>
+      <p class="notfound-text">
+        Alamat ini menyebut kendaraan yang tidak ada di katalog, atau hanya satu kendaraan.
+        Pilih sendiri kendaraan yang mau disandingkan lewat katalog.
+      </p>
+      <a class="btn btn-primary" href="/#daftar">Buka katalog</a>
+    </main>
+  ) : (
+    <main class="container cmp" id="konten">
+      <nav class="breadcrumb" aria-label="Remah roti">
+        <a href="/">Beranda</a>
+        <span aria-hidden="true">/</span>
+        <a href="/#daftar">Katalog</a>
+        <span aria-hidden="true">/</span>
+        <span class="breadcrumb-current">{heading}</span>
+      </nav>
+
+      <header class="cmp-head">
+        <h1>{heading}</h1>
+        <p class="cmp-lead">{lead}</p>
+      </header>
+
+      {verdicts.length ? (
+        <section class="cmp-section" aria-labelledby="cmp-ringkasan">
+          <h2 id="cmp-ringkasan">Siapa unggul di mana</h2>
+          <ul class="cmp-verdicts">
+            {verdicts.map((v: any) => (
+              <li class="cmp-verdict">
+                <span class="cmp-verdict-label">{v.label}</span>
+                <a class="cmp-verdict-winner" href={vehicleHref(v.winner)}>{v.winner.brand} {v.winner.name}</a>
+                <span class="cmp-verdict-value">{v.value}</span>
+              </li>
+            ))}
+          </ul>
+          {/* Angka yang tidak lengkap tidak bisa dipakai menyimpulkan apa pun,
+              dan lebih baik dikatakan daripada dibiarkan pembaca menebak. */}
+          <p class="cmp-note">
+            Hanya kolom yang datanya lengkap untuk semua kendaraan yang bisa dinilai unggul.
+            Baris tanpa pemenang berarti angkanya sama, atau ada yang belum tersedia.
+          </p>
+        </section>
+      ) : null}
+
+      <section class="cmp-section" aria-labelledby="cmp-tabel">
+        <h2 id="cmp-tabel">Spesifikasi berdampingan</h2>
+        <div class="cmp-table-wrap" set:html={tableHtml} />
+      </section>
+
+      <section class="cmp-section" aria-labelledby="cmp-detail">
+        <h2 id="cmp-detail">Halaman masing-masing</h2>
+        <div class="cmp-links">
+          {items.map((v: any) => (
+            <a class="btn btn-outline btn-sm" href={vehicleHref(v)}>
+              {v.brand} {v.name}{priceLabel(v) ? ` · ${priceLabel(v)}` : ""}
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {others.length ? (
+        <section class="cmp-section" aria-labelledby="cmp-lain">
+          <h2 id="cmp-lain">Perbandingan lain</h2>
+          <div class="cmp-others">
+            {others.map((o) => (
+              <a class="cmp-other" href={`/bandingkan/${o.slug}`}>{o.label}</a>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </main>
+  )}
+
+  <SiteFooter site={site} base="/" />
+</Base>

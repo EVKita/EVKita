@@ -1,23 +1,17 @@
 "use strict";
 
-import { paletteFor, defaultColor, carSVG } from "../lib/cars-ui.js";
-import {
-  esc,
-  safeUrl,
-  rupiah,
-  priceLabel,
-  cardHTML as buildCard,
-  visualHTML as buildVisual,
-} from "../lib/card-html.js";
+import { esc, rupiah, cardHTML as buildCard, visualHTML as buildVisual } from "../lib/card-html.js";
+import { MAX_COMPARE, compareTableHTML, compareSlug } from "../lib/compare-html.js";
 
 let EV_CARS = [];
 let MOTORS = [];
 let dataset = [];
 
 /*
- * esc, safeUrl, rupiah, priceLabel, dan pembangun kartu diambil dari
- * src/lib/card-html.js — modul yang sama dipakai beranda saat merender di
- * server, supaya markup kartu tidak bisa berselisih antara keduanya.
+ * Pembangun kartu diambil dari src/lib/card-html.js dan tabel perbandingan
+ * dari src/lib/compare-html.js — modul yang sama dipakai server saat merender
+ * beranda dan halaman /bandingkan, supaya markupnya tidak bisa berselisih
+ * antara kedua sisi.
  */
 
 const PRICE_BUCKETS = [
@@ -53,8 +47,6 @@ const SORTERS = {
   powerDesc: (a, b) => (b.powerHp ?? -1) - (a.powerHp ?? -1),
   newest: (a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")),
 };
-
-const MAX_COMPARE = 3;
 
 const DEFAULTS = {
   mode: "mobil",
@@ -293,25 +285,6 @@ function render() {
 
 /* ===== Bandingkan ===== */
 
-const COMPARE_ROWS = [
-  { label: "Harga", text: (c) => priceLabel(c), num: (c) => c.price, best: "min" },
-  { label: "Jarak tempuh", text: (c) => (c.rangeKm != null ? c.rangeKm + " km" : ""), num: (c) => c.rangeKm, best: "max" },
-  { label: "Standar uji", text: (c) => c.rangeStandard || "" },
-  { label: "Baterai", text: (c) => (c.batteryKwh != null ? c.batteryKwh + " kWh" : ""), num: (c) => c.batteryKwh, best: "max" },
-  { label: "Tenaga", text: (c) => (c.powerHp != null ? c.powerHp + " hp" : ""), num: (c) => c.powerHp, best: "max" },
-  { label: "Torsi", text: (c) => (c.torqueNm != null ? c.torqueNm + " Nm" : ""), num: (c) => c.torqueNm, best: "max" },
-  { label: "0–100 km/j", text: (c) => (c.accelSec != null ? c.accelSec + " dtk" : ""), num: (c) => c.accelSec, best: "min" },
-  { label: "Kecepatan puncak", text: (c) => (c.topSpeedKph != null ? c.topSpeedKph + " km/j" : ""), num: (c) => c.topSpeedKph, best: "max" },
-  { label: "Isi cepat DC", text: (c) => (c.chargeDcKw != null ? c.chargeDcKw + " kW" : ""), num: (c) => c.chargeDcKw, best: "max" },
-  { label: "Isi AC", text: (c) => (c.chargeAcKw != null ? c.chargeAcKw + " kW" : ""), num: (c) => c.chargeAcKw, best: "max" },
-  { label: "Waktu isi", text: (c) => c.chargeTime || "" },
-  { label: "Penggerak", text: (c) => c.driveType || "" },
-  { label: "Kursi", text: (c) => (c.seats != null ? c.seats + " kursi" : "") },
-  { label: "Tahun", text: (c) => (c.year != null ? String(c.year) : "") },
-  { label: "Garansi", text: (c) => c.warranty || "" },
-  { label: "Varian", text: (c) => (c.variantNames || []).join(", ") },
-];
-
 function comparePool() {
   return [...EV_CARS, ...MOTORS];
 }
@@ -370,47 +343,26 @@ function renderCompareTable() {
   const items = compareItems();
   if (items.length < 2) {
     body.innerHTML = '<p class="compare-hint">Pilih minimal dua kendaraan untuk dibandingkan.</p>';
+    const link = $("compareLink");
+    if (link) link.hidden = true;
     return;
   }
 
-  const head = items
-    .map((c) => {
-      const visual = c.image
-        ? `<img src="${safeUrl(c.image)}" alt="" loading="lazy" decoding="async" />`
-        : `<div class="compare-svg">${carSVG(c, defaultColor(c))}</div>`;
-      return `<th scope="col">
-        <div class="compare-head-card">
-          <div class="compare-head-media">${visual}</div>
-          <span class="compare-head-brand">${esc(c.brand)}</span>
-          <span class="compare-head-name">${esc(c.name)}</span>
-        </div>
-      </th>`;
-    })
-    .join("");
+  body.innerHTML = compareTableHTML(items);
+  updateCompareLink(items);
+}
 
-  const rows = COMPARE_ROWS.map((row) => {
-    const texts = items.map((c) => row.text(c));
-    if (!texts.some((t) => t)) return "";
-    let bestIdx = -1;
-    if (row.num && row.best) {
-      const nums = items.map((c) => row.num(c));
-      const valid = nums.filter((n) => n !== null && n !== undefined);
-      if (valid.length > 1) {
-        const target = row.best === "min" ? Math.min(...valid) : Math.max(...valid);
-        // Hanya tandai kalau ada satu pemenang jelas.
-        if (valid.filter((n) => n === target).length === 1) bestIdx = nums.indexOf(target);
-      }
-    }
-    const cells = texts
-      .map((t, i) => `<td class="${i === bestIdx ? "is-best" : ""}">${t ? esc(t) : "—"}</td>`)
-      .join("");
-    return `<tr><th scope="row">${esc(row.label)}</th>${cells}</tr>`;
-  }).join("");
-
-  body.innerHTML = `<div class="compare-scroll"><table class="compare-table">
-    <thead><tr><th scope="col"><span class="sr-only">Spesifikasi</span></th>${head}</tr></thead>
-    <tbody>${rows}</tbody>
-  </table></div>`;
+/**
+ * Menyalakan tautan ke halaman perbandingan yang sesungguhnya.
+ *
+ * Modal hidup di dalam beranda dan hilang begitu ditutup — tanpa tautan ini
+ * tidak ada cara mengirimkan perbandingan yang sedang dilihat ke orang lain.
+ */
+function updateCompareLink(items) {
+  const link = $("compareLink");
+  if (!link) return;
+  link.href = "/bandingkan/" + compareSlug(items.map((c) => c.id));
+  link.hidden = false;
 }
 
 function openCompare() {

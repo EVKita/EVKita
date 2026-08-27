@@ -443,7 +443,13 @@ const jsonLd = {
     <div class="compare-modal-box" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
       <div class="compare-modal-head">
         <h2 id="compareTitle">Perbandingan Spesifikasi</h2>
-        <button type="button" class="compare-close" data-compare-close aria-label="Tutup perbandingan">✕</button>
+        <div class="compare-modal-head-actions">
+          {/* Modal ini tidak punya alamat sendiri; tautan inilah yang memberi
+              perbandingan yang sedang dilihat sebuah URL untuk dibagikan.
+              app.js yang mengisi href-nya setiap tabel dirender ulang. */}
+          <a class="btn btn-ghost btn-sm" id="compareLink" href="/" hidden>Buka sebagai halaman</a>
+          <button type="button" class="compare-close" data-compare-close aria-label="Tutup perbandingan">✕</button>
+        </div>
       </div>
       <div class="compare-modal-body" id="compareBody"></div>
     </div>

@@ -49,6 +49,18 @@ export function priceLabel(c) {
 }
 
 /**
+ * Alamat halaman detail sebuah kendaraan.
+ *
+ * Satu tempat, dipakai kartu maupun tabel perbandingan: motor belum punya
+ * halaman detailnya sendiri dan sementara ini ikut ke `/mobil/<id>`, yang
+ * mengalihkannya ke katalog. Saat halaman motor lahir, yang berubah cukup
+ * fungsi ini — bukan setiap tempat yang pernah menautkan kendaraan.
+ */
+export function vehicleHref(c) {
+  return "/mobil/" + c.id;
+}
+
+/**
  * Pilihan yang berbeda antara render server dan render browser.
  * Server memakai semua nilai bawaannya: belum ada yang dipilih siapa pun.
  */
@@ -75,7 +87,7 @@ export function visualHTML(c, opts) {
     names.length > 1 || (c.variantNames && c.variantNames.length)
       ? `<div class="variant-row"><span class="mini-label">Varian</span><div class="chips">${chips}</div></div>`
       : "";
-  const href = safeUrl("/mobil/" + c.id);
+  const href = safeUrl(vehicleHref(c));
   const openLink = o.linkable ? `<a class="card-media-link" href="${href}" aria-label="${esc(c.brand + " " + c.name)}">` : "";
   const closeLink = o.linkable ? "</a>" : "";
 
@@ -140,7 +152,7 @@ export function cardHTML(c, opts) {
   if (c.year) badges.push(`<span class="badge badge-muted">${esc(c.year)}</span>`);
 
   const detailLink = o.linkable
-    ? `<a href="${safeUrl("/mobil/" + c.id)}" class="card-detail">Lihat detail <span aria-hidden="true">→</span></a>`
+    ? `<a href="${safeUrl(vehicleHref(c))}" class="card-detail">Lihat detail <span aria-hidden="true">→</span></a>`
     : "";
 
   const picked = o.compare.includes(c.id);
