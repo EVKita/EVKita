@@ -1,0 +1,14 @@
+{
+  "name": "EVKita — Referensi Kendaraan Listrik Indonesia",
+  "short_name": "EVKita",
+  "description": "Spesifikasi, jarak tempuh, baterai, dan harga mobil serta motor listrik yang dijual di Indonesia.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7fa",
+  "theme_color": "#37e0a6",
+  "lang": "id",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

@@ -5,6 +5,8 @@ import SiteFooter from "../components/SiteFooter.astro";
 import { readContent } from "../lib/store";
 import { carSVG, defaultColor } from "../lib/cars-ui.js";
 import { safeUrl } from "../lib/url.js";
+import { cardHTML, defaultSort } from "../lib/card-html.js";
+import { siteOrigin } from "../lib/site-url";
 
 const content = readContent();
 const { site } = content;
@@ -51,11 +53,71 @@ function metaRows(pairs: [string, any][]) {
   return pairs.filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "");
 }
 
+/**
+ * Katalog yang dirender SERVER.
+ *
+ * Sebelum ini beranda mengirim `<div id="grid">` yang kosong dan menyerahkan
+ * seluruh perenderan ke `app.js`. Perayap yang tidak menjalankan JavaScript —
+ * termasuk sebagian besar perayap media sosial dan perayap model bahasa —
+ * melihat halaman berisi hero, judul seksi, dan nol kendaraan.
+ *
+ * Yang dirender di sini adalah halaman pertama dalam urutan bawaan yang sama
+ * dengan yang dipakai `app.js`, sehingga kartunya tidak melompat saat skrip
+ * selesai dimuat. Begitu pembaca memfilter atau mengurutkan, `app.js` yang
+ * mengambil alih — memakai fungsi kartu yang sama persis, jadi keduanya tidak
+ * bisa berselisih.
+ */
+const canonical = `${siteOrigin(Astro.url)}/`;
+
+const SSR_CARDS = 12;
+const initialCards = defaultSort(cars).slice(0, SSR_CARDS);
+const initialGrid = initialCards.map((c: any) => cardHTML(c, { linkable: true })).join("");
+
+/**
+ * Data katalog yang disuntik ke klien dipangkas ke field yang benar-benar
+ * dipakai kartu, daftar bandingkan, dan filter. Sebelumnya seluruh objek ikut
+ * — deskripsi panjang, galeri, baris spesifikasi bebas — sekitar 40 KB JSON
+ * sebaris di setiap pemuatan beranda, padahal halaman detail sudah punya
+ * semuanya.
+ */
+const KATALOG_FIELDS = [
+  "id", "brand", "name", "bodyType", "tagline", "tags",
+  "rangeKm", "rangeStandard", "batteryKwh", "powerHp", "torqueNm",
+  "topSpeedKph", "accelSec", "seats", "year", "driveType",
+  "chargeDcKw", "chargeAcKw", "chargeTime", "warranty",
+  "variants", "variantNames", "colors", "price", "priceText",
+  "featured", "stale", "image", "video", "updatedAt",
+];
+const ringkas = (v: any) =>
+  Object.fromEntries(KATALOG_FIELDS.filter((k) => v[k] !== undefined).map((k) => [k, v[k]]));
+const carsLite = cars.map(ringkas);
+const motorsLite = motors.map(ringkas);
+
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: `${site.brandText || "EVKita"}${site.brandSuffix || ""}`,
-  description: seoDesc,
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${canonical}#situs`,
+      url: canonical,
+      name: `${site.brandText || "EVKita"}${site.brandSuffix || ""}`,
+      description: seoDesc,
+      inLanguage: "id-ID",
+    },
+    // Daftar kendaraan sebagai ItemList: inilah yang memberi tahu mesin
+    // pencari bahwa halaman ini adalah katalog, bukan sekadar halaman muka.
+    {
+      "@type": "ItemList",
+      name: site.katalogTitle || "Katalog Kendaraan Listrik",
+      numberOfItems: cars.length + motors.length,
+      itemListElement: [...cars, ...motors].slice(0, 30).map((v: any, i: number) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: `${v.brand} ${v.name}`,
+        url: `${canonical}mobil/${v.id}`,
+      })),
+    },
+  ],
 };
 ---
 
@@ -225,7 +287,7 @@ const jsonLd = {
           <span id="activeFilters" class="active-filters"></span>
         </div>
 
-        <div class="grid" id="grid"></div>
+        <div class="grid" id="grid" set:html={initialGrid}></div>
         <div class="empty" id="empty" hidden>
           <p class="empty-title">Tidak ada model yang cocok</p>
           <p>Coba longgarkan filter atau ubah kata kunci pencarian.</p>
@@ -389,9 +451,9 @@ const jsonLd = {
 
   <SiteFooter site={site} />
 
-  <script define:vars={{ cars, motors }}>
-    window.__EV_CARS__ = cars;
-    window.__EV_MOTORS__ = motors;
+  <script define:vars={{ carsLite, motorsLite }}>
+    window.__EV_CARS__ = carsLite;
+    window.__EV_MOTORS__ = motorsLite;
   </script>
   <script src="../scripts/app.js"></script>
 </Base>

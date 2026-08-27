@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import path from "node:path";
 import { getEnv } from "./env";
-import { readJson, writeJsonAtomic } from "./jsonfile";
+import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfile";
 import { normalizeLocale as i18nNormalizeLocale } from "./i18n/index.js";
 
 /**
@@ -152,8 +152,13 @@ function normalizeUser(raw: any): User {
 let usersFileCorrupt = "";
 
 function readFile(): User[] {
-  const res = readJson<any>(USERS_FILE());
+  // Dicache sampai berkasnya berubah: `currentUser()` memanggil rantai ini di
+  // SETIAP permintaan panel, dan beberapa endpoint dua sampai tiga kali dalam
+  // satu permintaan (usernameTaken, ownerCount, listPublicUsers).
+  return readCached(USERS_FILE(), (res) => parseUsers(res));
+}
 
+function parseUsers(res: ReturnType<typeof readJson>): User[] {
   if (res.status === "corrupt") {
     // JANGAN mengembalikan daftar kosong diam-diam. "Kosong" akan memicu
     // seedFromEnv() dan menulis ulang berkasnya berisi satu akun saja —
@@ -170,14 +175,17 @@ function readFile(): User[] {
   usersFileCorrupt = "";
   if (res.status === "missing") return [];
 
-  const list = Array.isArray(res.data) ? res.data : res.data?.users;
+  const data = res.data as any;
+  const list = Array.isArray(data) ? data : data?.users;
   if (!Array.isArray(list)) return [];
   return list.map(normalizeUser).filter((u) => u.username && u.password);
 }
 
 /** Berkas akun sedang rusak? Selama benar, tidak ada yang boleh menulisinya. */
 export function usersFileIsUnreadable(): boolean {
-  readFile();
+  // Sengaja melewati cache: pemeriksaan kesehatan harus melihat keadaan
+  // berkasnya sekarang, bukan keadaan saat terakhir dibaca.
+  parseUsers(readJson(USERS_FILE()));
   return usersFileCorrupt !== "";
 }
 
@@ -188,6 +196,10 @@ function writeFile(users: User[]): void {
     );
   }
   writeJsonAtomic(USERS_FILE(), { version: 1, users });
+  // Cache dibuang eksplisit: menulis lalu membaca dalam milidetik yang sama
+  // bisa menghasilkan mtime yang identik di sebagian sistem berkas, dan sesi
+  // yang baru saja dicabut harus langsung berlaku.
+  invalidateCache(USERS_FILE());
 }
 
 /**

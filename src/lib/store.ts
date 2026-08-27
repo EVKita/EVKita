@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { readJson, writeJsonAtomic } from "./jsonfile";
+import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfile";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "content.json");
@@ -278,15 +278,18 @@ function normalize(content: any): any {
 }
 
 export function readContent(): any {
-  const res = readJson<any>(DATA_FILE);
-  if (res.status === "ok") return normalize(res.data);
-  if (res.status === "corrupt") {
-    console.error(
-      `[evkita] data/content.json ada tapi tidak bisa dibaca (${res.error}). ` +
-        `Situs tampil kosong sampai berkasnya dipulihkan dari data/backups/.`
-    );
-  }
-  return normalize({});
+  // Hasil NORMALISASI yang dicache, bukan cuma hasil parse: normalisasi itu
+  // sendiri yang memutari 85 entri di setiap permintaan halaman publik.
+  return readCached(DATA_FILE, (res) => {
+    if (res.status === "ok") return normalize(res.data);
+    if (res.status === "corrupt") {
+      console.error(
+        `[evkita] data/content.json ada tapi tidak bisa dibaca (${res.error}). ` +
+          `Situs tampil kosong sampai berkasnya dipulihkan dari data/backups/.`
+      );
+    }
+    return normalize({});
+  });
 }
 
 function backupNames(): string[] {
@@ -392,5 +395,9 @@ export function writeContent(content: any, options: { snapshotAlways?: boolean }
   fs.mkdirSync(DATA_DIR, { recursive: true });
   snapshot(options.snapshotAlways === true);
   writeJsonAtomic(DATA_FILE, normalized);
+  // mtime yang baru sudah cukup membatalkan cache, tapi menulis dan membaca
+  // dalam milidetik yang sama bisa menghasilkan mtime yang identik di sebagian
+  // sistem berkas. Membuangnya di sini menutup celah itu.
+  invalidateCache(DATA_FILE);
   return normalized;
 }

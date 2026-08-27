@@ -5,6 +5,7 @@ import SiteFooter from "../../components/SiteFooter.astro";
 import { readContent } from "../../lib/store";
 import { carSVG, defaultColor } from "../../lib/cars-ui.js";
 import { safeUrl } from "../../lib/url.js";
+import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 
 const content = readContent();
 const site = content.site;
@@ -100,30 +101,99 @@ const stats = car
 
 const ogImage = car ? car.image || site.seoOgImage : site.seoOgImage;
 
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+/** Gambar di data terstruktur harus absolut supaya bisa diambil mesin pencari. */
+const absMedia = media.map((m) => (m.startsWith("http") ? m : new URL(m, origin).href));
+
+/**
+ * Data terstruktur.
+ *
+ * Naik dari `Product` generik ke `Car` — schema.org punya tipe kendaraan
+ * dengan properti yang sesungguhnya (jarak tempuh, jenis bahan bakar, jumlah
+ * kursi, penggerak), dan inilah yang bisa memunculkan hasil kaya di Google.
+ * Seluruh datanya sudah ada di content.json; sebelumnya tidak dipakai.
+ *
+ * `BreadcrumbList` ditambahkan karena halaman detail sebelumnya terlihat
+ * berdiri sendiri, tanpa hubungan apa pun dengan katalog yang memuatnya.
+ */
 const jsonLd = car
   ? {
       "@context": "https://schema.org",
-      "@type": "Product",
-      name: `${car.brand} ${car.name}`,
-      brand: { "@type": "Brand", name: car.brand },
-      description,
-      ...(media.length ? { image: media } : {}),
-      category: car.bodyType,
-      ...(car.price != null
-        ? {
-            offers: {
-              "@type": "Offer",
-              price: car.price,
-              priceCurrency: "IDR",
-              availability: "https://schema.org/InStock",
-            },
-          }
-        : {}),
-      additionalProperty: [
-        car.rangeKm != null ? { "@type": "PropertyValue", name: "Jarak tempuh", value: car.rangeKm, unitText: "km" } : null,
-        car.batteryKwh != null ? { "@type": "PropertyValue", name: "Kapasitas baterai", value: car.batteryKwh, unitText: "kWh" } : null,
-        car.powerHp != null ? { "@type": "PropertyValue", name: "Tenaga", value: car.powerHp, unitText: "hp" } : null,
-      ].filter(Boolean),
+      "@graph": [
+        {
+          "@type": "Car",
+          "@id": `${canonical}#kendaraan`,
+          name: `${car.brand} ${car.name}`,
+          url: canonical,
+          brand: { "@type": "Brand", name: car.brand },
+          model: car.name,
+          description,
+          ...(absMedia.length ? { image: absMedia } : {}),
+          bodyType: car.bodyType,
+          fuelType: "Electric",
+          vehicleEngine: {
+            "@type": "EngineSpecification",
+            fuelType: "Electric",
+            ...(car.powerHp != null
+              ? { enginePower: { "@type": "QuantitativeValue", value: car.powerHp, unitCode: "BHP" } }
+              : {}),
+            ...(car.torqueNm != null
+              ? { torque: { "@type": "QuantitativeValue", value: car.torqueNm, unitCode: "NU" } }
+              : {}),
+          },
+          ...(car.rangeKm != null
+            ? { vehicleRange: { "@type": "QuantitativeValue", value: car.rangeKm, unitCode: "KMT" } }
+            : {}),
+          ...(car.seats != null ? { seatingCapacity: car.seats } : {}),
+          ...(car.year ? { modelDate: String(car.year) } : {}),
+          ...(car.driveType ? { driveWheelConfiguration: car.driveType } : {}),
+          ...(car.topSpeedKph != null
+            ? { speed: { "@type": "QuantitativeValue", value: car.topSpeedKph, unitCode: "KMH" } }
+            : {}),
+          ...(car.accelSec != null
+            ? {
+                accelerationTime: {
+                  "@type": "QuantitativeValue",
+                  value: car.accelSec,
+                  unitCode: "SEC",
+                  name: "0–100 km/j",
+                },
+              }
+            : {}),
+          ...(car.price != null
+            ? {
+                offers: {
+                  "@type": "Offer",
+                  price: car.price,
+                  priceCurrency: "IDR",
+                  availability: "https://schema.org/InStock",
+                  url: canonical,
+                },
+              }
+            : {}),
+          additionalProperty: [
+            car.batteryKwh != null
+              ? { "@type": "PropertyValue", name: "Kapasitas baterai", value: car.batteryKwh, unitText: "kWh" }
+              : null,
+            car.chargeDcKw != null
+              ? { "@type": "PropertyValue", name: "Pengisian cepat DC", value: car.chargeDcKw, unitText: "kW" }
+              : null,
+            car.rangeStandard
+              ? { "@type": "PropertyValue", name: "Standar pengujian", value: car.rangeStandard }
+              : null,
+          ].filter(Boolean),
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: "Katalog", item: `${origin}/#daftar` },
+            { "@type": "ListItem", position: 3, name: `${car.brand} ${car.name}` },
+          ],
+        },
+      ],
     }
   : null;
 

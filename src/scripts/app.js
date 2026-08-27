@@ -1,34 +1,24 @@
 "use strict";
 
 import { paletteFor, defaultColor, carSVG } from "../lib/cars-ui.js";
-import { safeUrl as allowedUrl } from "../lib/url.js";
+import {
+  esc,
+  safeUrl,
+  rupiah,
+  priceLabel,
+  cardHTML as buildCard,
+  visualHTML as buildVisual,
+} from "../lib/card-html.js";
 
 let EV_CARS = [];
 let MOTORS = [];
 let dataset = [];
 
-/**
- * Semua nilai di berkas ini berakhir di innerHTML, dan isinya datang dari
- * panel admin (teks bebas). Jadi tiap penyisipan wajib lewat esc/attr —
- * bukan sekadar kerapian, tapi pencegahan injeksi markup.
+/*
+ * esc, safeUrl, rupiah, priceLabel, dan pembangun kartu diambil dari
+ * src/lib/card-html.js — modul yang sama dipakai beranda saat merender di
+ * server, supaya markup kartu tidak bisa berselisih antara keduanya.
  */
-function esc(v) {
-  return String(v === null || v === undefined ? "" : v)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-/**
- * URL di dalam atribut: tolak skema yang bisa mengeksekusi skrip, lalu ubah
- * hasilnya untuk HTML. Daftar skemanya ada di src/lib/url.js supaya halaman
- * yang dirender server memakai aturan yang sama persis.
- */
-function safeUrl(v) {
-  return esc(allowedUrl(v));
-}
 
 const PRICE_BUCKETS = [
   { id: "all", label: "Semua harga" },
@@ -93,15 +83,6 @@ const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").match
  */
 let animateCards = true;
 
-function rupiah(n) {
-  if (n === null || n === undefined) return "";
-  if (n >= 1000000000) return "Rp " + (n / 1000000000).toFixed(2).replace(".", ",") + " M";
-  return "Rp " + Math.round(n / 1000000) + " jt";
-}
-
-function priceLabel(c) {
-  return c.priceText || (c.price != null ? rupiah(c.price) : "");
-}
 
 /* ===== Sinkronisasi state dengan URL =====
    Supaya hasil filter bisa disalin-tempel dan dibagikan, bukan cuma hidup di
@@ -144,129 +125,21 @@ function writeUrlState() {
   history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
 }
 
-/* ===== Kartu kendaraan ===== */
-
-function visualHTML(c, linkable) {
-  const names = c.variantNames && c.variantNames.length ? c.variantNames : ["Standard"];
-  let vi = uiState.variant[c.id] || 0;
-  if (vi >= names.length) vi = 0;
-  const chips = names
-    .map((n, i) => `<button type="button" class="variant-chip${i === vi ? " active" : ""}" data-variant="${i}">${esc(n)}</button>`)
-    .join("");
-  const variantRow =
-    names.length > 1 || (c.variantNames && c.variantNames.length)
-      ? `<div class="variant-row"><span class="mini-label">Varian</span><div class="chips">${chips}</div></div>`
-      : "";
-  const href = safeUrl("/mobil/" + c.id);
-  const openLink = linkable ? `<a class="card-media-link" href="${href}" aria-label="${esc(c.brand + " " + c.name)}">` : "";
-  const closeLink = linkable ? "</a>" : "";
-
-  const video = safeUrl(c.video);
-  if (video) {
-    return `<div class="car-visual">
-      ${openLink}<div class="car-svg car-photo-wrap"><video class="car-photo" src="${video}" poster="${safeUrl(c.image)}" controls muted loop playsinline preload="metadata"></video></div>${closeLink}
-      ${variantRow}
-    </div>`;
-  }
-
-  const image = safeUrl(c.image);
-  if (image) {
-    return `<div class="car-visual">
-      ${openLink}<div class="car-svg car-photo-wrap"><img class="car-photo" src="${image}" alt="${esc(c.brand + " " + c.name)}" loading="lazy" decoding="async" /></div>${closeLink}
-      ${variantRow}
-    </div>`;
-  }
-
-  const palette = paletteFor(c);
-  const color = uiState.color[c.id] || defaultColor(c);
-  const swatches = palette
-    .map(
-      (col) =>
-        `<button type="button" class="swatch${col.hex === color ? " active" : ""}" data-color="${esc(col.hex)}" title="${esc(col.name)}" aria-label="Warna ${esc(col.name)}" style="--sw:${esc(col.hex)}"></button>`
-    )
-    .join("");
-  return `<div class="car-visual">
-    ${openLink}<div class="car-svg">${carSVG(c, color)}</div>${closeLink}
-    <div class="color-row"><span class="mini-label">Warna</span><div class="swatches">${swatches}</div></div>
-    ${variantRow}
-  </div>`;
-}
-
-/** Spesifikasi tambahan hanya dirender kalau terisi — kartu tidak boleh penuh "—". */
-function extraSpecs(c) {
-  const rows = [];
-  if (c.accelSec != null) rows.push(["0–100 km/j", c.accelSec + " dtk"]);
-  if (c.topSpeedKph != null) rows.push(["Kecepatan puncak", c.topSpeedKph + " km/j"]);
-  if (c.seats != null) rows.push(["Kursi", c.seats]);
-  if (c.chargeDcKw != null) rows.push(["Isi cepat DC", c.chargeDcKw + " kW"]);
-  if (!rows.length) return "";
-  return `<div class="card-extra">${rows
-    .map(([k, v]) => `<span class="pill-spec"><b>${esc(v)}</b> ${esc(k)}</span>`)
-    .join("")}</div>`;
-}
+/* ===== Kartu kendaraan =====
+   Markupnya dibangun src/lib/card-html.js. Di sini hanya status yang khas
+   browser yang disuntikkan: warna dan varian yang sedang dipilih pembaca,
+   daftar bandingkan, dan apakah animasi masuk masih perlu dijalankan. */
 
 function cardHTML(c) {
-  const range = c.rangeKm
-    ? `<span class="spec-value">${esc(c.rangeKm)} km</span>${c.rangeStandard ? `<span class="spec-note">${esc(c.rangeStandard)}</span>` : ""}`
-    : '<span class="spec-value">—</span>';
-
-  const price = priceLabel(c)
-    ? `<span class="card-price">${esc(priceLabel(c))}</span>`
-    : '<span class="card-price na">Harga belum tersedia</span>';
-
-  const badges = [];
-  if (c.featured) badges.push('<span class="badge badge-featured">Unggulan</span>');
-  if (c.stale) badges.push('<span class="badge badge-stale">Data lama</span>');
-  if (c.year) badges.push(`<span class="badge badge-muted">${esc(c.year)}</span>`);
-
-  const linkable = state.mode === "mobil";
-  const detailLink = linkable
-    ? `<a href="${safeUrl("/mobil/" + c.id)}" class="card-detail">Lihat detail <span aria-hidden="true">→</span></a>`
-    : "";
-
-  const picked = state.compare.includes(c.id);
-  const compareBtn = `<button type="button" class="compare-toggle${picked ? " active" : ""}" data-compare="${esc(c.id)}" aria-pressed="${picked}">
-      <span class="compare-tick" aria-hidden="true">${picked ? "✓" : "+"}</span> Bandingkan
-    </button>`;
-
-  const tags = (c.tags || [])
-    .slice(0, 3)
-    .map((t) => `<span class="tag-mini">${esc(t)}</span>`)
-    .join("");
-
-  return `
-    <article class="card${animateCards ? " reveal" : ""}" data-car="${esc(c.id)}">
-      <div class="card-head">
-        <div>
-          <div class="card-brand">${esc(c.brand)}</div>
-          <h3 class="card-name">${esc(c.name)}</h3>
-        </div>
-        <span class="card-type">${esc(c.bodyType)}</span>
-      </div>
-      ${c.tagline ? `<p class="card-tagline">${esc(c.tagline)}</p>` : ""}
-      ${visualHTML(c, linkable)}
-      <div class="card-specs">
-        <div class="spec"><span class="spec-label">Jarak tempuh</span>${range}</div>
-        <div class="spec"><span class="spec-label">Baterai</span><span class="spec-value">${c.batteryKwh != null ? esc(c.batteryKwh) + " kWh" : "—"}</span></div>
-        <div class="spec"><span class="spec-label">Tenaga</span><span class="spec-value">${c.powerHp != null ? esc(c.powerHp) + " hp" : "—"}</span></div>
-        <div class="spec"><span class="spec-label">Varian</span><span class="spec-value">${esc(c.variants || (c.variantNames || []).length || 1)}</span></div>
-      </div>
-      ${extraSpecs(c)}
-      ${tags ? `<div class="tag-row-mini">${tags}</div>` : ""}
-      <div class="card-footer">
-        <div class="card-price-wrap">
-          <span class="card-price-label">Mulai dari</span>
-          ${price}
-        </div>
-        <div class="card-badges">${badges.join("")}</div>
-      </div>
-      <div class="card-actions">
-        ${compareBtn}
-        ${detailLink}
-      </div>
-    </article>
-  `;
+  return buildCard(c, {
+    linkable: state.mode === "mobil",
+    compare: state.compare,
+    color: uiState.color,
+    variant: uiState.variant,
+    animate: animateCards,
+  });
 }
+
 
 /* ===== Filter & render ===== */
 
@@ -745,7 +618,13 @@ function bindEvents() {
     else uiState.variant[c.id] = parseInt(chip.dataset.variant, 10);
 
     const wrap = scope.querySelector(".car-visual");
-    if (wrap) wrap.outerHTML = visualHTML(c, state.mode === "mobil");
+    if (wrap) {
+      wrap.outerHTML = buildVisual(c, {
+        linkable: state.mode === "mobil",
+        color: uiState.color,
+        variant: uiState.variant,
+      });
+    }
   });
 }
 

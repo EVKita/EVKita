@@ -73,3 +73,51 @@ export function writeJsonAtomic(file: string, value: unknown): void {
     throw err;
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Cache berkunci waktu-ubah
+ * ------------------------------------------------------------------ */
+
+interface CacheEntry {
+  key: string;
+  value: unknown;
+}
+
+const caches = new Map<string, CacheEntry>();
+
+/**
+ * Menyimpan hasil olahan sebuah berkas sampai berkasnya berubah.
+ *
+ * Dipakai `readContent()` dan daftar pengguna. Sebelum ada ini, SETIAP
+ * permintaan halaman publik membaca `data/content.json` dari disk, mem-parse
+ * 57 KB JSON, lalu menormalkan 85 entri — hanya untuk menghasilkan objek yang
+ * persis sama dengan permintaan sebelumnya. `listUsers()` bahkan dipanggil dua
+ * sampai tiga kali dalam satu permintaan.
+ *
+ * Kuncinya `mtime` + ukuran, bukan durasi: penyimpanan dari panel langsung
+ * membatalkannya, tanpa jeda apa pun. Biayanya satu `statSync` per permintaan.
+ *
+ * `compute` menerima hasil pembacaan, bukan jalur berkas, supaya pemanggil
+ * tetap bisa membedakan "belum ada" dari "rusak".
+ */
+export function readCached<T>(file: string, compute: (res: ReadResult<unknown>) => T): T {
+  let key = "kosong";
+  try {
+    const st = fs.statSync(file);
+    key = `${st.mtimeMs}:${st.size}`;
+  } catch {
+    // Berkas belum ada. Kuncinya tetap stabil, jadi hasil "kosong" pun dicache.
+  }
+
+  const hit = caches.get(file);
+  if (hit && hit.key === key) return hit.value as T;
+
+  const value = compute(readJson(file));
+  caches.set(file, { key, value });
+  return value;
+}
+
+/** Membuang cache satu berkas. Dipakai sesudah menulis, sebagai pengaman. */
+export function invalidateCache(file: string): void {
+  caches.delete(file);
+}

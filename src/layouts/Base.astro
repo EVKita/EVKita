@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { canonicalUrl } from "../lib/site-url";
 
 interface Props {
   title?: string;
@@ -31,6 +32,11 @@ interface Props {
   noindex?: boolean;
 }
 
+/**
+ * Kanonis dihitung dari permintaan yang sedang berjalan, bukan dari nilai yang
+ * dipatok saat build: situs ini dipasang sendiri di domain mana pun.
+ */
+
 const {
   title = "EVKita",
   description = "Basis data mobil listrik yang dijual di Indonesia: spesifikasi, jarak tempuh, baterai, tenaga, dan harga.",
@@ -59,6 +65,8 @@ const FONTS: Record<string, string> = {
   "Plus Jakarta Sans": "Plus+Jakarta+Sans:wght@400;500;600;700;800",
   "Space Grotesk": "Space+Grotesk:wght@400;500;600;700",
 };
+
+const canonical = canonicalUrl(Astro.url);
 
 const fontName = theme?.font && FONTS[theme.font] ? theme.font : "Inter";
 const fontQuery = FONTS[fontName];
@@ -167,13 +175,19 @@ const themeStyle = styleParts.join(";");
       })();
     </script>
     {noindex ? <meta name="robots" content="noindex, nofollow" /> : null}
+    <link rel="canonical" href={canonical} />
     <meta name="description" content={description} />
     {keywords ? <meta name="keywords" content={keywords} /> : null}
     <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="id_ID" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     {/*
