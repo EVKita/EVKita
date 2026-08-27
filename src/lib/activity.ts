@@ -27,7 +27,9 @@ export type ActivityAction =
   | "user.delete"
   | "profile.update"
   | "password.change"
-  | "update.start";
+  | "update.start"
+  | "sessions.revoke"
+  | "login.blocked";
 
 export interface ActivityEntry {
   id: string;

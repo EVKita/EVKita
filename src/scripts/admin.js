@@ -2551,6 +2551,8 @@ function bindEvents() {
       return;
     }
 
+    if (e.target.closest("#profile-signout-others")) { signOutOtherDevices(); return; }
+
     /* --- Dialog konfirmasi --- */
     if (e.target.closest("#confirm-ok")) { if (confirmResolver) confirmResolver(true); return; }
     if (e.target.closest("#confirm-cancel")) { if (confirmResolver) confirmResolver(false); return; }
@@ -3329,7 +3331,18 @@ function renderProfile() {
       <div class="form-actions">
         <button type="submit" class="btn btn-primary">${esc(t("profile.changePassword"))}</button>
       </div>
+      <p class="field-hint">${esc(t("profile.passwordRevokesNote"))}</p>
     </form>
+
+    <section class="panel form-section">
+      <div class="form-section-head">
+        <h2>${esc(t("profile.sessions"))}</h2>
+        <p>${esc(t("profile.sessionsDesc"))}</p>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" id="profile-signout-others">${esc(t("profile.signOutOthers"))}</button>
+      </div>
+    </section>
 
     <form id="profile-prefs" class="panel form-section">
       <div class="form-section-head">
@@ -3388,6 +3401,28 @@ async function saveProfileIdentity(form) {
     renderDashboard();
     syncAccountChip();
     toast(t("profile.saved"), "success");
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+async function signOutOtherDevices() {
+  const setuju = await confirmDialog({
+    title: t("profile.signOutOthers"),
+    text: t("profile.signOutOthersConfirm"),
+    okText: t("profile.signOutOthers"),
+    danger: true,
+  });
+  if (!setuju) return;
+  try {
+    const res = await fetch("/api/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section: "signOutOthers" }),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    toast(t("profile.signedOutOthers"), "success");
   } catch (err) {
     toast(err.message, "error");
   }

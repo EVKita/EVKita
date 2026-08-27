@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { currentUser, LOCALE_COOKIE } from "../../lib/auth";
+import { currentUser, makeSession, LOCALE_COOKIE, SESSION_COOKIE } from "../../lib/auth";
 import {
   hashPassword,
   publicUser,
@@ -7,6 +7,7 @@ import {
   usernameTaken,
   verifyPassword,
   normalizeLocale,
+  revokeSessions,
   PASSWORD_MIN,
   type User,
 } from "../../lib/users";
@@ -15,6 +16,24 @@ import { json, apiError, unauthorized } from "../../lib/api";
 
 const USERNAME_RE = /^[A-Za-z0-9._]+$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Menerbitkan ulang cookie sesi setelah pencabutan.
+ *
+ * Pencabutan mematikan SEMUA sesi milik akun ini, termasuk yang sedang dipakai
+ * orang yang menekan tombolnya. Tanpa cookie baru, mengganti kata sandi sendiri
+ * akan langsung melempar pelakunya ke halaman masuk — perilaku yang terasa
+ * seperti kegagalan, bukan keberhasilan.
+ */
+function issueFreshCookie(cookies: any, userId: string, url: URL): void {
+  cookies.set(SESSION_COOKIE, makeSession(userId), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: url.protocol === "https:",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
 
 /**
  * Pengaturan akun sendiri. Dipisah per `section` supaya satu formulir yang
@@ -66,7 +85,21 @@ export const PUT: APIRoute = async ({ request, cookies, url }) => {
 
     next.password = hashPassword(fresh);
     saveUser(next);
+
+    // Mengganti kata sandi kini benar-benar mengeluarkan sesi lain. Sebelum
+    // ini, kata sandi yang bocor tetap memberi aksesnya kepada siapa pun yang
+    // sudah terlanjur masuk — mengganti kata sandi tidak menutup apa pun.
+    revokeSessions(next.id);
+    issueFreshCookie(cookies, next.id, url);
+
     logActivity(next, "password.change");
+    return json({ ok: true });
+  }
+
+  if (section === "signOutOthers") {
+    revokeSessions(next.id);
+    issueFreshCookie(cookies, next.id, url);
+    logActivity(next, "sessions.revoke");
     return json({ ok: true });
   }
 

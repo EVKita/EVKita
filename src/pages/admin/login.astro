@@ -40,6 +40,8 @@ const lang = localeMeta(locale);
 const texts = {
   required: t("login.required"),
   wrong: t("login.wrong"),
+  // Template dengan {minutes} masih utuh — diisi di browser dari jawaban API.
+  tooMany: t("login.tooMany"),
   offline: t("login.offline"),
   processing: t("login.processing"),
   redirecting: t("login.redirecting"),
@@ -186,6 +188,14 @@ const texts = {
         if (data.ok) {
           btn.textContent = texts.redirecting;
           location.href = "/admin";
+          return;
+        }
+        // Dibedakan dari kata sandi salah: kalau percobaannya sedang diblokir,
+        // memberi tahu "kata sandi salah" membuat orang mengulang terus dan
+        // memperpanjang blokirnya sendiri.
+        if (res.status === 429) {
+          const menit = (data && data.errorVars && data.errorVars.minutes) || 15;
+          showError(texts.tooMany.replace("{minutes}", String(menit)));
           return;
         }
         showError(texts.wrong);

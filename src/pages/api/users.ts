@@ -10,6 +10,7 @@ import {
   listPublicUsers,
   ownerCount,
   publicUser,
+  revokeSessions,
   saveUser,
   usernameTaken,
   normalizeLocale,
@@ -116,6 +117,11 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
   if (body?.avatar !== undefined) next.avatar = String(body.avatar || "");
   if (password) next.password = hashPassword(password);
   saveUser(next);
+
+  // Kata sandi yang direset admin harus ikut mengeluarkan sesi lama akun itu.
+  // Kalau tidak, mereset kata sandi akun yang diduga disusupi tidak menutup
+  // apa pun: yang sudah masuk tetap di dalam.
+  if (password) revokeSessions(next.id);
 
   logActivity(me, "user.update", { name: next.name });
   return json({ ok: true, user: publicUser(next), users: listPublicUsers() });

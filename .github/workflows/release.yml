@@ -38,7 +38,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 22.18+ menjalankan TypeScript langsung tanpa langkah kompilasi,
+          # dan `module.registerHooks()` yang dipakai tools/ts-resolver.mjs baru
+          # ada sejak 22.15. Node 20 tidak bisa menjalankan `npm test`.
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -47,11 +50,21 @@ jobs:
       - name: Tentukan tipe kenaikan versi
         id: meta
         shell: bash
+        # Isian workflow dilewatkan lewat `env`, bukan diinterpolasi langsung ke
+        # dalam skrip: teks bebas yang disisipkan ke bash bisa keluar dari
+        # konteksnya, dan catatan rilis berisi baris baru bisa memalsukan
+        # variabel keluaran karena `echo` biasa tidak punya pembatas.
+        env:
+          BUMP_INPUT: ${{ github.event.inputs.bump }}
+          NOTES_INPUT: ${{ github.event.inputs.notes }}
         run: |
-          BUMP="${{ github.event.inputs.bump || 'patch' }}"
-          NOTES="${{ github.event.inputs.notes || '' }}"
+          BUMP="${BUMP_INPUT:-patch}"
           echo "bump=${BUMP}" >> "$GITHUB_OUTPUT"
-          echo "notes=${NOTES}" >> "$GITHUB_OUTPUT"
+          {
+            echo "notes<<NOTES_EOF"
+            echo "${NOTES_INPUT:-}"
+            echo "NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Naikkan versi
         id: version
@@ -61,6 +74,9 @@ jobs:
           NEW="${NEW#v}"
           echo "new=${NEW}" >> "$GITHUB_OUTPUT"
           echo "tag=v${NEW}" >> "$GITHUB_OUTPUT"
+
+      - name: Uji
+        run: npm test
 
       - name: Build
         run: npm run build
@@ -87,6 +103,8 @@ jobs:
       - name: Susun changelog
         id: changelog
         shell: bash
+        env:
+          RELEASE_NOTES: ${{ steps.meta.outputs.notes }}
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
           if [ -z "$PREV_TAG" ]; then
@@ -96,8 +114,8 @@ jobs:
           fi
           if [ -z "$LOG" ]; then LOG="- Rilis v${{ steps.version.outputs.new }}"; fi
           BODY="$LOG"
-          if [ -n "${{ steps.meta.outputs.notes }}" ]; then
-            BODY="${BODY}"$'\n\n'"### Catatan"$'\n'"${{ steps.meta.outputs.notes }}"
+          if [ -n "${RELEASE_NOTES//[[:space:]]/}" ]; then
+            BODY="${BODY}"$'\n\n'"### Catatan"$'\n'"${RELEASE_NOTES}"
           fi
           {
             echo "body<<CHANGELOG_EOF"

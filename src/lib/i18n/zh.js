@@ -198,6 +198,8 @@ export default {
   "activity.user.delete": "删除了用户 {name}",
   "activity.profile.update": "更新了个人资料",
   "activity.password.change": "修改了密码",
+  "activity.sessions.revoke": "退出了所有其他设备",
+  "activity.login.blocked": "已拦截 {username} 的登录尝试",
   "activity.update.start": "开始更新到 {version}",
 
   /* ---------- Bilah alat daftar ---------- */
@@ -485,6 +487,7 @@ export default {
   "login.hidePassword": "隐藏密码",
   "login.required": "用户名和密码均为必填项。",
   "login.wrong": "用户名或密码错误。",
+  "login.tooMany": "登录尝试次数过多。请在 {minutes} 分钟后重试。",
   "login.offline": "无法连接服务器，请重试。",
   "login.foot": "此页面仅供网站管理员使用。",
 
@@ -510,6 +513,12 @@ export default {
   "profile.newPassword": "新密码",
   "profile.confirmPassword": "再次输入新密码",
   "profile.changePassword": "更改密码",
+  "profile.passwordRevokesNote": "更改密码会让其他所有仍在登录的设备退出。",
+  "profile.sessions": "设备与会话",
+  "profile.sessionsDesc": "如果你曾在别人的设备上登录，可以在这里把它们全部退出。",
+  "profile.signOutOthers": "退出其他所有设备",
+  "profile.signOutOthersConfirm": "除当前使用的会话外，其他会话都将结束。其他设备需要重新登录。要继续吗？",
+  "profile.signedOutOthers": "其他设备已退出。",
   "profile.prefs": "偏好设置",
   "profile.prefsDesc": "这些设置只对你的账户生效，不影响整个网站。",
   "profile.language": "面板语言",

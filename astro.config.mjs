@@ -2,6 +2,16 @@
 import { defineConfig } from "astro/config";
 import node from "@astrojs/node";
 
+/**
+ * `noExternal` di bawah hanya relevan saat MEM-BUILD paket rilis. Menyalakannya
+ * juga di `astro dev` memaksa Vite memproses seluruh dependensi Astro sendiri,
+ * dan salah satunya (`cookie`, yang masih CommonJS) gagal dimuat di graf modul
+ * middleware — `npm run dev` menjawab 500 di setiap halaman, sementara build
+ * produksi baik-baik saja. Gejala seperti itu paling mahal: yang rusak justru
+ * lingkungan tempat orang bekerja.
+ */
+const sedangBuild = process.argv.includes("build");
+
 export default defineConfig({
   output: "server",
   adapter: node({ mode: "standalone" }),
@@ -34,7 +44,12 @@ export default defineConfig({
       // Bundel dependensi runtime ke dalam dist/. Tanpa ini paket rilis harus
       // membawa seluruh toolchain build Astro (TypeScript, Vite, esbuild,
       // sharp, shiki) — 186 MB dan 11.440 berkas yang tidak dipakai server.
-      noExternal: true,
+      //
+      // Hanya saat build: lihat catatan di atas berkas ini.
+      // Daftar kosong, bukan `false`: Vite mengharapkan `true` atau daftar
+      // pola, dan `false` membuatnya mencoba memperlakukan nilai itu sebagai
+      // nama berkas.
+      noExternal: sedangBuild ? true : [],
     },
   },
 });

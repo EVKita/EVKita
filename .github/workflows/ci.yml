@@ -1,0 +1,37 @@
+name: CI
+
+# Sampai berkas ini ada, satu-satunya workflow berjalan SESUDAH perubahan
+# mendarat di main — sehingga regresi ditemukan sebagai rilis yang gagal, bukan
+# sebagai perubahan yang merah sebelum digabungkan.
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  periksa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Node 22.18+ menjalankan TypeScript langsung tanpa langkah kompilasi,
+          # dan `module.registerHooks()` yang dipakai tools/ts-resolver.mjs baru
+          # ada sejak 22.15. Node 20 tidak bisa menjalankan `npm test`.
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Periksa terjemahan
+        run: npm run i18n:check
+
+      - name: Uji
+        run: npm test
+
+      - name: Build
+        run: npm run build

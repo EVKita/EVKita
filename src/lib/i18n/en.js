@@ -199,6 +199,8 @@ export default {
   "activity.user.delete": "removed the user {name}",
   "activity.profile.update": "updated their profile",
   "activity.password.change": "changed their password",
+  "activity.sessions.revoke": "signed out every other device",
+  "activity.login.blocked": "a sign-in attempt was blocked for {username}",
   "activity.update.start": "started the update to {version}",
 
   /* ---------- Bilah alat daftar ---------- */
@@ -486,6 +488,7 @@ export default {
   "login.hidePassword": "Hide password",
   "login.required": "Username and password are both required.",
   "login.wrong": "Wrong username or password.",
+  "login.tooMany": "Too many sign-in attempts. Try again in {minutes} minutes.",
   "login.offline": "Could not reach the server. Try again.",
   "login.foot": "This page is for site managers only.",
 
@@ -511,6 +514,12 @@ export default {
   "profile.newPassword": "New Password",
   "profile.confirmPassword": "Repeat New Password",
   "profile.changePassword": "Change Password",
+  "profile.passwordRevokesNote": "Changing your password signs out every other device that is still logged in.",
+  "profile.sessions": "Devices & sessions",
+  "profile.sessionsDesc": "If you ever signed in on a device that is not yours, sign it out from here.",
+  "profile.signOutOthers": "Sign out all other devices",
+  "profile.signOutOthersConfirm": "Every session except the one you are using will end. Other devices will have to sign in again. Continue?",
+  "profile.signedOutOthers": "Other devices have been signed out.",
   "profile.prefs": "Preferences",
   "profile.prefsDesc": "These settings apply to your account only, not to the whole site.",
   "profile.language": "Panel Language",

@@ -204,6 +204,8 @@ export default {
   "activity.user.delete": "menghapus pengguna {name}",
   "activity.profile.update": "memperbarui profilnya",
   "activity.password.change": "mengganti kata sandinya",
+  "activity.sessions.revoke": "mengeluarkan seluruh perangkat lain",
+  "activity.login.blocked": "percobaan masuk diblokir untuk {username}",
   "activity.update.start": "memulai pembaruan ke {version}",
 
   /* ---------- Bilah alat daftar ---------- */
@@ -491,6 +493,7 @@ export default {
   "login.hidePassword": "Sembunyikan kata sandi",
   "login.required": "Nama pengguna dan kata sandi wajib diisi.",
   "login.wrong": "Nama pengguna atau kata sandi salah.",
+  "login.tooMany": "Terlalu banyak percobaan masuk. Coba lagi dalam {minutes} menit.",
   "login.offline": "Tidak bisa menghubungi server. Coba lagi.",
   "login.foot": "Halaman ini hanya untuk pengelola situs.",
 
@@ -516,6 +519,12 @@ export default {
   "profile.newPassword": "Kata Sandi Baru",
   "profile.confirmPassword": "Ulangi Kata Sandi Baru",
   "profile.changePassword": "Ganti Kata Sandi",
+  "profile.passwordRevokesNote": "Mengganti kata sandi akan mengeluarkan seluruh perangkat lain yang masih masuk.",
+  "profile.sessions": "Perangkat & sesi",
+  "profile.sessionsDesc": "Kalau kamu pernah masuk di perangkat yang bukan milikmu, keluarkan semuanya dari sini.",
+  "profile.signOutOthers": "Keluar dari semua perangkat lain",
+  "profile.signOutOthersConfirm": "Semua sesi selain yang sedang kamu pakai akan berakhir. Perangkat lain harus masuk lagi. Lanjutkan?",
+  "profile.signedOutOthers": "Perangkat lain sudah dikeluarkan.",
   "profile.prefs": "Preferensi",
   "profile.prefsDesc": "Setelan ini hanya berlaku untuk akunmu, bukan untuk seluruh situs.",
   "profile.language": "Bahasa Panel",

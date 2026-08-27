@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { getEnv } from "./env";
 import { readJson, writeJsonAtomic } from "./jsonfile";
+import { normalizeLocale as i18nNormalizeLocale } from "./i18n/index.js";
 
 /**
  * Penyimpanan pengguna panel admin.
@@ -45,6 +46,16 @@ export interface User {
    * selalu berbunyi "kunjungan terakhirmu: sekarang".
    */
   previousLoginAt: string;
+  /**
+   * Sesi yang terbit sebelum waktu ini ditolak.
+   *
+   * Inilah yang membuat "ganti kata sandi" benar-benar berarti sesuatu:
+   * sebelum ada nilai ini, mengganti kata sandi sama sekali tidak mengeluarkan
+   * sesi lain, dan satu-satunya cara mencabut sesi yang bocor adalah mengganti
+   * SESSION_SECRET — yang mengeluarkan semua orang sekaligus. Kosong berarti
+   * belum pernah ada pencabutan.
+   */
+  sessionsValidFrom: string;
 }
 
 /** Bentuk pengguna yang aman dikirim ke browser — tanpa hash kata sandi. */
@@ -100,9 +111,17 @@ function normalizeRole(v: unknown): Role {
   return (ROLES as readonly string[]).includes(s) ? (s as Role) : "editor";
 }
 
+/**
+ * Menormalkan kode bahasa.
+ *
+ * Meneruskan ke `src/lib/i18n/index.js` alih-alih memeriksa sendiri: dulu ada
+ * DUA fungsi bernama sama dengan perilaku berbeda — yang di i18n menerima
+ * bentuk lengkap seperti "en-US", yang di sini menolaknya dan diam-diam jatuh
+ * ke Bahasa Indonesia. Keduanya membaca nilai yang datang dari tempat yang
+ * sama (cookie `evkita_lang`), jadi perbedaan itu tidak punya alasan untuk ada.
+ */
 export function normalizeLocale(v: unknown): Locale {
-  const s = str(v).toLowerCase();
-  return (LOCALES as readonly string[]).includes(s) ? (s as Locale) : "id";
+  return i18nNormalizeLocale(v) as Locale;
 }
 
 function normalizeUser(raw: any): User {
@@ -121,6 +140,7 @@ function normalizeUser(raw: any): User {
     createdAt: str(raw?.createdAt) || new Date().toISOString(),
     lastLoginAt: str(raw?.lastLoginAt),
     previousLoginAt: str(raw?.previousLoginAt),
+    sessionsValidFrom: str(raw?.sessionsValidFrom),
   };
 }
 
@@ -199,6 +219,7 @@ function seedFromEnv(): User[] {
     createdAt: now,
     lastLoginAt: "",
     previousLoginAt: "",
+    sessionsValidFrom: "",
   };
 
   try {
@@ -294,6 +315,22 @@ export function deleteUser(id: string): boolean {
   if (next.length === users.length) return false;
   writeFile(next);
   return true;
+}
+
+/**
+ * Mencabut seluruh sesi milik satu akun, termasuk yang sedang aktif.
+ *
+ * Dipanggil saat kata sandi berubah — baik oleh pemiliknya sendiri maupun oleh
+ * admin — dan saat seseorang menekan "keluar dari semua perangkat". Pemanggil
+ * yang mencabut sesinya sendiri harus menerbitkan cookie baru sesudah ini,
+ * kalau tidak ia ikut terlempar keluar.
+ */
+export function revokeSessions(id: string): void {
+  const users = listUsers();
+  const u = users.find((x) => x.id === id);
+  if (!u) return;
+  u.sessionsValidFrom = new Date().toISOString();
+  writeFile(users);
 }
 
 export function touchLogin(id: string): void {
