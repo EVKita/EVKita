@@ -3738,6 +3738,10 @@ body:has(.modal-backdrop.open) .fab {
   display: none;
 }
 
+.upd-prog-relogin {
+  margin: 14px 0 0;
+}
+
 /* --- Log teknis (disembunyikan sampai diminta) --- */
 .upd-logbox {
   margin-top: 14px;

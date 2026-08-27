@@ -73,6 +73,8 @@ const texts = {
   },
   reconnecting: t("update.reconnecting"),
   timeout: t("update.timeout"),
+  doneReauth: t("update.doneReauth"),
+  doneReauthNote: t("update.doneReauthNote"),
   cannotStart: t("update.cannotStart"),
   cannotReach: t("update.cannotReach"),
   confirmInstall: t("update.confirmInstall"),
@@ -198,6 +200,12 @@ const texts = {
 
               <p class="upd-prog-hint">{t("update.dontClose")}</p>
 
+              {/* Muncul hanya kalau pembaruan mencabut sesi yang sedang dipakai:
+                  satu-satunya jalan ke depan dari layar itu adalah masuk lagi. */}
+              <p class="upd-prog-relogin" id="prog-relogin" hidden>
+                <a class="btn btn-primary btn-sm" href="/admin/login">{t("update.loginAgain")}</a>
+              </p>
+
               <details class="upd-logbox" id="prog-logbox">
                 <summary>{t("update.techLog")}</summary>
                 <pre class="upd-log" id="progress-log" aria-live="polite"></pre>
@@ -245,6 +253,7 @@ const texts = {
     const note = document.getElementById("progress-note");
     const log = document.getElementById("progress-log");
     const logbox = document.getElementById("prog-logbox");
+    const relogin = document.getElementById("prog-relogin");
     const bar = document.getElementById("prog-bar");
     const fill = document.getElementById("prog-fill");
     const pct = document.getElementById("prog-pct");
@@ -371,7 +380,33 @@ const texts = {
         clearInterval(ticker);
       };
 
+      /* Pembaruan bisa membuat sesi yang sedang dipakai tidak lagi sah — v1.0.15
+         mengubah bentuk token sesi, dan hal serupa akan terjadi lagi. Server yang
+         menjawab 401 bukan server yang mati: ia sudah hidup kembali dengan kode
+         baru, jadi pembaruannya justru sudah selesai. Melaporkannya sebagai
+         kegagalan mendorong orang mengulang pembaruan atau membongkar server
+         yang sebenarnya sehat. */
+      const finishReauth = () => {
+        settled = true;
+        outcome = "done";
+        box.classList.add("is-done");
+        setPercent(100);
+        title.textContent = texts.doneReauth;
+        note.textContent = texts.doneReauthNote;
+        paintChips();
+        if (relogin) relogin.hidden = false;
+        // Sengaja tidak memuat ulang sendiri: memuat ulang hanya melempar orang
+        // ke halaman masuk tanpa pernah memberi tahu bahwa pembaruannya berhasil.
+        clock();
+        clearInterval(ticker);
+      };
+
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      // Dibedakan dari null: null berarti "server belum menjawab" (wajar saat
+      // PM2 memuat ulang), sedangkan ini berarti server MENJAWAB dan menolak
+      // sesi kita — artinya aplikasi sudah hidup lagi dengan kode baru.
+      const UNAUTHORIZED = "unauthorized";
 
       // Batas waktu per permintaan: saat PM2 memuat ulang aplikasi, koneksi
       // bisa menggantung. Tanpa batas ini polling ikut berhenti berdenyut.
@@ -384,6 +419,7 @@ const texts = {
             cache: "no-store",
             signal: ac.signal,
           });
+          if (res.status === 401) return UNAUTHORIZED;
           if (!res.ok) return null;
           return await res.json();
         } catch {
@@ -401,6 +437,7 @@ const texts = {
         let misses = 0;
         while (Date.now() < deadline && !settled) {
           const data = await ask();
+          if (data === UNAUTHORIZED) return finishReauth();
           if (data) {
             misses = 0;
             readLog(data.log);
@@ -434,6 +471,7 @@ const texts = {
           return;
         }
         box.classList.remove("is-done", "is-failed");
+        if (relogin) relogin.hidden = true;
         settled = false;
         outcome = null;
         stage = 0;
@@ -466,6 +504,8 @@ const texts = {
       // sambung lagi progresnya alih-alih menampilkan keadaan diam.
       (async () => {
         const data = await ask();
+        // Termasuk UNAUTHORIZED: tanpa pembaruan yang sedang berjalan, 401 di
+        // sini hanya berarti sesinya habis — bukan kabar tentang pembaruan.
         if (!data || data.state !== "running") return;
         showPanel(data.startedAt);
         readLog(data.log);
