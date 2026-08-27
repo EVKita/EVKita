@@ -164,7 +164,16 @@ const themeStyle = styleParts.join(";");
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href={fontHref} rel="stylesheet" />
+    {/*
+      Stylesheet font dimuat tanpa memblokir render. Sebagai <link rel="stylesheet">
+      biasa, halaman baru boleh tampil setelah perjalanan bolak-balik ke
+      fonts.googleapis.com selesai — di jaringan seluler itu ratusan milidetik
+      layar kosong. Karena URL-nya sudah memakai `display=swap`, teks memang
+      tampil dengan font cadangan lebih dulu, jadi tidak ada yang hilang.
+    */}
+    <link rel="preload" as="style" href={fontHref} />
+    <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href={fontHref} /></noscript>
     <slot name="head" />
   </head>
   <body style={themeStyle} class={bodyClass}>
