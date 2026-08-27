@@ -1,0 +1,346 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { vehicleHref } from "../../lib/card-html.js";
+import { TARIF_PRESETS } from "../../lib/hemat.js";
+import {
+  DEFAULTS,
+  DAYA_PRESETS,
+  BATAS_TAPER,
+  hitungPengisian,
+  modePengisian,
+  teksDurasi,
+  kwhKeTeks,
+  kmKeTeks,
+  teksRingkasPengisian,
+  catatanHasil,
+} from "../../lib/pengisian.js";
+import { rupiahPenuh, rupiahHalus } from "../../lib/hemat.js";
+import { siteOrigin, canonicalUrl } from "../../lib/site-url";
+
+/**
+ * Kalkulator waktu & biaya sekali mengisi daya.
+ *
+ * Pasangan alami bagi direktori SPKLU yang sudah ada: situs ini sudah lama
+ * menyebut di mana bisa mengisi, tapi tidak pernah menjawab berapa lama dan
+ * habis berapa — dua hal yang justru menentukan apakah perjalanannya masuk akal.
+ *
+ * Hasilnya dirender SERVER dari parameter URL lalu dihitung ulang di browser
+ * lewat fungsi yang sama persis, seperti kalkulator hemat. Formulirnya
+ * `method="get"`, jadi halaman ini tetap berfungsi utuh tanpa JavaScript.
+ *
+ * Yang paling penting ditiru dari kalkulator hemat bukan strukturnya melainkan
+ * SIKAPNYA: lama pengisian tidak pernah disajikan sebagai satu angka, karena
+ * pengisian tidak linear dan kurvanya berbeda tiap kendaraan.
+ */
+
+const content = readContent();
+const site = content.site;
+
+const isLive = (v: any) => v && v.status !== "draft";
+const cars = (content.cars || []).filter(isLive);
+const motors = site.showMotor ? (content.motors || []).filter(isLive) : [];
+
+/** Hanya kendaraan yang kapasitas baterainya tercatat — tanpa itu tak ada yang bisa dihitung. */
+const punyaBaterai = (v: any) => v.batteryKwh !== null && v.batteryKwh !== undefined && Number(v.batteryKwh) > 0;
+const pilihanMobil = cars.filter(punyaBaterai);
+const pilihanMotor = motors.filter(punyaBaterai);
+const pilihan = [...pilihanMobil, ...pilihanMotor];
+
+const q = Astro.url.searchParams;
+
+/**
+ * Membaca satu parameter URL.
+ *
+ * Yang membedakan "tidak disebut" dari "sengaja dikosongkan" bukan kerewelan:
+ * `?tarif=` berarti pembacanya menghapus isian itu, dan mengembalikannya ke
+ * nilai bawaan membuat halaman yang dimuat ulang menjawab BEDA dari yang
+ * barusan dilihat di layar. Kalkulator yang berubah jawaban saat disegarkan
+ * sama tidak bisa dipercayanya dengan yang berubah saat skripnya dimuat.
+ */
+const num = (key: string, fallback: number | "") => {
+  const raw = q.get(key);
+  if (raw === null) return fallback;
+  if (raw.trim() === "") return "";
+  const n = Number(raw.replace(",", "."));
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+};
+
+const kendaraanId = q.get("kendaraan") || "";
+const terpilih = pilihan.find((c: any) => c.id === kendaraanId) || pilihan[0] || null;
+
+const form = {
+  kendaraan: terpilih ? terpilih.id : "",
+  batteryKwh: num("baterai", terpilih ? terpilih.batteryKwh : 60),
+  socAwal: num("awal", DEFAULTS.socAwal),
+  socAkhir: num("akhir", DEFAULTS.socAkhir),
+  dayaKw: num("daya", DEFAULTS.dayaKw),
+  tarif: num("tarif", DEFAULTS.tarif),
+};
+
+const mode = modePengisian(form.dayaKw);
+
+/**
+ * Batas daya yang diterima kendaraan, dari katalog.
+ *
+ * Hari ini nilainya null untuk SELURUH kendaraan — kolomnya ada di panel dan
+ * sudah terpasang di halaman detail maupun tabel perbandingan, tapi belum satu
+ * pun terisi. Jalurnya tetap dipasang di sini supaya begitu penyunting
+ * mengisinya, hitungannya langsung ikut benar; dan selama masih kosong,
+ * `catatanHasil()` yang mengatakannya terus terang alih-alih diam-diam
+ * menganggap seluruh daya stasiun terpakai.
+ */
+const dayaMaksKendaraan = terpilih ? (mode === "dc" ? terpilih.chargeDcKw : terpilih.chargeAcKw) : null;
+
+const hasil = hitungPengisian({
+  ...form,
+  dayaMaksKendaraan,
+  rangeKm: terpilih ? terpilih.rangeKm : null,
+});
+
+const catatan = catatanHasil(hasil);
+
+/** Data kendaraan yang disuntik ke browser dipangkas ke field yang dipakai kotak pilihan. */
+const kendaraanLite = pilihan.map((c: any) => ({
+  id: c.id,
+  batteryKwh: c.batteryKwh,
+  rangeKm: c.rangeKm ?? null,
+  chargeDcKw: c.chargeDcKw ?? null,
+  chargeAcKw: c.chargeAcKw ?? null,
+}));
+
+const brand = site.brandText || "EVKita";
+const pageTitle = `Kalkulator Biaya & Waktu Pengisian Mobil Listrik — ${brand}`;
+const metaDesc =
+  "Hitung sendiri: berapa kWh yang masuk, berapa lama mengisinya di SPKLU atau di rumah, dan habis berapa rupiah sekali isi.";
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      name: "Kalkulator biaya dan waktu pengisian kendaraan listrik",
+      url: canonical,
+      applicationCategory: "UtilitiesApplication",
+      operatingSystem: "Web",
+      description: metaDesc,
+      offers: { "@type": "Offer", price: 0, priceCurrency: "IDR" },
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
+        { "@type": "ListItem", position: 2, name: "Kalkulator biaya pengisian" },
+      ],
+    },
+  ],
+};
+
+const themeProps = {
+  primary: site.themePrimary,
+  secondary: site.themeSecondary,
+  radius: site.themeRadius,
+  font: site.themeFont,
+  mode: site.themeMode,
+};
+
+/** Teks hasil yang dirender server; skrip browser menghitung ulang dengan fungsi yang sama. */
+const teks = {
+  durasi: teksDurasi(hasil),
+  biaya: rupiahPenuh(hasil.biaya),
+  perKwh: hasil.biayaPerKwh !== null ? rupiahHalus(hasil.biayaPerKwh) : "—",
+  energiMasuk: kwhKeTeks(hasil.energiMasuk),
+  energiDitagih: kwhKeTeks(hasil.energiDitagih),
+  km: kmKeTeks(hasil.kmDidapat),
+};
+
+const ringkas = teksRingkasPengisian(hasil);
+---
+
+<Base
+  title={pageTitle}
+  description={metaDesc}
+  keywords="biaya pengisian mobil listrik, lama cas mobil listrik, tarif SPKLU, kalkulator SPKLU"
+  ogImage={site.seoOgImage}
+  theme={themeProps}
+>
+  <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+
+  <SiteHeader site={site} base="/" active="" />
+
+  <main class="container kalk" id="konten">
+    <nav class="breadcrumb" aria-label="Remah roti">
+      <a href="/">Beranda</a>
+      <span aria-hidden="true">/</span>
+      <span class="breadcrumb-current">Kalkulator biaya pengisian</span>
+    </nav>
+
+    <header class="kalk-head">
+      <h1>Sekali isi: berapa lama, dan habis berapa?</h1>
+      <p class="kalk-lead">
+        Pilih kendaraannya, tentukan mau diisi dari berapa persen ke berapa persen, lalu sebutkan
+        daya stasiun dan tarifnya. Hasilnya berubah seketika, dan tautannya bisa dibagikan lengkap
+        dengan angka yang kamu pakai.
+      </p>
+    </header>
+
+    <form class="kalk-form" id="pengisianForm" method="get" autocomplete="off">
+      <div class="kalk-grid">
+        <div class="kalk-field kalk-field-wide">
+          <label for="f-kendaraan">Kendaraan</label>
+          <select id="f-kendaraan" name="kendaraan">
+            {pilihanMobil.length ? (
+              <optgroup label="Mobil listrik">
+                {pilihanMobil.map((c: any) => (
+                  <option value={c.id} selected={c.id === form.kendaraan}>{c.brand} {c.name}</option>
+                ))}
+              </optgroup>
+            ) : null}
+            {pilihanMotor.length ? (
+              <optgroup label="Motor listrik">
+                {pilihanMotor.map((c: any) => (
+                  <option value={c.id} selected={c.id === form.kendaraan}>{c.brand} {c.name}</option>
+                ))}
+              </optgroup>
+            ) : null}
+          </select>
+          <p class="kalk-hint">Memilih kendaraan mengisi kapasitas baterainya. Angkanya tetap bisa diubah.</p>
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-baterai">Kapasitas baterai <span class="kalk-unit">kWh</span></label>
+          <input id="f-baterai" name="baterai" type="number" min="0.1" step="0.1" value={form.batteryKwh} />
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-awal">Mulai dari <span class="kalk-unit">% baterai</span></label>
+          <input id="f-awal" name="awal" type="number" min="0" max="100" step="1" value={form.socAwal} />
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-akhir">Sampai <span class="kalk-unit">% baterai</span></label>
+          <input id="f-akhir" name="akhir" type="number" min="0" max="100" step="1" value={form.socAkhir} />
+          <p class="kalk-hint">
+            Bawaannya berhenti di {BATAS_TAPER}% karena di situlah pengisian DC mulai menukik —
+            alasan yang sama kenapa klaim pabrik hampir selalu berbunyi "10–{BATAS_TAPER}%".
+          </p>
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-daya">Daya pengisian <span class="kalk-unit">kW</span></label>
+          <input id="f-daya" name="daya" type="number" min="0.1" step="0.1" value={form.dayaKw} />
+          <div class="kalk-presets">
+            {DAYA_PRESETS.map((p) => (
+              <button type="button" class="kalk-preset" data-target="f-daya" data-value={p.value}>
+                {p.label} <span>{p.value} kW</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-tarif">Tarif listrik <span class="kalk-unit">Rp / kWh</span></label>
+          <input id="f-tarif" name="tarif" type="number" min="1" step="0.01" value={form.tarif} />
+          <div class="kalk-presets">
+            {TARIF_PRESETS.map((p) => (
+              <button type="button" class="kalk-preset" data-target="f-tarif" data-value={p.value}>
+                {p.label} <span>≈{Math.round(p.value).toLocaleString("id-ID")}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tanpa JavaScript, tombol ini mengirim formulir sebagai GET dan server
+          merender hasilnya — halaman ini tetap berfungsi utuh. */}
+      <noscript>
+        <button type="submit" class="btn btn-primary">Hitung</button>
+      </noscript>
+    </form>
+
+    <section class="kalk-result" aria-live="polite">
+      <p class="kalk-summary" id="p-summary">{ringkas}</p>
+
+      <div class="kalk-cards">
+        <div class="kalk-card kalk-card-accent">
+          <span class="kalk-card-label">Lama mengisi</span>
+          <strong class="kalk-card-value" id="p-durasi">{teks.durasi}</strong>
+          <span class="kalk-card-sub">rentang, bukan satu angka</span>
+        </div>
+        <div class="kalk-card">
+          <span class="kalk-card-label">Biaya sekali isi</span>
+          <strong class="kalk-card-value" id="p-biaya">{teks.biaya}</strong>
+          <span class="kalk-card-sub"><span id="p-per-kwh">{teks.perKwh}</span> per kWh yang benar-benar masuk</span>
+        </div>
+        <div class="kalk-card">
+          <span class="kalk-card-label">Masuk ke baterai</span>
+          <strong class="kalk-card-value" id="p-energi">{teks.energiMasuk}</strong>
+          <span class="kalk-card-sub">dibayar <span id="p-ditagih">{teks.energiDitagih}</span></span>
+        </div>
+        <div class="kalk-card">
+          <span class="kalk-card-label">Setara jarak tempuh</span>
+          <strong class="kalk-card-value" id="p-km">{teks.km}</strong>
+          <span class="kalk-card-sub">menurut klaim pabrik</span>
+        </div>
+      </div>
+
+      {/* Peringatan bukan hiasan, melainkan bagian dari jawabannya — dan yang
+          muncul hanya yang benar-benar berlaku untuk angka yang sedang tampil. */}
+      <ul class="kalk-notes kalk-notes-live" id="p-catatan">
+        {catatan.map((c: string) => <li>{c}</li>)}
+      </ul>
+
+      {terpilih ? (
+        <p class="kalk-detail-link">
+          <a href={vehicleHref(terpilih)}>Lihat spesifikasi lengkap {terpilih.brand} {terpilih.name} →</a>
+        </p>
+      ) : null}
+    </section>
+
+    <section class="kalk-section">
+      <h2>Yang tidak dihitung di sini</h2>
+      <ul class="kalk-notes">
+        <li>
+          Lama pengisian selalu berupa rentang, dan itu disengaja. Daya papan nama stasiun jarang
+          mengalir utuh: kurva pengisian tiap kendaraan berbeda, baterai yang dingin atau terlalu
+          panas mengisi lebih lambat, dan satu stasiun yang dipakai dua mobil sekaligus membagi
+          dayanya.
+        </li>
+        <li>
+          Kapasitas baterai di katalog adalah angka kotor. Sebagian tidak pernah dipakai demi umur
+          sel, jadi "0%" di layar mobil bukan baterai yang benar-benar kosong.
+        </li>
+        <li>
+          Setara jarak tempuh diturunkan dari klaim pabrik (WLTP/NEDC). Di jalan sebenarnya hampir
+          selalu lebih pendek — lebih pendek lagi di tol, saat hujan, atau dengan AC menyala penuh.
+        </li>
+        <li>
+          Tarif SPKLU berbeda tiap operator dan bisa punya biaya layanan atau tarif parkir sendiri
+          yang tidak ikut terhitung di sini. Angka bawaannya perkiraan; ganti dengan yang
+          benar-benar tertera.
+        </li>
+      </ul>
+    </section>
+
+    <section class="kalk-section">
+      <h2>Lanjutkan</h2>
+      <div class="tag-row">
+        <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">Kalkulator hemat listrik vs bensin</a>
+        {site.showSpklu ? <a class="tag-pill" href="/#spklu">Daftar SPKLU</a> : null}
+        <a class="tag-pill" href="/katalog">Katalog lengkap</a>
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter site={site} base="/" />
+
+  <script define:vars={{ kendaraanLite }}>
+    window.__EV_PENGISIAN__ = kendaraanLite;
+  </script>
+  <script src="../../scripts/pengisian.js"></script>
+</Base>

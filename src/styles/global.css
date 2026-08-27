@@ -3261,6 +3261,22 @@ a.pager-arrow:hover {
   line-height: 1.6;
 }
 
+/* Catatan yang menyertai HASIL, bukan catatan kaki halaman: isinya berubah
+   setiap angka diubah, jadi ia berdiri lebih dekat ke kartu hasilnya. Daftar
+   yang kosong tidak boleh menyisakan jarak — `:empty` yang menanganinya. */
+.kalk-notes-live {
+  margin-top: 16px;
+  padding: 14px 16px 14px 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  font-size: 13px;
+}
+
+.kalk-notes-live:empty {
+  display: none;
+}
+
 /* ===== Lightbox ===== */
 .lightbox {
   position: fixed;

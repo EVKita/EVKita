@@ -94,6 +94,10 @@ const tipeHref = car && taxoSlug(car.bodyType) ? `/tipe/${taxoSlug(car.bodyType)
    yang tidak bisa menemukan kendaraan yang barusan diklik. */
 const bisaDihitung = car ? !isMotor && consumptionKwhPer100(car) !== null : false;
 
+/* Kalkulator pengisian menerima keduanya: yang dibutuhkannya cuma kapasitas
+   baterai, dan motor pun punya. Tanpa kapasitas itu tautannya janji kosong. */
+const bisaHitungPengisian = car ? car.batteryKwh !== null && Number(car.batteryKwh) > 0 : false;
+
 /**
  * Perbandingan yang paling sering dicari untuk kendaraan ini.
  *
@@ -364,6 +368,11 @@ const themeProps = {
             {bisaDihitung ? (
               <a class="btn btn-ghost btn-sm" href={`/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}`}>
                 Hitung penghematan
+              </a>
+            ) : null}
+            {bisaHitungPengisian ? (
+              <a class="btn btn-ghost btn-sm" href={`/kalkulator/biaya-pengisian?kendaraan=${car.id}`}>
+                Hitung biaya pengisian
               </a>
             ) : null}
             <span class="share-status" id="shareStatus" role="status" aria-live="polite"></span>
