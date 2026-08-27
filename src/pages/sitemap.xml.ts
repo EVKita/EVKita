@@ -20,6 +20,7 @@ export const GET: APIRoute = ({ url }) => {
 
   const entries: { loc: string; lastmod?: string; priority: string }[] = [
     { loc: `${origin}/`, priority: "1.0" },
+    { loc: `${origin}/kalkulator/hemat-listrik-vs-bensin`, priority: "0.7" },
   ];
 
   const liveCars = (content.cars || []).filter(isLive);

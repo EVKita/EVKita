@@ -1,0 +1,284 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { vehicleHref } from "../../lib/card-html.js";
+import {
+  DEFAULTS,
+  TARIF_PRESETS,
+  consumptionKwhPer100,
+  hitungHemat,
+  rupiahPenuh,
+  rupiahHalus,
+  teksBalikModal,
+  teksRingkas,
+} from "../../lib/hemat.js";
+import { siteOrigin, canonicalUrl } from "../../lib/site-url";
+
+/**
+ * Kalkulator hemat: listrik vs bensin.
+ *
+ * Pertanyaan pertama setiap calon pembeli EV di Indonesia, dan sampai sekarang
+ * situs ini hanya menjawab setengahnya — katalognya menyebut kapasitas baterai
+ * dan jarak tempuh, tapi tidak seorang pun membeli mobil karena angka kWh.
+ * Yang mereka mau tahu: sebulan habis berapa, dan selisih harga belinya kapan
+ * kembali.
+ *
+ * Hasilnya dirender SERVER dari parameter URL, lalu dihitung ulang di browser
+ * setiap angka diubah. Dua-duanya memanggil `hitungHemat()` yang sama, jadi
+ * angka yang dilihat perayap dan angka yang dilihat pembaca tidak bisa
+ * berselisih — dan hasil hitungan bisa dibagikan lewat tautan.
+ */
+
+const content = readContent();
+const site = content.site;
+
+const isLive = (v: any) => v && v.status !== "draft";
+const cars = (content.cars || []).filter(isLive);
+
+/** Hanya mobil yang datanya cukup untuk dihitung yang boleh muncul di pilihan. */
+const pilihan = cars
+  .map((c: any) => ({ ...c, kwhPer100: consumptionKwhPer100(c) }))
+  .filter((c: any) => c.kwhPer100 !== null);
+
+const q = Astro.url.searchParams;
+
+/**
+ * Membaca satu parameter URL, atau memakai nilai bawaannya.
+ *
+ * Bawaan untuk harga beli sengaja string kosong, BUKAN nol: nol adalah harga
+ * yang sah, dan mobil bensin seharga Rp 0 akan membuat "balik modal" dihitung
+ * dari seluruh harga mobil listriknya — jawaban yang kelihatan pasti padahal
+ * tidak ada yang pernah menanyakannya.
+ */
+const num = (key: string, fallback: number | "") => {
+  const raw = q.get(key);
+  if (raw === null || raw.trim() === "") return fallback;
+  const n = Number(raw.replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+};
+
+const mobilId = q.get("mobil") || "";
+const terpilih = pilihan.find((c: any) => c.id === mobilId) || pilihan[0] || null;
+
+const form = {
+  mobil: terpilih ? terpilih.id : "",
+  kwhPer100: num("kwh", terpilih ? terpilih.kwhPer100 : 17),
+  elecPrice: num("listrik", DEFAULTS.elecPrice),
+  fuelPrice: num("bbm", DEFAULTS.fuelPrice),
+  kmPerLiter: num("kml", DEFAULTS.kmPerLiter),
+  kmPerMonth: num("km", DEFAULTS.kmPerMonth),
+  evPrice: num("hargaEv", terpilih && terpilih.price ? terpilih.price : ""),
+  icePrice: num("hargaBensin", ""),
+};
+
+const hasil = hitungHemat(form);
+
+/**
+ * Data mobil yang disuntik ke browser dipangkas ke tiga field yang benar-benar
+ * dipakai kotak pilihan — nama, konsumsi, harga. Bukan seluruh objek katalog.
+ */
+const mobilLite = pilihan.map((c: any) => ({
+  id: c.id,
+  label: `${c.brand} ${c.name}`,
+  kwhPer100: c.kwhPer100,
+  price: c.price ?? 0,
+}));
+
+const brand = site.brandText || "EVKita";
+const pageTitle = `Kalkulator Hemat Mobil Listrik vs Bensin — ${brand}`;
+const metaDesc =
+  "Hitung sendiri: biaya listrik per bulan, biaya bensin per bulan, selisihnya, dan berapa lama selisih harga beli mobil listrik itu kembali.";
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      name: "Kalkulator hemat mobil listrik vs bensin",
+      url: canonical,
+      applicationCategory: "FinanceApplication",
+      operatingSystem: "Web",
+      description: metaDesc,
+      offers: { "@type": "Offer", price: 0, priceCurrency: "IDR" },
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
+        { "@type": "ListItem", position: 2, name: "Kalkulator hemat" },
+      ],
+    },
+  ],
+};
+
+const themeProps = {
+  primary: site.themePrimary,
+  secondary: site.themeSecondary,
+  radius: site.themeRadius,
+  font: site.themeFont,
+  mode: site.themeMode,
+};
+
+/**
+ * Teks hasil yang dirender server; skrip di browser menghitung ulang dengan
+ * fungsi yang sama persis, jadi tidak ada satu pun kalimat di sini yang
+ * dirakit dua kali di dua tempat.
+ */
+const teks = {
+  evMonthly: rupiahPenuh(hasil.evMonthly),
+  iceMonthly: rupiahPenuh(hasil.iceMonthly),
+  evPerKm: rupiahHalus(hasil.evPerKm),
+  icePerKm: rupiahHalus(hasil.icePerKm),
+  savingMonthly: rupiahPenuh(hasil.savingMonthly),
+  savingYearly: rupiahPenuh(hasil.savingYearly),
+  payback: teksBalikModal(hasil),
+};
+
+const ringkas = teksRingkas(hasil);
+---
+
+<Base title={pageTitle} description={metaDesc} keywords="kalkulator mobil listrik, biaya mobil listrik, listrik vs bensin, hemat mobil listrik" ogImage={site.seoOgImage} theme={themeProps}>
+  <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+
+  <SiteHeader site={site} base="/" active="" />
+
+  <main class="container kalk" id="konten">
+    <nav class="breadcrumb" aria-label="Remah roti">
+      <a href="/">Beranda</a>
+      <span aria-hidden="true">/</span>
+      <span class="breadcrumb-current">Kalkulator hemat</span>
+    </nav>
+
+    <header class="kalk-head">
+      <h1>Mobil listrik vs bensin: hitung sendiri</h1>
+      <p class="kalk-lead">
+        Isi harga BBM, tarif listrik, dan jarak tempuhmu sebulan. Hasilnya berubah seketika, dan
+        tautannya bisa dibagikan lengkap dengan angka yang kamu pakai.
+      </p>
+    </header>
+
+    <form class="kalk-form" id="kalkForm" method="get" autocomplete="off">
+      <div class="kalk-grid">
+        <div class="kalk-field kalk-field-wide">
+          <label for="f-mobil">Mobil listrik</label>
+          <select id="f-mobil" name="mobil">
+            {pilihan.map((c: any) => (
+              <option value={c.id} selected={c.id === form.mobil}>{c.brand} {c.name}</option>
+            ))}
+          </select>
+          <p class="kalk-hint">Memilih mobil mengisi konsumsi dan harga di bawah. Keduanya tetap bisa diubah.</p>
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-kwh">Konsumsi listrik <span class="kalk-unit">kWh / 100 km</span></label>
+          <input id="f-kwh" name="kwh" type="number" min="1" step="0.1" value={form.kwhPer100} />
+          <p class="kalk-hint">
+            Dihitung dari kapasitas baterai dibagi jarak tempuh klaim pabrik. Di jalan sebenarnya
+            biasanya lebih boros — naikkan sedikit kalau mau angka yang lebih jujur.
+          </p>
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-listrik">Tarif listrik <span class="kalk-unit">Rp / kWh</span></label>
+          <input id="f-listrik" name="listrik" type="number" min="1" step="0.01" value={form.elecPrice} />
+          <div class="kalk-presets">
+            {TARIF_PRESETS.map((p) => (
+              <button type="button" class="kalk-preset" data-target="f-listrik" data-value={p.value}>
+                {p.label} <span>≈{Math.round(p.value).toLocaleString("id-ID")}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-bbm">Harga BBM <span class="kalk-unit">Rp / liter</span></label>
+          <input id="f-bbm" name="bbm" type="number" min="1" step="100" value={form.fuelPrice} />
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-kml">Konsumsi mobil bensin <span class="kalk-unit">km / liter</span></label>
+          <input id="f-kml" name="kml" type="number" min="1" step="0.1" value={form.kmPerLiter} />
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-km">Jarak tempuh <span class="kalk-unit">km / bulan</span></label>
+          <input id="f-km" name="km" type="number" min="1" step="50" value={form.kmPerMonth} />
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-harga-ev">Harga mobil listrik <span class="kalk-unit">Rp</span></label>
+          <input id="f-harga-ev" name="hargaEv" type="number" min="0" step="1000000" value={form.evPrice || ""} />
+        </div>
+
+        <div class="kalk-field">
+          <label for="f-harga-bensin">Harga mobil bensin <span class="kalk-unit">Rp</span></label>
+          <input id="f-harga-bensin" name="hargaBensin" type="number" min="0" step="1000000" value={form.icePrice || ""} placeholder="opsional" />
+          <p class="kalk-hint">Diisi kalau mau tahu kapan selisih harga belinya kembali.</p>
+        </div>
+      </div>
+
+      {/* Tanpa JavaScript, tombol ini mengirim formulir sebagai GET dan server
+          merender hasilnya — halaman ini tetap berfungsi utuh. */}
+      <noscript>
+        <button type="submit" class="btn btn-primary">Hitung</button>
+      </noscript>
+    </form>
+
+    <section class="kalk-result" aria-live="polite">
+      <p class="kalk-summary" id="r-summary">{ringkas}</p>
+
+      <div class="kalk-cards">
+        <div class="kalk-card">
+          <span class="kalk-card-label">Listrik, per bulan</span>
+          <strong class="kalk-card-value" id="r-ev">{teks.evMonthly}</strong>
+          <span class="kalk-card-sub"><span id="r-ev-km">{teks.evPerKm}</span> per km</span>
+        </div>
+        <div class="kalk-card">
+          <span class="kalk-card-label">Bensin, per bulan</span>
+          <strong class="kalk-card-value" id="r-ice">{teks.iceMonthly}</strong>
+          <span class="kalk-card-sub"><span id="r-ice-km">{teks.icePerKm}</span> per km</span>
+        </div>
+        <div class="kalk-card kalk-card-accent">
+          <span class="kalk-card-label">Selisihnya</span>
+          <strong class="kalk-card-value" id="r-saving">{teks.savingMonthly}</strong>
+          <span class="kalk-card-sub"><span id="r-saving-year">{teks.savingYearly}</span> setahun</span>
+        </div>
+        <div class="kalk-card">
+          <span class="kalk-card-label">Selisih harga beli kembali</span>
+          <strong class="kalk-card-value" id="r-payback">{teks.payback}</strong>
+          <span class="kalk-card-sub">dari penghematan bahan bakar saja</span>
+        </div>
+      </div>
+
+      {terpilih ? (
+        <p class="kalk-detail-link">
+          <a href={vehicleHref(terpilih)}>Lihat spesifikasi lengkap {terpilih.brand} {terpilih.name} →</a>
+        </p>
+      ) : null}
+    </section>
+
+    <section class="kalk-section">
+      <h2>Yang tidak dihitung di sini</h2>
+      {/* Kalkulator yang menyajikan asumsinya sebagai fakta lebih menyesatkan
+          daripada tidak ada kalkulator sama sekali. */}
+      <ul class="kalk-notes">
+        <li>Semua angka bawaan hanyalah perkiraan. Harga BBM berbeda tiap jenis dan daerah, tarif listrik berbeda tiap golongan — ganti dengan angka yang benar-benar kamu bayar.</li>
+        <li>Konsumsi listrik diturunkan dari klaim pabrik (WLTP/NEDC). Pemakaian sehari-hari hampir selalu lebih boros, dan mengisi baterai sendiri punya rugi daya.</li>
+        <li>Perhitungan ini murni bahan bakar. Servis berkala, pajak, asuransi, penyusutan, dan penggantian baterai tidak ikut — semuanya bisa mengubah kesimpulan.</li>
+        <li>Balik modal dihitung dari selisih harga beli dibagi penghematan bulanan, tanpa bunga, cicilan, atau kenaikan harga di masa depan.</li>
+      </ul>
+    </section>
+  </main>
+
+  <SiteFooter site={site} base="/" />
+
+  <script define:vars={{ mobilLite }}>
+    window.__EV_KALK__ = mobilLite;
+  </script>
+  <script src="../../scripts/kalkulator.js"></script>
+</Base>

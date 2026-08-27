@@ -19,6 +19,7 @@ const mark = (site.logoMark || brand.slice(0, 2) || "EV").slice(0, 3);
 const quickLinks = [
   { label: "Beranda", href: base || "/" },
   { label: "Katalog", href: `${base}#daftar` },
+  { label: "Kalkulator hemat", href: "/kalkulator/hemat-listrik-vs-bensin" },
   site.showSpklu ? { label: "SPKLU", href: `${base}#spklu` } : null,
   site.showBengkel ? { label: "Bengkel", href: `${base}#bengkel` } : null,
   site.showBerita ? { label: "Berita", href: `${base}#berita` } : null,

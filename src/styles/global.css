@@ -2974,6 +2974,189 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
   color: var(--accent-ink);
 }
 
+/* ===== Kalkulator ===== */
+
+.kalk {
+  padding: 28px 20px clamp(40px, 6vw, 72px);
+}
+
+.kalk-head {
+  margin-bottom: clamp(20px, 3vw, 32px);
+}
+
+.kalk-head h1 {
+  font-size: clamp(24px, 4vw, 38px);
+  line-height: 1.15;
+}
+
+.kalk-lead {
+  margin-top: 12px;
+  max-width: 70ch;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.kalk-form {
+  margin-bottom: clamp(24px, 4vw, 36px);
+}
+
+.kalk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.kalk-field-wide {
+  grid-column: 1 / -1;
+}
+
+.kalk-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.kalk-unit {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.kalk-field input,
+.kalk-field select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+}
+
+.kalk-field input:focus-visible,
+.kalk-field select:focus-visible {
+  outline: none;
+  border-color: var(--accent-ink);
+  box-shadow: var(--ring);
+}
+
+.kalk-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.kalk-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.kalk-preset {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+.kalk-preset span {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.kalk-preset:hover {
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
+}
+
+.kalk-result {
+  margin-bottom: clamp(28px, 4vw, 44px);
+}
+
+.kalk-summary {
+  margin-bottom: 16px;
+  max-width: 70ch;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.kalk-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.kalk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+}
+
+.kalk-card-accent {
+  border-color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.kalk-card-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.kalk-card-value {
+  font-size: clamp(18px, 2.4vw, 24px);
+  line-height: 1.2;
+}
+
+.kalk-card-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.kalk-detail-link {
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.kalk-detail-link a {
+  color: var(--accent-ink);
+}
+
+.kalk-section h2 {
+  font-size: clamp(18px, 2.4vw, 24px);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.kalk-notes {
+  display: grid;
+  gap: 10px;
+  max-width: 80ch;
+  padding-left: 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 /* ===== Lightbox ===== */
 .lightbox {
   position: fixed;

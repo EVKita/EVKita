@@ -7,6 +7,7 @@ import { carSVG, defaultColor } from "../../lib/cars-ui.js";
 import { safeUrl } from "../../lib/url.js";
 import { compareSlug } from "../../lib/compare-html.js";
 import { rivalsFor } from "../../lib/compare-pairs.js";
+import { consumptionKwhPer100 } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 
 const content = readContent();
@@ -73,6 +74,10 @@ const priceText = car ? car.priceText || (car.price != null ? "Rp " + Number(car
  * sedang menimbang mobil ini tidak pernah diberi tahu bahwa perbandingannya
  * ada. Lawannya dipilih dengan aturan yang sama dengan yang dipakai peta situs.
  */
+/* Kalkulator hanya bisa menjawab kalau mobil ini punya baterai dan jarak
+   tempuhnya — tanpa keduanya tautannya cuma janji kosong. */
+const bisaDihitung = car ? consumptionKwhPer100(car) !== null : false;
+
 const compareLinks = car
   ? rivalsFor(car, cars, 3).map((r: any) => ({
       slug: compareSlug([car.id, r.id]),
@@ -312,6 +317,11 @@ const themeProps = {
               Bagikan
             </button>
             <button type="button" class="btn btn-ghost btn-sm" id="copyBtn">Salin tautan</button>
+            {bisaDihitung ? (
+              <a class="btn btn-ghost btn-sm" href={`/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}`}>
+                Hitung penghematan
+              </a>
+            ) : null}
             <span class="share-status" id="shareStatus" role="status" aria-live="polite"></span>
           </div>
         </div>
