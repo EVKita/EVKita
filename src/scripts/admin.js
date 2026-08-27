@@ -14,7 +14,9 @@
  * 1. Konfigurasi
  * ------------------------------------------------------------------ */
 
-const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "site", "media", "backups"];
+/* "editor" adalah halaman penuh untuk mobil/motor. Tidak punya butir di
+   sidebar — yang disorot tetap koleksi asalnya. */
+const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "site", "media", "backups", "editor"];
 const COLLECTIONS = ["cars", "motors", "spklu", "bengkel", "berita"];
 const VEHICLE_COLS = ["cars", "motors"];
 const DIR_COLS = ["spklu", "bengkel", "berita"];
@@ -46,7 +48,15 @@ const SPEC_PRESETS = {
   motors: ["Bobot", "Tipe Baterai", "Baterai Bisa Ditukar", "Daya Motor (Watt)", "Waktu Pengisian Penuh", "Rem Depan / Belakang", "Ukuran Ban", "Kapasitas Bagasi", "Mode Berkendara", "Suspensi", "Beban Maksimum"],
 };
 
-const VEHICLE_TABS = ["dasar", "spesifikasi", "media", "varian", "lanjutan"];
+/* Urutan bagian di halaman editor, sekaligus isi navigasi sampingnya. */
+const EDITOR_SECTIONS = [
+  { k: "dasar", l: "Dasar", d: "Identitas kendaraan dan cara ia tampil di daftar katalog." },
+  { k: "spesifikasi", l: "Spesifikasi", d: "Angka yang dibandingkan pembaca — jarak tempuh, baterai, tenaga, dan harga." },
+  { k: "media", l: "Media", d: "Gambar utama, galeri, dan video yang tampil di halaman detail." },
+  { k: "varian", l: "Varian", d: "Nama varian yang dijual. Jumlahnya dihitung otomatis dari daftar ini." },
+  { k: "lanjutan", l: "Lanjutan", d: "Pilihan warna, daftar keunggulan, dan identitas teknis item." },
+];
+const SECTION_KEYS = EDITOR_SECTIONS.map((x) => x.k);
 
 /**
  * Field kendaraan per pane modal. `t` = tipe kontrol, `full` = selebar grid,
@@ -420,14 +430,13 @@ function closeModal(el) {
   el.classList.remove("open");
   const i = modalStack.indexOf(el);
   if (i >= 0) modalStack.splice(i, 1);
-  if (el.id === "vehicle-modal") { vehicleCtx = null; editorTouched = false; }
   if (el.id === "dir-modal") { dirCtx = null; editorTouched = false; }
 }
 
 /** Menutup modal editor: kalau formulir sudah disentuh, minta konfirmasi dulu. */
 async function requestCloseModal(modal) {
   if (!modal) return;
-  const isEditor = modal.id === "vehicle-modal" || modal.id === "dir-modal";
+  const isEditor = modal.id === "dir-modal";
   if (isEditor && editorTouched) {
     const ok = await confirmDialog({
       title: "Tutup tanpa menyimpan?",
@@ -715,6 +724,7 @@ function readRepeater(root, name) {
 
 function setView(view, opts) {
   if (!VIEWS.includes(view)) view = "dashboard";
+  if (view !== "editor") { vehicleCtx = null; editorTouched = false; }
   activeView = view;
   syncQuickAdd();
   $$(".view").forEach((s) => {
@@ -722,14 +732,53 @@ function setView(view, opts) {
     if (match) s.removeAttribute("hidden");
     else s.setAttribute("hidden", "");
   });
-  $$(".nav-item[data-view]").forEach((n) => n.classList.toggle("active", n.getAttribute("data-view") === view));
+  const navView = (opts && opts.nav) || view;
+  $$(".nav-item[data-view]").forEach((n) => n.classList.toggle("active", n.getAttribute("data-view") === navView));
   if (!opts || opts.hash !== false) {
     const target = "#/" + view;
-    if (location.hash !== target) location.hash = target;
+    if (location.hash !== target) setHash(target);
   }
   const app = $("admin-app");
   if (app) app.classList.remove("sidebar-open");
   if (view === "backups") loadBackups();
+  if (view !== "editor") window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+/* ------------------------------------------------------------------ *
+ * 8b. Rute berbasis hash
+ *
+ * Bentuk yang dikenali: `#/cars`, `#/cars/new`, `#/cars/edit/<id>`.
+ * Editor kendaraan memakai alamat sendiri supaya tombol Kembali browser,
+ * muat ulang halaman, dan berbagi tautan semuanya bekerja seperti halaman biasa.
+ * ------------------------------------------------------------------ */
+
+let lastHash = "";
+let hashGuard = false;
+
+function setHash(value) {
+  hashGuard = true;
+  lastHash = value;
+  location.hash = value;
+}
+
+function parseRoute(hash) {
+  const parts = String(hash || "").replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
+  const head = parts[0] || "dashboard";
+  if (VEHICLE_COLS.includes(head)) {
+    if (parts[1] === "new") return { kind: "editor", col: head, id: null };
+    if (parts[1] === "edit" && parts[2]) return { kind: "editor", col: head, id: parts[2] };
+  }
+  return { kind: "view", view: VIEWS.includes(head) && head !== "editor" ? head : "dashboard" };
+}
+
+function routeHash(col, id) {
+  return id ? `#/${col}/edit/${encodeURIComponent(id)}` : `#/${col}/new`;
+}
+
+function applyRoute(hash) {
+  const route = parseRoute(hash);
+  if (route.kind === "editor") { openVehicle(route.col, route.id); return; }
+  if (activeView !== route.view) setView(route.view, { hash: false });
 }
 
 /* Tombol tambah melayang (hanya tampil di layar sempit) selalu menunjuk ke
@@ -1295,7 +1344,12 @@ function moveItem(col, dragId, targetId) {
 
 function openVehicle(col, id) {
   const item = id ? findItem(col, id) : blankItem(col);
-  if (!item) return;
+  if (!item) {
+    toast("Item itu tidak ada lagi — mungkin sudah dihapus", "error");
+    setView(col);
+    return;
+  }
+
   vehicleCtx = {
     col,
     id: id || null,
@@ -1304,25 +1358,110 @@ function openVehicle(col, id) {
   };
   editorTouched = false;
 
-  const title = $("vehicle-modal-title");
-  if (title) title.textContent = id ? `Edit ${COL_ONE[col]}: ${titleOf(col, item)}` : `Tambah ${COL_ONE[col]} Baru`;
+  const eyebrow = $("editor-eyebrow");
+  if (eyebrow) eyebrow.textContent = `${COL_LABEL[col]} · ${id ? "Edit" : "Baru"}`;
 
-  const sub = $("vehicle-modal-sub");
+  const title = $("editor-title");
+  if (title) title.textContent = id ? titleOf(col, item) : `Tambah ${COL_ONE[col]} Baru`;
+
+  const sub = $("editor-sub");
   if (sub) {
     sub.textContent = id
-      ? "Perubahan langsung tersimpan begitu ditekan Simpan."
+      ? "Perubahan baru tersimpan setelah menekan Simpan."
       : "Hanya Merek dan Nama Model yang wajib. Sisanya bisa dilengkapi kapan saja.";
   }
 
-  const again = $("vehicle-save-add");
+  const again = $("editor-save-add");
   if (again) again.hidden = !!id;
 
-  renderVehiclePanes(item);
-  setModalTab("vehicle-modal", "dasar");
-  openModal($("vehicle-modal"));
+  setView("editor", { hash: false, nav: col });
+  renderEditorNav();
+  renderVehicleSections(item);
+  syncEditorMetrics();
+  setActiveSection(SECTION_KEYS[0]);
+  window.scrollTo({ top: 0, behavior: "instant" });
 
   const first = document.querySelector('#vehicle-form [name="brand"]');
-  if (first) setTimeout(() => first.focus(), 30);
+  if (first) setTimeout(() => first.focus(), 40);
+}
+
+/* Meninggalkan editor lewat tombol Batal / panah kembali. Penjaga "belum
+   disimpan" ditangani oleh penanganan hashchange, jadi cukup ubah alamatnya. */
+function leaveEditor() {
+  if (!vehicleCtx) { setView("dashboard"); return; }
+  setView(vehicleCtx.col);
+}
+
+function renderEditorNav() {
+  const nav = $("editor-nav");
+  if (!nav) return;
+  nav.innerHTML = EDITOR_SECTIONS.map((sec) => `<button type="button" class="editor-nav-item" data-goto-section="${esc(sec.k)}">
+      <span class="editor-nav-label">${esc(sec.l)}</span>
+      <span class="editor-nav-count" data-count-section="${esc(sec.k)}"></span>
+    </button>`).join("");
+}
+
+function setActiveSection(key) {
+  $$("#editor-nav .editor-nav-item").forEach((b) => b.classList.toggle("active", b.getAttribute("data-goto-section") === key));
+}
+
+/* Tinggi bilah lengket dipakai dua kali: sebagai `top` rel navigasi dan
+   sebagai `scroll-margin` tiap bagian. Diukur, bukan ditebak, supaya judul
+   yang membungkus di layar sempit tidak menggeser posisi lompatan. */
+function editorStacked() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function syncEditorMetrics() {
+  const view = document.querySelector('.view[data-view="editor"]');
+  if (!view) return;
+  const bar = $("editor-bar");
+  const rail = document.querySelector(".editor-rail");
+  view.style.setProperty("--editor-bar-h", (bar ? bar.offsetHeight : 0) + "px");
+  view.style.setProperty("--editor-rail-h", (rail && editorStacked() ? rail.offsetHeight : 0) + "px");
+}
+
+function editorStickyOffset() {
+  const topbar = document.querySelector(".admin-topbar");
+  const bar = $("editor-bar");
+  const rail = document.querySelector(".editor-rail");
+  return (topbar ? topbar.offsetHeight : 60) +
+    (bar ? bar.offsetHeight : 0) +
+    (rail && editorStacked() ? rail.offsetHeight : 0);
+}
+
+function syncActiveSection() {
+  if (activeView !== "editor") return;
+  const form = $("vehicle-form");
+  if (!form) return;
+  const line = editorStickyOffset() + 24;
+  let current = SECTION_KEYS[0];
+  for (const el of form.querySelectorAll(".editor-section")) {
+    if (el.getBoundingClientRect().top <= line) current = el.getAttribute("data-section");
+  }
+  // Di dasar halaman bagian terakhir selalu dianggap aktif, walau pendek.
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+    current = SECTION_KEYS[SECTION_KEYS.length - 1];
+  }
+  setActiveSection(current);
+}
+
+/**
+ * Posisi guliran dihitung sendiri, bukan lewat `scrollIntoView`. Halaman
+ * publik memasang `scroll-padding-top` dengan variabel yang tidak ada di
+ * admin, jadi `scrollIntoView` bisa mendarat di balik bilah lengket — dan
+ * kalau animasi mulusnya tidak jalan, lompatannya tidak terjadi sama sekali.
+ */
+function scrollToY(top) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: Math.max(0, Math.round(top)), behavior: reduce ? "instant" : "smooth" });
+}
+
+function scrollToSection(key) {
+  const el = document.querySelector(`.editor-section[data-section="${CSS.escape(key)}"]`);
+  if (!el) return;
+  setActiveSection(key);
+  scrollToY(window.scrollY + el.getBoundingClientRect().top - editorStickyOffset() - 12);
 }
 
 /* Saran merek: gabungan merek yang sudah dipakai di koleksi ini dan daftar bawaan. */
@@ -1341,96 +1480,83 @@ function specPresetHtml(col) {
   </div>`;
 }
 
-function renderVehiclePanes(item) {
+function renderVehicleSections(item) {
   const form = $("vehicle-form");
-  if (!form) return;
-
-  const pane = (name) => form.querySelector(`.modal-pane[data-mpane="${name}"]`);
+  if (!form || !vehicleCtx) return;
 
   const col = vehicleCtx.col;
   const defs = vehicleCtx.defs;
+  const one = col === "motors" ? "motor" : "mobil";
 
-  const dasar = pane("dasar");
-  if (dasar) {
-    dasar.innerHTML = `${brandListHtml(col)}<div class="field-grid">
-      ${defs.dasar.map((d) => fieldHtml(d, item[d.k], "v")).join("")}
+  const fill = (key, inner) => {
+    const host = form.querySelector(`.editor-section[data-section="${key}"]`);
+    if (!host) return;
+    const sec = EDITOR_SECTIONS.find((x) => x.k === key);
+    host.innerHTML = `<div class="editor-section-head">
+        <h2>${esc(sec.l)}</h2>
+        <p>${esc(sec.d)}</p>
+      </div>
+      <div class="editor-section-body">${inner}</div>`;
+  };
+
+  fill("dasar", `${brandListHtml(col)}<div class="field-grid">
+    ${defs.dasar.map((d) => fieldHtml(d, item[d.k], "v")).join("")}
+  </div>`);
+
+  fill("spesifikasi", `<div class="field-grid">${defs.spesifikasi.map((d) => fieldHtml(d, item[d.k], "v")).join("")}</div>
+    <div class="editor-subsection">
+      <h3>Baris spesifikasi tambahan</h3>
+      <p class="hint">Untuk data yang tidak tercakup field di atas. Tampil apa adanya di halaman detail.</p>
+      ${specPresetHtml(col)}
+      ${repeaterHtml("specs", item.specs || [], "kv")}
+    </div>`);
+
+  fill("media", `<div class="field-grid">
+    <div class="field full">
+      <label>Gambar Utama</label>
+      <div class="dropzone" data-vzone="image">${imagePreviewHtml(vehicleCtx.draft.image, 'data-vimg-del="1"')}</div>
+      <div class="hint">Klik untuk memilih berkas, atau seret gambar ke kotak ini.</div>
+    </div>
+    <div class="field full">
+      <label>Galeri</label>
+      <div class="dropzone" data-vzone="gallery"><div class="empty-state-text">Klik atau seret beberapa gambar sekaligus ke sini</div></div>
+      <div class="gallery-list" data-gallery>${galleryHtml(vehicleCtx.draft.gallery)}</div>
+      <div class="hint">Seret pratinjau untuk mengubah urutan tampil.</div>
+    </div>
+    ${fieldHtml({ k: "video", l: "URL Video", t: "url", full: true, ph: "https://youtube.com/watch?v=…" }, item.video, "v")}
+  </div>`);
+
+  fill("varian", `${repeaterHtml("variantNames", item.variantNames || [], "text")}`);
+
+  fill("lanjutan", `<div class="editor-subsection">
+      <h3>Pilihan Warna</h3>
+      ${repeaterHtml("colors", item.colors || [], "color")}
+    </div>
+    <div class="editor-subsection">
+      <h3>Keunggulan</h3>
       <div class="field full">
-        <label>Pratinjau kartu</label>
-        <div class="item-row" id="vehicle-preview"></div>
+        <label for="v-highlights">Satu keunggulan per baris</label>
+        <textarea id="v-highlights" name="highlights" rows="5" placeholder="Pengisian cepat 18 menit&#10;Garansi baterai 8 tahun">${esc((item.highlights || []).join("\n"))}</textarea>
       </div>
-    </div>`;
-  }
-
-  const spek = pane("spesifikasi");
-  if (spek) {
-    spek.innerHTML = `<div class="field-grid">${defs.spesifikasi.map((d) => fieldHtml(d, item[d.k], "v")).join("")}</div>
-      <div class="form-section">
-        <div class="form-section-head"><h4 class="panel-title">Baris spesifikasi tambahan</h4></div>
-        <div class="hint">Untuk data yang tidak tercakup field di atas. Tampil apa adanya di halaman detail.</div>
-        ${specPresetHtml(col)}
-        ${repeaterHtml("specs", item.specs || [], "kv")}
-      </div>`;
-  }
-
-  const media = pane("media");
-  if (media) {
-    media.innerHTML = `<div class="field-grid">
-      <div class="field full">
-        <label>Gambar Utama</label>
-        <div class="dropzone" data-vzone="image">${imagePreviewHtml(vehicleCtx.draft.image, 'data-vimg-del="1"')}</div>
-        <div class="hint">Klik untuk memilih berkas, atau seret gambar ke kotak ini.</div>
-      </div>
-      <div class="field full">
-        <label>Galeri</label>
-        <div class="dropzone" data-vzone="gallery"><div class="empty-state-text">Klik atau seret beberapa gambar sekaligus ke sini</div></div>
-        <div class="gallery-list" data-gallery>${galleryHtml(vehicleCtx.draft.gallery)}</div>
-        <div class="hint">Seret pratinjau untuk mengubah urutan tampil.</div>
-      </div>
-      ${fieldHtml({ k: "video", l: "URL Video", t: "url", full: true, ph: "https://youtube.com/watch?v=…" }, item.video, "v")}
-    </div>`;
-  }
-
-  const varian = pane("varian");
-  if (varian) {
-    varian.innerHTML = `<div class="form-section">
-      <div class="form-section-head"><h4 class="panel-title">Nama Varian</h4></div>
-      <div class="hint">Jumlah varian dihitung otomatis dari daftar ini.</div>
-      ${repeaterHtml("variantNames", item.variantNames || [], "text")}
-    </div>`;
-  }
-
-  const lanjutan = pane("lanjutan");
-  if (lanjutan) {
-    lanjutan.innerHTML = `<div class="form-section">
-        <div class="form-section-head"><h4 class="panel-title">Pilihan Warna</h4></div>
-        ${repeaterHtml("colors", item.colors || [], "color")}
-      </div>
-      <div class="form-section">
-        <div class="form-section-head"><h4 class="panel-title">Keunggulan</h4></div>
+    </div>
+    <div class="editor-subsection">
+      <h3>Identitas Teknis</h3>
+      <div class="field-grid">
         <div class="field full">
-          <label for="v-highlights">Satu keunggulan per baris</label>
-          <textarea id="v-highlights" name="highlights" rows="5" placeholder="Pengisian cepat 18 menit&#10;Garansi baterai 8 tahun">${esc((item.highlights || []).join("\n"))}</textarea>
+          <label for="v-id">ID (dipakai di tautan halaman ${esc(one)})</label>
+          <input type="text" id="v-id" name="__id" value="${esc(item.id)}" readonly />
+          <div class="hint">${vehicleCtx.id
+            ? "ID tidak berubah lagi supaya tautan yang sudah tersebar tetap hidup."
+            : "Dibuat otomatis dari Merek &amp; Nama Model, dan ikut berubah selama item ini belum disimpan."}</div>
+        </div>
+        <div class="field">
+          <button type="button" class="btn btn-outline btn-sm" data-copy-from="v-id">Salin ID</button>
+        </div>
+        <div class="field">
+          <div class="hint">Terakhir diubah: ${esc(item.updatedAt ? formatDateTime(item.updatedAt) : "belum pernah")}</div>
         </div>
       </div>
-      <div class="form-section">
-        <div class="form-section-head"><h4 class="panel-title">Identitas Teknis</h4></div>
-        <div class="field-grid">
-          <div class="field full">
-            <label for="v-id">ID (dipakai di tautan halaman)</label>
-            <input type="text" id="v-id" name="__id" value="${esc(item.id)}" readonly />
-            <div class="hint">${vehicleCtx.id
-              ? "ID tidak berubah lagi supaya tautan yang sudah tersebar tetap hidup."
-              : "Dibuat otomatis dari Merek &amp; Nama Model, dan ikut berubah selama item ini belum disimpan."}</div>
-          </div>
-          <div class="field">
-            <button type="button" class="btn btn-outline btn-sm" data-copy-from="v-id">Salin ID</button>
-          </div>
-          <div class="field">
-            <div class="hint">Terakhir diubah: ${esc(item.updatedAt ? formatDateTime(item.updatedAt) : "belum pernah")}</div>
-          </div>
-        </div>
-      </div>`;
-  }
+    </div>`);
 
   updateVehiclePreview();
 }
@@ -1541,14 +1667,13 @@ function updateVehicleMeter(form) {
       <div class="editor-meter-text"><strong>${stats.pct}% lengkap</strong> · ${stats.filled} dari ${stats.total} detail terisi</div>`;
   }
 
-  const modal = $("vehicle-modal");
-  if (!modal) return;
-  for (const key of VEHICLE_TABS) {
-    const tab = modal.querySelector(`.modal-tab[data-mtab="${key}"] .tab-count`);
-    if (!tab) continue;
+  for (const key of SECTION_KEYS) {
+    const badge = document.querySelector(`[data-count-section="${key}"]`);
+    if (!badge) continue;
     const p = stats.panes[key];
-    tab.textContent = `${p.filled}/${p.total}`;
-    tab.classList.toggle("is-empty", p.filled === 0);
+    badge.textContent = `${p.filled}/${p.total}`;
+    badge.classList.toggle("is-empty", p.filled === 0);
+    badge.classList.toggle("is-done", p.filled === p.total);
   }
 }
 
@@ -1565,17 +1690,7 @@ function markError(form, key, message) {
   err.className = "error-text";
   err.textContent = message;
   field.appendChild(err);
-  return field.closest(".modal-pane");
-}
-
-function setModalTab(modalId, tab) {
-  const modal = $(modalId);
-  if (!modal) return;
-  modal.querySelectorAll(".modal-tab[data-mtab]").forEach((b) => b.classList.toggle("active", b.getAttribute("data-mtab") === tab));
-  modal.querySelectorAll(".modal-pane[data-mpane]").forEach((p) => {
-    if (p.getAttribute("data-mpane") === tab) p.removeAttribute("hidden");
-    else p.setAttribute("hidden", "");
-  });
+  return field.closest(".editor-section");
 }
 
 function saveVehicle(opts) {
@@ -1606,11 +1721,13 @@ function saveVehicle(opts) {
   data.gallery = vehicleCtx.draft.gallery.slice();
   data.rangeStandard = data.rangeStandard || null;
 
-  let badPane = null;
-  if (!data.brand) badPane = markError(form, "brand", "Merek wajib diisi.") || badPane;
-  if (!data.name) badPane = markError(form, "name", "Nama model wajib diisi.") || badPane;
-  if (badPane) {
-    setModalTab("vehicle-modal", badPane.getAttribute("data-mpane"));
+  let badSection = null;
+  if (!data.brand) badSection = markError(form, "brand", "Merek wajib diisi.") || badSection;
+  if (!data.name) badSection = markError(form, "name", "Nama model wajib diisi.") || badSection;
+  if (badSection) {
+    scrollToSection(badSection.getAttribute("data-section"));
+    const firstBad = form.querySelector(".field.has-error input, .field.has-error select, .field.has-error textarea");
+    if (firstBad) setTimeout(() => firstBad.focus({ preventScroll: true }), 260);
     toast("Lengkapi field yang ditandai merah", "error");
     return;
   }
@@ -1639,7 +1756,7 @@ function saveVehicle(opts) {
     return;
   }
 
-  closeModal($("vehicle-modal"));
+  setView(col);
   if (id) {
     toast("Perubahan disimpan", "success");
   } else {
@@ -2080,8 +2197,9 @@ function renderAll() {
  * ------------------------------------------------------------------ */
 
 function openEditor(col, id) {
-  if (isVehicle(col)) openVehicle(col, id);
-  else openDir(col, id);
+  if (!isVehicle(col)) { openDir(col, id); return; }
+  setHash(routeHash(col, id));
+  openVehicle(col, id);
 }
 
 function parseRef(ref) {
@@ -2131,16 +2249,13 @@ function bindEvents() {
       return;
     }
 
-    const mtab = e.target.closest(".modal-tab[data-mtab]");
-    if (mtab) {
-      const modal = mtab.closest(".modal-backdrop");
-      if (modal) setModalTab(modal.id, mtab.getAttribute("data-mtab"));
-      return;
-    }
-
     if (e.target.closest("#media-refresh")) { renderMedia(); toast("Daftar media dimuat ulang", "info"); return; }
 
-    if (e.target.closest("#vehicle-save-add")) { saveVehicle({ again: true }); return; }
+    if (e.target.closest("#editor-save-add")) { saveVehicle({ again: true }); return; }
+    if (e.target.closest("#editor-back") || e.target.closest("#editor-cancel")) { leaveEditor(); return; }
+
+    const jump = e.target.closest("[data-goto-section]");
+    if (jump) { scrollToSection(jump.getAttribute("data-goto-section")); return; }
 
     /* --- Salin ke papan klip --- */
     const copyFrom = e.target.closest("[data-copy-from]");
@@ -2161,7 +2276,7 @@ function bindEvents() {
     if (open) {
       const { col, id } = parseRef(open.getAttribute("data-open"));
       if (palette && palette.classList.contains("open")) closeModal(palette);
-      setView(col);
+      if (!isVehicle(col)) setView(col);
       openEditor(col, id);
       return;
     }
@@ -2550,7 +2665,8 @@ function bindEvents() {
       const top = modalStack[modalStack.length - 1];
       if (top) { requestCloseModal(top); return; }
       const app = $("admin-app");
-      if (app && app.classList.contains("sidebar-open")) app.classList.remove("sidebar-open");
+      if (app && app.classList.contains("sidebar-open")) { app.classList.remove("sidebar-open"); return; }
+      if (activeView === "editor" && !typing) leaveEditor();
       return;
     }
     if (!typing && !modalStack.length && key === "n" && !mod && !e.altKey) {
@@ -2559,12 +2675,50 @@ function bindEvents() {
   });
 
   window.addEventListener("hashchange", () => {
-    const view = (location.hash || "").replace(/^#\/?/, "");
-    if (view && view !== activeView) setView(view, { hash: false });
+    // Perubahan alamat yang kita picu sendiri sudah dirender duluan.
+    if (hashGuard) { hashGuard = false; lastHash = location.hash; return; }
+
+    const target = location.hash;
+    const leaving = activeView === "editor" && parseRoute(target).kind !== "editor";
+    if (leaving && editorTouched) {
+      const back = lastHash;
+      confirmDialog({
+        title: "Tinggalkan halaman ini?",
+        text: "Isian yang belum disimpan akan hilang.",
+        okText: "Tinggalkan",
+      }).then((ok) => {
+        if (!ok) { setHash(back); return; }
+        editorTouched = false;
+        lastHash = target;
+        applyRoute(target);
+      });
+      return;
+    }
+
+    lastHash = target;
+    applyRoute(target);
   });
 
+  /* --- Sorotan bagian mengikuti guliran ---
+     Dibatasi lewat waktu, bukan requestAnimationFrame: di tab latar belakang
+     frame tidak pernah datang, dan penanda "sedang diproses" ala rAF bisa
+     tersangkut selamanya sehingga sorotannya mati diam-diam. */
+  let spyAt = 0;
+  let spyTimer = null;
+  const runSpy = () => { spyAt = Date.now(); syncActiveSection(); };
+  const onScroll = () => {
+    clearTimeout(spyTimer);
+    if (Date.now() - spyAt >= 80) runSpy();
+    else spyTimer = setTimeout(runSpy, 80);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", () => { syncEditorMetrics(); syncActiveSection(); });
+
+  const bar = $("editor-bar");
+  if (bar && "ResizeObserver" in window) new ResizeObserver(syncEditorMetrics).observe(bar);
+
   window.addEventListener("beforeunload", (e) => {
-    if (!dirty) return;
+    if (!dirty && !editorTouched) return;
     e.preventDefault();
     e.returnValue = "";
     return "";
@@ -2614,8 +2768,10 @@ async function init() {
   setSaveState("saved");
   renderAll();
 
-  const fromHash = (location.hash || "").replace(/^#\/?/, "");
-  setView(VIEWS.includes(fromHash) ? fromHash : "dashboard", { hash: false });
+  lastHash = location.hash;
+  const route = parseRoute(location.hash);
+  if (route.kind === "editor") openVehicle(route.col, route.id);
+  else setView(route.view, { hash: false });
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

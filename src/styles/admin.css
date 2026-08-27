@@ -1204,9 +1204,9 @@
 .field input,
 .field select,
 .field textarea,
-.modal-pane input,
-.modal-pane select,
-.modal-pane textarea {
+.editor-section input,
+.editor-section select,
+.editor-section textarea {
   width: 100%;
   padding: 10px 12px;
   background: var(--bg);
@@ -1631,6 +1631,11 @@
   min-height: 0;
 }
 
+.modal-head,
+.modal-foot {
+  flex: none;
+}
+
 .modal-head {
   display: flex;
   align-items: center;
@@ -1700,97 +1705,12 @@
   background: var(--bg);
 }
 
-.modal-tabs {
-  display: flex;
-  gap: 2px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.modal-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.modal-tab {
-  position: relative;
-  flex: none;
-  min-height: 40px;
-  padding: 10px 14px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color var(--adm-t);
-}
-
-.modal-tab::after {
-  content: "";
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: transparent;
-  transition: background var(--adm-t);
-}
-
-.modal-tab:hover {
-  color: var(--text);
-}
-
-.modal-tab:focus-visible {
-  outline: none;
-  box-shadow: var(--adm-ring);
-}
-
-.modal-tab.active {
-  color: var(--accent-ink, var(--accent));
-}
-
-.modal-tab.active::after {
-  background: var(--accent);
-}
-
-.modal-tab .tab-count {
-  display: inline-block;
-  margin-left: 5px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: var(--adm-surface-2);
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  vertical-align: 1px;
-}
-
-.modal-tab .tab-count:empty {
-  display: none;
-}
-
-.modal-tab .tab-count.is-empty {
-  opacity: 0.55;
-}
-
-.modal-pane[hidden] {
-  display: none;
-}
 
 /* --- Meter kelengkapan editor --- */
 .editor-meter {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
 }
 
 .editor-meter:empty {
@@ -1872,6 +1792,254 @@
 .chip:focus-visible {
   outline: none;
   box-shadow: var(--adm-ring);
+}
+
+/* =========================================================================
+   10b. Halaman editor kendaraan
+
+   Mobil & motor punya 30+ isian. Alih-alih menumpuknya di popup bertab,
+   semuanya tampil sekaligus sebagai bagian-bagian yang bisa digulir, dengan
+   rel navigasi lengket di samping yang menandai bagian mana yang sedang
+   dibaca dan berapa isian tiap bagian yang sudah terisi.
+   ========================================================================= */
+
+.view-editor {
+  --editor-bar-h: 104px;
+  --editor-rail-h: 0px;
+  display: block;
+}
+
+/* Bilah aksi: menempel di bawah topbar supaya Simpan dan indikator
+   kelengkapan selalu terlihat sejauh apa pun formulir digulir. */
+.editor-bar {
+  position: sticky;
+  top: var(--adm-top);
+  z-index: 25;
+  margin: -24px -24px 20px;
+  padding: 16px 24px 12px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editor-back {
+  flex: none;
+}
+
+.editor-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.editor-eyebrow {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.editor-title {
+  margin-top: 1px;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-bar-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-sub {
+  margin: 6px 0 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.editor-layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.editor-rail {
+  position: sticky;
+  top: calc(var(--adm-top) + var(--editor-bar-h) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.editor-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.editor-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--adm-r-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--adm-t), color var(--adm-t);
+}
+
+.editor-nav-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-nav-item:hover {
+  background: var(--adm-surface);
+  color: var(--text);
+}
+
+.editor-nav-item:focus-visible {
+  outline: none;
+  box-shadow: var(--adm-ring);
+}
+
+.editor-nav-item.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink, var(--accent));
+}
+
+.editor-nav-count {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--adm-surface-2);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.editor-nav-count:empty {
+  display: none;
+}
+
+.editor-nav-count.is-empty {
+  opacity: 0.5;
+}
+
+.editor-nav-count.is-done {
+  background: color-mix(in srgb, var(--adm-ok) 20%, transparent);
+  color: var(--adm-ok);
+}
+
+.editor-preview {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r);
+  background: var(--bg-card);
+}
+
+.editor-preview-label {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Pratinjau memakai markup baris daftar, tapi di rel sempit ia harus menumpuk. */
+.editor-preview .item-row {
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  cursor: default;
+}
+
+.editor-preview .item-row .row-main {
+  flex: 1 1 100%;
+}
+
+.editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.editor-section {
+  scroll-margin-top: calc(var(--adm-top) + var(--editor-bar-h) + var(--editor-rail-h) + 16px);
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  background: var(--bg-card);
+  box-shadow: var(--adm-shadow-sm);
+}
+
+.editor-section-head {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-section-head h2 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.editor-section-head p {
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.editor-subsection {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border);
+}
+
+.editor-subsection:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.editor-subsection h3 {
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.editor-subsection > .hint {
+  margin-bottom: 10px;
 }
 
 /* =========================================================================
@@ -2719,6 +2887,66 @@ body:has(.modal-backdrop.open) .fab {
     width: 100%;
   }
 
+  /* Editor: rel samping berubah jadi deretan pintasan mendatar yang ikut
+     menempel di bawah bilah aksi. Kartu pratinjau disembunyikan supaya
+     ruang layar habis untuk formulirnya sendiri. */
+  .editor-bar {
+    margin: -18px -14px 16px;
+    padding: 12px 14px 10px;
+  }
+
+  .editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .editor-rail {
+    position: sticky;
+    top: calc(var(--adm-top) + var(--editor-bar-h));
+    z-index: 24;
+    margin: 0 -14px 14px;
+    padding: 7px 14px;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Sisi kanan diredupkan sebagai petunjuk bahwa deretan pintasan
+     masih bisa digeser. */
+  .editor-nav {
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-right: 20px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent);
+  }
+
+  .editor-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .editor-nav-item {
+    flex: none;
+    min-height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .editor-nav-item.active {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .editor-preview {
+    display: none;
+  }
+
+  .editor-section {
+    padding: 18px 16px;
+  }
+
   .modal-backdrop {
     padding: 0;
     align-items: stretch;
@@ -2742,13 +2970,6 @@ body:has(.modal-backdrop.open) .fab {
     min-height: 0;
   }
 
-  .modal-head,
-  .modal-tabs,
-  .editor-meter,
-  .modal-foot {
-    flex: none;
-  }
-
   .modal-body {
     flex: 1;
     min-height: 0;
@@ -2758,18 +2979,6 @@ body:has(.modal-backdrop.open) .fab {
 
   .modal-foot {
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
-  }
-
-  .modal-tab {
-    min-height: 46px;
-  }
-
-  /* Sisi kanan digelapkan sedikit sebagai petunjuk bahwa deretan tab
-     masih bisa digeser. */
-  .modal-tabs {
-    padding-right: 24px;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
   }
 
   /* Tombol melayang hanya berguna di layar sempit; disembunyikan saat modal terbuka. */
@@ -2800,9 +3009,9 @@ body:has(.modal-backdrop.open) .fab {
   .field input,
   .field select,
   .field textarea,
-  .modal-pane input,
-  .modal-pane select,
-  .modal-pane textarea,
+  .editor-section input,
+  .editor-section select,
+  .editor-section textarea,
   .repeater-row > input,
   .repeater-row > select,
   .search-input {
@@ -2811,13 +3020,13 @@ body:has(.modal-backdrop.open) .fab {
 
   .field input,
   .field select,
-  .modal-pane input:not([type="checkbox"]):not([type="color"]),
-  .modal-pane select {
+  .editor-section input:not([type="checkbox"]):not([type="color"]),
+  .editor-section select {
     min-height: 46px;
   }
 
   .field textarea,
-  .modal-pane textarea {
+  .editor-section textarea {
     min-height: 110px;
   }
 
@@ -2843,13 +3052,48 @@ body:has(.modal-backdrop.open) .fab {
     justify-content: center;
   }
 
-  .modal-foot #vehicle-save-add {
-    flex-basis: 100%;
-    order: -1;
-  }
-
   .editor-meter-text {
     font-size: 11.5px;
+  }
+
+  /* Judul dan panah kembali di baris pertama, tombol simpan di baris kedua —
+     muat tanpa memotong apa pun, dan tetap terjangkau ibu jari. */
+  .editor-bar {
+    padding: 8px 14px 8px;
+  }
+
+  .editor-bar-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Judulnya sudah menyebut jenis dan mode ("Tambah Motor Baru"), jadi baris
+     kecil di atasnya cuma mengulang dan memakan tinggi layar. */
+  .editor-eyebrow,
+  .editor-sub {
+    display: none;
+  }
+
+  .editor-title {
+    font-size: 17px;
+  }
+
+  .editor-bar-actions {
+    flex: 1 1 100%;
+  }
+
+  .editor-bar-actions .btn {
+    flex: 1;
+    min-height: 42px;
+    justify-content: center;
+  }
+
+  .editor-cancel {
+    display: none;
+  }
+
+  .editor-section-head {
+    margin-bottom: 14px;
   }
 
   /* Baris repeater: dua input turun ke bawah, tombolnya tetap sebaris. */
@@ -2872,12 +3116,6 @@ body:has(.modal-backdrop.open) .fab {
   .chip {
     font-size: 13px;
     padding: 7px 12px;
-  }
-
-  .modal-tab {
-    padding-left: 10px;
-    padding-right: 10px;
-    font-size: 13px;
   }
 
   /* Tombol aksi baris daftar dibuat cukup besar untuk disentuh. */
@@ -3598,8 +3836,8 @@ body:has(.modal-backdrop.open) .fab {
    radio, dan berkas perlu dikembalikan ke ukuran wajarnya. */
 .field input[type="checkbox"],
 .field input[type="radio"],
-.modal-pane input[type="checkbox"],
-.modal-pane input[type="radio"] {
+.editor-section input[type="checkbox"],
+.editor-section input[type="radio"] {
   width: 17px;
   height: 17px;
   padding: 0;
@@ -3610,7 +3848,7 @@ body:has(.modal-backdrop.open) .fab {
 }
 
 .field input[type="file"],
-.modal-pane input[type="file"] {
+.editor-section input[type="file"] {
   padding: 8px 10px;
   font-size: 13px;
   cursor: pointer;

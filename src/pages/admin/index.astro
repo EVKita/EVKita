@@ -626,6 +626,50 @@ if (!isAuthed(Astro.cookies)) {
         <div id="media-grid"></div>
       </section>
 
+      <!-- ===== Editor Kendaraan =====
+           Mobil & motor punya 30+ isian dalam lima kelompok — terlalu banyak
+           untuk sebuah popup. Editornya jadi halaman tersendiri dengan alamat
+           sendiri (#/cars/new, #/cars/edit/<id>), jadi tombol Kembali browser,
+           penanda halaman, dan berbagi tautan semuanya bekerja. -->
+      <section class="view view-editor" data-view="editor" hidden>
+        <div class="editor-bar" id="editor-bar">
+          <div class="editor-bar-row">
+            <button type="button" class="btn btn-icon editor-back" id="editor-back" aria-label="Kembali ke daftar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18 9 12l6-6"/></svg>
+            </button>
+            <div class="editor-titles">
+              <span class="editor-eyebrow" id="editor-eyebrow"></span>
+              <h1 class="editor-title" id="editor-title">Tambah Mobil</h1>
+            </div>
+            <div class="editor-bar-actions">
+              <button type="button" class="btn btn-ghost editor-cancel" id="editor-cancel">Batal</button>
+              <button type="button" class="btn btn-outline" id="editor-save-add" hidden>Simpan &amp; Tambah Lagi</button>
+              <button type="submit" form="vehicle-form" class="btn btn-primary" id="editor-save">Simpan</button>
+            </div>
+          </div>
+          <p class="editor-sub" id="editor-sub"></p>
+          <div class="editor-meter" id="vehicle-meter"></div>
+        </div>
+
+        <div class="editor-layout">
+          <aside class="editor-rail">
+            <nav class="editor-nav" id="editor-nav" aria-label="Bagian formulir"></nav>
+            <div class="editor-preview">
+              <div class="editor-preview-label">Pratinjau di katalog</div>
+              <div class="item-row" id="vehicle-preview"></div>
+            </div>
+          </aside>
+
+          <form id="vehicle-form" class="editor-form" novalidate>
+            <section class="editor-section" data-section="dasar"></section>
+            <section class="editor-section" data-section="spesifikasi"></section>
+            <section class="editor-section" data-section="media"></section>
+            <section class="editor-section" data-section="varian"></section>
+            <section class="editor-section" data-section="lanjutan"></section>
+          </form>
+        </div>
+      </section>
+
       <!-- ===== Cadangan ===== -->
       <section class="view" data-view="backups" hidden>
         <div class="view-head">
@@ -642,41 +686,6 @@ if (!isAuthed(Astro.cookies)) {
         </div>
       </section>
     </main>
-  </div>
-
-  <!-- ===== Modal kendaraan ===== -->
-  <div id="vehicle-modal" class="modal-backdrop">
-    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
-      <div class="modal-head">
-        <div class="modal-head-text">
-          <h3 class="modal-title" id="vehicle-modal-title">Tambah Mobil</h3>
-          <p class="modal-sub" id="vehicle-modal-sub"></p>
-        </div>
-        <button type="button" class="modal-close" id="vehicle-modal-close" aria-label="Tutup">&times;</button>
-      </div>
-      <form id="vehicle-form">
-        <div class="modal-tabs" role="tablist">
-          <button type="button" class="modal-tab active" data-mtab="dasar">Dasar <span class="tab-count"></span></button>
-          <button type="button" class="modal-tab" data-mtab="spesifikasi">Spesifikasi <span class="tab-count"></span></button>
-          <button type="button" class="modal-tab" data-mtab="media">Media <span class="tab-count"></span></button>
-          <button type="button" class="modal-tab" data-mtab="varian">Varian <span class="tab-count"></span></button>
-          <button type="button" class="modal-tab" data-mtab="lanjutan">Lanjutan <span class="tab-count"></span></button>
-        </div>
-        <div class="editor-meter" id="vehicle-meter"></div>
-        <div class="modal-body">
-          <div class="modal-pane" data-mpane="dasar"></div>
-          <div class="modal-pane" data-mpane="spesifikasi" hidden></div>
-          <div class="modal-pane" data-mpane="media" hidden></div>
-          <div class="modal-pane" data-mpane="varian" hidden></div>
-          <div class="modal-pane" data-mpane="lanjutan" hidden></div>
-        </div>
-        <div class="modal-foot">
-          <button type="button" class="btn btn-ghost" id="vehicle-cancel" data-close-modal>Batal</button>
-          <button type="button" class="btn btn-outline" id="vehicle-save-add" hidden>Simpan &amp; Tambah Lagi</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
   </div>
 
   <!-- ===== Modal direktori (SPKLU / bengkel / berita) ===== -->
