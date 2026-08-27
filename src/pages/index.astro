@@ -4,6 +4,7 @@ import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import { readContent } from "../lib/store";
 import { carSVG, defaultColor } from "../lib/cars-ui.js";
+import { safeUrl } from "../lib/url.js";
 
 const content = readContent();
 const { site } = content;
@@ -89,10 +90,10 @@ const jsonLd = {
       {site.heroCtaText || site.heroCtaAltText ? (
         <div class="hero-cta enter">
           {site.heroCtaText ? (
-            <a class="btn btn-primary btn-lg" href={site.heroCtaUrl || "#daftar"}>{site.heroCtaText}</a>
+            <a class="btn btn-primary btn-lg" href={safeUrl(site.heroCtaUrl) || "#daftar"}>{site.heroCtaText}</a>
           ) : null}
           {site.heroCtaAltText ? (
-            <a class="btn btn-outline btn-lg" href={site.heroCtaAltUrl || "#tentang"}>{site.heroCtaAltText}</a>
+            <a class="btn btn-outline btn-lg" href={safeUrl(site.heroCtaAltUrl) || "#tentang"}>{site.heroCtaAltText}</a>
           ) : null}
         </div>
       ) : null}
@@ -117,7 +118,7 @@ const jsonLd = {
               <a class="feature-card" href={f.kind === "mobil" ? `/mobil/${f.id}` : "#daftar"}>
                 <div class="feature-media">
                   {f.image ? (
-                    <img src={f.image} alt={`${f.brand} ${f.name}`} loading="lazy" decoding="async" />
+                    <img src={safeUrl(f.image)} alt={`${f.brand} ${f.name}`} loading="lazy" decoding="async" />
                   ) : (
                     <div class="feature-svg" set:html={carSVG(f, defaultColor(f))} />
                   )}
@@ -266,8 +267,8 @@ const jsonLd = {
                 </ul>
                 {s.note ? <p class="dir-note">{s.note}</p> : null}
                 <div class="dir-actions">
-                  {s.website ? <a class="dir-link" href={s.website} target="_blank" rel="noopener">Situs resmi →</a> : null}
-                  {s.mapUrl ? <a class="dir-link ghost" href={s.mapUrl} target="_blank" rel="noopener">Buka peta</a> : null}
+                  {safeUrl(s.website) ? <a class="dir-link" href={safeUrl(s.website)} target="_blank" rel="noopener">Situs resmi →</a> : null}
+                  {safeUrl(s.mapUrl) ? <a class="dir-link ghost" href={safeUrl(s.mapUrl)} target="_blank" rel="noopener">Buka peta</a> : null}
                 </div>
               </article>
             ))}
@@ -307,9 +308,9 @@ const jsonLd = {
                 </ul>
                 {b.note ? <p class="dir-note">{b.note}</p> : null}
                 <div class="dir-actions">
-                  {b.website ? <a class="dir-link" href={b.website} target="_blank" rel="noopener">Situs resmi →</a> : null}
+                  {safeUrl(b.website) ? <a class="dir-link" href={safeUrl(b.website)} target="_blank" rel="noopener">Situs resmi →</a> : null}
                   {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>Telepon</a> : null}
-                  {b.mapUrl ? <a class="dir-link ghost" href={b.mapUrl} target="_blank" rel="noopener">Buka peta</a> : null}
+                  {safeUrl(b.mapUrl) ? <a class="dir-link ghost" href={safeUrl(b.mapUrl)} target="_blank" rel="noopener">Buka peta</a> : null}
                 </div>
               </article>
             ))}
@@ -329,9 +330,9 @@ const jsonLd = {
           </div>
           <div class="news-grid">
             {beritaList.map((n: any) => (
-              <a class={`news-card${n.featured ? " is-featured" : ""}`} href={n.url || "#"} target={n.url ? "_blank" : undefined} rel={n.url ? "noopener" : undefined}>
+              <a class={`news-card${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
                 {n.image ? (
-                  <div class="news-thumb"><img src={n.image} alt="" loading="lazy" /></div>
+                  <div class="news-thumb"><img src={safeUrl(n.image)} alt="" loading="lazy" /></div>
                 ) : null}
                 <div class="news-body">
                   <div class="news-top">

@@ -287,6 +287,7 @@ export default {
   "editor.meter": "完成度 {pct}%",
   "editor.meterDetail": "已填写 {total} 项中的 {filled} 项",
   "editor.presetHint": "添加现成的规格行",
+  "editor.presetQuickAdd": "快速添加：",
   "editor.autoFromBrand": "根据品牌和名称自动生成",
   "editor.addSpecRow": "添加规格行",
   "editor.addColor": "添加颜色",
@@ -469,6 +470,7 @@ export default {
   /* ---------- Palet perintah ---------- */
   "palette.placeholder": "在所有集合中搜索…",
   "palette.emptyText": "换个关键词试试。",
+  "palette.startHint": "输入汽车、摩托车、充电站、维修店或新闻的名称。",
 
   /* ---------- Halaman masuk ---------- */
   "login.pageTitle": "管理员登录",
@@ -569,6 +571,8 @@ export default {
   "err.emailInvalid": "邮箱格式无效。",
   "err.userNotFound": "找不到该用户。",
   "err.lastOwner": "至少需要保留一位所有者。",
+  "err.uploadNoFile": "没有收到图片文件。",
+  "err.uploadType": "不支持 {type} 类型的文件。请使用 JPG、PNG、WebP 或 GIF。",
 
   /* ---------- Tambahan editor & umum ---------- */
   "upload.dropHere": "点击，或把图片拖到此处",
@@ -582,6 +586,7 @@ export default {
   "editor.mainImage": "主图",
   "editor.mainImage.hint": "点击选择文件，或把图片拖到此框中。",
   "editor.gallery": "相册",
+  "editor.galleryEmpty": "相册还是空的。",
   "editor.gallery.drop": "点击，或一次拖入多张图片",
   "editor.gallery.hint": "拖动预览图即可调整显示顺序。",
   "editor.colorsTitle": "颜色选项",

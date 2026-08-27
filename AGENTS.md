@@ -41,11 +41,16 @@ atau perubahannya tidak menyentuh apa pun yang ikut ke dalam paket rilis
 3. **Push ke `main`.** Push ke `main` otomatis menjalankan
    `.github/workflows/release.yml`, yang mengerjakan:
    - menaikkan versi `patch` di `package.json` (1.0.3 → 1.0.4)
-   - `npm run build`
-   - `npm prune --omit=dev`
-   - mengemas `dist/`, `node_modules/`, `package.json`, `ecosystem.config.cjs`,
-     `deploy.sh`, `install.sh`, `.env.example`, dan `data/content.json` menjadi **`evkita.zip`**
+   - `npm run build` (yang menjalankan `npm run i18n:check` lebih dulu)
+   - mengemas `dist/`, `package.json`, `package-lock.json`,
+     `ecosystem.config.cjs`, `deploy.sh`, `install.sh`, `.env.example`, dan
+     `data/content.json` menjadi **`evkita.zip`**
    - membuat tag `vX.Y.Z` dan **GitHub Release** berisi zip tadi
+
+   `node_modules/` **tidak** ikut ke dalam zip, dan tidak ada langkah
+   `npm prune`: seluruh dependensi runtime sudah dibundel ke dalam `dist/`
+   lewat `vite.ssr.noExternal` di `astro.config.mjs`. Membawanya berarti
+   mengirim ±186 MB toolchain build yang tidak pernah dipakai server.
 
    Untuk kenaikan **minor/major**, atau kalau perlu catatan rilis tambahan,
    jalankan lewat **Actions → Release → Run workflow** dan pilih

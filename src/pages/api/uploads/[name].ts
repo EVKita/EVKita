@@ -28,11 +28,22 @@ export const GET: APIRoute = ({ params }) => {
   const mime = MIME_BY_EXT[ext] || "application/octet-stream";
   const buf = fs.readFileSync(file);
 
-  return new Response(buf, {
-    status: 200,
-    headers: {
-      "Content-Type": mime,
-      "Cache-Control": "public, max-age=31536000, immutable",
-    },
-  });
+  const headers: Record<string, string> = {
+    "Content-Type": mime,
+    "Cache-Control": "public, max-age=31536000, immutable",
+    // Tanpa ini peramban boleh menebak tipe isi dan mengabaikan Content-Type di
+    // atas — berkas yang tersimpan sebagai .jpg tapi isinya HTML bisa berakhir
+    // dijalankan sebagai halaman.
+    "X-Content-Type-Options": "nosniff",
+  };
+
+  // SVG tidak lagi bisa diunggah (lihat api/upload.ts), tapi berkas yang
+  // terlanjur ada dari sebelum aturan itu tetap tersaji. `sandbox` tanpa
+  // `allow-scripts` memberinya origin buram dan mematikan skrip di dalamnya,
+  // jadi logo lama tetap tampil sementara isinya kehilangan gigi.
+  if (ext === ".svg") {
+    headers["Content-Security-Policy"] = "sandbox; default-src 'none'; style-src 'unsafe-inline'";
+  }
+
+  return new Response(buf, { status: 200, headers });
 };

@@ -288,6 +288,7 @@ export default {
   "editor.meter": "{pct}% complete",
   "editor.meterDetail": "{filled} of {total} details filled in",
   "editor.presetHint": "Add a ready-made spec row",
+  "editor.presetQuickAdd": "Quick add:",
   "editor.autoFromBrand": "auto from brand & name",
   "editor.addSpecRow": "Add spec row",
   "editor.addColor": "Add colour",
@@ -470,6 +471,7 @@ export default {
   /* ---------- Palet perintah ---------- */
   "palette.placeholder": "Search across all collections…",
   "palette.emptyText": "Try a different keyword.",
+  "palette.startHint": "Type the name of a car, motorbike, charging station, workshop, or news item.",
 
   /* ---------- Halaman masuk ---------- */
   "login.pageTitle": "Admin Sign In",
@@ -570,6 +572,8 @@ export default {
   "err.emailInvalid": "That email address is not valid.",
   "err.userNotFound": "User not found.",
   "err.lastOwner": "There must be at least one owner.",
+  "err.uploadNoFile": "No image file was sent.",
+  "err.uploadType": "File type {type} is not supported. Use JPG, PNG, WebP, or GIF.",
 
   /* ---------- Tambahan editor & umum ---------- */
   "upload.dropHere": "Click, or drag an image here",
@@ -583,6 +587,7 @@ export default {
   "editor.mainImage": "Main Image",
   "editor.mainImage.hint": "Click to pick a file, or drag an image onto this box.",
   "editor.gallery": "Gallery",
+  "editor.galleryEmpty": "The gallery is still empty.",
   "editor.gallery.drop": "Click, or drag several images here at once",
   "editor.gallery.hint": "Drag the previews to change the display order.",
   "editor.colorsTitle": "Colour Options",

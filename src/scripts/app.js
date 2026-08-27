@@ -1,6 +1,7 @@
 "use strict";
 
 import { paletteFor, defaultColor, carSVG } from "../lib/cars-ui.js";
+import { safeUrl as allowedUrl } from "../lib/url.js";
 
 let EV_CARS = [];
 let MOTORS = [];
@@ -20,12 +21,13 @@ function esc(v) {
     .replace(/'/g, "&#39;");
 }
 
-/** URL di dalam atribut: tolak skema yang bisa mengeksekusi skrip. */
+/**
+ * URL di dalam atribut: tolak skema yang bisa mengeksekusi skrip, lalu ubah
+ * hasilnya untuk HTML. Daftar skemanya ada di src/lib/url.js supaya halaman
+ * yang dirender server memakai aturan yang sama persis.
+ */
 function safeUrl(v) {
-  const s = String(v || "").trim();
-  if (!s) return "";
-  if (/^(https?:|mailto:|tel:|\/|\.\/|#|data:image\/)/i.test(s)) return esc(s);
-  return "";
+  return esc(allowedUrl(v));
 }
 
 const PRICE_BUCKETS = [

@@ -1,5 +1,6 @@
 ---
 import ThemeToggle from "./ThemeToggle.astro";
+import { safeUrl } from "../lib/url.js";
 
 /**
  * Header dipakai beranda dan halaman detail. `base` diisi "/" dari halaman
@@ -49,7 +50,7 @@ const ICONS: Record<string, string> = {
   <div class="container masthead-inner">
     <a href={base || "/"} class="logo" aria-label={`${brand}${suffix} — beranda`}>
       {site.logoImage ? (
-        <img class="logo-img" src={site.logoImage} alt="" width="40" height="40" />
+        <img class="logo-img" src={safeUrl(site.logoImage)} alt="" width="40" height="40" />
       ) : (
         <span class="logo-mark">{mark}</span>
       )}

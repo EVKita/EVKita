@@ -16,8 +16,16 @@
  *   3. Ada terjemahan yang masih persis sama dengan teks Indonesianya padahal
  *      teksnya mengandung huruf — biasanya tanda hasil salin-tempel yang lupa
  *      diterjemahkan. Kecualikan lewat daftar SAMA_SENGAJA di bawah.
+ *   4. Ada kalimat yang ditulis LANGSUNG di kode panel, tanpa pernah menjadi
+ *      kunci. Kecualikan lewat KONSTAN_DATA / ABAIKAN_LITERAL di bawah.
  *
  * Yang hanya jadi peringatan: kunci yang tidak pernah dipakai di kode.
+ *
+ * Catatan soal pemeriksaan nomor 4: selama pemeriksaan ini belum ada, tiga
+ * kalimat berhasil lolos ke panel tanpa terjemahan — "Galeri masih kosong.",
+ * "Cepat tambah:", dan teks pembuka pencarian global. Memeriksa kunci saja
+ * tidak cukup: teks yang tidak pernah menjadi kunci tidak akan pernah muncul
+ * sebagai kunci yang hilang.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -204,6 +212,80 @@ for (const key of idKeys) {
   if (used.has(key)) continue;
   if (DYNAMIC_PREFIXES.some((p) => key.startsWith(p))) continue;
   warnings.push(`Kunci "${key}" tidak terpakai di kode mana pun`);
+}
+
+/* 7. Kalimat yang ditulis langsung di kode panel. */
+
+/**
+ * Berkas yang teksnya WAJIB berasal dari kamus. Situs publik sengaja tidak
+ * ikut: ia memang hanya berbahasa Indonesia.
+ */
+const PANEL_FILES = [
+  "src/scripts/admin.js",
+  "src/scripts/admin-shell.js",
+  "src/pages/admin/index.astro",
+  "src/pages/admin/login.astro",
+  "src/pages/admin/update.astro",
+];
+
+/**
+ * Deklarasi yang isinya DATA, bukan antarmuka: nilainya tersimpan apa adanya
+ * ke content.json dan ikut tampil di situs publik yang berbahasa Indonesia.
+ * Menerjemahkannya akan mengubah isi database. Baris di dalamnya dilewati.
+ */
+const KONSTAN_DATA = new Set([
+  "CAR_BODY_TYPES",
+  "MOTOR_BODY_TYPES",
+  "RANGE_STANDARDS",
+  "DRIVE_TYPES",
+  "BRAND_SUGGESTIONS",
+  "SPEC_PRESETS",
+  "FONTS",
+]);
+
+/** Kalimat yang memang tidak diterjemahkan, ditulis persis apa adanya. */
+const ABAIKAN_LITERAL = new Set([
+  "Rp 22 jt",
+  "Rp 415 jt",
+]);
+
+/* Dua bentuk yang benar-benar berisiko: teks di antara dua tag, dan string
+   yang seluruhnya berupa kalimat. Keduanya sengaja menolak karakter kode
+   (<, >, =, {, $, kutip) supaya regex dan potongan markup tidak ikut tertangkap. */
+const TEKS_ANTAR_TAG = />([^<>{}$`"'=]*[A-Za-zÀ-ÿ]{2,}\s+[A-Za-zÀ-ÿ]{2,}[^<>{}$`"'=]*)</g;
+const KALIMAT_UTUH = /(["'])([A-ZÀ-Ý][A-Za-zÀ-ÿ]+(?:[ ,.…]+[A-Za-zÀ-ÿ0-9]+)+[.!?…]?)\1/g;
+
+for (const rel of PANEL_FILES) {
+  const full = path.join(ROOT, rel);
+  if (!fs.existsSync(full)) continue;
+
+  const lines = fs.readFileSync(full, "utf8").split(/\r?\n/);
+  let konstanSekarang = "";
+
+  lines.forEach((line, i) => {
+    // Lacak deklarasi yang sedang dibuka, supaya daftar data multi-baris
+    // (BRAND_SUGGESTIONS, SPEC_PRESETS) ikut terlewati seluruhnya.
+    const buka = line.match(/^const\s+(\w+)/);
+    if (buka) konstanSekarang = buka[1];
+    else if (/^[}\]);]/.test(line) || line.trim() === "") konstanSekarang = "";
+    if (KONSTAN_DATA.has(konstanSekarang)) return;
+
+    const trimmed = line.trim();
+    if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) return;
+
+    for (const re of [TEKS_ANTAR_TAG, KALIMAT_UTUH]) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(line))) {
+        const teks = (m[1] === '"' || m[1] === "'" ? m[2] : m[1]).trim();
+        if (!teks || ABAIKAN_LITERAL.has(teks)) continue;
+        errors.push(
+          `${rel}:${i + 1} menulis teks panel langsung di kode: "${teks}" — ` +
+            `beri kunci di ketiga kamus lalu panggil lewat t()`
+        );
+      }
+    }
+  });
 }
 
 for (const w of warnings) console.log(YELLOW("peringatan: ") + w);

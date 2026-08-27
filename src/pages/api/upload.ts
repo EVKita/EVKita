@@ -3,41 +3,51 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { isAuthed } from "../../lib/auth";
+import { json, apiError, unauthorized } from "../../lib/api";
 
 const UPLOAD_DIR = path.resolve(process.cwd(), "data", "uploads");
 
+/**
+ * Tipe berkas yang boleh diunggah.
+ *
+ * `image/svg+xml` SENGAJA TIDAK ADA di sini. SVG boleh berisi `<script>`, dan
+ * berkas unggahan disajikan kembali dari domain yang sama dengan `/admin` —
+ * jadi satu berkas SVG yang diunggah peran Editor bisa berjalan dengan hak
+ * panel begitu ada admin yang membukanya, lalu memanggil `/api/users` atas
+ * namanya. Cookie `httpOnly` tidak menolong: skripnya tidak perlu membaca
+ * cookie, cukup memanggil API dari origin yang sudah terautentikasi.
+ */
 const MIME_EXT: Record<string, string> = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
   "image/webp": ".webp",
   "image/gif": ".gif",
-  "image/svg+xml": ".svg",
 };
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
 export const POST: APIRoute = async ({ request, cookies }) => {
-  if (!isAuthed(cookies)) return json({ ok: false, error: "Unauthorized" }, 401);
+  if (!isAuthed(cookies)) return unauthorized();
 
   let form: FormData;
   try {
     form = await request.formData();
   } catch {
-    return json({ ok: false, error: "Data tidak valid" }, 400);
+    return apiError("err.badJson");
   }
 
   const file = form.get("image");
   if (!file || typeof file === "string" || !("arrayBuffer" in file)) {
-    return json({ ok: false, error: "Tidak ada file gambar" }, 400);
+    return apiError("err.uploadNoFile");
   }
 
-  const type = file.type || "image/jpeg";
-  const ext = MIME_EXT[type] || ".jpg";
+  // Tipe yang tidak dikenali DITOLAK, bukan disimpan diam-diam sebagai .jpg.
+  // Nilai bawaan yang lama membuat berkas apa pun — termasuk SVG yang baru saja
+  // dikeluarkan dari daftar di atas — tetap tersimpan, cuma dengan nama lain.
+  const type = String(file.type || "").toLowerCase();
+  const ext = MIME_EXT[type];
+  if (!ext) {
+    return apiError("err.uploadType", 400, { type: type || "?" });
+  }
+
   const name = crypto.randomBytes(8).toString("hex") + ext;
 
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });

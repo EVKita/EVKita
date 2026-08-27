@@ -195,6 +195,23 @@ export function listPublicUsers(): PublicUser[] {
   return listUsers().map(publicUser);
 }
 
+/**
+ * Apakah pemasangan ini sudah punya akun?
+ *
+ * Dipakai wizard `/install` sebagai syarat kedua di samping `SESSION_SECRET`:
+ * kalau `.env` hilang tapi `data/users.json` selamat, wizard TIDAK boleh
+ * terbuka lagi — pengunjung pertama yang menemukannya bisa membuat akun
+ * pemilik baru di pemasangan yang sudah berisi konten. Kunci sesi yang
+ * benar-benar hilang harus dipulihkan lewat SSH, bukan lewat halaman publik.
+ *
+ * Sengaja membaca berkas langsung, bukan lewat `listUsers()`: yang terakhir
+ * ikut menjalankan `seedFromEnv()`, dan pertanyaan di sini adalah tentang
+ * berkas yang benar-benar ada di disk.
+ */
+export function hasAnyUser(): boolean {
+  return readFile().length > 0;
+}
+
 export function findById(id: string): User | null {
   return listUsers().find((u) => u.id === id) || null;
 }
@@ -261,10 +278,28 @@ export function touchLogin(id: string): void {
  */
 export type Capability = "users" | "update" | "backups";
 
+/**
+ * Peran mana yang boleh melakukan apa, ditulis lengkap.
+ *
+ * Sebelumnya `can()` mengabaikan argumen `capability` dan hanya memeriksa
+ * "admin atau pemilik?" — ketiga kemampuan runtuh jadi satu. Tidak ada celah
+ * saat itu, tapi kemampuan keempat yang ditambahkan nanti akan otomatis
+ * terbuka untuk admin tanpa seorang pun memutuskannya. Dengan peta ini,
+ * menambah kemampuan berarti menuliskan siapa yang boleh memakainya.
+ */
+const CAPABILITY_ROLES: Record<Capability, readonly Role[]> = {
+  users: ["owner", "admin"],
+  update: ["owner", "admin"],
+  backups: ["owner", "admin"],
+};
+
 export function can(user: { role: Role } | null, capability: Capability): boolean {
   if (!user) return false;
-  if (user.role === "owner" || user.role === "admin") return true;
-  return false;
+  const allowed = CAPABILITY_ROLES[capability];
+  // Kemampuan yang tidak dikenal ditolak, bukan diizinkan. Salah ketik nama
+  // kemampuan harus menutup pintu, bukan membukanya.
+  if (!allowed) return false;
+  return allowed.includes(user.role);
 }
 
 /** Hanya pemilik yang boleh menyentuh akun pemilik. */

@@ -24,7 +24,7 @@ const isAdmin = me.role === "owner" || me.role === "admin";
 const FONTS = ["Inter", "Poppins", "Manrope", "Figtree", "Outfit", "Rubik", "Montserrat", "Nunito", "Plus Jakarta Sans", "Space Grotesk"];
 ---
 
-<Base title={`${t("topbar.adminPanel")} — EVKita`} bodyClass="admin-ui" lang={lang.html}>
+<Base title={`${t("topbar.adminPanel")} — EVKita`} bodyClass="admin-ui" lang={lang.html} noindex>
   <div id="admin-app" class="admin-app" class:list={[{ "density-compact": me.density === "compact" }]}>
     <!-- Lapisan gelap khusus mode drawer (≤900px); klik untuk menutup sidebar. -->
     <div id="sidebar-scrim" class="sidebar-scrim"></div>

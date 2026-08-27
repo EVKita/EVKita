@@ -12,7 +12,27 @@ if (isAuthed(Astro.cookies)) {
  * Halaman ini dibuka sebelum ada sesi, jadi bahasanya diambil dari cookie
  * `evkita_lang` — yang ditulis saat seseorang memilih bahasa di panel atau
  * berhasil masuk. Tanpa cookie, bawaannya tetap Bahasa Indonesia.
+ *
+ * `?lang=` ditangani DI SERVER, bukan cuma oleh skrip di bawah: tautan pemilih
+ * bahasa memang mengarah ke sana, dan tanpa penanganan ini mengekliknya saat
+ * JavaScript tidak jalan hanya memuat ulang halaman yang bahasanya tidak
+ * berubah. Skrip di bawah tinggal mempercepat, bukan menjadi syarat.
  */
+const asked = Astro.url.searchParams.get("lang");
+if (asked) {
+  const picked = normalizeLocale(asked);
+  Astro.cookies.set(LOCALE_COOKIE, picked, {
+    httpOnly: false,
+    sameSite: "lax",
+    path: "/",
+    secure: Astro.url.protocol === "https:",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  // Dialihkan ke URL bersih supaya parameternya tidak menempel di bilah alamat
+  // dan tidak ikut terbawa saat halaman dimuat ulang.
+  return Astro.redirect("/admin/login", 302);
+}
+
 const locale = normalizeLocale(Astro.cookies.get(LOCALE_COOKIE)?.value);
 const t = makeT(locale);
 const lang = localeMeta(locale);
@@ -29,7 +49,7 @@ const texts = {
 };
 ---
 
-<Base title={`${t("login.pageTitle")} — EVKita`} bodyClass="admin-ui" lang={lang.html}>
+<Base title={`${t("login.pageTitle")} — EVKita`} bodyClass="admin-ui" lang={lang.html} noindex>
   <div class="login-page">
     <div class="login-top">
       <div class="lang-switch lang-switch-inline">

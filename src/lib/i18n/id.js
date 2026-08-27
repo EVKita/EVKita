@@ -293,6 +293,7 @@ export default {
   "editor.meter": "{pct}% lengkap",
   "editor.meterDetail": "{filled} dari {total} detail terisi",
   "editor.presetHint": "Tambah baris spesifikasi siap pakai",
+  "editor.presetQuickAdd": "Cepat tambah:",
   "editor.autoFromBrand": "otomatis dari merek & nama",
   "editor.addSpecRow": "Tambah baris spesifikasi",
   "editor.addColor": "Tambah warna",
@@ -475,6 +476,7 @@ export default {
   /* ---------- Palet perintah ---------- */
   "palette.placeholder": "Cari di semua koleksi…",
   "palette.emptyText": "Coba kata kunci lain.",
+  "palette.startHint": "Ketik nama mobil, motor, SPKLU, bengkel, atau berita.",
 
   /* ---------- Halaman masuk ---------- */
   "login.pageTitle": "Masuk Admin",
@@ -575,6 +577,8 @@ export default {
   "err.emailInvalid": "Format email tidak valid.",
   "err.userNotFound": "Pengguna tidak ditemukan.",
   "err.lastOwner": "Harus ada minimal satu pemilik.",
+  "err.uploadNoFile": "Tidak ada berkas gambar yang dikirim.",
+  "err.uploadType": "Tipe berkas {type} tidak didukung. Pakai JPG, PNG, WebP, atau GIF.",
 
   /* ---------- Tambahan editor & umum ---------- */
   "upload.dropHere": "Klik atau seret gambar ke sini",
@@ -588,6 +592,7 @@ export default {
   "editor.mainImage": "Gambar Utama",
   "editor.mainImage.hint": "Klik untuk memilih berkas, atau seret gambar ke kotak ini.",
   "editor.gallery": "Galeri",
+  "editor.galleryEmpty": "Galeri masih kosong.",
   "editor.gallery.drop": "Klik atau seret beberapa gambar sekaligus ke sini",
   "editor.gallery.hint": "Seret pratinjau untuk mengubah urutan tampil.",
   "editor.colorsTitle": "Pilihan Warna",

@@ -2,13 +2,15 @@
 import Base from "../layouts/Base.astro";
 import "../styles/install.css";
 import { isInstalled } from "../lib/env";
+import { hasAnyUser } from "../lib/users";
 
-if (isInstalled()) {
+// Syarat yang sama dengan /api/install: kunci sesi ADA, atau sudah ada akun.
+if (isInstalled() || hasAnyUser()) {
   return Astro.redirect("/admin/login");
 }
 ---
 
-<Base title="Instalasi — EVKita">
+<Base title="Instalasi — EVKita" noindex>
   <div class="install-wrap">
     <div class="install-card">
       <div class="install-brand">EV<span>Kita</span> <small>Installer</small></div>

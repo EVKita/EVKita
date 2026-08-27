@@ -11,6 +11,7 @@ import {
   formatDateTime as i18nDateTime,
   formatRelative,
 } from "../lib/i18n/index.js";
+import { safeUrl } from "../lib/url.js";
 
 /* =============================================================================
  * EVKita — Logika Panel Admin
@@ -1413,8 +1414,12 @@ function rowHtml(col, it, dragEnabled) {
   if (isVehicle(col) && !it.image) badges.push(`<span class="badge badge-muted">${esc(t("badge.noImage"))}</span>`);
 
   const view = col === "cars" ? `<a class="btn btn-ghost btn-sm" href="/mobil/${encodeURIComponent(it.id)}" target="_blank" rel="noopener">${esc(t("common.view"))}</a>` : "";
-  const link = col === "berita" && it.url ? `<a class="btn btn-ghost btn-sm" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(t("common.open"))}</a>` : "";
-  const map = (col === "spklu" || col === "bengkel") && it.mapUrl ? `<a class="btn btn-ghost btn-sm" href="${esc(it.mapUrl)}" target="_blank" rel="noopener">${esc(t("common.map"))}</a>` : "";
+  // Skema disaring lebih dulu: field ini teks bebas, dan esc() tidak menolak
+  // `javascript:`. Tautan yang ditolak tidak dirender sama sekali.
+  const itemUrl = col === "berita" ? safeUrl(it.url) : "";
+  const itemMap = col === "spklu" || col === "bengkel" ? safeUrl(it.mapUrl) : "";
+  const link = itemUrl ? `<a class="btn btn-ghost btn-sm" href="${esc(itemUrl)}" target="_blank" rel="noopener">${esc(t("common.open"))}</a>` : "";
+  const map = itemMap ? `<a class="btn btn-ghost btn-sm" href="${esc(itemMap)}" target="_blank" rel="noopener">${esc(t("common.map"))}</a>` : "";
 
   return `<div class="item-row${selected ? " selected" : ""}" data-col="${esc(col)}" data-id="${esc(it.id)}"${dragEnabled ? "" : ' data-nodrag="1"'}>
     <input type="checkbox" class="row-check" data-check data-col="${esc(col)}" data-id="${esc(it.id)}"${selected ? " checked" : ""} aria-label="${esc(t("common.selectItem", { name: titleOf(col, it) }))}" />
@@ -1743,7 +1748,7 @@ function specPresetHtml(col) {
   const presets = SPEC_PRESETS[col] || [];
   if (!presets.length) return "";
   return `<div class="chip-row" aria-label="${esc(t("editor.presetHint"))}">
-    <span class="chip-row-label">Cepat tambah:</span>
+    <span class="chip-row-label">${esc(t("editor.presetQuickAdd"))}</span>
     ${presets.map((label) => `<button type="button" class="chip" data-spec-preset="${esc(label)}">+ ${esc(label)}</button>`).join("")}
   </div>`;
 }
@@ -1829,7 +1834,7 @@ function renderVehicleSections(item) {
 }
 
 function galleryHtml(list) {
-  if (!list.length) return `<div class="empty-state-text">Galeri masih kosong.</div>`;
+  if (!list.length) return `<div class="empty-state-text">${esc(t("editor.galleryEmpty"))}</div>`;
   return list
     .map((url, i) => `<div class="gallery-item" draggable="true" data-gi="${i}">
       <img src="${esc(url)}" alt="" loading="lazy" />
@@ -2419,7 +2424,7 @@ function renderPalette(q) {
   if (!box) return;
   const results = searchAll(q);
   if (!String(q || "").trim()) {
-    box.innerHTML = `<div class="empty-state-text">Ketik nama mobil, motor, SPKLU, bengkel, atau berita.</div>`;
+    box.innerHTML = `<div class="empty-state-text">${esc(t("palette.startHint"))}</div>`;
     return;
   }
   if (!results.length) {

@@ -2,7 +2,16 @@ import type { APIRoute } from "astro";
 import fs from "node:fs";
 import path from "node:path";
 import { isInstalled, writeEnvFile, getEnv } from "../../lib/env";
-import { createUser, PASSWORD_MIN } from "../../lib/users";
+import { createUser, hasAnyUser, PASSWORD_MIN } from "../../lib/users";
+
+/**
+ * Terpasang kalau kunci sesi ADA, ATAU sudah ada akun di data/users.json.
+ * Dua syarat, bukan satu: `.env` yang hilang setelah pembaruan tidak boleh
+ * membuka kembali wizard di pemasangan yang sudah berisi konten dan akun.
+ */
+function alreadyInstalled(): boolean {
+  return isInstalled() || hasAnyUser();
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -24,7 +33,7 @@ function dataWritable(): boolean {
 
 export const GET: APIRoute = async () => {
   return json({
-    installed: isInstalled(),
+    installed: alreadyInstalled(),
     node: process.version,
     writable: dataWritable(),
     port: getEnv("PORT", "4321"),
@@ -33,7 +42,7 @@ export const GET: APIRoute = async () => {
 };
 
 export const POST: APIRoute = async ({ request }) => {
-  if (isInstalled()) {
+  if (alreadyInstalled()) {
     return json({ ok: false, error: "Aplikasi sudah terinstal." }, 400);
   }
 

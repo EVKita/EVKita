@@ -1,3 +1,5 @@
+import { safeUrl } from "./url.js";
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -11,7 +13,14 @@ function inline(text: string): string {
   t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
   t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   t = t.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // Skema disaring, bukan cuma dikutip: `[x](javascript:...)` di dalam catatan
+  // rilis akan berjalan saat ditekan di halaman Pembaruan. Tautan yang skemanya
+  // ditolak jatuh kembali menjadi teks biasa.
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (whole, label, href) => {
+    const url = safeUrl(href.replace(/&amp;/g, "&"));
+    if (!url) return label;
+    return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${label}</a>`;
+  });
   return t;
 }
 

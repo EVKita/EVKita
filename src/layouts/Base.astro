@@ -23,6 +23,12 @@ interface Props {
   /** Kode bahasa untuk atribut <html lang>. Panel admin mengirim bahasa
       pilihan penggunanya; situs publik tetap Bahasa Indonesia. */
   lang?: string;
+  /**
+   * Halaman yang tidak boleh masuk hasil pencarian: panel admin dan wizard
+   * pemasangan. Selain tidak ada gunanya diindeks, keduanya justru mengundang
+   * persis lalu lintas otomatis yang paling tidak diinginkan di halaman masuk.
+   */
+  noindex?: boolean;
 }
 
 const {
@@ -34,6 +40,7 @@ const {
   ogType = "website",
   bodyClass = "",
   lang = "id",
+  noindex = false,
 } = Astro.props;
 
 /**
@@ -159,6 +166,7 @@ const themeStyle = styleParts.join(";");
         });
       })();
     </script>
+    {noindex ? <meta name="robots" content="noindex, nofollow" /> : null}
     <meta name="description" content={description} />
     {keywords ? <meta name="keywords" content={keywords} /> : null}
     <meta property="og:type" content={ogType} />
