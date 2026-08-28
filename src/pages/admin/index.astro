@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import AdminSidebar from "../../components/AdminSidebar.astro";
 import LogoMark from "../../components/LogoMark.astro";
+import { MEDIA_LIMITS } from "../../lib/media.js";
 import "../../styles/admin.css";
 import { currentUser } from "../../lib/auth";
 import { makeT, localeMeta, LOCALES } from "../../lib/i18n/index.js";
@@ -1037,6 +1038,16 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
           <div class="toolbar-search">
             <input id="media-search" class="search-input" type="search" placeholder={t("media.searchPh")} data-i18n-ph="media.searchPh" autocomplete="off" />
           </div>
+          <div class="toolbar-actions">
+            <span id="media-summary" class="media-summary"></span>
+            <button
+              id="media-filter-alt"
+              class="btn btn-outline btn-sm"
+              type="button"
+              aria-pressed="false"
+              data-i18n="media.onlyMissingAlt"
+            >{t("media.onlyMissingAlt")}</button>
+          </div>
         </div>
         <div id="media-grid"></div>
       </section>
@@ -1164,6 +1175,79 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
   </div>
 
   <!-- ===== Dialog konfirmasi ===== -->
+  <!-- ===== Modal media =====
+       Pratinjau besar satu gambar plus segala yang diketahui tentangnya:
+       ukuran, tempat pemakaian, dan tiga field metadata. Panah kiri/kanan
+       berpindah gambar tanpa menutup modal, jadi mengisi teks alternatif
+       untuk dua puluh gambar tidak berarti dua puluh kali buka-tutup. -->
+  <div id="media-modal" class="modal-backdrop">
+    <div class="modal modal-lg mediaview" role="dialog" aria-modal="true" aria-labelledby="media-modal-title">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3 class="modal-title" id="media-modal-title"></h3>
+          <p class="modal-sub" id="media-modal-sub"></p>
+        </div>
+        <button type="button" class="modal-close" aria-label={t("common.close")} data-i18n-aria="common.close">&times;</button>
+      </div>
+
+      <div class="modal-body mediaview-body">
+        <div class="mediaview-stage">
+          <div class="mediaview-canvas" id="media-canvas">
+            <img id="media-image" src="" alt="" />
+          </div>
+          <button type="button" class="mediaview-nav prev" id="media-prev" aria-label={t("media.prev")} data-i18n-aria="media.prev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>
+          </button>
+          <button type="button" class="mediaview-nav next" id="media-next" aria-label={t("media.next")} data-i18n-aria="media.next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm mediaview-zoom" id="media-zoom" data-i18n="media.zoomIn">{t("media.zoomIn")}</button>
+        </div>
+
+        <div class="mediaview-side">
+          <dl class="mediaview-facts">
+            <div><dt data-i18n="media.factDimensions">{t("media.factDimensions")}</dt><dd id="media-fact-dim">—</dd></div>
+            <div><dt data-i18n="media.factSize">{t("media.factSize")}</dt><dd id="media-fact-size">—</dd></div>
+            <div><dt data-i18n="media.factType">{t("media.factType")}</dt><dd id="media-fact-type">—</dd></div>
+            <div><dt data-i18n="media.factUses">{t("media.factUses")}</dt><dd id="media-fact-uses">—</dd></div>
+          </dl>
+
+          <div class="field-grid mediaview-fields">
+            <div class="field full">
+              <label for="media-field-alt" data-i18n="media.fieldAlt">{t("media.fieldAlt")}</label>
+              <textarea id="media-field-alt" data-media-field="alt" rows="2" maxlength={MEDIA_LIMITS.alt}></textarea>
+              <span class="hint" data-i18n="media.fieldAlt.hint">{t("media.fieldAlt.hint")}</span>
+            </div>
+            <div class="field full">
+              <label for="media-field-title" data-i18n="media.fieldTitle">{t("media.fieldTitle")}</label>
+              <input id="media-field-title" type="text" data-media-field="title" maxlength={MEDIA_LIMITS.title} />
+              <span class="hint" data-i18n="media.fieldTitle.hint">{t("media.fieldTitle.hint")}</span>
+            </div>
+            <div class="field full">
+              <label for="media-field-note" data-i18n="media.fieldNote">{t("media.fieldNote")}</label>
+              <textarea id="media-field-note" data-media-field="note" rows="2" maxlength={MEDIA_LIMITS.note}></textarea>
+              <span class="hint" data-i18n="media.fieldNote.hint">{t("media.fieldNote.hint")}</span>
+            </div>
+          </div>
+
+          <div class="mediaview-uses">
+            <h4 data-i18n="media.usesTitle">{t("media.usesTitle")}</h4>
+            <div id="media-uses"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-foot mediaview-foot">
+        <div class="mediaview-foot-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="media-copy" data-i18n="common.copyUrl">{t("common.copyUrl")}</button>
+          <a class="btn btn-outline btn-sm" id="media-open" href="#" target="_blank" rel="noopener" data-i18n="media.openFile">{t("media.openFile")}</a>
+          <a class="btn btn-outline btn-sm" id="media-download" href="#" download data-i18n="media.download">{t("media.download")}</a>
+        </div>
+        <button type="button" class="btn btn-primary" data-close-modal data-i18n="common.close">{t("common.close")}</button>
+      </div>
+    </div>
+  </div>
+
   <div id="confirm-modal" class="modal-backdrop">
     <div class="modal modal-sm">
       <div class="modal-head"><h3 class="modal-title" id="confirm-title"></h3></div>

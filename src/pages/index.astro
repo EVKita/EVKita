@@ -8,6 +8,7 @@ import { safeUrl } from "../lib/url.js";
 import { cardHTML, defaultSort, vehicleHref } from "../lib/card-html.js";
 import { PER_PAGE } from "../lib/pagination.js";
 import { siteOrigin } from "../lib/site-url";
+import { altMapFor, mediaAlt } from "../lib/media.js";
 
 const content = readContent();
 const { site } = content;
@@ -76,7 +77,7 @@ const canonical = `${siteOrigin(Astro.url)}/`;
 /* Sama dengan isi satu halaman /katalog — dua tempat, satu angka. */
 const SSR_CARDS = PER_PAGE;
 const initialCards = defaultSort(cars).slice(0, SSR_CARDS);
-const initialGrid = initialCards.map((c: any) => cardHTML(c, { linkable: true })).join("");
+const initialGrid = initialCards.map((c: any) => cardHTML(c, { linkable: true, media: content.media })).join("");
 
 /**
  * Data katalog yang disuntik ke klien dipangkas ke field yang benar-benar
@@ -99,6 +100,17 @@ const ringkas = (v: any) =>
   Object.fromEntries(KATALOG_FIELDS.filter((k) => v[k] !== undefined).map((k) => [k, v[k]]));
 const carsLite = cars.map(ringkas);
 const motorsLite = motors.map(ringkas);
+
+/**
+ * Teks alternatif ikut ke browser, tapi hanya alt dan hanya untuk gambar yang
+ * benar-benar ada di muatan ini: `app.js` menggambar ULANG kartu setiap kali
+ * pembaca memfilter, dan tanpa peta ini alt yang ditulis di Admin → Media akan
+ * hilang begitu filter pertama disentuh.
+ */
+const mediaAltLite = altMapFor(
+  content.media,
+  [...carsLite, ...motorsLite].map((v: any) => v.image).filter(Boolean)
+);
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -181,7 +193,7 @@ const jsonLd = {
               <a class="feature-card" href={vehicleHref(f)}>
                 <div class="feature-media">
                   {f.image ? (
-                    <img src={safeUrl(f.image)} alt={`${f.brand} ${f.name}`} loading="lazy" decoding="async" />
+                    <img src={safeUrl(f.image)} alt={mediaAlt(content.media, f.image, `${f.brand} ${f.name}`)} loading="lazy" decoding="async" />
                   ) : (
                     <div class="feature-svg" set:html={carSVG(f, defaultColor(f))} />
                   )}
@@ -472,9 +484,10 @@ const jsonLd = {
 
   <SiteFooter site={site} />
 
-  <script define:vars={{ carsLite, motorsLite }}>
+  <script define:vars={{ carsLite, motorsLite, mediaAltLite }}>
     window.__EV_CARS__ = carsLite;
     window.__EV_MOTORS__ = motorsLite;
+    window.__EV_MEDIA_ALT__ = mediaAltLite;
   </script>
   <script src="../scripts/app.js"></script>
 </Base>

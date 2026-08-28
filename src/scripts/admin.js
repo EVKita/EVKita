@@ -12,6 +12,7 @@ import {
   formatRelative,
 } from "../lib/i18n/index.js";
 import { safeUrl } from "../lib/url.js";
+import { mediaEntry, MEDIA_LIMITS } from "../lib/media.js";
 import {
   MAX_MENU_COLS,
   MAX_MENU_LINKS,
@@ -499,6 +500,9 @@ function closeModal(el) {
   const i = modalStack.indexOf(el);
   if (i >= 0) modalStack.splice(i, 1);
   if (el.id === "dir-modal") { dirCtx = null; editorTouched = false; }
+  // Grid disegarkan saat modal tutup, bukan pada tiap ketikan: menggambar ulang
+  // kartu di belakang modal sambil mengetik alt hanya membuang kerja.
+  if (el.id === "media-modal") { mediaCtx = null; renderMedia(); }
 }
 
 /** Menutup modal editor: kalau formulir sudah disentuh, minta konfirmasi dulu. */
@@ -2509,54 +2513,314 @@ function applyThemePreview() {
  * 15. View media
  * ------------------------------------------------------------------ */
 
+/*
+ * Media punya dua lapis. Lapis pertama adalah DAFTAR: alamat gambar yang
+ * dikumpulkan ulang dari kendaraan, berita, dan pengaturan situs — turunan,
+ * tidak disimpan. Lapis kedua adalah METADATA (judul, teks alternatif,
+ * catatan) yang disimpan di `content.media` berkunci alamat gambar; lihat
+ * src/lib/media.js.
+ *
+ * Pemisahan itu yang membuat satu foto yang dipakai tiga kendaraan cukup
+ * ditulis alt-nya sekali, dan alt itu tidak ikut hilang saat salah satu
+ * kendaraannya dihapus.
+ */
+
+/** Saringan "belum ada alt" di bilah alat. */
+let mediaOnlyMissingAlt = false;
+
+/** Gambar yang sedang dibuka: { list, index, zoom }. `null` kalau modal tutup. */
+let mediaCtx = null;
+
 function collectMedia() {
   const map = new Map();
-  const add = (url, usage) => {
+
+  /**
+   * @param ref Kendaraan/berita asal pemakaian, kalau ada. Dipakai modal untuk
+   *   menautkan tiap baris "Dipakai di" langsung ke editornya.
+   */
+  const add = (url, label, ref) => {
     const u = String(url || "").trim();
     if (!u) return;
     if (!map.has(u)) map.set(u, []);
-    map.get(u).push(usage);
+    map.get(u).push({ label, col: (ref && ref.col) || "", id: (ref && ref.id) || "" });
   };
 
   for (const key of ["logoImage", "heroImage", "seoOgImage"]) add(content.site[key], t("media.siteSettings", { field: key }));
   for (const col of VEHICLE_COLS) {
     for (const it of content[col] || []) {
-      add(it.image, `${colLabel(col)} · ${titleOf(col, it)}`);
-      (it.gallery || []).forEach((g) => add(g, `${colLabel(col)} · ${titleOf(col, it)} (galeri)`));
+      add(it.image, `${colLabel(col)} · ${titleOf(col, it)}`, { col, id: it.id });
+      (it.gallery || []).forEach((g) =>
+        add(g, `${colLabel(col)} · ${titleOf(col, it)} (${t("media.gallerySuffix")})`, { col, id: it.id })
+      );
     }
   }
-  for (const it of content.berita || []) add(it.image, `Berita · ${titleOf("berita", it)}`);
+  for (const it of content.berita || []) add(it.image, `${colLabel("berita")} · ${titleOf("berita", it)}`, { col: "berita", id: it.id });
   for (const u of mediaUploads) add(u, t("media.unused"));
 
   return [...map.entries()];
 }
 
+function mediaMeta(url) {
+  return mediaEntry(content && content.media, url);
+}
+
+function mediaFileName(url) {
+  const clean = String(url || "").split(/[?#]/)[0];
+  const name = clean.slice(clean.lastIndexOf("/") + 1);
+  return name || clean;
+}
+
+/** Judul yang ditulis manusia kalau ada; kalau tidak, nama berkasnya. */
+function mediaLabel(url) {
+  return mediaMeta(url).title || mediaFileName(url);
+}
+
+function mediaExt(url) {
+  const name = mediaFileName(url);
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot + 1).toUpperCase() : "";
+}
+
+/** Gambar milik situs ini sendiri — hanya untuk ini ukuran berkas bisa dibaca. */
+function mediaIsLocal(url) {
+  const u = String(url || "");
+  return u.startsWith("/") && !u.startsWith("//");
+}
+
+/**
+ * Daftar yang sedang tampil, setelah pencarian dan saringan.
+ *
+ * Grid dan panah di modal memakai fungsi yang SAMA: kalau tidak, menekan panah
+ * kanan di gambar terakhir hasil pencarian akan melompat ke gambar yang tidak
+ * terlihat di belakangnya.
+ */
+function mediaList() {
+  const search = $("media-search");
+  const q = ((search && search.value) || "").trim().toLowerCase();
+  return collectMedia().filter(([url, uses]) => {
+    const meta = mediaMeta(url);
+    if (mediaOnlyMissingAlt && meta.alt) return false;
+    if (!q) return true;
+    const hay = [url, meta.title, meta.alt, meta.note, ...uses.map((u) => u.label)].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+
 function renderMedia() {
   const el = $("media-grid");
   if (!el) return;
-  const q = ($("media-search")?.value || "").trim().toLowerCase();
-  const items = collectMedia().filter(
-    ([url, uses]) => !q || url.toLowerCase().includes(q) || uses.join(" ").toLowerCase().includes(q)
-  );
+
+  const all = collectMedia();
+  const items = mediaList();
+  const missing = all.filter(([url]) => !mediaMeta(url).alt).length;
+
+  const summary = $("media-summary");
+  if (summary) {
+    summary.textContent = !all.length
+      ? ""
+      : missing
+        ? t("media.summary", { n: all.length, missing })
+        : t("media.summaryAllSet", { n: all.length });
+  }
+
+  const filterBtn = $("media-filter-alt");
+  if (filterBtn) {
+    filterBtn.hidden = !all.length;
+    filterBtn.classList.toggle("active", mediaOnlyMissingAlt);
+    filterBtn.setAttribute("aria-pressed", String(mediaOnlyMissingAlt));
+  }
+
+  const search = $("media-search");
+  const q = ((search && search.value) || "").trim();
 
   const uploader = `<div class="dropzone" data-dzone="__media">
     <div class="empty-state-text">${esc(t("upload.dropHereUrl"))}</div>
   </div>`;
 
   if (!items.length) {
-    el.innerHTML = uploader + (q
-      ? emptyStateHtml(t("common.noResults"), t("media.noMatch", { q }), "🔍")
-      : emptyStateHtml(t("media.emptyTitle"), t("media.emptyText"), "🖼️"));
+    let empty;
+    if (q) empty = emptyStateHtml(t("common.noResults"), t("media.noMatch", { q }), "🔍");
+    else if (mediaOnlyMissingAlt && all.length) empty = emptyStateHtml(t("media.noMissingAlt"), t("media.summaryAllSet", { n: all.length }), "✅");
+    else empty = emptyStateHtml(t("media.emptyTitle"), t("media.emptyText"), "🖼️");
+    el.innerHTML = uploader + empty;
     return;
   }
 
   el.innerHTML = uploader + `<div class="media-grid">${items
-    .map(([url, uses]) => `<div class="media-item">
-      <img src="${esc(url)}" alt="" loading="lazy" />
-      <button type="button" class="btn btn-ghost btn-sm" data-copy="${esc(url)}" title="${esc(t("common.copyUrl"))}">${esc(t("common.copyUrl"))}</button>
-      <div class="row-meta">${esc(uses.slice(0, 3).join(" · "))}${uses.length > 3 ? ` · +${uses.length - 3} lagi` : ""}</div>
-    </div>`)
+    .map(([url, uses]) => {
+      const meta = mediaMeta(url);
+      return `<button type="button" class="media-card" data-media-open="${esc(url)}">
+        <span class="media-card-thumb">
+          <img src="${esc(safeUrl(url))}" alt="" loading="lazy" />
+          <span class="media-card-uses">${esc(String(uses.length))}</span>
+        </span>
+        <span class="media-card-name">${esc(mediaLabel(url))}</span>
+        ${meta.alt
+          ? `<span class="media-card-alt">${esc(meta.alt)}</span>`
+          : `<span class="media-card-alt is-missing">${esc(t("media.noAlt"))}</span>`}
+      </button>`;
+    })
     .join("")}</div>`;
+}
+
+/* ---------------- Modal media ---------------- */
+
+function openMediaModal(url) {
+  const list = mediaList();
+  if (!list.length) return;
+  let index = list.findIndex(([u]) => u === url);
+  if (index < 0) index = 0;
+  mediaCtx = { list, index, zoom: false };
+  renderMediaModal();
+  openModal($("media-modal"));
+}
+
+function mediaStep(step) {
+  if (!mediaCtx || mediaCtx.list.length < 2) return;
+  const n = mediaCtx.list.length;
+  mediaCtx.index = (mediaCtx.index + step + n) % n;
+  mediaCtx.zoom = false;
+  renderMediaModal();
+}
+
+function currentMediaUrl() {
+  const entry = mediaCtx && mediaCtx.list[mediaCtx.index];
+  return entry ? entry[0] : "";
+}
+
+function mediaUsesHtml(uses) {
+  if (!uses.length) return `<p class="mediaview-uses-empty">${esc(t("media.usesNone"))}</p>`;
+  return `<ul class="mediaview-use-list">${uses
+    .map((u) =>
+      u.col && u.id
+        ? `<li><button type="button" class="mediaview-use" data-media-goto="${esc(u.col)}:${esc(u.id)}" title="${esc(t("media.usesOpen", { name: u.label }))}">${esc(u.label)}</button></li>`
+        : `<li><span class="mediaview-use is-static">${esc(u.label)}</span></li>`
+    )
+    .join("")}</ul>`;
+}
+
+/**
+ * Menggambar isi modal dari gambar yang sedang aktif.
+ *
+ * Field yang sedang diketik dilewati — sama alasannya dengan form Pengaturan
+ * Situs: autosave menggambar ulang panel setelah menyimpan, dan menulis ulang
+ * nilai input yang sedang dipakai akan memindahkan kursor ke belakang teks.
+ */
+function renderMediaModal() {
+  if (!mediaCtx) return;
+  const entry = mediaCtx.list[mediaCtx.index];
+  if (!entry) { closeModal($("media-modal")); return; }
+
+  const [url, uses] = entry;
+  const meta = mediaMeta(url);
+
+  const title = $("media-modal-title");
+  if (title) title.textContent = mediaLabel(url);
+  const sub = $("media-modal-sub");
+  if (sub) sub.textContent = t("media.counter", { i: mediaCtx.index + 1, n: mediaCtx.list.length });
+
+  const img = $("media-image");
+  if (img) {
+    if (img.getAttribute("data-url") !== url) {
+      img.setAttribute("data-url", url);
+      img.src = safeUrl(url);
+      const dim = $("media-fact-dim");
+      if (dim) dim.textContent = "—";
+      fillMediaSize(url);
+    }
+    // Alt sungguhan dipasang di pratinjau: yang diketik di sini persis yang
+    // dibaca pembaca layar di situs.
+    img.alt = meta.alt;
+  }
+
+  const canvas = $("media-canvas");
+  if (canvas) canvas.classList.toggle("zoomed", !!mediaCtx.zoom);
+  const zoomBtn = $("media-zoom");
+  if (zoomBtn) {
+    // Kunci ikut diperbarui, bukan cuma teksnya: applyStaticI18n() menggambar
+    // ulang elemen ber-`data-i18n` saat bahasa berganti.
+    zoomBtn.setAttribute("data-i18n", mediaCtx.zoom ? "media.zoomOut" : "media.zoomIn");
+    zoomBtn.textContent = mediaCtx.zoom ? t("media.zoomOut") : t("media.zoomIn");
+  }
+
+  const many = mediaCtx.list.length > 1;
+  for (const id of ["media-prev", "media-next"]) {
+    const btn = $(id);
+    if (btn) btn.hidden = !many;
+  }
+
+  const type = $("media-fact-type");
+  if (type) type.textContent = mediaExt(url) || "—";
+  const usesFact = $("media-fact-uses");
+  if (usesFact) usesFact.textContent = t("media.usesCount", { n: uses.length });
+
+  for (const field of ["alt", "title", "note"]) {
+    const input = $(`media-field-${field}`);
+    if (!input || input === document.activeElement) continue;
+    if (input.value !== meta[field]) input.value = meta[field];
+  }
+
+  const usesBox = $("media-uses");
+  if (usesBox) usesBox.innerHTML = mediaUsesHtml(uses);
+
+  const copyBtn = $("media-copy");
+  if (copyBtn) copyBtn.setAttribute("data-copy", url);
+  const openLink = $("media-open");
+  if (openLink) openLink.href = safeUrl(url);
+  const dl = $("media-download");
+  if (dl) {
+    // `download` diabaikan peramban untuk berkas lintas domain: tombolnya akan
+    // membuka tab, bukan mengunduh. Lebih baik tidak menjanjikannya.
+    dl.hidden = !mediaIsLocal(url);
+    dl.href = safeUrl(url);
+    dl.setAttribute("download", mediaFileName(url));
+  }
+}
+
+/**
+ * Ukuran berkas hanya bisa dibaca untuk gambar milik situs ini: permintaan ke
+ * domain lain ditolak CORS, dan gambar pabrikan yang ditaut langsung memang
+ * bukan berkas kita.
+ */
+async function fillMediaSize(url) {
+  const el = $("media-fact-size");
+  if (!el) return;
+  if (!mediaIsLocal(url)) { el.textContent = t("media.sizeUnknown"); return; }
+  el.textContent = "…";
+  try {
+    // Peramban sudah memuat gambar yang sama untuk pratinjau, dan berkas
+    // unggahan disajikan `immutable` — jadi ini nyaris selalu dari cache.
+    const res = await fetch(safeUrl(url), { cache: "force-cache" });
+    if (!res.ok) throw new Error(String(res.status));
+    const declared = Number(res.headers.get("content-length") || 0);
+    const size = declared || (await res.blob()).size;
+    if (currentMediaUrl() !== url) return;
+    el.textContent = size ? formatSize(size) : "—";
+  } catch {
+    if (currentMediaUrl() === url) el.textContent = "—";
+  }
+}
+
+/** Menulis satu field metadata gambar yang sedang dibuka. */
+function setMediaField(field, value) {
+  const url = currentMediaUrl();
+  if (!url || !MEDIA_LIMITS[field]) return;
+
+  if (!content.media || typeof content.media !== "object") content.media = {};
+  const next = mediaMeta(url);
+  next[field] = String(value == null ? "" : value).slice(0, MEDIA_LIMITS[field]);
+
+  // Entri yang seluruh field-nya kosong dibuang, supaya membuka-buka gambar
+  // di panel tidak meninggalkan baris kosong di content.json.
+  if (!next.title && !next.alt && !next.note) delete content.media[url];
+  else content.media[url] = next;
+
+  commit({ key: `media:${field}:${url}`, render: false });
+
+  const img = $("media-image");
+  if (img && field === "alt") img.alt = next.alt;
+  const title = $("media-modal-title");
+  if (title && field === "title") title.textContent = mediaLabel(url);
 }
 
 /* ------------------------------------------------------------------ *
@@ -2928,6 +3192,28 @@ function bindEvents() {
 
     if (e.target.closest("#media-refresh")) { renderMedia(); toast(t("toast.mediaReloaded"), "info"); return; }
 
+    /* --- Media --- */
+    if (e.target.closest("#media-filter-alt")) {
+      mediaOnlyMissingAlt = !mediaOnlyMissingAlt;
+      renderMedia();
+      return;
+    }
+    const mediaOpen = e.target.closest("[data-media-open]");
+    if (mediaOpen) { openMediaModal(mediaOpen.getAttribute("data-media-open")); return; }
+    if (e.target.closest("#media-prev")) { mediaStep(-1); return; }
+    if (e.target.closest("#media-next")) { mediaStep(1); return; }
+    if (e.target.closest("#media-zoom") || e.target.closest("#media-image")) {
+      if (mediaCtx) { mediaCtx.zoom = !mediaCtx.zoom; renderMediaModal(); }
+      return;
+    }
+    const mediaGoto = e.target.closest("[data-media-goto]");
+    if (mediaGoto) {
+      const ref = parseRef(mediaGoto.getAttribute("data-media-goto"));
+      closeModal($("media-modal"));
+      openEditor(ref.col, ref.id);
+      return;
+    }
+
     if (e.target.closest("#editor-save-add")) { saveVehicle({ again: true }); return; }
     if (e.target.closest("#editor-back") || e.target.closest("#editor-cancel")) { leaveEditor(); return; }
 
@@ -3203,6 +3489,11 @@ function bindEvents() {
 
     if (el.id === "media-search") { renderMedia(); return; }
 
+    if (el.matches && el.matches("[data-media-field]")) {
+      setMediaField(el.getAttribute("data-media-field"), el.value);
+      return;
+    }
+
     const siteForm = el.closest && el.closest("#site-form, #tampilan-form");
     if (siteForm) {
       collectSiteForm();
@@ -3230,7 +3521,7 @@ function bindEvents() {
     const sort = el.closest && el.closest("[data-sort]");
     if (sort) {
       const col = sort.getAttribute("data-col");
-      ui[col].sort = sorel.value;
+      ui[col].sort = sort.value;
       ui[col].page = 1;
       renderCollection(col);
       return;
@@ -3390,6 +3681,24 @@ function bindEvents() {
     reader.readAsText(file);
   });
 
+  /* --- Dimensi gambar di modal media ---
+     Ukuran piksel baru diketahui setelah gambarnya benar-benar termuat, dan itu
+     berlaku untuk gambar dari domain mana pun — tidak seperti ukuran berkas. */
+  const mediaImage = $("media-image");
+  if (mediaImage) {
+    mediaImage.addEventListener("load", () => {
+      const el = $("media-fact-dim");
+      if (!el) return;
+      el.textContent = mediaImage.naturalWidth
+        ? t("media.pixels", { w: mediaImage.naturalWidth, h: mediaImage.naturalHeight })
+        : "—";
+    });
+    mediaImage.addEventListener("error", () => {
+      const el = $("media-fact-dim");
+      if (el) el.textContent = "—";
+    });
+  }
+
   /* --- Papan ketik --- */
   document.addEventListener("keydown", (e) => {
     /* Combobox lebih dulu: panah, Enter, dan Escape miliknya sendiri. */
@@ -3407,6 +3716,13 @@ function bindEvents() {
       applyHistory(e.shiftKey ? 1 : -1);
       return;
     }
+    // Panah berpindah gambar hanya kalau modal media yang paling atas dan
+    // kursor tidak sedang berada di dalam kolom teksnya.
+    if (mediaCtx && !typing && !mod && modalStack[modalStack.length - 1] === $("media-modal")) {
+      if (key === "arrowleft") { e.preventDefault(); mediaStep(-1); return; }
+      if (key === "arrowright") { e.preventDefault(); mediaStep(1); return; }
+    }
+
     if (e.key === "Escape") {
       if (confirmResolver) { confirmResolver(false); return; }
       const top = modalStack[modalStack.length - 1];

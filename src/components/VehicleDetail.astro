@@ -10,6 +10,7 @@ import { rivalsFor } from "../lib/compare-pairs.js";
 import { consumptionKwhPer100 } from "../lib/hemat.js";
 import { taxoSlug } from "../lib/taxonomy.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
+import { mediaAlt } from "../lib/media.js";
 
 /**
  * Halaman detail satu kendaraan — dipakai `/mobil/<slug>` DAN `/motor/<slug>`.
@@ -30,9 +31,11 @@ interface Props {
   /** Kendaraan sejenis yang tayang — sumber "terkait" dan lawan perbandingan. */
   pool: any[];
   kind: "mobil" | "motor";
+  /** Metadata gambar dari Admin → Media, dipakai untuk teks alternatif. */
+  media?: Record<string, any>;
 }
 
-const { site, vehicle: car, pool, kind } = Astro.props;
+const { site, vehicle: car, pool, kind, media: mediaMeta = {} } = Astro.props;
 
 const isMotor = kind === "motor";
 const noun = isMotor ? "motor listrik" : "mobil listrik";
@@ -305,7 +308,7 @@ const pageTitle = car
             </div>
           ) : media.length ? (
             <button type="button" class="detail-main detail-main-btn" id="detailMainBtn" aria-label="Perbesar gambar">
-              <img id="detail-main-img" src={media[0]} alt={`${car.brand} ${car.name}`} fetchpriority="high" decoding="async" />
+              <img id="detail-main-img" src={media[0]} alt={mediaAlt(mediaMeta, media[0], `${car.brand} ${car.name}`)} fetchpriority="high" decoding="async" />
               <span class="zoom-hint" aria-hidden="true">⤢</span>
             </button>
           ) : (
@@ -315,7 +318,14 @@ const pageTitle = car
           {media.length > 1 ? (
             <div class="detail-thumbs">
               {media.map((src, i) => (
-                <button type="button" class={`detail-thumb${i === 0 ? " active" : ""}`} data-src={src} data-index={i} aria-label={`Foto ${i + 1}`}>
+                <button
+                  type="button"
+                  class={`detail-thumb${i === 0 ? " active" : ""}`}
+                  data-src={src}
+                  data-alt={mediaAlt(mediaMeta, src, `${car.brand} ${car.name}`)}
+                  data-index={i}
+                  aria-label={`Foto ${i + 1}`}
+                >
                   <img src={src} alt="" loading="lazy" decoding="async" />
                 </button>
               ))}
@@ -500,14 +510,28 @@ const pageTitle = car
         : mainImg
           ? [mainImg.src]
           : [];
+      // Teks alternatif tiap foto ikut dirender server (Admin → Media), jadi
+      // berganti foto juga mengganti alt — bukan hanya gambarnya.
+      const alts = thumbs.length
+        ? thumbs.map((t) => t.dataset.alt || "")
+        : mainImg
+          ? [mainImg.alt]
+          : [];
       let index = 0;
 
       function select(i: number) {
         if (!sources.length) return;
         index = (i + sources.length) % sources.length;
-        if (mainImg) mainImg.src = sources[index];
+        const alt = alts[index] || "";
+        if (mainImg) {
+          mainImg.src = sources[index];
+          mainImg.alt = alt;
+        }
         thumbs.forEach((t, n) => t.classList.toggle("active", n === index));
-        if (lbImg) lbImg.src = sources[index];
+        if (lbImg) {
+          lbImg.src = sources[index];
+          lbImg.alt = alt;
+        }
         if (lbCount) lbCount.textContent = `${index + 1} / ${sources.length}`;
       }
 

@@ -122,6 +122,19 @@ function writeUrlState() {
    browser yang disuntikkan: warna dan varian yang sedang dipilih pembaca,
    daftar bandingkan, dan apakah animasi masuk masih perlu dijalankan. */
 
+/**
+ * Beranda mengirim peta ringkas `alamat → alt`; `card-html.js` menunggu bentuk
+ * penuh `{ alamat: { alt } }` yang sama dengan `content.media`. Diterjemahkan
+ * di sini, sekali, bukan di setiap kartu.
+ */
+let mediaMapCache = null;
+function toMediaMap(lite) {
+  if (mediaMapCache) return mediaMapCache;
+  mediaMapCache = {};
+  for (const [url, alt] of Object.entries(lite)) mediaMapCache[url] = { alt };
+  return mediaMapCache;
+}
+
 function cardHTML(c) {
   return buildCard(c, {
     // Dulu hanya mobil yang boleh ditautkan: motor belum punya halaman detail,
@@ -132,6 +145,9 @@ function cardHTML(c) {
     color: uiState.color,
     variant: uiState.variant,
     animate: animateCards,
+    // Teks alternatif dari Admin → Media, disuntikkan beranda. Tanpa ini kartu
+    // yang digambar ulang di browser akan kehilangan alt yang sudah ditulis.
+    media: window.__EV_MEDIA_ALT__ ? toMediaMap(window.__EV_MEDIA_ALT__) : {},
   });
 }
 

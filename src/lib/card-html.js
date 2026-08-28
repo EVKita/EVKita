@@ -1,5 +1,6 @@
 import { paletteFor, defaultColor, carSVG } from "./cars-ui.js";
 import { safeUrl as allowedUrl } from "./url.js";
+import { mediaAlt } from "./media.js";
 
 /**
  * Markup kartu kendaraan — satu sumber untuk server dan browser.
@@ -72,6 +73,9 @@ function withDefaults(opts) {
     color: {},
     variant: {},
     animate: false,
+    /* Peta `alamat gambar → teks alternatif` dari Admin → Media. Kosong berarti
+       kartu memakai cadangannya sendiri, "Merek Model". */
+    media: {},
     ...(opts || {}),
   };
 }
@@ -114,8 +118,9 @@ export function visualHTML(c, opts) {
 
   const image = safeUrl(c.image);
   if (image) {
+    const alt = mediaAlt(o.media, c.image, `${c.brand} ${c.name}`);
     return `<div class="car-visual">
-      ${openLink}<div class="car-svg car-photo-wrap"><img class="car-photo" src="${image}" alt="${esc(c.brand + " " + c.name)}" loading="lazy" decoding="async" /></div>${closeLink}
+      ${openLink}<div class="car-svg car-photo-wrap"><img class="car-photo" src="${image}" alt="${esc(alt)}" loading="lazy" decoding="async" /></div>${closeLink}
       ${variantRow}
     </div>`;
   }

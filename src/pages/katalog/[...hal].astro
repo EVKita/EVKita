@@ -61,7 +61,7 @@ if (!adaHalaman) {
 
 const nomor = adaHalaman ? (halaman as number) : 1;
 const daftar = adaHalaman ? pageSlice(cars, nomor, PER_PAGE) : [];
-const gridHtml = daftar.map((c: any) => cardHTML(c, { linkable: true })).join("");
+const gridHtml = daftar.map((c: any) => cardHTML(c, { linkable: true, media: content.media })).join("");
 
 const origin = siteOrigin(Astro.url);
 const canonical = canonicalUrl(Astro.url);

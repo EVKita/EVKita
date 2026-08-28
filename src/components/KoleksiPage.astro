@@ -37,9 +37,11 @@ interface Props {
   mode: "indeks" | "kelompok" | "hilang";
   /** Diisi hanya saat mode `kelompok`. */
   group?: { slug: string; label: string; items: any[] } | null;
+  /** Metadata gambar dari Admin → Media, dipakai kartu untuk teks alternatif. */
+  media?: Record<string, any>;
 }
 
-const { site, jenis, pool, mode, group = null } = Astro.props;
+const { site, jenis, pool, mode, group = null, media = {} } = Astro.props;
 
 const isMerek = jenis === "merek";
 const field = isMerek ? "brand" : "bodyType";
@@ -65,7 +67,7 @@ const silang = group ? groupByField(group.items, isMerek ? "bodyType" : "brand")
 /** Kelompok lain, tanpa yang sedang dibuka. Dibatasi supaya tidak jadi dinding. */
 const tetangga = group ? groups.filter((g) => g.slug !== group.slug).slice(0, 12) : [];
 
-const gridHtml = items.map((c: any) => cardHTML(c, { linkable: true })).join("");
+const gridHtml = items.map((c: any) => cardHTML(c, { linkable: true, media })).join("");
 
 const brand = site.brandText || "EVKita";
 const origin = siteOrigin(Astro.url);

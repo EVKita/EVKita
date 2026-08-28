@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfile";
 import { APPEARANCE_DEFAULTS, APPEARANCE_FLAGS } from "./theme.js";
 import { MAX_LEGAL_LINKS, normalizeLinks, normalizeMenus } from "./footer.js";
+import { normalizeMediaMap } from "./media.js";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "content.json");
@@ -333,6 +334,14 @@ function normalize(content: any): any {
     spklu: ensureIds(asList(content?.spklu).map(normalizeSpklu), "spklu", "name"),
     bengkel: ensureIds(asList(content?.bengkel).map(normalizeBengkel), "bengkel", "name"),
     berita: ensureIds(asList(content?.berita).map(normalizeBerita), "berita", "title"),
+
+    /*
+     * Metadata gambar (judul, teks alternatif, catatan), berkunci alamat
+     * gambar. Sengaja BUKAN bagian dari tiap kendaraan: satu foto bisa dipakai
+     * di beberapa tempat, dan alt-nya tidak boleh ikut hilang ketika salah satu
+     * pemakainya dihapus. Lihat src/lib/media.js.
+     */
+    media: normalizeMediaMap(content?.media),
   };
 }
 
