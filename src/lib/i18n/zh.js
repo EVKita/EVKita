@@ -1072,4 +1072,8 @@ export default {
   "ai.cobaLagi": "重试",
   "ai.sejauhIni": "AI 进行到哪一步",
   "ai.gagalDetail": "来自 DeepSeek 的消息",
+
+  "ai.jawabanMentah": "AI 的原始回答",
+  "ai.duaLangkah": "AI 的回答需要额外一次调用整理后才能读取。",
+  "err.ai.tanpaJawaban": "DeepSeek 结束了却没有返回任何回答。请重试。",
 };

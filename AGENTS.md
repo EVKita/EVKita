@@ -237,6 +237,15 @@ baru Tahap 0a: halaman **Admin → AI** untuk memasang kunci API DeepSeek.
   sendiri, menyaring alamat sumber lewat `safeUrl()`, dan membuang kunci asing
   tanpa jejak. Kalau dua pembacaan angka sama-sama masuk akal, nilainya dibuang
   — tidak ditebak.
+- **Riset berjalan dua langkah kalau perlu.** `web_search` dan
+  `text.format: json_schema` ternyata TIDAK akur — dokumentasi DeepSeek
+  menyatakan keduanya didukung, tapi ketika dipakai bersamaan model menjawab
+  dengan kalimat biasa, bukan JSON. Jawaban mentah itu tidak dibuang: ia
+  dikirim ke `rapikanJadiJson()` — panggilan kedua tanpa alat pencarian dan
+  tanpa penalaran, yang hanya menyalin isinya ke dalam skema. Sepuluh putaran
+  pencarian yang sudah dibayar jadi tidak terbuang. Jangan menghapus jalur ini
+  tanpa membuktikan lebih dulu bahwa panggilan tunggalnya sudah bisa
+  diandalkan.
 - **Panel menanya-kabar berulang (polling), bukan SSE.** Reverse proxy
   OpenLiteSpeed mem-buffer aliran peristiwa; server yang membaca SSE dari
   DeepSeek dan mengubahnya jadi linimasa yang bisa dibaca ulang.

@@ -216,6 +216,11 @@ export class PembacaRiset {
   errorKey = "";
   selesai = false;
 
+  /** Jawaban mentah yang gagal diurai. Satu-satunya bahan untuk menelusurinya. */
+  mentah = "";
+  /** Nama peristiwa yang pernah datang, untuk kasus "tidak ada jawaban sama sekali". */
+  jejak: string[] = [];
+
   private teksAkhir = "";
   private urut = 0;
 
@@ -242,6 +247,7 @@ export class PembacaRiset {
   }
 
   terima(nama: string, data: any): void {
+    if (!this.jejak.includes(nama)) this.jejak.push(nama);
     switch (nama) {
       case "response.created":
         this.tambah("mulai", "mulai", "").status = "selesai";
@@ -303,13 +309,33 @@ export class PembacaRiset {
         break;
       }
 
+      case "response.output_text.done": {
+        // Sebagian aliran mengirim teks akhirnya sekaligus di sini, bukan
+        // sepotong-sepotong lewat delta. Yang lebih panjang yang dipakai.
+        const penuh = String(data?.text || "");
+        if (penuh.length > this.teksAkhir.length) this.teksAkhir = penuh;
+        break;
+      }
+
       case "response.completed": {
         this.selesai = true;
         for (const l of this.langkah) l.status = "selesai";
         this.usage = data?.response?.usage || null;
         const teks = this.teksAkhir || teksPesan(data?.response);
         this.hasil = uraiJson(teks);
-        if (!this.hasil) this.errorKey = "err.ai.jawabanTidakTerbaca";
+        if (!this.hasil) {
+          this.mentah = String(teks || "").trim();
+          /*
+           * Dua kegagalan yang sangat berbeda, dan dulu keduanya dilaporkan
+           * dengan kalimat yang sama:
+           *
+           *   - Model MENJAWAB, tapi bukan JSON. Isinya biasanya temuan riset
+           *     dalam kalimat biasa — sayang sekali dibuang, dan bisa
+           *     dirapikan panggilan kedua yang murah.
+           *   - Model tidak menjawab apa-apa. Tidak ada yang bisa diselamatkan.
+           */
+          this.errorKey = this.mentah ? "err.ai.jawabanTidakTerbaca" : "err.ai.tanpaJawaban";
+        }
         break;
       }
 
@@ -390,6 +416,8 @@ export interface RisetHasil {
    * ditindaklanjuti.
    */
   detail?: string;
+  /** Jawaban akhir apa adanya, saat ia gagal diurai jadi JSON. */
+  mentah?: string;
   hasil?: any;
   usage?: any;
   langkah: Langkah[];
@@ -506,10 +534,81 @@ export async function jalankanRiset(opts: RisetOpts): Promise<RisetHasil> {
     return {
       ok: false,
       errorKey: pembaca.errorKey || "err.ai.jawabanTidakTerbaca",
+      // Kalau tidak ada jawaban sama sekali, yang berguna justru daftar
+      // peristiwa yang sempat datang — ia menunjukkan di mana alirannya
+      // berhenti.
+      detail: pembaca.mentah || pembaca.jejak.join("\n"),
+      mentah: pembaca.mentah,
       usage: pembaca.usage,
       langkah: pembaca.langkah,
     };
   }
 
   return { ok: true, hasil: pembaca.hasil, usage: pembaca.usage, langkah: pembaca.langkah };
+}
+
+/**
+ * Panggilan kedua: mengubah temuan yang sudah didapat jadi JSON.
+ *
+ * Ini rencana cadangan yang sudah ditulis di RENCANA-AI-DEEPSEEK.md §7.1
+ * sebelum satu baris kode pun dibuat, dan ternyata memang dibutuhkan:
+ * dokumentasi DeepSeek menyatakan `web_search` dan `text.format: json_schema`
+ * sama-sama didukung, tapi tidak satu pun contohnya memakai keduanya
+ * bersamaan — dan ketika dipakai bersamaan, model menjawab dengan kalimat
+ * biasa, bukan JSON.
+ *
+ * Yang terjadi kalau itu dibiarkan: sepuluh putaran pencarian yang sudah
+ * dibayar terbuang seluruhnya, padahal temuannya SUDAH ADA di dalam jawaban
+ * itu — hanya bentuknya yang salah.
+ *
+ * Jadi jawaban mentahnya dikirim ulang ke model yang murah, TANPA alat
+ * pencarian dan tanpa penalaran, dengan satu tugas: menyalin isinya ke dalam
+ * skema. Tidak ada pencarian baru, tidak ada penilaian baru — hanya perapian
+ * bentuk, dan itu sebabnya `effort: "none"` cukup.
+ */
+export async function rapikanJadiJson(opts: {
+  apiKey: string;
+  schema: any;
+  mentah: string;
+  signal?: AbortSignal;
+}): Promise<{ ok: boolean; hasil?: any; errorKey?: string; usage?: any }> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}/responses`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${opts.apiKey}`,
+      },
+      signal: opts.signal,
+      body: JSON.stringify({
+        // Selalu model termurah: pekerjaannya menyalin, bukan menilai.
+        model: "deepseek-v4-flash",
+        instructions:
+          "Ubah catatan riset berikut menjadi JSON sesuai skema. " +
+          "JANGAN menambah, menebak, atau mengubah satu pun nilai — salin apa adanya dari catatan. " +
+          "Nilai yang tidak disebut di catatan diisi null dengan keyakinan \"rendah\".",
+        input: opts.mentah,
+        reasoning: { effort: "none" },
+        text: { format: { type: "json_schema", name: "usulan_kendaraan", schema: opts.schema } },
+        max_output_tokens: 16_000,
+      }),
+    });
+  } catch {
+    return { ok: false, errorKey: "err.ai.tidakTerhubung" };
+  }
+
+  if (!res.ok) return { ok: false, errorKey: errorKeyForStatus(res.status) };
+
+  let data: any;
+  try {
+    const raw = (await res.text()).trim();
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    return { ok: false, errorKey: "err.ai.jawabanTidakTerbaca" };
+  }
+
+  const hasil = uraiJson(data?.output_text || teksPesan(data));
+  if (!hasil) return { ok: false, errorKey: "err.ai.jawabanTidakTerbaca" };
+  return { ok: true, hasil, usage: data?.usage };
 }

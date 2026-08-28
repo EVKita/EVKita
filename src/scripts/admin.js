@@ -5271,9 +5271,13 @@ function aiGagalHtml() {
 
   // Pesan dari DeepSeek ditampilkan sebagai teks apa adanya di blok monospace:
   // ia ditujukan untuk ditelusuri, bukan dibaca sebagai kalimat panel.
+  // "Jawaban mentah" kalau modelnya sempat menjawab, "pesan dari DeepSeek"
+  // kalau permintaannya sendiri yang ditolak. Dua hal berbeda, dan menyebutnya
+  // dengan nama yang sama membuat penelusurannya berputar-putar.
+  const judulDetail = job.errorKey === "err.ai.jawabanTidakTerbaca" ? t("ai.jawabanMentah") : t("ai.gagalDetail");
   const detail = job.detail
     ? `<div class="ai-group">
-        <h4>${esc(t("ai.gagalDetail"))}</h4>
+        <h4>${esc(judulDetail)}</h4>
         <pre class="ai-detail">${esc(job.detail)}</pre>
       </div>`
     : "";
@@ -5333,6 +5337,10 @@ function aiHasilHtml() {
     ? `<p class="ai-biaya">${esc(t("ai.biayaNyata", { rp: formatRupiahKecil(job.biaya.rupiah) }))}</p>`
     : "";
 
+  const duaLangkah = job.duaLangkah
+    ? `<p class="ai-biaya">${esc(t("ai.duaLangkah"))}</p>`
+    : "";
+
   return `<div class="ai-hasil">
     ${hasil.ringkasan ? `<p class="ai-ringkasan">${esc(hasil.ringkasan)}</p>` : ""}
     <div class="ai-tools">
@@ -5341,6 +5349,7 @@ function aiHasilHtml() {
     </div>
     <div class="ai-rows">${baris}</div>
     ${peringatan}
+    ${duaLangkah}
     ${biaya}
   </div>`;
 }

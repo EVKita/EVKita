@@ -1078,4 +1078,8 @@ export default {
   "ai.cobaLagi": "Coba lagi",
   "ai.sejauhIni": "Sejauh mana AI sempat berjalan",
   "ai.gagalDetail": "Pesan dari DeepSeek",
+
+  "ai.jawabanMentah": "Jawaban mentah dari AI",
+  "ai.duaLangkah": "Jawaban AI perlu dirapikan lewat satu panggilan tambahan sebelum bisa dibaca.",
+  "err.ai.tanpaJawaban": "DeepSeek selesai tanpa memberi jawaban apa pun. Coba lagi.",
 };

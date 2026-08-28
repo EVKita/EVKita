@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { getEnv } from "./env";
-import { jalankanRiset, type Langkah } from "./deepseek";
+import { jalankanRiset, rapikanJadiJson, type Langkah } from "./deepseek";
 import { buildInstructions, buildSchema, emptyFieldKeys, PRICE_FIELDS } from "./ai-prompt.js";
 import { bersihkanUsulan } from "./ai-usulan.js";
 import { biayaDari, MODEL_BAWAAN, MODEL_PILIHAN } from "./ai-biaya.js";
@@ -61,6 +61,8 @@ export interface Job {
   errorKey: string;
   /** Pesan asli dari DeepSeek saat gagal. Kosong kalau tidak ada. */
   detail: string;
+  /** Hasilnya perlu dirapikan panggilan kedua. Lihat `rapikanJadiJson`. */
+  duaLangkah: boolean;
   ac: AbortController;
 }
 
@@ -174,6 +176,7 @@ export function jobPublik(job: Job) {
     biaya: job.biaya,
     errorKey: job.errorKey,
     detail: job.detail,
+    duaLangkah: job.duaLangkah,
   };
 }
 
@@ -285,6 +288,7 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     biaya: null,
     errorKey: "",
     detail: "",
+    duaLangkah: false,
     ac: new AbortController(),
   };
 
@@ -313,10 +317,38 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
       job.langkah = langkah;
     },
   })
-    .then((res) => {
+    .then(async (res) => {
       job.langkah = res.langkah;
       job.usage = res.usage || null;
       if (res.usage) job.biaya = biayaDari(res.usage, model, new Date());
+
+      /*
+       * Model menjawab, tapi bukan JSON — dan jawabannya memuat temuan yang
+       * sudah dibayar sepuluh putaran pencarian. Jangan dibuang: kirim ke
+       * panggilan kedua yang murah untuk dirapikan bentuknya.
+       */
+      if (!res.ok && res.errorKey === "err.ai.jawabanTidakTerbaca" && res.mentah) {
+        const rapi = await rapikanJadiJson({
+          apiKey,
+          schema,
+          mentah: res.mentah,
+          signal: job.ac.signal,
+        });
+        if (rapi.ok) {
+          job.duaLangkah = true;
+          if (rapi.usage) {
+            job.biaya = {
+              usd: (job.biaya?.usd || 0) + biayaDari(rapi.usage, "deepseek-v4-flash", new Date()).usd,
+              rupiah:
+                (job.biaya?.rupiah || 0) +
+                biayaDari(rapi.usage, "deepseek-v4-flash", new Date()).rupiah,
+            };
+          }
+          job.status = "selesai";
+          job.hasil = bersihkanUsulan(rapi.hasil, { kind, vehicle, only });
+          return;
+        }
+      }
 
       if (!res.ok) {
         job.status = res.errorKey === "err.ai.dibatalkan" ? "batal" : "gagal";

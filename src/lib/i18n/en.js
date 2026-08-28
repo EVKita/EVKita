@@ -1073,4 +1073,8 @@ export default {
   "ai.cobaLagi": "Try again",
   "ai.sejauhIni": "How far the AI got",
   "ai.gagalDetail": "Message from DeepSeek",
+
+  "ai.jawabanMentah": "Raw answer from the AI",
+  "ai.duaLangkah": "The AI answer needed one extra call to be tidied up before it could be read.",
+  "err.ai.tanpaJawaban": "DeepSeek finished without returning any answer. Try again.",
 };

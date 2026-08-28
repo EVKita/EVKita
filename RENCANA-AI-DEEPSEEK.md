@@ -600,7 +600,16 @@ dst.
 
 ## 7. Risiko & mitigasi
 
-### 7.1 Risiko terbesar: `json_schema` + `web_search` mungkin tidak akur
+### 7.1 Risiko terbesar: `json_schema` + `web_search` — TERBUKTI TIDAK AKUR
+
+> **Terkonfirmasi 28 Agustus 2026 pada riset sungguhan pertama.** Permintaannya
+> berhasil, pencariannya jalan, temuannya benar — lalu jawaban akhirnya keluar
+> sebagai kalimat biasa, bukan JSON sesuai skema. Rencana cadangan di bawah
+> dipasang, dan sekarang berjalan otomatis: jawaban mentahnya dikirim ke
+> panggilan kedua yang murah untuk dirapikan bentuknya, jadi pencarian yang
+> sudah dibayar tidak terbuang. Rilis v1.0.35.
+
+
 
 Dokumentasi menyatakan keduanya didukung, tapi **tidak ada satu contoh pun yang
 memakai keduanya bersamaan**. Ada kemungkinan nyata bahwa memaksa keluaran

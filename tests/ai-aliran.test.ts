@@ -198,6 +198,47 @@ describe("linimasa riset", () => {
     assert.equal(p.errorKey, "err.ai.jawabanTidakTerbaca");
   });
 
+  it("jawaban bukan-JSON disimpan mentah, supaya bisa dirapikan panggilan kedua", () => {
+    const p = new PembacaRiset();
+    p.terima("response.output_item.added", { item: { id: "m1", type: "message" } });
+    p.terima("response.output_text.delta", {
+      item_id: "m1",
+      delta: "Harga OTR Jakarta Rp 415 juta, baterai 50,6 kWh.",
+    });
+    p.terima("response.completed", { response: {} });
+
+    assert.equal(p.errorKey, "err.ai.jawabanTidakTerbaca");
+    assert.match(p.mentah, /415 juta/);
+  });
+
+  it("tidak menjawab sama sekali dibedakan dari menjawab tapi bukan JSON", () => {
+    const p = new PembacaRiset();
+    p.terima("response.created", {});
+    p.terima("response.completed", { response: {} });
+
+    assert.equal(p.errorKey, "err.ai.tanpaJawaban");
+    assert.equal(p.mentah, "");
+    // Jejak peristiwa jadi satu-satunya bahan telusur saat tidak ada teks.
+    assert.deepEqual(p.jejak, ["response.created", "response.completed"]);
+  });
+
+  it("teks akhir yang datang sekaligus lewat .done ikut terbaca", () => {
+    const p = new PembacaRiset();
+    p.terima("response.output_item.added", { item: { id: "m1", type: "message" } });
+    p.terima("response.output_text.done", { item_id: "m1", text: '{"ringkasan":"dari done"}' });
+    p.terima("response.completed", { response: {} });
+    assert.equal(p.hasil.ringkasan, "dari done");
+  });
+
+  it("delta yang lebih panjang menang atas .done yang lebih pendek", () => {
+    const p = new PembacaRiset();
+    p.terima("response.output_item.added", { item: { id: "m1", type: "message" } });
+    p.terima("response.output_text.delta", { item_id: "m1", delta: '{"ringkasan":"dari delta yang panjang"}' });
+    p.terima("response.output_text.done", { item_id: "m1", text: "{}" });
+    p.terima("response.completed", { response: {} });
+    assert.equal(p.hasil.ringkasan, "dari delta yang panjang");
+  });
+
   it("peristiwa yang tidak dikenal diabaikan tanpa merusak apa pun", () => {
     const p = jalankan([
       ["response.created", {}],
