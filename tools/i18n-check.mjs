@@ -249,10 +249,9 @@ const PANEL_FILES = [
  * Menerjemahkannya akan mengubah isi database. Baris di dalamnya dilewati.
  */
 const KONSTAN_DATA = new Set([
-  "CAR_BODY_TYPES",
-  "MOTOR_BODY_TYPES",
-  "RANGE_STANDARDS",
-  "DRIVE_TYPES",
+  // CAR_BODY_TYPES, MOTOR_BODY_TYPES, RANGE_STANDARDS, dan DRIVE_TYPES tidak
+  // lagi ditulis di panel — mereka pindah ke src/lib/vehicle-spec.js, yang
+  // bukan berkas panel dan karena itu tidak diperiksa di sini.
   "BRAND_SUGGESTIONS",
   "SPEC_PRESETS",
   "DIR_SUGGESTIONS",

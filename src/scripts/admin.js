@@ -22,6 +22,12 @@ import {
   normalizeMenus,
 } from "../lib/footer.js";
 import {
+  CAR_BODY_TYPES,
+  MOTOR_BODY_TYPES,
+  RANGE_STANDARDS,
+  DRIVE_TYPES,
+} from "../lib/vehicle-spec.js";
+import {
   THEME_PRESETS,
   PRESET_FIELDS,
   APPEARANCE_DEFAULTS,
@@ -76,13 +82,9 @@ const PAGE_SIZE = 24;
 const AUTOSAVE_MS = 1200;
 const HISTORY_MAX = 40;
 
-/* Nilai berikut adalah DATA, bukan antarmuka: ia tersimpan apa adanya di
-   content.json dan ikut tampil di situs publik yang berbahasa Indonesia.
-   Menerjemahkannya akan mengubah isi database, jadi sengaja dibiarkan. */
-const CAR_BODY_TYPES = ["Hatchback", "Crossover", "SUV", "Sedan", "Coupe", "MPV", "Wagon", "Pikap", "Van", "Niaga"];
-const MOTOR_BODY_TYPES = ["Skuter", "Motor Bebek", "Motor Sport", "Moped", "Motor Trail", "Sepeda Listrik"];
-const RANGE_STANDARDS = ["", "WLTP", "NEDC", "CLTC", "EPA", "Klaim pabrikan"];
-const DRIVE_TYPES = ["", "FWD", "RWD", "AWD", "4WD"];
+/* Tipe bodi, standar jarak, dan tipe penggerak sekarang tinggal di
+   src/lib/vehicle-spec.js — dibaca formulir ini DAN skema JSON yang dikirim ke
+   DeepSeek, supaya keduanya tidak bisa berbeda. Lihat catatan di berkas itu. */
 
 /* Statusnya sendiri tetap "published"/"draft"; hanya labelnya yang berbahasa. */
 const statusOpts = () => [["published", t("status.published")], ["draft", t("status.draft")]];
