@@ -153,16 +153,9 @@ const ringkasan = (g: { items: any[] }) => {
   return bagian.join(" · ");
 };
 
-const themeProps = {
-  primary: site.themePrimary,
-  secondary: site.themeSecondary,
-  radius: site.themeRadius,
-  font: site.themeFont,
-  mode: site.themeMode,
-};
 ---
 
-<Base title={pageTitle} description={metaDesc} keywords={site.seoKeywords} ogImage={site.seoOgImage} theme={themeProps}>
+<Base title={pageTitle} description={metaDesc} keywords={site.seoKeywords} ogImage={site.seoOgImage} site={site}>
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
   <SiteHeader site={site} base="/" active="mobil" />

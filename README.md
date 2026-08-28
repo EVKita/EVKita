@@ -17,6 +17,10 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
   - Tambah / edit / hapus model mobil &amp; motor (merek, tipe bodi, spesifikasi, varian, warna, harga, video).
   - Upload gambar per mobil (disimpan di `data/uploads/` dan disajikan lewat `/api/uploads/...`); mobil tanpa gambar memakai siluet yang bisa diganti warna.
   - Edit teks halaman (hero, tentang, footer).
+  - **Menu Tampilan**: 12 preset siap pakai plus pengaturan rinci — warna &amp;
+    gradien, pola latar, gambar latar, huruf isi &amp; judul, sudut membulat,
+    bayangan, gaya kartu, header, tombol, hero, efek gerak, dan CSS kustom,
+    semuanya dengan pratinjau langsung terang/gelap.
 - Data disimpan di file `data/content.json` di server.
 
 ## Struktur
@@ -36,6 +40,7 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
     ├── lib/users.ts         (akun, peran, hash kata sandi)
     ├── lib/i18n/            (kamus id / en / zh + runtime terjemahan)
     ├── lib/store.ts         (baca/tulis content.json)
+    ├── lib/theme.js         (preset &amp; setelan menu Tampilan → CSS)
     ├── pages/
     │   ├── index.astro
     │   ├── admin/login.astro

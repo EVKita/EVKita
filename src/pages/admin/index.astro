@@ -4,6 +4,7 @@ import AdminSidebar from "../../components/AdminSidebar.astro";
 import "../../styles/admin.css";
 import { currentUser } from "../../lib/auth";
 import { makeT, localeMeta, LOCALES } from "../../lib/i18n/index.js";
+import { FONT_NAMES, CHOICES, THEME_PRESETS } from "../../lib/theme.js";
 
 const me = currentUser(Astro.cookies);
 if (!me) {
@@ -21,7 +22,8 @@ const t = makeT(locale);
 const lang = localeMeta(locale);
 const isAdmin = me.role === "owner" || me.role === "admin";
 
-const FONTS = ["Inter", "Poppins", "Manrope", "Figtree", "Outfit", "Rubik", "Montserrat", "Nunito", "Plus Jakarta Sans", "Space Grotesk"];
+/** Bobot huruf judul yang ditawarkan. Angka, jadi tidak perlu diterjemahkan. */
+const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
 ---
 
 <Base title={`${t("topbar.adminPanel")} — EVKita`} bodyClass="admin-ui" lang={lang.html} noindex>
@@ -230,45 +232,6 @@ const FONTS = ["Inter", "Poppins", "Manrope", "Figtree", "Outfit", "Rubik", "Mon
                 <div class="dropzone" data-dropzone></div>
                 <input type="hidden" name="logoImage" />
                 <span class="hint" data-i18n="site.logoImage.hint">{t("site.logoImage.hint")}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tema & Tampilan -->
-          <div class="form-section">
-            <div class="form-section-head">
-              <h2 data-i18n="site.theme">{t("site.theme")}</h2>
-              <p data-i18n="site.theme.desc">{t("site.theme.desc")}</p>
-            </div>
-            <div class="field-grid">
-              <div class="field color-field">
-                <label for="s-themePrimary" data-i18n="site.themePrimary">{t("site.themePrimary")}</label>
-                <input id="s-themePrimary" type="color" name="themePrimary" />
-              </div>
-              <div class="field color-field">
-                <label for="s-themeSecondary" data-i18n="site.themeSecondary">{t("site.themeSecondary")}</label>
-                <input id="s-themeSecondary" type="color" name="themeSecondary" />
-                <span class="hint" data-i18n="site.themeSecondary.hint">{t("site.themeSecondary.hint")}</span>
-              </div>
-              <div class="field">
-                <label for="s-themeMode" data-i18n="site.themeMode">{t("site.themeMode")}</label>
-                <select id="s-themeMode" name="themeMode">
-                  <option value="auto" data-i18n="site.themeMode.auto">{t("site.themeMode.auto")}</option>
-                  <option value="light" data-i18n="site.themeMode.light">{t("site.themeMode.light")}</option>
-                  <option value="dark" data-i18n="site.themeMode.dark">{t("site.themeMode.dark")}</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="s-themeFont" data-i18n="site.themeFont">{t("site.themeFont")}</label>
-                <select id="s-themeFont" name="themeFont">
-                  {FONTS.map((f) => <option value={f}>{f}</option>)}
-                </select>
-              </div>
-              <div class="field full range-field">
-                <label for="s-themeRadius" data-i18n="site.themeRadius">{t("site.themeRadius")}</label>
-                <input id="s-themeRadius" type="range" name="themeRadius" min="0" max="32" step="1" />
-                <output class="range-value" for="s-themeRadius"></output>
-                <span class="hint" data-i18n="site.themeRadius.hint">{t("site.themeRadius.hint")}</span>
               </div>
             </div>
           </div>
@@ -525,6 +488,410 @@ const FONTS = ["Inter", "Poppins", "Manrope", "Figtree", "Outfit", "Rubik", "Mon
               <div class="field full">
                 <label for="s-footerNote" data-i18n="site.footerNote">{t("site.footerNote")}</label>
                 <input id="s-footerNote" name="footerNote" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <span class="form-actions-note" data-i18n="site.saveNote">{t("site.saveNote")}</span>
+            <button type="submit" class="btn btn-primary" data-i18n="common.save">{t("common.save")}</button>
+          </div>
+        </form>
+      </section>
+
+
+      <!-- ===== Tampilan ===== -->
+      <section class="view" data-view="tampilan" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title" data-i18n="view.tampilan.title">{t("view.tampilan.title")}</h1>
+            <p class="view-sub" data-i18n="view.tampilan.sub">{t("view.tampilan.sub")}</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="tampilan-reset" class="btn btn-ghost" type="button" data-i18n="tampilan.reset">{t("tampilan.reset")}</button>
+          </div>
+        </div>
+
+        <!-- Pratinjau langsung. Isinya digambar dari CSS yang sama dengan situs
+             publik, jadi apa yang terlihat di sini bukan tafsiran ulang. -->
+        <div class="tp-wrap">
+          <div class="tp-head">
+            <span class="tp-label" data-i18n="tampilan.preview">{t("tampilan.preview")}</span>
+            <div class="tp-modes">
+              <button type="button" class="tp-mode active" data-tp-mode="light" data-i18n="site.themeMode.light">{t("site.themeMode.light")}</button>
+              <button type="button" class="tp-mode" data-tp-mode="dark" data-i18n="site.themeMode.dark">{t("site.themeMode.dark")}</button>
+            </div>
+          </div>
+          <div id="tampilan-preview" class="tp ui-surface ui-bg-layer">
+            <div class="tp-inner">
+              <div class="tp-bar">
+                <span class="tp-logo">EV</span>
+                <span class="tp-navline"></span>
+                <span class="tp-navline short"></span>
+              </div>
+              <p class="tp-eyebrow" data-i18n="tampilan.preview.eyebrow">{t("tampilan.preview.eyebrow")}</p>
+              <h3 class="tp-title" data-i18n="tampilan.preview.title">{t("tampilan.preview.title")}</h3>
+              <p class="tp-sub" data-i18n="tampilan.preview.sub">{t("tampilan.preview.sub")}</p>
+              <div class="tp-actions">
+                <span class="tp-btn tp-btn-primary" data-i18n="tampilan.preview.cta">{t("tampilan.preview.cta")}</span>
+                <span class="tp-btn tp-btn-outline" data-i18n="tampilan.preview.ctaAlt">{t("tampilan.preview.ctaAlt")}</span>
+              </div>
+              <div class="tp-cards">
+                <div class="tp-card"><span class="tp-card-line"></span><span class="tp-card-line short"></span></div>
+                <div class="tp-card"><span class="tp-card-line"></span><span class="tp-card-line short"></span></div>
+                <div class="tp-card"><span class="tp-card-line"></span><span class="tp-card-line short"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form id="tampilan-form">
+          <!-- Preset -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.preset">{t("tampilan.preset")}</h2>
+              <p data-i18n="tampilan.preset.desc">{t("tampilan.preset.desc")}</p>
+            </div>
+            <div class="preset-grid" id="preset-grid">
+              {THEME_PRESETS.map((p) => (
+                <button type="button" class="preset-card" data-preset={p.id} title={p.label}>
+                  <span
+                    class="preset-swatch"
+                    style={`background:linear-gradient(${p.gradAngle}deg, ${p.themePrimary}, ${p.themeSecondary})`}
+                    aria-hidden="true"
+                  ></span>
+                  <span class="preset-name">{p.label}</span>
+                </button>
+              ))}
+            </div>
+            <input type="hidden" name="themePreset" />
+            <span class="hint" data-i18n="tampilan.preset.hint">{t("tampilan.preset.hint")}</span>
+          </div>
+
+          <!-- Warna & gradien -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.colors">{t("tampilan.colors")}</h2>
+              <p data-i18n="tampilan.colors.desc">{t("tampilan.colors.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field color-field">
+                <label for="t-themePrimary" data-i18n="site.themePrimary">{t("site.themePrimary")}</label>
+                <input id="t-themePrimary" type="color" name="themePrimary" />
+              </div>
+              <div class="field color-field">
+                <label for="t-themeSecondary" data-i18n="site.themeSecondary">{t("site.themeSecondary")}</label>
+                <input id="t-themeSecondary" type="color" name="themeSecondary" />
+                <span class="hint" data-i18n="site.themeSecondary.hint">{t("site.themeSecondary.hint")}</span>
+              </div>
+              <div class="field">
+                <label for="t-themeMode" data-i18n="site.themeMode">{t("site.themeMode")}</label>
+                <select id="t-themeMode" name="themeMode">
+                  {CHOICES.themeMode.map((v) => (
+                    <option value={v} data-i18n={`site.themeMode.${v}`}>{t(`site.themeMode.${v}`)}</option>
+                  ))}
+                </select>
+                <span class="hint" data-i18n="site.themeMode.hint">{t("site.themeMode.hint")}</span>
+              </div>
+              <div class="field">
+                <label for="t-gradType" data-i18n="tampilan.gradType">{t("tampilan.gradType")}</label>
+                <select id="t-gradType" name="gradType">
+                  {CHOICES.gradType.map((v) => (
+                    <option value={v} data-i18n={`tampilan.gradType.${v}`}>{t(`tampilan.gradType.${v}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <div class="field range-field">
+                <label for="t-gradAngle" data-i18n="tampilan.gradAngle">{t("tampilan.gradAngle")}</label>
+                <input id="t-gradAngle" type="range" name="gradAngle" min="0" max="360" step="5" />
+                <output class="range-value" for="t-gradAngle" data-unit="°"></output>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="gradMidOn" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="tampilan.gradMidOn">{t("tampilan.gradMidOn")}</span>
+                </label>
+              </div>
+              <div class="field color-field">
+                <label for="t-gradMid" data-i18n="tampilan.gradMid">{t("tampilan.gradMid")}</label>
+                <input id="t-gradMid" type="color" name="gradMid" />
+                <span class="hint" data-i18n="tampilan.gradMid.hint">{t("tampilan.gradMid.hint")}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Latar belakang -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.bg">{t("tampilan.bg")}</h2>
+              <p data-i18n="tampilan.bg.desc">{t("tampilan.bg.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="t-bgPattern" data-i18n="tampilan.bgPattern">{t("tampilan.bgPattern")}</label>
+                <select id="t-bgPattern" name="bgPattern">
+                  {CHOICES.bgPattern.map((v) => (
+                    <option value={v} data-i18n={`tampilan.bgPattern.${v}`}>{t(`tampilan.bgPattern.${v}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <div class="field range-field">
+                <label for="t-bgIntensity" data-i18n="tampilan.bgIntensity">{t("tampilan.bgIntensity")}</label>
+                <input id="t-bgIntensity" type="range" name="bgIntensity" min="0" max="100" step="5" />
+                <output class="range-value" for="t-bgIntensity" data-unit="%"></output>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="bgCustom" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="tampilan.bgCustom">{t("tampilan.bgCustom")}</span>
+                </label>
+              </div>
+              <div class="field color-field">
+                <label for="t-bgLight" data-i18n="tampilan.bgLight">{t("tampilan.bgLight")}</label>
+                <input id="t-bgLight" type="color" name="bgLight" />
+              </div>
+              <div class="field color-field">
+                <label for="t-bgDark" data-i18n="tampilan.bgDark">{t("tampilan.bgDark")}</label>
+                <input id="t-bgDark" type="color" name="bgDark" />
+              </div>
+              <div class="field full" data-image-field="bgImage">
+                <label data-i18n="tampilan.bgImage">{t("tampilan.bgImage")}</label>
+                <div class="dropzone" data-dropzone></div>
+                <input type="hidden" name="bgImage" />
+                <span class="hint" data-i18n="tampilan.bgImage.hint">{t("tampilan.bgImage.hint")}</span>
+              </div>
+              <div class="field range-field">
+                <label for="t-bgImageOpacity" data-i18n="tampilan.bgImageOpacity">{t("tampilan.bgImageOpacity")}</label>
+                <input id="t-bgImageOpacity" type="range" name="bgImageOpacity" min="0" max="100" step="1" />
+                <output class="range-value" for="t-bgImageOpacity" data-unit="%"></output>
+              </div>
+              <div class="field range-field">
+                <label for="t-bgImageBlur" data-i18n="tampilan.bgImageBlur">{t("tampilan.bgImageBlur")}</label>
+                <input id="t-bgImageBlur" type="range" name="bgImageBlur" min="0" max="24" step="1" />
+                <output class="range-value" for="t-bgImageBlur"></output>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="bgImageFixed" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="tampilan.bgImageFixed">{t("tampilan.bgImageFixed")}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipografi -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.type">{t("tampilan.type")}</h2>
+              <p data-i18n="tampilan.type.desc">{t("tampilan.type.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="t-themeFont" data-i18n="site.themeFont">{t("site.themeFont")}</label>
+                <select id="t-themeFont" name="themeFont">
+                  {FONT_NAMES.map((f) => <option value={f}>{f}</option>)}
+                </select>
+              </div>
+              <div class="field">
+                <label for="t-themeFontHeading" data-i18n="tampilan.fontHeading">{t("tampilan.fontHeading")}</label>
+                <select id="t-themeFontHeading" name="themeFontHeading">
+                  <option value="" data-i18n="tampilan.fontHeading.same">{t("tampilan.fontHeading.same")}</option>
+                  {FONT_NAMES.map((f) => <option value={f}>{f}</option>)}
+                </select>
+                <span class="hint" data-i18n="tampilan.fontHeading.hint">{t("tampilan.fontHeading.hint")}</span>
+              </div>
+              <div class="field range-field">
+                <label for="t-themeFontScale" data-i18n="tampilan.fontScale">{t("tampilan.fontScale")}</label>
+                <input id="t-themeFontScale" type="range" name="themeFontScale" min="85" max="120" step="1" />
+                <output class="range-value" for="t-themeFontScale" data-unit="%"></output>
+                <span class="hint" data-i18n="tampilan.fontScale.hint">{t("tampilan.fontScale.hint")}</span>
+              </div>
+              <div class="field">
+                <label for="t-themeHeadingWeight" data-i18n="tampilan.headingWeight">{t("tampilan.headingWeight")}</label>
+                <select id="t-themeHeadingWeight" name="themeHeadingWeight">
+                  {HEADING_WEIGHTS.map((w) => <option value={w}>{w}</option>)}
+                </select>
+              </div>
+              <div class="field range-field full">
+                <label for="t-themeHeadingSpacing" data-i18n="tampilan.headingSpacing">{t("tampilan.headingSpacing")}</label>
+                <input id="t-themeHeadingSpacing" type="range" name="themeHeadingSpacing" min="-8" max="4" step="1" />
+                <output class="range-value" for="t-themeHeadingSpacing" data-unit="em" data-div="100"></output>
+                <span class="hint" data-i18n="tampilan.headingSpacing.hint">{t("tampilan.headingSpacing.hint")}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bentuk & kedalaman -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.shape">{t("tampilan.shape")}</h2>
+              <p data-i18n="tampilan.shape.desc">{t("tampilan.shape.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field range-field">
+                <label for="t-themeRadius" data-i18n="site.themeRadius">{t("site.themeRadius")}</label>
+                <input id="t-themeRadius" type="range" name="themeRadius" min="0" max="36" step="1" />
+                <output class="range-value" for="t-themeRadius"></output>
+                <span class="hint" data-i18n="site.themeRadius.hint">{t("site.themeRadius.hint")}</span>
+              </div>
+              <div class="field">
+                <label for="t-themeShadow" data-i18n="tampilan.shadow">{t("tampilan.shadow")}</label>
+                <select id="t-themeShadow" name="themeShadow">
+                  {CHOICES.themeShadow.map((v) => (
+                    <option value={v} data-i18n={`tampilan.shadow.${v}`}>{t(`tampilan.shadow.${v}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <div class="field">
+                <label for="t-themeCard" data-i18n="tampilan.card">{t("tampilan.card")}</label>
+                <select id="t-themeCard" name="themeCard">
+                  {CHOICES.themeCard.map((v) => (
+                    <option value={v} data-i18n={`tampilan.card.${v}`}>{t(`tampilan.card.${v}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <div class="field range-field">
+                <label for="t-themeMaxWidth" data-i18n="tampilan.maxWidth">{t("tampilan.maxWidth")}</label>
+                <input id="t-themeMaxWidth" type="range" name="themeMaxWidth" min="1000" max="1600" step="20" />
+                <output class="range-value" for="t-themeMaxWidth"></output>
+                <span class="hint" data-i18n="tampilan.maxWidth.hint">{t("tampilan.maxWidth.hint")}</span>
+              </div>
+              <div class="field range-field full">
+                <label for="t-themeSpacing" data-i18n="tampilan.spacing">{t("tampilan.spacing")}</label>
+                <input id="t-themeSpacing" type="range" name="themeSpacing" min="70" max="140" step="5" />
+                <output class="range-value" for="t-themeSpacing" data-unit="%"></output>
+                <span class="hint" data-i18n="tampilan.spacing.hint">{t("tampilan.spacing.hint")}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Header -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.header">{t("tampilan.header")}</h2>
+              <p data-i18n="tampilan.header.desc">{t("tampilan.header.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="t-headerStyle" data-i18n="tampilan.headerStyle">{t("tampilan.headerStyle")}</label>
+                <select id="t-headerStyle" name="headerStyle">
+                  {CHOICES.headerStyle.map((v) => (
+                    <option value={v} data-i18n={`tampilan.headerStyle.${v}`}>{t(`tampilan.headerStyle.${v}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="headerSticky" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="tampilan.headerSticky">{t("tampilan.headerSticky")}</span>
+                </label>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="headerBorder" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="tampilan.headerBorder">{t("tampilan.headerBorder")}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tombol -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.button">{t("tampilan.button")}</h2>
+              <p data-i18n="tampilan.button.desc">{t("tampilan.button.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="t-buttonStyle" data-i18n="tampilan.buttonStyle">{t("tampilan.buttonStyle")}</label>
+                <select id="t-buttonStyle" name="buttonStyle">
+                  {CHOICES.buttonStyle.map((v) => (
+                    <option value={v} data-i18n={`tampilan.buttonStyle.${v}`}>{t(`tampilan.buttonStyle.${v}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <div class="field">
+                <label for="t-buttonShape" data-i18n="tampilan.buttonShape">{t("tampilan.buttonShape")}</label>
+                <select id="t-buttonShape" name="buttonShape">
+                  {CHOICES.buttonShape.map((v) => (
+                    <option value={v} data-i18n={`tampilan.buttonShape.${v}`}>{t(`tampilan.buttonShape.${v}`)}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.hero">{t("tampilan.hero")}</h2>
+              <p data-i18n="tampilan.hero.desc">{t("tampilan.hero.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="t-heroAlign" data-i18n="tampilan.heroAlign">{t("tampilan.heroAlign")}</label>
+                <select id="t-heroAlign" name="heroAlign">
+                  {CHOICES.heroAlign.map((v) => (
+                    <option value={v} data-i18n={`tampilan.heroAlign.${v}`}>{t(`tampilan.heroAlign.${v}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <div class="field range-field">
+                <label for="t-heroOverlay" data-i18n="tampilan.heroOverlay">{t("tampilan.heroOverlay")}</label>
+                <input id="t-heroOverlay" type="range" name="heroOverlay" min="0" max="100" step="5" />
+                <output class="range-value" for="t-heroOverlay" data-unit="%"></output>
+                <span class="hint" data-i18n="tampilan.heroOverlay.hint">{t("tampilan.heroOverlay.hint")}</span>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="heroGlow" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="tampilan.heroGlow">{t("tampilan.heroGlow")}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Efek -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.fx">{t("tampilan.fx")}</h2>
+              <p data-i18n="tampilan.fx.desc">{t("tampilan.fx.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="fxAnimations" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="tampilan.fxAnimations">{t("tampilan.fxAnimations")}</span>
+                </label>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="fxHover" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="tampilan.fxHover">{t("tampilan.fxHover")}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- CSS kustom -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="tampilan.css">{t("tampilan.css")}</h2>
+              <p data-i18n="tampilan.css.desc">{t("tampilan.css.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field full">
+                <label for="t-customCss" data-i18n="tampilan.customCss">{t("tampilan.customCss")}</label>
+                <textarea id="t-customCss" name="customCss" rows="8" spellcheck="false" class="code-area" placeholder={t("tampilan.customCss.ph")} data-i18n-ph="tampilan.customCss.ph"></textarea>
+                <span class="hint" data-i18n="tampilan.customCss.hint">{t("tampilan.customCss.hint")}</span>
               </div>
             </div>
           </div>

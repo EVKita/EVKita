@@ -254,13 +254,6 @@ const pageTitle = car
   ? `${car.brand} ${car.name} — ${site.brandText || "EVKita"}`
   : `Halaman tidak ditemukan — ${site.brandText || "EVKita"}`;
 
-const themeProps = {
-  primary: site.themePrimary,
-  secondary: site.themeSecondary,
-  radius: site.themeRadius,
-  font: site.themeFont,
-  mode: site.themeMode,
-};
 ---
 
 <Base
@@ -269,7 +262,7 @@ const themeProps = {
   keywords={car ? [car.brand, car.name, car.bodyType, ...(car.tags || [])].filter(Boolean).join(", ") : site.seoKeywords}
   ogImage={ogImage}
   ogType={car ? "product" : "website"}
-  theme={themeProps}
+  site={site}
 >
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 

@@ -162,6 +162,24 @@ merek, dan label preset spesifikasi. Menerjemahkannya akan mengubah isi
 database. Pola `match` di halaman Pembaruan juga tidak diterjemahkan — ia
 dicocokkan ke keluaran `deploy.sh` yang selalu Bahasa Indonesia.
 
+### Menu Tampilan
+
+Seluruh setelan tampilan situs publik — preset, warna, gradien, pola latar,
+huruf, sudut membulat, bayangan, gaya kartu, header, tombol, hero, efek, dan
+CSS kustom — bermuara ke **`src/lib/theme.js`**, dan hanya ke sana.
+
+- Nilai bawaannya ada di `APPEARANCE_DEFAULTS` / `APPEARANCE_FLAGS` di berkas
+  itu; `store.ts` cuma menyebarkannya ke `SITE_DEFAULTS`. Jangan menyalin nilai
+  bawaan ke tempat kedua — tombol "Kembalikan ke Bawaan" membacanya dari sana.
+- Angka dikirim ke halaman sebagai variabel CSS di atribut `style` `<body>`;
+  pilihan yang berupa gaya dikirim sebagai kelas `ui-*`. Aturannya ditulis di
+  blok **MENU TAMPILAN** di akhir `global.css`.
+- Setiap nilai baru WAJIB lewat penyaring `hex()` / `num()` / `pick()` di
+  `theme.js`. Nilainya datang dari panel dan langsung jadi CSS.
+- Kotak pratinjau di panel memakai variabel dan kelas yang sama persis. Kalau
+  menambah setelan, pastikan pratinjaunya ikut — pratinjau yang berbohong lebih
+  buruk daripada tidak ada pratinjau.
+
 ### Pengguna & peran
 
 - Akun panel disimpan di **`data/users.json`** (kata sandi ter-hash `scrypt`),

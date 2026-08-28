@@ -66,6 +66,10 @@ const SAMA_SENGAJA = new Set([
   "en:site.footer",
   "zh:site.seo",
   "zh:field.id",
+  "en:tampilan.header",
+  "en:tampilan.bgPattern.aurora",
+  "en:tampilan.customCss.ph",
+  "zh:tampilan.customCss.ph",
 ]);
 
 /**
@@ -94,6 +98,8 @@ const DYNAMIC_PREFIXES = [
   "update.step.",
   "update.note.",
   "users.cannot",
+  "tampilan.",
+  "site.themeMode.",
 ];
 
 const RED = (s) => `\x1b[31m${s}\x1b[0m`;
@@ -240,7 +246,7 @@ const KONSTAN_DATA = new Set([
   "DRIVE_TYPES",
   "BRAND_SUGGESTIONS",
   "SPEC_PRESETS",
-  "FONTS",
+  "HEADING_WEIGHTS",
 ]);
 
 /** Kalimat yang memang tidak diterjemahkan, ditulis persis apa adanya. */

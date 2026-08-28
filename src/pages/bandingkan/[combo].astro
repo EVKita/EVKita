@@ -162,13 +162,6 @@ const jsonLd = items.length >= 2
     }
   : null;
 
-const themeProps = {
-  primary: site.themePrimary,
-  secondary: site.themeSecondary,
-  radius: site.themeRadius,
-  font: site.themeFont,
-  mode: site.themeMode,
-};
 ---
 
 <Base
@@ -176,7 +169,7 @@ const themeProps = {
   description={metaDesc}
   keywords={items.map((v: any) => `${v.brand} ${v.name}`).join(", ")}
   ogImage={ogImage}
-  theme={themeProps}
+  site={site}
 >
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 

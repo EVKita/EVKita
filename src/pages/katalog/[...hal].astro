@@ -117,16 +117,9 @@ const jsonLd = adaHalaman
     }
   : null;
 
-const themeProps = {
-  primary: site.themePrimary,
-  secondary: site.themeSecondary,
-  radius: site.themeRadius,
-  font: site.themeFont,
-  mode: site.themeMode,
-};
 ---
 
-<Base title={pageTitle} description={metaDesc} keywords={site.seoKeywords} ogImage={site.seoOgImage} theme={themeProps}>
+<Base title={pageTitle} description={metaDesc} keywords={site.seoKeywords} ogImage={site.seoOgImage} site={site}>
   {/* rel prev/next memberi tahu mesin pencari bahwa halaman-halaman ini satu
       rangkaian, bukan tumpukan halaman berisi daftar yang mirip-mirip. */}
   {prevHref ? <link slot="head" rel="prev" href={absoluteUrl(Astro.url, prevHref)} /> : null}

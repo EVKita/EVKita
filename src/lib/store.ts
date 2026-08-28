@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfile";
+import { APPEARANCE_DEFAULTS, APPEARANCE_FLAGS } from "./theme.js";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "content.json");
@@ -37,12 +38,8 @@ const SITE_DEFAULTS: Record<string, string> = {
   logoMark: "EV",
   logoImage: "",
 
-  // Tema
-  themePrimary: "#37e0a6",
-  themeSecondary: "#3aa0ff",
-  themeRadius: "16",
-  themeFont: "Inter",
-  themeMode: "auto",
+  // Tema & tampilan — nilai bawaannya ada di src/lib/theme.js
+  ...APPEARANCE_DEFAULTS,
 
   // Hero
   heroEyebrow: "",
@@ -103,6 +100,7 @@ const SITE_FLAG_DEFAULTS: Record<string, boolean> = {
   showBerita: true,
   showAbout: true,
   showHeroStats: true,
+  ...APPEARANCE_FLAGS,
 };
 
 function numOrNull(v: unknown): number | null {

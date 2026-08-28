@@ -141,14 +141,6 @@ const jsonLd = {
   ],
 };
 
-const themeProps = {
-  primary: site.themePrimary,
-  secondary: site.themeSecondary,
-  radius: site.themeRadius,
-  font: site.themeFont,
-  mode: site.themeMode,
-};
-
 /** Teks hasil yang dirender server; skrip browser menghitung ulang dengan fungsi yang sama. */
 const teks = {
   durasi: teksDurasi(hasil),
@@ -167,7 +159,7 @@ const ringkas = teksRingkasPengisian(hasil);
   description={metaDesc}
   keywords="biaya pengisian mobil listrik, lama cas mobil listrik, tarif SPKLU, kalkulator SPKLU"
   ogImage={site.seoOgImage}
-  theme={themeProps}
+  site={site}
 >
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 

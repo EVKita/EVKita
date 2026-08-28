@@ -116,14 +116,6 @@ const jsonLd = {
   ],
 };
 
-const themeProps = {
-  primary: site.themePrimary,
-  secondary: site.themeSecondary,
-  radius: site.themeRadius,
-  font: site.themeFont,
-  mode: site.themeMode,
-};
-
 /**
  * Teks hasil yang dirender server; skrip di browser menghitung ulang dengan
  * fungsi yang sama persis, jadi tidak ada satu pun kalimat di sini yang
@@ -142,7 +134,7 @@ const teks = {
 const ringkas = teksRingkas(hasil);
 ---
 
-<Base title={pageTitle} description={metaDesc} keywords="kalkulator mobil listrik, biaya mobil listrik, listrik vs bensin, hemat mobil listrik" ogImage={site.seoOgImage} theme={themeProps}>
+<Base title={pageTitle} description={metaDesc} keywords="kalkulator mobil listrik, biaya mobil listrik, listrik vs bensin, hemat mobil listrik" ogImage={site.seoOgImage} site={site}>
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
   <SiteHeader site={site} base="/" active="" />

@@ -1,22 +1,20 @@
 ---
 import "../styles/global.css";
 import { canonicalUrl } from "../lib/site-url";
+import { themeStyle, themeBodyClass, themeExtraCss, themeFontHref, themeMode } from "../lib/theme.js";
 
 interface Props {
   title?: string;
   description?: string;
   /**
-   * `radius`, `font`, dan `mode` opsional: halaman admin dan /install memakai
-   * layout ini tanpa mengirim tema sama sekali, jadi semuanya harus punya
-   * nilai bawaan yang aman.
+   * Objek `site` dari `content.json`, apa adanya. Seluruh setelan menu
+   * Tampilan dibaca dari sini lewat `src/lib/theme.js`. Opsional: halaman
+   * admin dan /install memakai layout ini tanpa tema sama sekali, jadi semua
+   * nilainya harus punya bawaan yang aman.
    */
-  theme?: {
-    primary?: string;
-    secondary?: string;
-    radius?: string | number;
-    font?: string;
-    mode?: string;
-  };
+  site?: Record<string, any>;
+  /** Halaman panel hanya butuh warna aksennya, bukan seluruh tampilan situs. */
+  accentOnly?: boolean;
   keywords?: string;
   ogImage?: string;
   ogType?: string;
@@ -40,7 +38,8 @@ interface Props {
 const {
   title = "EVKita",
   description = "Basis data mobil listrik yang dijual di Indonesia: spesifikasi, jarak tempuh, baterai, tenaga, dan harga.",
-  theme,
+  site,
+  accentOnly = false,
   keywords = "",
   ogImage = "",
   ogType = "website",
@@ -49,53 +48,24 @@ const {
   noindex = false,
 } = Astro.props;
 
-/**
- * Nama font dibatasi daftar putih: nilainya datang dari panel admin dan
- * langsung disusun jadi URL Google Fonts, jadi teks bebas tidak boleh lewat.
- */
-const FONTS: Record<string, string> = {
-  Inter: "Inter:wght@400;500;600;700;800;900",
-  Poppins: "Poppins:wght@400;500;600;700;800",
-  Manrope: "Manrope:wght@400;500;600;700;800",
-  Figtree: "Figtree:wght@400;500;600;700;800;900",
-  Outfit: "Outfit:wght@400;500;600;700;800",
-  Rubik: "Rubik:wght@400;500;600;700;800",
-  Montserrat: "Montserrat:wght@400;500;600;700;800",
-  Nunito: "Nunito:wght@400;500;600;700;800",
-  "Plus Jakarta Sans": "Plus+Jakarta+Sans:wght@400;500;600;700;800",
-  "Space Grotesk": "Space+Grotesk:wght@400;500;600;700",
-};
-
 const canonical = canonicalUrl(Astro.url);
 
-const fontName = theme?.font && FONTS[theme.font] ? theme.font : "Inter";
-const fontQuery = FONTS[fontName];
-const fontHref = `https://fonts.googleapis.com/css2?family=${fontQuery}&display=swap`;
+/*
+ * Halaman panel (login, pembaruan) hanya mengambil warna aksennya supaya
+ * identitas situs tetap terasa, tanpa ikut memakai pola latar, huruf judul,
+ * atau gaya kartu yang dirancang untuk situs publik.
+ */
+const themeSource = site ? (accentOnly ? { themePrimary: site.themePrimary, themeSecondary: site.themeSecondary } : site) : null;
 
-const radiusRaw = theme?.radius === undefined || theme?.radius === null ? "" : String(theme.radius).trim();
-const radiusNum = Number(radiusRaw.replace(/px$/i, ""));
-const radius = Number.isFinite(radiusNum) && radiusRaw !== "" ? Math.min(36, Math.max(0, radiusNum)) : null;
-
-const themeMode = theme?.mode === "light" || theme?.mode === "dark" ? theme.mode : "auto";
-
-const styleParts: string[] = [];
-if (theme?.primary) {
-  const p = theme.primary;
-  const s = theme.secondary || theme.primary;
-  styleParts.push(`--accent:${p}`);
-  styleParts.push(`--accent-2:${s}`);
-  styleParts.push(`--accent-grad:linear-gradient(135deg,${p},${s})`);
-}
-if (radius !== null) {
-  styleParts.push(`--radius:${radius}px`);
-  styleParts.push(`--radius-sm:${Math.max(4, Math.round(radius * 0.6))}px`);
-  styleParts.push(`--radius-lg:${Math.round(radius * 1.6)}px`);
-}
-styleParts.push(`--font-sans:"${fontName}",system-ui,-apple-system,"Segoe UI",sans-serif`);
-const themeStyle = styleParts.join(";");
+const bodyStyle = themeSource ? themeStyle(themeSource) : undefined;
+const themeClass = themeSource && !accentOnly ? themeBodyClass(themeSource) : "";
+const extraCss = themeSource && !accentOnly ? themeExtraCss(themeSource) : "";
+const fontHref = themeFontHref(themeSource || {});
+const mode = themeSource ? themeMode(themeSource) : "auto";
+const bodyClasses = [bodyClass, themeClass].filter(Boolean).join(" ");
 ---
 <!DOCTYPE html>
-<html lang={lang} data-theme-mode={themeMode}>
+<html lang={lang} data-theme-mode={mode}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -200,9 +170,10 @@ const themeStyle = styleParts.join(";");
     <link rel="preload" as="style" href={fontHref} />
     <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href={fontHref} /></noscript>
+    {extraCss ? <style is:inline set:html={extraCss}></style> : null}
     <slot name="head" />
   </head>
-  <body style={themeStyle} class={bodyClass}>
+  <body style={bodyStyle} class={bodyClasses}>
     <slot />
   </body>
 </html>

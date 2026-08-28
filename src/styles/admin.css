@@ -4638,3 +4638,357 @@ body:has(.modal-backdrop.open) .fab {
 .density-compact .hello-card {
   padding: 16px;
 }
+
+/* =========================================================================
+   21. Menu Tampilan
+
+   Dua bagian yang tidak ada di halaman panel lain: galeri preset dan kotak
+   pratinjau. Pratinjau memakai kelas `ui-*` dan variabel yang sama persis
+   dengan yang dikirim ke situs publik — kelas-kelas itu didefinisikan di
+   `global.css`, dan yang ditulis di sini hanya bentuk miniaturnya.
+   ========================================================================= */
+
+/* --- Galeri preset --- */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.preset-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r);
+  background: var(--bg-card);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--adm-t), box-shadow var(--adm-t), transform var(--adm-t);
+}
+
+.preset-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.preset-card:focus-visible {
+  outline: none;
+  box-shadow: var(--adm-ring);
+}
+
+.preset-card.active {
+  border-color: var(--accent);
+  box-shadow: var(--adm-ring);
+}
+
+.preset-swatch {
+  display: block;
+  height: 46px;
+  border-radius: var(--adm-r-sm);
+}
+
+.preset-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  padding-inline: 2px;
+}
+
+/* Tanda centang pada preset yang sedang dipakai. Warnanya diambil dari aksen
+   yang sedang berlaku, jadi ia tetap terbaca di preset segelap Karbon. */
+.preset-card.active .preset-swatch::after {
+  content: "✓";
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+
+/* --- Kotak pratinjau --- */
+.tp-wrap {
+  margin-bottom: var(--adm-gap);
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.tp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tp-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tp-modes {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--adm-surface);
+}
+
+.tp-mode {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--adm-t), color var(--adm-t);
+}
+
+.tp-mode.active {
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--adm-shadow-sm);
+}
+
+/*
+ * `isolation` menahan `z-index` lapisan pola (`.ui-bg-layer::before`) supaya
+ * tidak pernah naik ke atas panel admin, dan `overflow: hidden` menahan pola
+ * mesh/aurora yang memang digambar melebar di dalam kotaknya.
+ */
+.tp {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 260px;
+  padding: 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: calc(15px * var(--font-scale, 1));
+}
+
+/* z-index negatif, bukan 0: lapisan pola (`::before`) juga di 0, dan dua
+   elemen semu dengan z-index sama diurutkan berdasarkan urutan tulis — tanpa
+   ini gambar latar akan menutupi polanya, kebalikan dari situs publik. */
+.tp.ui-has-bgimage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--bg-image-opacity, 0.18);
+  filter: blur(var(--bg-image-blur, 0px));
+}
+
+.tp-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.tp.ui-hero-left .tp-inner {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.tp-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+}
+
+.tp.ui-header-line .tp-bar {
+  border-bottom: 1px solid var(--border);
+}
+
+.tp-logo {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-grad);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.tp-navline {
+  height: 6px;
+  width: 74px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  opacity: 0.32;
+}
+
+.tp-navline.short {
+  width: 44px;
+}
+
+.tp-eyebrow {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.tp-title {
+  font-family: var(--font-head, var(--font-sans));
+  font-size: 30px;
+  font-weight: var(--head-weight, 900);
+  letter-spacing: var(--head-track, -0.03em);
+  line-height: 1.15;
+  background: var(--accent-grad-ink, var(--accent-grad));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tp-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.tp-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.tp-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tp.ui-btnshape-rounded .tp-btn {
+  border-radius: var(--radius-sm);
+}
+
+.tp.ui-btnshape-square .tp-btn {
+  border-radius: 2px;
+}
+
+.tp-btn-primary {
+  background: var(--accent-grad);
+  color: #fff;
+}
+
+.tp.ui-btn-solid .tp-btn-primary {
+  background: var(--accent);
+}
+
+.tp.ui-btn-outline .tp-btn-primary {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.tp.ui-btn-soft .tp-btn-primary {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.tp-btn-outline {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.tp-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.tp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.tp.ui-card-outline .tp-card {
+  background: transparent;
+  box-shadow: none;
+}
+
+.tp.ui-card-elevated .tp-card {
+  border-color: transparent;
+  box-shadow: var(--shadow);
+}
+
+.tp.ui-card-glass .tp-card {
+  background: color-mix(in srgb, var(--bg-card) 62%, transparent);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border-color: color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.tp-card-line {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  opacity: 0.3;
+}
+
+.tp-card-line.short {
+  width: 55%;
+  opacity: 0.18;
+}
+
+@media (max-width: 640px) {
+  .tp-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .tp-card-line.short {
+    width: 40%;
+  }
+}
+
+/* --- Field CSS kustom --- */
+.code-area {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}

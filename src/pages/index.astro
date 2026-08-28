@@ -133,13 +133,7 @@ const jsonLd = {
   description={seoDesc}
   keywords={site.seoKeywords}
   ogImage={site.seoOgImage || site.heroImage}
-  theme={{
-    primary: site.themePrimary,
-    secondary: site.themeSecondary,
-    radius: site.themeRadius,
-    font: site.themeFont,
-    mode: site.themeMode,
-  }}
+  site={site}
 >
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 

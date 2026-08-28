@@ -12,6 +12,16 @@ import {
   formatRelative,
 } from "../lib/i18n/index.js";
 import { safeUrl } from "../lib/url.js";
+import {
+  THEME_PRESETS,
+  PRESET_FIELDS,
+  APPEARANCE_DEFAULTS,
+  APPEARANCE_FLAGS,
+  findPreset,
+  resolveTheme,
+  themeStyle,
+  themeBodyClass,
+} from "../lib/theme.js";
 
 /* =============================================================================
  * EVKita — Logika Panel Admin
@@ -40,7 +50,12 @@ let t = makeT(locale);
 
 /* "editor", "profile", dan "users" adalah halaman penuh tanpa butir sidebar
    sendiri di kelompok koleksi. */
-const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "site", "media", "backups", "editor", "profile", "users"];
+const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "tampilan", "site", "media", "backups", "editor", "profile", "users"];
+
+/* Dua form yang isinya sama-sama field `site`: Pengaturan Situs dan Tampilan.
+   Keduanya ditangani mesin yang sama supaya menambah field cukup satu baris
+   markup, tanpa penangan baru. */
+const SITE_FORMS = ["site-form", "tampilan-form"];
 const COLLECTIONS = ["cars", "motors", "spklu", "bengkel", "berita"];
 const VEHICLE_COLS = ["cars", "motors"];
 const DIR_COLS = ["spklu", "bengkel", "berita"];
@@ -2168,30 +2183,47 @@ function saveDir() {
  * ------------------------------------------------------------------ */
 
 function renderSiteForm() {
-  const form = $("site-form");
-  if (!form || !content) return;
-  // Jangan timpa apa yang sedang diketik pengguna.
-  if (form.contains(document.activeElement)) return;
+  if (!content) return;
+  for (const id of SITE_FORMS) {
+    const form = $(id);
+    if (!form) continue;
+    // Jangan timpa apa yang sedang diketik pengguna.
+    if (form.contains(document.activeElement)) continue;
 
-  for (const el of form.elements) {
-    const key = el.name;
-    if (!key || !(key in content.site)) continue;
-    if (el.type === "checkbox") el.checked = !!content.site[key];
-    else if (el.value !== String(content.site[key])) el.value = String(content.site[key]);
+    for (const el of form.elements) {
+      const key = el.name;
+      if (!key || !(key in content.site)) continue;
+      if (el.type === "checkbox") el.checked = !!content.site[key];
+      else if (el.value !== String(content.site[key])) el.value = String(content.site[key]);
+    }
+    form.querySelectorAll("[data-image-field]").forEach(renderSiteImageField);
   }
-  form.querySelectorAll("[data-image-field]").forEach(renderSiteImageField);
   syncRangeOutputs();
+  syncPresetCards();
   applyThemePreview();
 }
 
-/** Nilai <input type="range"> tidak terlihat tanpa label angka di sampingnya. */
+/**
+ * Nilai <input type="range"> tidak terlihat tanpa label angka di sampingnya.
+ *
+ * Satuannya dibaca dari `data-unit` di <output> — menu Tampilan memakai persen,
+ * derajat, dan piksel dalam satu form yang sama. `data-div` membagi nilainya
+ * lebih dulu, supaya slider yang bergerak per satuan bulat (jarak huruf judul)
+ * tetap bisa menampilkan angka yang benar-benar dipakai CSS.
+ */
 function syncRangeOutputs() {
-  const form = $("site-form");
-  if (!form) return;
-  form.querySelectorAll('input[type="range"]').forEach((input) => {
-    const out = form.querySelector(`output[for="${CSS.escape(input.id)}"]`);
-    if (out) out.textContent = input.value + "px";
-  });
+  for (const id of SITE_FORMS) {
+    const form = $(id);
+    if (!form) continue;
+    form.querySelectorAll('input[type="range"]').forEach((input) => {
+      const out = form.querySelector(`output[for="${CSS.escape(input.id)}"]`);
+      if (!out) return;
+      const div = Number(out.getAttribute("data-div"));
+      const raw = Number(input.value);
+      const shown = div > 0 ? (raw / div).toFixed(String(div).length - 1) : input.value;
+      out.textContent = shown + (out.getAttribute("data-unit") || "px");
+    });
+  }
 }
 
 function renderSiteImageField(wrap) {
@@ -2204,22 +2236,101 @@ function renderSiteImageField(wrap) {
 }
 
 function collectSiteForm() {
-  const form = $("site-form");
-  if (!form) return;
-  for (const el of form.elements) {
-    const key = el.name;
-    if (!key || !(key in content.site)) continue;
-    content.site[key] = el.type === "checkbox" ? !!el.checked : String(el.value);
+  for (const id of SITE_FORMS) {
+    const form = $(id);
+    if (!form) continue;
+    for (const el of form.elements) {
+      const key = el.name;
+      if (!key || !(key in content.site)) continue;
+      content.site[key] = el.type === "checkbox" ? !!el.checked : String(el.value);
+    }
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * 14b. Menu Tampilan
+ * ------------------------------------------------------------------ */
+
+/** Sisi mana yang sedang ditunjukkan kotak pratinjau: terang atau gelap. */
+let previewMode = "light";
+
+/**
+ * Menyalakan preset yang sedang dipakai.
+ *
+ * Preset dianggap aktif hanya kalau SELURUH field yang dibawanya masih sama
+ * dengan nilai sekarang. Kalau cuma menyimpan id-nya, satu klik pada pemilih
+ * warna sudah membuat kartu "Senja" tetap menyala padahal warnanya bukan
+ * warna Senja lagi.
+ */
+function activePresetId() {
+  const site = content && content.site;
+  if (!site) return "";
+  const hit = THEME_PRESETS.find((p) => PRESET_FIELDS.every((k) => String(site[k]) === String(p[k])));
+  return hit ? hit.id : "";
+}
+
+function syncPresetCards() {
+  const grid = $("preset-grid");
+  if (!grid) return;
+  const active = activePresetId();
+  grid.querySelectorAll("[data-preset]").forEach((card) => {
+    card.classList.toggle("active", card.getAttribute("data-preset") === active);
+  });
+}
+
+function applyPreset(id) {
+  const preset = findPreset(id);
+  if (!preset || !content) return;
+  for (const key of PRESET_FIELDS) content.site[key] = preset[key];
+  content.site.themePreset = preset.id;
+  renderSiteForm();
+  commit({ render: false });
+  saveNow();
+  toast(t("toast.presetApplied", { name: preset.label }), "success");
+}
+
+/** Mengembalikan SELURUH setelan tampilan ke bawaannya, termasuk CSS kustom. */
+function resetTampilan() {
+  if (!content) return;
+  if (!confirm(t("tampilan.reset.confirm"))) return;
+  Object.assign(content.site, APPEARANCE_DEFAULTS, APPEARANCE_FLAGS);
+  renderSiteForm();
+  commit({ render: false });
+  saveNow();
+  toast(t("toast.tampilanReset"), "success");
+}
+
+/**
+ * Pratinjau langsung.
+ *
+ * Kotak pratinjau memakai variabel dan kelas `ui-*` yang persis sama dengan
+ * yang dikirim ke situs publik, jadi tidak ada "versi panel" dari tema yang
+ * bisa menyimpang. Warna latar pilihan sendiri dipasang di sini karena di
+ * situs publik ia dikirim sebagai aturan CSS untuk <html>, yang tidak punya
+ * padanan di dalam satu kotak.
+ */
 function applyThemePreview() {
   if (!content || !content.site) return;
-  const p = content.site.themePrimary;
-  const s = content.site.themeSecondary;
+  const site = content.site;
+
+  // Panel ikut memakai warna aksen situs supaya tombol utamanya senada.
+  const p = site.themePrimary;
+  const s = site.themeSecondary;
   if (p) document.body.style.setProperty("--accent", p);
   if (s) document.body.style.setProperty("--accent-2", s);
   if (p && s) document.body.style.setProperty("--accent-grad", `linear-gradient(135deg, ${p}, ${s})`);
+
+  const box = $("tampilan-preview");
+  if (!box) return;
+  const th = resolveTheme(site);
+  const bg = previewMode === "dark" ? th.bgDark : th.bgLight;
+  box.setAttribute("style", themeStyle(site) + (bg ? `;--bg:${bg};--bg-tint:${bg}` : ""));
+  box.className = "tp ui-surface ui-bg-layer " + themeBodyClass(site);
+  if (previewMode === "dark") box.setAttribute("data-theme", "dark");
+  else box.removeAttribute("data-theme");
+
+  const modes = document.querySelectorAll("[data-tp-mode]");
+  modes.forEach((b) => b.classList.toggle("active", b.getAttribute("data-tp-mode") === previewMode));
 }
 
 /* ------------------------------------------------------------------ *
@@ -2438,6 +2549,7 @@ async function handleUpload(dz, files) {
     const key = siteField.getAttribute("data-image-field");
     content.site[key] = urls[0];
     renderSiteImageField(siteField);
+    applyThemePreview();
     commit({ render: false });
   } else if (dzone && dirCtx) {
     dirCtx.draft[dzone] = urls[0];
@@ -2802,12 +2914,29 @@ function bindEvents() {
       if (vehicleCtx) { vehicleCtx.draft.gallery.splice(Number(galDel.getAttribute("data-gal-del")), 1); refreshGallery(); }
       return;
     }
+    const presetCard = e.target.closest("[data-preset]");
+    if (presetCard) {
+      applyPreset(presetCard.getAttribute("data-preset"));
+      return;
+    }
+    if (e.target.closest("#tampilan-reset")) {
+      resetTampilan();
+      return;
+    }
+    const tpMode = e.target.closest("[data-tp-mode]");
+    if (tpMode) {
+      previewMode = tpMode.getAttribute("data-tp-mode") === "dark" ? "dark" : "light";
+      applyThemePreview();
+      return;
+    }
+
     const siteImgDel = e.target.closest("[data-site-img-del]");
     if (siteImgDel) {
       const key = siteImgDel.getAttribute("data-site-img-del");
       content.site[key] = "";
       const wrap = siteImgDel.closest("[data-image-field]");
       if (wrap) renderSiteImageField(wrap);
+      applyThemePreview();
       commit({ render: false });
       return;
     }
@@ -2866,11 +2995,12 @@ function bindEvents() {
 
     if (el.id === "media-search") { renderMedia(); return; }
 
-    const siteForm = el.closest && el.closest("#site-form");
+    const siteForm = el.closest && el.closest("#site-form, #tampilan-form");
     if (siteForm) {
       collectSiteForm();
       if (el.type === "range") syncRangeOutputs();
-      if (el.name === "themePrimary" || el.name === "themeSecondary") applyThemePreview();
+      if (siteForm.id === "tampilan-form") syncPresetCards();
+      applyThemePreview();
       commit({ key: "site:" + el.name, render: false });
       return;
     }
@@ -2919,8 +3049,10 @@ function bindEvents() {
       return;
     }
 
-    if (el.closest && el.closest("#site-form") && el.type === "checkbox") {
+    if (el.closest && el.closest("#site-form, #tampilan-form") && el.type === "checkbox") {
       collectSiteForm();
+      syncPresetCards();
+      applyThemePreview();
       commit({ render: false });
     }
   });
@@ -2934,7 +3066,7 @@ function bindEvents() {
     if (form.id === "profile-identity") { e.preventDefault(); saveProfileIdentity(form); return; }
     if (form.id === "profile-password") { e.preventDefault(); saveProfilePassword(form); return; }
     if (form.id === "profile-prefs") { e.preventDefault(); saveProfilePrefs(form); return; }
-    if (form.id === "site-form") {
+    if (SITE_FORMS.includes(form.id)) {
       e.preventDefault();
       collectSiteForm();
       commit({ render: false });
@@ -3323,7 +3455,7 @@ function renderProfile() {
   if (!root) return;
   if (!me) { root.innerHTML = `<div class="skeleton"></div>`; return; }
 
-  const homeOptions = ["dashboard", ...COLLECTIONS, "site", "media"]
+  const homeOptions = ["dashboard", ...COLLECTIONS, "tampilan", "site", "media"]
     .map((v) => `<option value="${esc(v)}"${me.homeView === v ? " selected" : ""}>${esc(t(`nav.${v}`))}</option>`)
     .join("");
 
