@@ -428,11 +428,28 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
               </div>
               <div class="field">
                 <label for="s-contactPhone" data-i18n="site.contactPhone">{t("site.contactPhone")}</label>
-                <input id="s-contactPhone" name="contactPhone" />
+                <input id="s-contactPhone" name="contactPhone" placeholder="+62 21 1234 5678" />
+              </div>
+              <div class="field">
+                <label for="s-contactWhatsapp" data-i18n="site.contactWhatsapp">{t("site.contactWhatsapp")}</label>
+                <input id="s-contactWhatsapp" name="contactWhatsapp" placeholder="628xxxxxxxxxx" />
+                <span class="hint" data-i18n="site.contactWhatsapp.hint">{t("site.contactWhatsapp.hint")}</span>
+              </div>
+              <div class="field">
+                <label for="s-contactHours" data-i18n="site.contactHours">{t("site.contactHours")}</label>
+                <input id="s-contactHours" name="contactHours" placeholder={t("site.contactHours.ph")} data-i18n-ph="site.contactHours.ph" />
               </div>
               <div class="field full">
                 <label for="s-contactAddress" data-i18n="site.contactAddress">{t("site.contactAddress")}</label>
                 <input id="s-contactAddress" name="contactAddress" />
+              </div>
+              <div class="field">
+                <label for="s-contactMapUrl" data-i18n="site.contactMapUrl">{t("site.contactMapUrl")}</label>
+                <input id="s-contactMapUrl" name="contactMapUrl" placeholder="https://maps.google.com/…" />
+              </div>
+              <div class="field">
+                <label for="s-contactWebsite" data-i18n="site.contactWebsite">{t("site.contactWebsite")}</label>
+                <input id="s-contactWebsite" name="contactWebsite" placeholder="https://…" />
               </div>
               <div class="field">
                 <label for="s-socialInstagram">Instagram</label>
@@ -458,6 +475,14 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
                 <label for="s-socialWhatsapp">WhatsApp</label>
                 <input id="s-socialWhatsapp" name="socialWhatsapp" placeholder="628xxxxxxxxxx" />
                 <span class="hint" data-i18n="site.socialWhatsapp.hint">{t("site.socialWhatsapp.hint")}</span>
+              </div>
+              <div class="field">
+                <label for="s-socialLinkedin">LinkedIn</label>
+                <input id="s-socialLinkedin" name="socialLinkedin" placeholder="https://linkedin.com/company/…" />
+              </div>
+              <div class="field">
+                <label for="s-socialTelegram">Telegram</label>
+                <input id="s-socialTelegram" name="socialTelegram" placeholder="https://t.me/…" />
               </div>
             </div>
           </div>
@@ -489,6 +514,88 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
                 <label for="s-footerNote" data-i18n="site.footerNote">{t("site.footerNote")}</label>
                 <input id="s-footerNote" name="footerNote" />
               </div>
+
+              <div class="field">
+                <label for="s-footerCopyright" data-i18n="site.footerCopyright">{t("site.footerCopyright")}</label>
+                <input id="s-footerCopyright" name="footerCopyright" placeholder={t("site.footerCopyright.ph")} data-i18n-ph="site.footerCopyright.ph" />
+                <span class="hint" data-i18n="site.footerCopyright.hint">{t("site.footerCopyright.hint")}</span>
+              </div>
+              <div class="field">
+                <label for="s-footerBottomNote" data-i18n="site.footerBottomNote">{t("site.footerBottomNote")}</label>
+                <input id="s-footerBottomNote" name="footerBottomNote" />
+                <span class="hint" data-i18n="site.footerBottomNote.hint">{t("site.footerBottomNote.hint")}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blok footer: judul kolom & saklar tampil -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="site.footerBlocks">{t("site.footerBlocks")}</h2>
+              <p data-i18n="site.footerBlocks.desc">{t("site.footerBlocks.desc")}</p>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="s-footerMenuTitle" data-i18n="site.footerMenuTitle">{t("site.footerMenuTitle")}</label>
+                <input id="s-footerMenuTitle" name="footerMenuTitle" />
+                <label class="switch-row">
+                  <input type="checkbox" name="showFooterMenu" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="site.showFooterMenu">{t("site.showFooterMenu")}</span>
+                </label>
+              </div>
+              <div class="field">
+                <label for="s-footerContactTitle" data-i18n="site.footerContactTitle">{t("site.footerContactTitle")}</label>
+                <input id="s-footerContactTitle" name="footerContactTitle" />
+                <label class="switch-row">
+                  <input type="checkbox" name="showFooterContact" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="site.showFooterContact">{t("site.showFooterContact")}</span>
+                </label>
+              </div>
+              <div class="field">
+                <label for="s-footerSocialTitle" data-i18n="site.footerSocialTitle">{t("site.footerSocialTitle")}</label>
+                <input id="s-footerSocialTitle" name="footerSocialTitle" />
+                <label class="switch-row">
+                  <input type="checkbox" name="showFooterSocial" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="site.showFooterSocial">{t("site.showFooterSocial")}</span>
+                </label>
+              </div>
+              <div class="field">
+                <label for="s-footerSourceTitle" data-i18n="site.footerSourceTitle">{t("site.footerSourceTitle")}</label>
+                <input id="s-footerSourceTitle" name="footerSourceTitle" />
+                <label class="switch-row">
+                  <input type="checkbox" name="showBackToTop" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="site.showBackToTop">{t("site.showBackToTop")}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Menu footer buatan sendiri -->
+          <div class="form-section">
+            <div class="form-section-head">
+              <h2 data-i18n="site.footerMenus">{t("site.footerMenus")}</h2>
+              <p data-i18n="site.footerMenus.desc">{t("site.footerMenus.desc")}</p>
+            </div>
+
+            <!-- Isi kedua daftar digambar admin.js dari content.site. -->
+            <div class="fmenus" data-footer-menus></div>
+            <button type="button" class="repeater-add" data-fmenu-add>
+              <span aria-hidden="true">+</span>
+              <span data-i18n="site.footerMenus.add">{t("site.footerMenus.add")}</span>
+            </button>
+
+            <div class="fmenu-sub">
+              <h3 data-i18n="site.footerLegal">{t("site.footerLegal")}</h3>
+              <p class="hint" data-i18n="site.footerLegal.desc">{t("site.footerLegal.desc")}</p>
+              <div class="frows" data-footer-legal></div>
+              <button type="button" class="repeater-add" data-flegal-add>
+                <span aria-hidden="true">+</span>
+                <span data-i18n="site.footerLegal.add">{t("site.footerLegal.add")}</span>
+              </button>
             </div>
           </div>
 

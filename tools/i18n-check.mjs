@@ -64,6 +64,9 @@ const SAMA_SENGAJA = new Set([
   "en:site.seo",
   "en:site.contactEmail",
   "en:site.footer",
+  // Nama merek, sama di semua bahasa.
+  "en:site.contactWhatsapp",
+  "zh:site.contactWhatsapp",
   "zh:site.seo",
   "zh:field.id",
   "en:tampilan.header",

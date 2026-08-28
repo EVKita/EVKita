@@ -2,8 +2,14 @@
 /**
  * Footer bersama. Setiap blok hanya muncul kalau datanya terisi — situs ini
  * dipasang sendiri oleh banyak orang dan sebagian besar field bersifat opsional.
+ *
+ * Isinya diatur dari **Admin → Pengaturan Situs → Footer**: kolom menu bebas
+ * (judul + tautan), baris kontak, tautan bilah bawah, dan saklar tampil untuk
+ * tiap blok. Daftar ikon sosial dan kontak datang dari `src/lib/footer.js`,
+ * satu sumber yang dipakai bareng panel admin.
  */
 import { safeUrl } from "../lib/url.js";
+import { SOCIAL_NETWORKS, CONTACT_ROWS } from "../lib/footer.js";
 
 interface Props {
   site: Record<string, any>;
@@ -16,130 +22,225 @@ const brand = site.brandText || "EVKita";
 const suffix = site.brandSuffix || "";
 const mark = (site.logoMark || brand.slice(0, 2) || "EV").slice(0, 3);
 
-const quickLinks = [
-  { label: "Beranda", href: base || "/" },
-  { label: "Katalog", href: "/katalog" },
-  { label: "Merek", href: "/merek" },
-  { label: "Tipe bodi", href: "/tipe" },
-  { label: "Kalkulator hemat", href: "/kalkulator/hemat-listrik-vs-bensin" },
-  { label: "Biaya pengisian", href: "/kalkulator/biaya-pengisian" },
-  site.showSpklu ? { label: "SPKLU", href: `${base}#spklu` } : null,
-  site.showBengkel ? { label: "Bengkel", href: `${base}#bengkel` } : null,
-  site.showBerita ? { label: "Berita", href: `${base}#berita` } : null,
-  site.showAbout ? { label: "Tentang", href: `${base}#tentang` } : null,
-].filter(Boolean) as { label: string; href: string }[];
+const ICON_ATTRS = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-width": "1.7",
+  "stroke-linecap": "round",
+  "aria-hidden": "true",
+} as const;
 
-const socials = [
-  { key: "socialInstagram", label: "Instagram", icon: "IG" },
-  { key: "socialYoutube", label: "YouTube", icon: "YT" },
-  { key: "socialTiktok", label: "TikTok", icon: "TT" },
-  { key: "socialFacebook", label: "Facebook", icon: "FB" },
-  { key: "socialX", label: "X", icon: "X" },
-  { key: "socialWhatsapp", label: "WhatsApp", icon: "WA" },
-]
-  .map((s) => ({ ...s, url: safeUrl(site[s.key]) }))
-  .filter((s) => s.url);
+/** Menu bawaan: halaman yang selalu ada, ditambah seksi beranda yang sedang aktif. */
+const defaultLinks = site.showFooterMenu
+  ? ([
+      { label: "Beranda", href: base || "/" },
+      { label: "Katalog", href: "/katalog" },
+      { label: "Merek", href: "/merek" },
+      { label: "Tipe bodi", href: "/tipe" },
+      { label: "Kalkulator hemat", href: "/kalkulator/hemat-listrik-vs-bensin" },
+      { label: "Biaya pengisian", href: "/kalkulator/biaya-pengisian" },
+      site.showSpklu ? { label: "SPKLU", href: `${base}#spklu` } : null,
+      site.showBengkel ? { label: "Bengkel", href: `${base}#bengkel` } : null,
+      site.showBerita ? { label: "Berita", href: `${base}#berita` } : null,
+      site.showAbout ? { label: "Tentang", href: `${base}#tentang` } : null,
+    ].filter(Boolean) as { label: string; href: string }[])
+  : [];
 
-const contacts = [
-  site.contactEmail ? { label: "Email", value: site.contactEmail, href: `mailto:${site.contactEmail}` } : null,
-  site.contactPhone ? { label: "Telepon", value: site.contactPhone, href: `tel:${String(site.contactPhone).replace(/[^\d+]/g, "")}` } : null,
-  site.contactAddress ? { label: "Alamat", value: site.contactAddress, href: "" } : null,
-].filter(Boolean) as { label: string; value: string; href: string }[];
+/** Kolom menu buatan pemilik situs. Tautan tanpa alamat yang sah tidak ikut tampil. */
+const customMenus = (Array.isArray(site.footerMenus) ? site.footerMenus : [])
+  .map((col: any) => ({
+    title: String(col?.title || ""),
+    links: (Array.isArray(col?.links) ? col.links : [])
+      .map((l: any) => ({ label: String(l?.label || "").trim(), href: safeUrl(l?.url) }))
+      .filter((l: any) => l.label && l.href),
+  }))
+  .filter((col: any) => col.links.length);
+
+const socials = site.showFooterSocial
+  ? SOCIAL_NETWORKS.map((s) => ({
+      ...s,
+      // Nomor WhatsApp lebih sering diketik sebagai angka daripada sebagai URL.
+      url: safeUrl(
+        s.key === "socialWhatsapp" && /^[\d+\s()-]{6,}$/.test(String(site[s.key] || ""))
+          ? `https://wa.me/${String(site[s.key]).replace(/[^\d]/g, "")}`
+          : site[s.key]
+      ),
+    })).filter((s) => s.url)
+  : [];
+
+const contacts = site.showFooterContact
+  ? CONTACT_ROWS.map((row) => {
+      const value = String(site[row.key] || "").trim();
+      if (!value) return null;
+      const href = row.href ? safeUrl(row.href(value)) : "";
+      return { ...row, value: row.text ? row.text() : value, href };
+    }).filter(Boolean)
+  : [];
+
+const legal = (Array.isArray(site.footerLegal) ? site.footerLegal : [])
+  .map((l: any) => ({ label: String(l?.label || "").trim(), href: safeUrl(l?.url) }))
+  .filter((l: any) => l.label && l.href);
 
 const year = new Date().getFullYear();
+const copyright = site.footerCopyright
+  ? String(site.footerCopyright).replace(/\{tahun\}/g, String(year)).replace(/\{brand\}/g, brand)
+  : `© ${year} ${brand}${site.footerTitle ? ` — ${site.footerTitle}` : ""}.`;
+
+const hasSource = site.footerSourceText || site.footerNote;
 ---
 
 <footer class="site-footer" id="sumber">
-  <div class="container footer-grid">
-    <div class="footer-col footer-col-brand">
-      <div class="footer-brand">
-        {site.logoImage ? (
-          <img class="logo-img" src={safeUrl(site.logoImage)} alt="" width="40" height="40" />
-        ) : (
-          <span class="logo-mark">{mark}</span>
-        )}
-        <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
-      </div>
-      {site.footerDesc ? <p class="footer-about">{site.footerDesc}</p> : null}
-      {socials.length ? (
-        <div class="social-row">
-          {socials.map((s) => (
-            <a class="social-link" href={s.url} target="_blank" rel="noopener" aria-label={s.label} title={s.label}>
-              <span aria-hidden="true">{s.icon}</span>
-            </a>
-          ))}
+  <div class="footer-inner container">
+    <div class="footer-top">
+      <div class="footer-brand-col">
+        <div class="footer-brand">
+          {site.logoImage ? (
+            <img class="logo-img" src={safeUrl(site.logoImage)} alt="" width="40" height="40" />
+          ) : (
+            <span class="logo-mark">{mark}</span>
+          )}
+          <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
         </div>
-      ) : null}
+        {site.footerDesc ? <p class="footer-about">{site.footerDesc}</p> : null}
+        {socials.length ? (
+          <div class="footer-social">
+            {site.footerSocialTitle ? <span class="footer-social-label">{site.footerSocialTitle}</span> : null}
+            <div class="social-row">
+              {socials.map((s) => (
+                <a class="social-link" href={s.url} target="_blank" rel="noopener me" aria-label={s.label} title={s.label}>
+                  <svg {...ICON_ATTRS} set:html={s.icon} />
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <nav class="footer-nav" aria-label="Tautan footer">
+        {defaultLinks.length ? (
+          <details class="footer-col" open>
+            <summary><h4>{site.footerMenuTitle || "Jelajahi"}</h4></summary>
+            <ul class="footer-links">
+              {defaultLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+            </ul>
+          </details>
+        ) : null}
+
+        {customMenus.map((col: any) => (
+          <details class="footer-col" open>
+            <summary><h4>{col.title}</h4></summary>
+            <ul class="footer-links">
+              {col.links.map((l: any) => (
+                <li>
+                  <a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel={l.href.startsWith("http") ? "noopener" : undefined}>{l.label}</a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        ))}
+
+        {contacts.length ? (
+          <details class="footer-col footer-col-contact" open>
+            <summary><h4>{site.footerContactTitle || "Kontak"}</h4></summary>
+            <ul class="footer-contact">
+              {contacts.map((c: any) => (
+                <li>
+                  <span class="footer-contact-icon" aria-hidden="true">
+                    <svg {...ICON_ATTRS} set:html={c.icon} />
+                  </span>
+                  <span class="footer-contact-body">
+                    <span class="footer-contact-label">{c.label}</span>
+                    {c.href ? (
+                      <a href={c.href} target={c.href.startsWith("http") ? "_blank" : undefined} rel={c.href.startsWith("http") ? "noopener" : undefined}>{c.value}</a>
+                    ) : (
+                      <span class="footer-contact-value">{c.value}</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
+
+        {hasSource ? (
+          <details class="footer-col" open>
+            <summary><h4>{site.footerSourceTitle || "Sumber Data"}</h4></summary>
+            <div class="footer-source">
+              {site.footerSourceText ? (
+                site.footerSourceUrl ? (
+                  <a class="footer-source-link" href={safeUrl(site.footerSourceUrl)} target="_blank" rel="noopener">{site.footerSourceText}</a>
+                ) : (
+                  <p class="footer-about">{site.footerSourceText}</p>
+                )
+              ) : null}
+              {site.footerNote ? <p class="footer-about footer-note">{site.footerNote}</p> : null}
+            </div>
+          </details>
+        ) : null}
+      </nav>
     </div>
 
-    <div class="footer-col">
-      <h4>Jelajahi</h4>
-      <ul>
-        {quickLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
-      </ul>
-    </div>
-
-    {contacts.length ? (
-      <div class="footer-col">
-        <h4>Kontak</h4>
-        <ul class="footer-contact">
-          {contacts.map((c) => (
+    <div class="footer-bottom">
+      <p class="footer-copy">{copyright}</p>
+      {legal.length ? (
+        <ul class="footer-legal">
+          {legal.map((l: any) => (
             <li>
-              <span class="footer-contact-label">{c.label}</span>
-              {c.href ? (
-                <a href={c.href}>{c.value}</a>
-              ) : (
-                <span class="footer-contact-value">{c.value}</span>
-              )}
+              <a href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel={l.href.startsWith("http") ? "noopener" : undefined}>{l.label}</a>
             </li>
           ))}
         </ul>
-      </div>
-    ) : null}
-
-    {site.footerSourceText || site.footerNote ? (
-      <div class="footer-col">
-        {site.footerSourceText ? (
-          <>
-            <h4>Sumber Data</h4>
-            <ul>
-              <li>
-                {site.footerSourceUrl ? (
-                  <a href={safeUrl(site.footerSourceUrl)} target="_blank" rel="noopener">{site.footerSourceText}</a>
-                ) : (
-                  <span class="footer-about">{site.footerSourceText}</span>
-                )}
-              </li>
-            </ul>
-          </>
-        ) : null}
-        {site.footerNote ? <p class="footer-about footer-note">{site.footerNote}</p> : null}
-      </div>
-    ) : null}
-  </div>
-
-  <div class="container copyright">
-    <span>© {year} {brand}{site.footerTitle ? ` — ${site.footerTitle}` : ""}.</span>
-    <span>Harga &amp; spesifikasi dapat berubah sewaktu-waktu.</span>
+      ) : null}
+      {site.footerBottomNote ? <p class="footer-fineprint">{site.footerBottomNote}</p> : null}
+    </div>
   </div>
 </footer>
 
-<button class="back-to-top" id="backToTop" type="button" aria-label="Kembali ke atas" hidden>
-  <span aria-hidden="true">↑</span>
-</button>
+{site.showBackToTop ? (
+  <button class="back-to-top" id="backToTop" type="button" aria-label="Kembali ke atas" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 19V5" /><path d="m5 12 7-7 7 7" />
+    </svg>
+  </button>
+) : null}
 
 <script>
   (function () {
     const btn = document.getElementById("backToTop");
-    if (!btn) return;
-    const onScroll = () => {
-      btn.hidden = window.scrollY < 500;
+    if (btn) {
+      const onScroll = () => {
+        btn.hidden = window.scrollY < 500;
+      };
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+      btn.addEventListener("click", () => {
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+      });
+    }
+
+    /**
+     * Di layar sempit tiap kolom menu jadi akordeon: enam kolom yang terbuka
+     * semua berarti menggulir jauh hanya untuk melewati footer. Tanpa JavaScript
+     * seluruh kolom tetap terbuka — `open` sudah ada di markup — jadi tidak ada
+     * isi yang hilang kalau skrip ini gagal dimuat.
+     */
+    const cols = document.querySelectorAll(".site-footer .footer-col");
+    if (!cols.length) return;
+    const narrow = window.matchMedia("(max-width: 640px)");
+    const sync = () => {
+      cols.forEach((col, i) => {
+        // Kolom pertama dibiarkan terbuka supaya footer tidak terlihat kosong.
+        col.open = !narrow.matches || i === 0;
+        // Di layar lebar judulnya bukan tombol — CSS sudah mematikan kliknya,
+        // dan ini yang mengeluarkannya dari urutan Tab supaya papan ketik tidak
+        // berhenti di sesuatu yang tidak melakukan apa-apa.
+        const summary = col.querySelector("summary");
+        if (summary) summary.tabIndex = narrow.matches ? 0 : -1;
+      });
     };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    btn.addEventListener("click", () => {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
-    });
+    sync();
+    narrow.addEventListener("change", sync);
   })();
 </script>

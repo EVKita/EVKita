@@ -13,6 +13,14 @@ import {
 } from "../lib/i18n/index.js";
 import { safeUrl } from "../lib/url.js";
 import {
+  MAX_MENU_COLS,
+  MAX_MENU_LINKS,
+  MAX_LEGAL_LINKS,
+  blankMenuColumn,
+  normalizeLinks,
+  normalizeMenus,
+} from "../lib/footer.js";
+import {
   THEME_PRESETS,
   PRESET_FIELDS,
   APPEARANCE_DEFAULTS,
@@ -1047,6 +1055,13 @@ function repeaterRowHtml(name, row, kind, index) {
     <input type="text" data-rk="value" value="${esc(row || "")}" placeholder="${esc(t("editor.variantPh", { n: index + 1 }))}" />
     ${move}${del}
   </div>`;
+}
+
+/** Menggeser satu baris naik (dir < 0) atau turun (dir > 0) di antara saudaranya. */
+function moveSibling(row, dir) {
+  if (!row) return;
+  if (dir < 0 && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+  if (dir > 0 && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
 }
 
 function readRepeater(root, name) {
@@ -2197,6 +2212,7 @@ function renderSiteForm() {
       else if (el.value !== String(content.site[key])) el.value = String(content.site[key]);
     }
     form.querySelectorAll("[data-image-field]").forEach(renderSiteImageField);
+    renderFooterMenus(form);
   }
   syncRangeOutputs();
   syncPresetCards();
@@ -2244,7 +2260,138 @@ function collectSiteForm() {
       if (!key || !(key in content.site)) continue;
       content.site[key] = el.type === "checkbox" ? !!el.checked : String(el.value);
     }
+    collectFooterMenus(form);
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * 14c. Penyusun menu footer
+ * ------------------------------------------------------------------ */
+
+/*
+ * Menu footer dan tautan bilah bawah adalah satu-satunya field `site` yang
+ * berupa LARIK, jadi mesin form generik di atas — satu input = satu field —
+ * tidak bisa menanganinya. Dua fungsi di bawah yang menjembatani: yang satu
+ * menggambar barisnya dari `content.site`, yang lain membacanya kembali dari
+ * DOM saat ada yang berubah.
+ *
+ * Perubahan susunan (tambah, hapus, geser) dikerjakan langsung di DOM lalu
+ * dibaca ulang, persis seperti repeater di editor kendaraan. Menggambar ulang
+ * seluruh daftar pada tiap ketikan akan merebut fokus dari kolom yang sedang
+ * diketik.
+ */
+
+function footerLinkRowHtml(link, hk) {
+  const l = link || { label: "", url: "" };
+  return `<div class="frow" data-frow>
+    <input type="text" data-fk="label" data-hk="${esc(hk)}-label" value="${esc(l.label)}"
+      placeholder="${esc(t("site.footerMenus.linkLabel.ph"))}" aria-label="${esc(t("site.footerMenus.linkLabel.ph"))}" />
+    <input type="text" data-fk="url" data-hk="${esc(hk)}-url" value="${esc(l.url)}"
+      placeholder="${esc(t("site.footerMenus.linkUrl.ph"))}" aria-label="${esc(t("site.footerMenus.linkUrl.ph"))}" />
+    <button type="button" class="btn btn-ghost btn-icon btn-sm" data-frow-move="-1" title="${esc(t("common.moveUp"))}">&uarr;</button>
+    <button type="button" class="btn btn-ghost btn-icon btn-sm" data-frow-move="1" title="${esc(t("common.moveDown"))}">&darr;</button>
+    <button type="button" class="btn btn-ghost btn-icon btn-sm" data-frow-del title="${esc(t("common.removeRow"))}">&times;</button>
+  </div>`;
+}
+
+function footerMenuHtml(col, i) {
+  const c = col || { title: "", links: [] };
+  const links = (c.links && c.links.length ? c.links : [{ label: "", url: "" }])
+    .map((l, j) => footerLinkRowHtml(l, `m${i}-${j}`))
+    .join("");
+  return `<div class="fmenu" data-fmenu>
+    <div class="fmenu-head">
+      <input type="text" class="fmenu-title" data-fk="title" data-hk="m${i}-title" value="${esc(c.title)}"
+        placeholder="${esc(t("site.footerMenus.colTitle.ph"))}" aria-label="${esc(t("site.footerMenus.colTitle.ph"))}" />
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" data-fmenu-move="-1" title="${esc(t("common.moveUp"))}">&uarr;</button>
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" data-fmenu-move="1" title="${esc(t("common.moveDown"))}">&darr;</button>
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" data-fmenu-del title="${esc(t("site.footerMenus.removeCol"))}">&times;</button>
+    </div>
+    <div class="frows" data-fmenu-links>${links}</div>
+    <button type="button" class="repeater-add" data-flink-add>
+      <span aria-hidden="true">+</span> ${esc(t("site.footerMenus.addLink"))}
+    </button>
+  </div>`;
+}
+
+function footerMenuEmptyHtml() {
+  return `<p class="fmenu-empty" data-i18n="site.footerMenus.empty">${esc(t("site.footerMenus.empty"))}</p>`;
+}
+
+/** @param {HTMLElement} root Form yang sedang digambar; halaman Tampilan tidak punya penyusun ini. */
+function renderFooterMenus(root) {
+  const wrap = root.querySelector("[data-footer-menus]");
+  if (wrap) {
+    const cols = content.site.footerMenus || [];
+    wrap.innerHTML = cols.length ? cols.map(footerMenuHtml).join("") : footerMenuEmptyHtml();
+  }
+  const legal = root.querySelector("[data-footer-legal]");
+  if (legal) {
+    legal.innerHTML = (content.site.footerLegal || []).map((l, i) => footerLinkRowHtml(l, `g${i}`)).join("");
+  }
+  syncFooterMenuLimits(root);
+}
+
+/** Nilai mentah tiap baris; pemangkasan dan pembuangan baris kosong dikerjakan
+    normalizeLinks(), fungsi yang sama dengan yang dipakai server. */
+function readFooterLinks(body) {
+  if (!body) return [];
+  return Array.from(body.querySelectorAll("[data-frow]")).map((row) => ({
+    label: (row.querySelector('[data-fk="label"]') || {}).value || "",
+    url: (row.querySelector('[data-fk="url"]') || {}).value || "",
+  }));
+}
+
+/** @param {HTMLElement} root Lihat renderFooterMenus(). */
+function collectFooterMenus(root) {
+  const wrap = root.querySelector("[data-footer-menus]");
+  if (wrap) {
+    content.site.footerMenus = normalizeMenus(
+      Array.from(wrap.querySelectorAll("[data-fmenu]")).map((col) => ({
+        title: (col.querySelector('[data-fk="title"]') || {}).value || "",
+        links: readFooterLinks(col.querySelector("[data-fmenu-links]")),
+      }))
+    );
+  }
+  const legal = root.querySelector("[data-footer-legal]");
+  if (legal) content.site.footerLegal = normalizeLinks(readFooterLinks(legal), MAX_LEGAL_LINKS);
+}
+
+/**
+ * Mematikan tombol tambah begitu batasnya tercapai. Batasnya juga dijaga di
+ * server (`store.ts`), tapi tombol yang tetap menyala lalu diam-diam tidak
+ * berpengaruh adalah cara terburuk menyampaikan sebuah batas.
+ */
+function syncFooterMenuLimits(root) {
+  const wrap = root.querySelector("[data-footer-menus]");
+  const addCol = root.querySelector("[data-fmenu-add]");
+  if (wrap && addCol) addCol.disabled = wrap.querySelectorAll("[data-fmenu]").length >= MAX_MENU_COLS;
+
+  if (wrap) {
+    wrap.querySelectorAll("[data-fmenu]").forEach((col) => {
+      const add = col.querySelector("[data-flink-add]");
+      if (add) add.disabled = col.querySelectorAll("[data-frow]").length >= MAX_MENU_LINKS;
+    });
+  }
+
+  const legal = root.querySelector("[data-footer-legal]");
+  const addLegal = root.querySelector("[data-flegal-add]");
+  if (legal && addLegal) addLegal.disabled = legal.querySelectorAll("[data-frow]").length >= MAX_LEGAL_LINKS;
+}
+
+/** Menyimpan susunan baru lalu menjadwalkan simpan otomatis. */
+function footerMenusChanged(root) {
+  collectFooterMenus(root);
+  syncFooterMenuLimits(root);
+
+  // Kolom terakhir yang dihapus meninggalkan ruang kosong tanpa penjelasan;
+  // render penuh baru terjadi belakangan, jadi keadaan kosongnya dipasang di sini.
+  const wrap = root.querySelector("[data-footer-menus]");
+  if (wrap && !wrap.querySelector("[data-fmenu]") && !wrap.querySelector(".fmenu-empty")) {
+    wrap.innerHTML = footerMenuEmptyHtml();
+  }
+
+  commit({ key: "site:footerMenus", render: false });
 }
 
 /* ------------------------------------------------------------------ *
@@ -2877,6 +3024,45 @@ function bindEvents() {
       return;
     }
 
+    /* --- Penyusun menu footer --- */
+    const fmenuBtn = e.target.closest(
+      "[data-fmenu-add], [data-fmenu-del], [data-fmenu-move], [data-flink-add], [data-flegal-add], [data-frow-del], [data-frow-move]"
+    );
+    if (fmenuBtn) {
+      const form = fmenuBtn.closest("#site-form");
+      if (!form) return;
+
+      if (fmenuBtn.hasAttribute("data-fmenu-add")) {
+        const wrap = form.querySelector("[data-footer-menus]");
+        const empty = wrap.querySelector(".fmenu-empty");
+        if (empty) empty.remove();
+        wrap.insertAdjacentHTML("beforeend", footerMenuHtml(blankMenuColumn(), wrap.children.length));
+        const title = wrap.lastElementChild.querySelector('[data-fk="title"]');
+        if (title) title.focus();
+      } else if (fmenuBtn.hasAttribute("data-fmenu-del")) {
+        fmenuBtn.closest("[data-fmenu]").remove();
+      } else if (fmenuBtn.hasAttribute("data-fmenu-move")) {
+        moveSibling(fmenuBtn.closest("[data-fmenu]"), Number(fmenuBtn.getAttribute("data-fmenu-move")));
+      } else if (fmenuBtn.hasAttribute("data-flink-add")) {
+        const body = fmenuBtn.closest("[data-fmenu]").querySelector("[data-fmenu-links]");
+        body.insertAdjacentHTML("beforeend", footerLinkRowHtml(null, `n${body.children.length}`));
+        const input = body.lastElementChild.querySelector("input");
+        if (input) input.focus();
+      } else if (fmenuBtn.hasAttribute("data-flegal-add")) {
+        const body = form.querySelector("[data-footer-legal]");
+        body.insertAdjacentHTML("beforeend", footerLinkRowHtml(null, `g${body.children.length}`));
+        const input = body.lastElementChild.querySelector("input");
+        if (input) input.focus();
+      } else if (fmenuBtn.hasAttribute("data-frow-del")) {
+        fmenuBtn.closest("[data-frow]").remove();
+      } else if (fmenuBtn.hasAttribute("data-frow-move")) {
+        moveSibling(fmenuBtn.closest("[data-frow]"), Number(fmenuBtn.getAttribute("data-frow-move")));
+      }
+
+      footerMenusChanged(form);
+      return;
+    }
+
     /* --- Repeater --- */
     const repAdd = e.target.closest("[data-rep-add]");
     if (repAdd) {
@@ -2897,10 +3083,7 @@ function bindEvents() {
 
     const repMove = e.target.closest("[data-rep-move]");
     if (repMove) {
-      const row = repMove.closest(".repeater-row");
-      const dir = Number(repMove.getAttribute("data-rep-move"));
-      if (dir < 0 && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
-      if (dir > 0 && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+      moveSibling(repMove.closest(".repeater-row"), Number(repMove.getAttribute("data-rep-move")));
       return;
     }
 
@@ -3001,7 +3184,7 @@ function bindEvents() {
       if (el.type === "range") syncRangeOutputs();
       if (siteForm.id === "tampilan-form") syncPresetCards();
       applyThemePreview();
-      commit({ key: "site:" + el.name, render: false });
+      commit({ key: "site:" + (el.name || el.getAttribute("data-hk") || "footer"), render: false });
       return;
     }
   });

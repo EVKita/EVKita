@@ -1762,6 +1762,131 @@
   box-shadow: var(--adm-ring);
 }
 
+/* Penyusun menu footer: kolom berisi baris tautan, plus baris tautan lepas
+   untuk bilah bawah. Barisnya memakai gaya yang sama dengan .repeater-row,
+   hanya susunannya yang berbeda — dua input yang sama lebarnya. */
+.fmenus {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.fmenu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  background: var(--bg);
+}
+
+.fmenu-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fmenu-title {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-sm);
+  background: var(--bg-card);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+}
+
+.fmenu-title:focus {
+  border-color: var(--accent-ink, var(--accent));
+  box-shadow: var(--adm-ring);
+}
+
+.frows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.frow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r);
+  background: var(--bg-card);
+}
+
+.frow > input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-sm);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  outline: none;
+}
+
+.frow > input:focus {
+  border-color: var(--accent-ink, var(--accent));
+  box-shadow: var(--adm-ring);
+}
+
+.fmenu-empty {
+  grid-column: 1 / -1;
+  padding: 18px;
+  border: 1px dashed var(--border);
+  border-radius: var(--adm-r-lg);
+  color: var(--text-muted);
+  font-size: 13.5px;
+  text-align: center;
+}
+
+.repeater-add[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.repeater-add[disabled]:hover {
+  color: var(--text-muted);
+  border-color: var(--border);
+  background: transparent;
+}
+
+/* Tautan bilah bawah: daftarnya jarang panjang, jadi ia menempel di bawah
+   penyusun menu alih-alih jadi seksi form sendiri. */
+.fmenu-sub {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.fmenu-sub h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.fmenu-sub .hint {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.fmenu-sub .frows {
+  margin-bottom: 12px;
+}
+
 /* =========================================================================
    10. Modal
    ========================================================================= */
@@ -3256,14 +3381,24 @@ body:has(.modal-backdrop.open) .fab {
 
   .repeater-row > input,
   .repeater-row > select,
-  .repeater-row > .color-field {
+  .repeater-row > .color-field,
+  .frow > input {
     flex: 1 1 100%;
     min-height: 44px;
   }
 
-  .repeater-row .btn {
+  .repeater-row .btn,
+  .frow .btn {
     min-height: 40px;
     min-width: 40px;
+  }
+
+  .frow {
+    flex-wrap: wrap;
+  }
+
+  .fmenus {
+    grid-template-columns: 1fr;
   }
 
   .chip {

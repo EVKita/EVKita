@@ -3,6 +3,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfile";
 import { APPEARANCE_DEFAULTS, APPEARANCE_FLAGS } from "./theme.js";
+import { MAX_LEGAL_LINKS, normalizeLinks, normalizeMenus } from "./footer.js";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "content.json");
@@ -30,6 +31,10 @@ const KEEP_DAYS = 14;
  * memetakan satu field = satu input tanpa logika khusus, dan supaya konten lama
  * yang belum punya field baru tetap terbaca — nilai bawaan di bawah ini yang
  * mengisinya.
+ *
+ * Dua pengecualian yang disengaja ada di `SITE_LISTS`: menu footer dan tautan
+ * bilah bawah. Keduanya berjumlah bebas, jadi tidak ada jumlah field tetap yang
+ * bisa menampungnya tanpa memaksa pemilik situs memilih "maksimal empat menu".
  */
 const SITE_DEFAULTS: Record<string, string> = {
   // Identitas
@@ -64,7 +69,11 @@ const SITE_DEFAULTS: Record<string, string> = {
   // Kontak
   contactEmail: "",
   contactPhone: "",
+  contactWhatsapp: "",
   contactAddress: "",
+  contactHours: "",
+  contactMapUrl: "",
+  contactWebsite: "",
 
   // Sosial
   socialInstagram: "",
@@ -73,6 +82,8 @@ const SITE_DEFAULTS: Record<string, string> = {
   socialFacebook: "",
   socialX: "",
   socialWhatsapp: "",
+  socialLinkedin: "",
+  socialTelegram: "",
 
   // Judul & catatan tiap seksi di beranda
   katalogTitle: "Katalog Kendaraan Listrik",
@@ -90,6 +101,12 @@ const SITE_DEFAULTS: Record<string, string> = {
   footerSourceText: "",
   footerSourceUrl: "",
   footerNote: "",
+  footerMenuTitle: "Jelajahi",
+  footerContactTitle: "Kontak",
+  footerSourceTitle: "Sumber Data",
+  footerSocialTitle: "Ikuti Kami",
+  footerCopyright: "",
+  footerBottomNote: "Harga & spesifikasi dapat berubah sewaktu-waktu.",
 };
 
 /** Field `site` bertipe boolean — saklar tampil/sembunyi seksi beranda. */
@@ -100,6 +117,10 @@ const SITE_FLAG_DEFAULTS: Record<string, boolean> = {
   showBerita: true,
   showAbout: true,
   showHeroStats: true,
+  showFooterMenu: true,
+  showFooterContact: true,
+  showFooterSocial: true,
+  showBackToTop: true,
   ...APPEARANCE_FLAGS,
 };
 
@@ -145,6 +166,16 @@ function specRows(v: unknown): { label: string; value: string }[] {
     .map((r: any) => ({ label: str(r?.label).trim(), value: str(r?.value).trim() }))
     .filter((r) => r.label || r.value);
 }
+
+/**
+ * Daftar `site` yang berupa larik, bukan string. Lihat catatan di SITE_DEFAULTS.
+ * Isinya dinormalkan `src/lib/footer.js` — berkas yang sama dipakai panel admin,
+ * jadi batas jumlah dan bentuk barisnya tidak bisa berbeda antara keduanya.
+ */
+const SITE_LISTS: Record<string, (v: unknown) => any[]> = {
+  footerMenus: normalizeMenus,
+  footerLegal: (v) => normalizeLinks(v, MAX_LEGAL_LINKS),
+};
 
 /**
  * @param kind Mobil atau motor. Bentuk objek keduanya identik, jadi tanpa
@@ -288,6 +319,9 @@ function normalize(content: any): any {
   }
   for (const [key, fallback] of Object.entries(SITE_FLAG_DEFAULTS)) {
     site[key] = bool(src[key], fallback);
+  }
+  for (const [key, normalizeList] of Object.entries(SITE_LISTS)) {
+    site[key] = normalizeList(src[key]);
   }
 
   return {

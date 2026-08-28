@@ -180,6 +180,26 @@ CSS kustom — bermuara ke **`src/lib/theme.js`**, dan hanya ke sana.
   menambah setelan, pastikan pratinjaunya ikut — pratinjau yang berbohong lebih
   buruk daripada tidak ada pratinjau.
 
+### Footer
+
+Isi footer diatur dari **Pengaturan Situs → Footer**, dan bermuara ke dua
+tempat: `src/lib/footer.js` (daftar ikon sosial, baris kontak, batas jumlah,
+dan normalisasi menu) serta `src/components/SiteFooter.astro` (yang
+menggambarnya).
+
+- Menambah jejaring sosial atau baris kontak = satu baris di `SOCIAL_NETWORKS` /
+  `CONTACT_ROWS`, satu nilai bawaan di `SITE_DEFAULTS`, satu input di panel,
+  dan tiga terjemahan. Ikonnya ditulis sebagai isi `<svg>` tanpa pembungkusnya.
+- `site.footerMenus` dan `site.footerLegal` adalah **satu-satunya** field `site`
+  yang berupa larik. Keduanya dinormalkan `normalizeMenus()` / `normalizeLinks()`
+  di `footer.js` — fungsi yang sama dipakai `store.ts` (server) dan `admin.js`
+  (panel), jadi batas jumlah dan bentuk barisnya tidak bisa berbeda di antara
+  keduanya. Ujinya ada di `tests/footer.test.ts`.
+- Alamat tautan disimpan apa adanya; penyaring skema `safeUrl()` dipasang di
+  titik render, bukan saat menyimpan. Jangan menyaring dua kali.
+- Tiap blok footer punya saklar `show*` sendiri. Blok yang datanya kosong tidak
+  pernah tampil, jadi footer situs yang baru dipasang tetap rapi.
+
 ### Pengguna & peran
 
 - Akun panel disimpan di **`data/users.json`** (kata sandi ter-hash `scrypt`),
