@@ -184,6 +184,24 @@ describe("linimasa riset", () => {
     assert.equal(p.hasil, null);
   });
 
+  it("jawaban yang terpotong tetap menyimpan potongannya, supaya bisa dirapikan", () => {
+    const p = new PembacaRiset();
+    p.terima("response.output_item.added", { item: { id: "m1", type: "message" } });
+    p.terima("response.output_text.delta", {
+      item_id: "m1",
+      delta: '{"field":{"batteryKwh":{"nilai":50.6,',
+    });
+    p.terima("response.incomplete", {
+      response: { incomplete_details: { reason: "max_output_tokens" } },
+    });
+
+    assert.equal(p.errorKey, "err.ai.jawabanTerpotong");
+    // Potongannya TIDAK dibuang: belasan halaman yang sudah dibuka ada di sana.
+    assert.match(p.mentah, /50\.6/);
+    // Tapi juga tidak diterima sebagai hasil apa adanya.
+    assert.equal(p.hasil, null);
+  });
+
   it("penyaringan konten dilaporkan sebagai penolakan, bukan kerusakan", () => {
     const p = new PembacaRiset();
     p.terima("response.incomplete", { response: { incomplete_details: { reason: "content_filter" } } });

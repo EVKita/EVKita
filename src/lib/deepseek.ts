@@ -339,17 +339,29 @@ export class PembacaRiset {
         break;
       }
 
-      case "response.incomplete":
+      case "response.incomplete": {
         this.selesai = true;
         this.usage = data?.response?.usage || null;
-        // Jawaban yang terpotong di tengah bukan jawaban. Sebagiannya bisa
-        // saja terbaca sebagai JSON yang sah dan tetap kehilangan separuh
-        // field — menerimanya lebih berbahaya daripada gagal.
+
+        /*
+         * Jawaban yang terpotong tidak diterima apa adanya — sebagiannya bisa
+         * saja terbaca sebagai JSON yang sah dan tetap kehilangan separuh
+         * field, dan itu lebih berbahaya daripada gagal.
+         *
+         * Tapi ia juga tidak DIBUANG. Riset yang berhenti di sini sudah membuka
+         * belasan halaman dan menemukan angka-angkanya; yang habis hanya jatah
+         * token untuk menuliskannya. Teks yang sempat keluar diserahkan ke
+         * panggilan perapian, yang menyusunnya jadi bentuk yang benar tanpa
+         * mencari apa pun lagi.
+         */
+        const potongan = this.teksAkhir || teksPesan(data?.response);
+        this.mentah = String(potongan || "").trim();
         this.errorKey =
           data?.response?.incomplete_details?.reason === "content_filter"
             ? "err.ai.ditolak"
             : "err.ai.jawabanTerpotong";
         break;
+      }
 
       case "response.failed":
         this.selesai = true;
@@ -550,21 +562,21 @@ export async function jalankanRiset(opts: RisetOpts): Promise<RisetHasil> {
 /**
  * Panggilan kedua: mengubah temuan yang sudah didapat jadi JSON.
  *
- * Ini rencana cadangan yang sudah ditulis di RENCANA-AI-DEEPSEEK.md §7.1
- * sebelum satu baris kode pun dibuat, dan ternyata memang dibutuhkan:
- * dokumentasi DeepSeek menyatakan `web_search` dan `text.format: json_schema`
- * sama-sama didukung, tapi tidak satu pun contohnya memakai keduanya
- * bersamaan — dan ketika dipakai bersamaan, model menjawab dengan kalimat
- * biasa, bukan JSON.
+ * Rencana cadangan dari RENCANA-AI-DEEPSEEK.md §7.1, dan ternyata memang
+ * dibutuhkan: dipakai bersama `web_search`, `text.format: json_schema` tidak
+ * ditegakkan — model menjawab dengan kalimat biasa. Riset yang jawabannya
+ * terpotong kehabisan token juga berakhir di sini.
  *
- * Yang terjadi kalau itu dibiarkan: sepuluh putaran pencarian yang sudah
- * dibayar terbuang seluruhnya, padahal temuannya SUDAH ADA di dalam jawaban
- * itu — hanya bentuknya yang salah.
+ * Sengaja lewat **Chat Completions dengan `response_format: json_object`**,
+ * bukan lewat Responses API dengan `json_schema`. Alasannya bukan selera:
+ * `json_object` adalah satu-satunya bentuk keluaran terstruktur yang punya
+ * contoh berjalan di dokumentasi DeepSeek, sementara `json_schema` sudah
+ * terbukti tidak ditegakkan sekali di jalur ini. Jalur cadangan yang memakai
+ * mekanisme yang sama dengan yang baru saja gagal bukan jalur cadangan.
  *
- * Jadi jawaban mentahnya dikirim ulang ke model yang murah, TANPA alat
- * pencarian dan tanpa penalaran, dengan satu tugas: menyalin isinya ke dalam
- * skema. Tidak ada pencarian baru, tidak ada penilaian baru — hanya perapian
- * bentuk, dan itu sebabnya `effort: "none"` cukup.
+ * Skemanya karena itu dititipkan di dalam teks perintah, dan bentuk hasilnya
+ * tetap disaring `ai-usulan.js` sesudahnya — lapisan yang memang sudah
+ * dirancang untuk tidak memercayai apa pun yang datang dari model.
  */
 export async function rapikanJadiJson(opts: {
   apiKey: string;
@@ -572,9 +584,19 @@ export async function rapikanJadiJson(opts: {
   mentah: string;
   signal?: AbortSignal;
 }): Promise<{ ok: boolean; hasil?: any; errorKey?: string; usage?: any }> {
+  const perintah = [
+    "Ubah catatan riset berikut menjadi satu objek JSON yang sesuai skema di bawah.",
+    "JANGAN menambah, menebak, atau mengubah satu pun nilai — salin apa adanya dari catatan.",
+    'Nilai yang tidak disebut di catatan diisi null dengan keyakinan "rendah".',
+    "Jawab HANYA dengan JSON, tanpa penjelasan dan tanpa pembungkus markdown.",
+    "",
+    "SKEMA JSON:",
+    JSON.stringify(opts.schema),
+  ].join("\n");
+
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}/responses`, {
+    res = await fetch(`${BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -584,14 +606,15 @@ export async function rapikanJadiJson(opts: {
       body: JSON.stringify({
         // Selalu model termurah: pekerjaannya menyalin, bukan menilai.
         model: "deepseek-v4-flash",
-        instructions:
-          "Ubah catatan riset berikut menjadi JSON sesuai skema. " +
-          "JANGAN menambah, menebak, atau mengubah satu pun nilai — salin apa adanya dari catatan. " +
-          "Nilai yang tidak disebut di catatan diisi null dengan keyakinan \"rendah\".",
-        input: opts.mentah,
-        reasoning: { effort: "none" },
-        text: { format: { type: "json_schema", name: "usulan_kendaraan", schema: opts.schema } },
-        max_output_tokens: 16_000,
+        messages: [
+          { role: "system", content: perintah },
+          { role: "user", content: opts.mentah },
+        ],
+        response_format: { type: "json_object" },
+        // Menyalin tidak butuh penalaran, dan penalaran di sini hanya memakan
+        // jatah token yang dibutuhkan jawabannya sendiri.
+        thinking: { type: "disabled" },
+        max_tokens: 16_000,
       }),
     });
   } catch {
@@ -608,7 +631,7 @@ export async function rapikanJadiJson(opts: {
     return { ok: false, errorKey: "err.ai.jawabanTidakTerbaca" };
   }
 
-  const hasil = uraiJson(data?.output_text || teksPesan(data));
+  const hasil = uraiJson(data?.choices?.[0]?.message?.content || "");
   if (!hasil) return { ok: false, errorKey: "err.ai.jawabanTidakTerbaca" };
   return { ok: true, hasil, usage: data?.usage };
 }

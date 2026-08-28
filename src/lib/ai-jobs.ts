@@ -31,8 +31,15 @@ const ARSIP_DIR = () => path.join(DATA_DIR(), "ai-jobs");
 /** Berapa hasil riset terakhir yang disimpan sebagai jejak audit. */
 const ARSIP_MAKS = 50;
 
-/** Batas keras satu riset. Di atas ini pasti ada yang salah. */
-const BATAS_MS = 5 * 60 * 1000;
+/**
+ * Batas keras satu riset.
+ *
+ * Semula lima menit, dan itu terlalu pendek: riset sungguhan pada kendaraan
+ * yang datanya tersebar bisa menjalankan tujuh pencarian dan membuka delapan
+ * belas halaman. Riset yang dipotong tepat sebelum menuliskan hasilnya adalah
+ * biaya yang sudah keluar tanpa satu pun angka yang didapat.
+ */
+const BATAS_MS = 10 * 60 * 1000;
 
 /** Berapa lama job yang sudah selesai tetap bisa dibaca dari memori. */
 const SIMPAN_MS = 30 * 60 * 1000;
@@ -345,7 +352,9 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
        * sudah dibayar sepuluh putaran pencarian. Jangan dibuang: kirim ke
        * panggilan kedua yang murah untuk dirapikan bentuknya.
        */
-      if (!res.ok && res.errorKey === "err.ai.jawabanTidakTerbaca" && res.mentah) {
+      const bisaDirapikan =
+        res.errorKey === "err.ai.jawabanTidakTerbaca" || res.errorKey === "err.ai.jawabanTerpotong";
+      if (!res.ok && bisaDirapikan && res.mentah) {
         const rapi = await rapikanJadiJson({
           apiKey,
           schema,

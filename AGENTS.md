@@ -241,11 +241,15 @@ baru Tahap 0a: halaman **Admin → AI** untuk memasang kunci API DeepSeek.
   `text.format: json_schema` ternyata TIDAK akur — dokumentasi DeepSeek
   menyatakan keduanya didukung, tapi ketika dipakai bersamaan model menjawab
   dengan kalimat biasa, bukan JSON. Jawaban mentah itu tidak dibuang: ia
-  dikirim ke `rapikanJadiJson()` — panggilan kedua tanpa alat pencarian dan
-  tanpa penalaran, yang hanya menyalin isinya ke dalam skema. Sepuluh putaran
-  pencarian yang sudah dibayar jadi tidak terbuang. Jangan menghapus jalur ini
-  tanpa membuktikan lebih dulu bahwa panggilan tunggalnya sudah bisa
-  diandalkan.
+  dikirim ke `rapikanJadiJson()`, yang menyusunnya jadi bentuk yang benar
+  tanpa mencari apa pun lagi. Jawaban yang TERPOTONG karena kehabisan token
+  juga lewat jalur yang sama — potongannya disimpan, bukan dibuang.
+  **`rapikanJadiJson()` sengaja memakai Chat Completions dengan
+  `response_format: json_object`, bukan Responses API dengan `json_schema`.**
+  `json_object` satu-satunya bentuk keluaran terstruktur yang punya contoh
+  berjalan di dokumentasi DeepSeek; `json_schema` sudah terbukti tidak
+  ditegakkan di jalur ini, dan jalur cadangan yang memakai mekanisme yang baru
+  saja gagal bukan jalur cadangan. Jangan menyatukan keduanya.
 - **Job hidup di server, bukan di dalam kotak dialog.** Menutup kotak riset,
   berpindah halaman, atau memuat ulang panel tidak membuang apa pun:
   `GET /api/ai/riset` tanpa id mengembalikan `terakhir`, dan panel menyambung
