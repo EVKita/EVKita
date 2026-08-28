@@ -1068,4 +1068,8 @@ export default {
   "err.ai.modelTidakDikenal": "无法识别该模型。",
   "err.ai.jawabanTerpotong": "AI 的回答尚未结束就被截断。请重试，或缩小检索范围。",
   "err.ai.dibatalkan": "检索已取消。",
+
+  "ai.cobaLagi": "重试",
+  "ai.sejauhIni": "AI 进行到哪一步",
+  "ai.gagalDetail": "来自 DeepSeek 的消息",
 };

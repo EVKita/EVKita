@@ -1069,4 +1069,8 @@ export default {
   "err.ai.modelTidakDikenal": "That model is not recognised.",
   "err.ai.jawabanTerpotong": "The AI answer was cut off before it finished. Try again, or narrow the search.",
   "err.ai.dibatalkan": "Research cancelled.",
+
+  "ai.cobaLagi": "Try again",
+  "ai.sejauhIni": "How far the AI got",
+  "ai.gagalDetail": "Message from DeepSeek",
 };

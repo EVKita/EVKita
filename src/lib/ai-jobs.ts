@@ -59,6 +59,8 @@ export interface Job {
   usage: any;
   biaya: { usd: number; rupiah: number } | null;
   errorKey: string;
+  /** Pesan asli dari DeepSeek saat gagal. Kosong kalau tidak ada. */
+  detail: string;
   ac: AbortController;
 }
 
@@ -171,6 +173,7 @@ export function jobPublik(job: Job) {
     hasil: job.hasil,
     biaya: job.biaya,
     errorKey: job.errorKey,
+    detail: job.detail,
   };
 }
 
@@ -281,6 +284,7 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     usage: null,
     biaya: null,
     errorKey: "",
+    detail: "",
     ac: new AbortController(),
   };
 
@@ -297,6 +301,9 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     apiKey,
     model,
     effort: mode === "harga" ? "low" : "high",
+    // Cek harga hanya mengisi tiga field dan berpikir seperlunya; riset penuh
+    // butuh ruang untuk penalaran sepanjang sepuluh putaran pencarian.
+    maxOutputTokens: mode === "harga" ? 8_000 : 64_000,
     instructions,
     input: `Riset ${brand} ${name}. Jawab hanya dengan JSON sesuai skema.`,
     schema,
@@ -314,6 +321,7 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
       if (!res.ok) {
         job.status = res.errorKey === "err.ai.dibatalkan" ? "batal" : "gagal";
         job.errorKey = res.errorKey || "err.ai.deepseekBermasalah";
+        job.detail = res.detail || "";
         // Nol token terpakai berarti nol biaya. Lihat `kembalikanPemakaian`.
         if (!res.usage) kembalikanPemakaian(job.userId);
       } else {
@@ -329,7 +337,15 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     .finally(() => {
       clearTimeout(batas);
       job.selesaiPada = Date.now();
-      if (job.status === "selesai") arsipkan(job);
+      /*
+       * Job yang GAGAL ikut diarsipkan, bukan hanya yang berhasil.
+       *
+       * Versi pertama hanya menyimpan yang berhasil — dan itu justru membuang
+       * satu-satunya jejak dari kejadian yang paling perlu ditelusuri. Riset
+       * yang gagal hidup di memori tiga puluh menit lalu hilang bersama
+       * alasannya.
+       */
+      if (job.status !== "batal") arsipkan(job);
     });
 
   return { ok: true, job, errorKey: "" };

@@ -3498,6 +3498,7 @@ function bindEvents() {
     if (e.target.closest("#ai-open")) { openAiModal(); return; }
     if (e.target.closest("#ai-start")) { startAiRiset(); return; }
     if (e.target.closest("#ai-cancel")) { batalkanAiRiset(); return; }
+    if (e.target.closest("#ai-retry")) { aiCtx.fase = "setup"; aiCtx.job = null; renderAiModal(); return; }
     if (e.target.closest("#ai-apply")) { applyAiUsulan(); return; }
     if (e.target.closest("#ai-modal-close")) { closeAiModal(); return; }
     if (e.target.closest("#ai-pick-empty")) {
@@ -5153,6 +5154,13 @@ function renderAiModal() {
     return;
   }
 
+  if (aiCtx.fase === "gagal") {
+    body.innerHTML = aiGagalHtml();
+    foot.innerHTML = `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.close"))}</button>
+      <button type="button" class="btn btn-primary" id="ai-retry">${esc(t("ai.cobaLagi"))}</button>`;
+    return;
+  }
+
   body.innerHTML = aiHasilHtml();
   const jumlah = aiCtx.pilih.size;
   foot.innerHTML = `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.close"))}</button>
@@ -5234,6 +5242,46 @@ function aiProgresHtml() {
   return `<div class="ai-progres">
     <ul class="ai-steps">${baris}</ul>
     <p class="ai-progres-meta">${esc(t("ai.progresMeta", { cari, buka }))}</p>
+  </div>`;
+}
+
+/**
+ * Layar kegagalan.
+ *
+ * Versi pertama mengembalikan modal ke layar persiapan dan menaruh alasannya di
+ * toast — yang hilang sendiri beberapa detik kemudian. Riset yang gagal setelah
+ * satu menit lalu tidak meninggalkan jejak apa pun adalah hal yang paling
+ * membuat orang berhenti memercayai sebuah fitur.
+ *
+ * Karena itu layar ini menahan tiga hal sekaligus: alasannya, sejauh mana AI
+ * sempat berjalan sebelum berhenti, dan — kalau ada — kalimat asli dari
+ * DeepSeek yang menyebut persis apa yang ditolak.
+ */
+function aiGagalHtml() {
+  const job = aiCtx.job || {};
+  const pesan = job.errorKey ? t(job.errorKey) : t("err.ai.deepseekBermasalah");
+
+  const langkah = job.langkah || [];
+  const sejauhIni = langkah.length
+    ? `<div class="ai-group">
+        <h4>${esc(t("ai.sejauhIni"))}</h4>
+        ${aiProgresHtml()}
+      </div>`
+    : "";
+
+  // Pesan dari DeepSeek ditampilkan sebagai teks apa adanya di blok monospace:
+  // ia ditujukan untuk ditelusuri, bukan dibaca sebagai kalimat panel.
+  const detail = job.detail
+    ? `<div class="ai-group">
+        <h4>${esc(t("ai.gagalDetail"))}</h4>
+        <pre class="ai-detail">${esc(job.detail)}</pre>
+      </div>`
+    : "";
+
+  return `<div class="ai-gagal">
+    <p class="ai-gagal-pesan">${esc(pesan)}</p>
+    ${detail}
+    ${sejauhIni}
   </div>`;
 }
 
@@ -5359,9 +5407,11 @@ async function startAiRiset() {
     stopAiPoll();
     aiTimer = setInterval(pollAiRiset, AI_POLL_MS);
   } catch (err) {
-    aiCtx.fase = "setup";
+    // Gagal sebelum job sempat dibuat — mis. kuota habis, atau kunci dicabut.
+    // Alasannya tetap ditahan di layar, bukan dititipkan ke toast.
+    aiCtx.fase = "gagal";
+    aiCtx.job = { errorKey: "", detail: err.message, langkah: [] };
     renderAiModal();
-    toast(err.message, "error");
   }
 }
 
@@ -5397,10 +5447,16 @@ async function pollAiRiset() {
   stopAiPoll();
 
   if (data.job.status !== "selesai") {
-    aiCtx.fase = "setup";
+    // Dibatalkan sendiri oleh penyunting: itu bukan kegagalan, dan mereka sudah
+    // tahu alasannya. Selain itu, modal BERTAHAN di layar kegagalan.
+    if (data.job.status === "batal") {
+      aiCtx.fase = "setup";
+      renderAiModal();
+      toast(t("ai.dibatalkan"), "info");
+      return;
+    }
+    aiCtx.fase = "gagal";
     renderAiModal();
-    const kunci = data.job.status === "batal" ? "ai.dibatalkan" : (data.job.errorKey || "err.ai.deepseekBermasalah");
-    toast(t(kunci), data.job.status === "batal" ? "info" : "error");
     return;
   }
 

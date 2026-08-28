@@ -380,9 +380,36 @@ export interface RisetOpts {
 export interface RisetHasil {
   ok: boolean;
   errorKey?: string;
+  /**
+   * Pesan galat apa adanya dari DeepSeek.
+   *
+   * `errorKey` menerjemahkan kode HTTP jadi kalimat yang bisa dibaca siapa pun,
+   * tapi untuk 400 kalimat itu selalu sama — "DeepSeek menolak permintaan ini"
+   * — sementara badan jawabannya menyebut PERSIS apa yang ditolak. Membuangnya
+   * berarti setiap penolakan terlihat identik dan tidak satu pun bisa
+   * ditindaklanjuti.
+   */
+  detail?: string;
   hasil?: any;
   usage?: any;
   langkah: Langkah[];
+}
+
+/** Mengambil kalimat galat dari badan jawaban, kalau ada. */
+async function bacaDetailGalat(res: Response): Promise<string> {
+  try {
+    const raw = (await res.text()).trim();
+    if (!raw) return "";
+    try {
+      const data = JSON.parse(raw);
+      const pesan = data?.error?.message || data?.message || "";
+      return String(pesan || raw).slice(0, 400);
+    } catch {
+      return raw.slice(0, 400);
+    }
+  } catch {
+    return "";
+  }
 }
 
 /** Menjalankan satu riset sampai selesai. */
@@ -409,7 +436,15 @@ export async function jalankanRiset(opts: RisetOpts): Promise<RisetHasil> {
         reasoning: { effort: opts.effort },
         tools: [{ type: "web_search" }],
         text: { format: { type: "json_schema", name: "usulan_kendaraan", schema: opts.schema } },
-        max_output_tokens: opts.maxOutputTokens || 16_000,
+        /*
+         * Batas ini mencakup token PENALARAN, bukan hanya jawaban yang
+         * terlihat — dan itu yang membuat angka 16.000 di versi pertama terlalu
+         * kecil. Dengan effort "high" dan sepuluh putaran pencarian, penalaran
+         * sendiri bisa menghabiskan seluruh jatahnya, lalu jawabannya terpotong
+         * di tengah JSON dan seluruh riset terbuang. Batas yang longgar tidak
+         * menambah biaya: yang ditagih adalah token yang benar-benar dibuat.
+         */
+        max_output_tokens: opts.maxOutputTokens || 64_000,
         stream: true,
         ...(opts.userId ? { user: opts.userId } : {}),
       }),
@@ -424,7 +459,12 @@ export async function jalankanRiset(opts: RisetOpts): Promise<RisetHasil> {
   }
 
   if (!res.ok || !res.body) {
-    return { ok: false, errorKey: errorKeyForStatus(res.status), langkah: pembaca.langkah };
+    return {
+      ok: false,
+      errorKey: errorKeyForStatus(res.status),
+      detail: await bacaDetailGalat(res),
+      langkah: pembaca.langkah,
+    };
   }
 
   const parser = createSseParser();

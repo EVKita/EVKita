@@ -6027,3 +6027,33 @@ body:has(.modal-backdrop.open) .fab {
   .ai-row-arrow { display: none; }
 }
 
+/* --- Layar kegagalan riset --- */
+
+.ai-gagal-pesan {
+  margin: 0 0 18px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.ai-gagal .ai-group + .ai-group {
+  margin-top: 18px;
+}
+
+/* Pesan asli DeepSeek: untuk ditelusuri, bukan dibaca sebagai kalimat panel. */
+.ai-detail {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-surface);
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 180px;
+  overflow-y: auto;
+}
+

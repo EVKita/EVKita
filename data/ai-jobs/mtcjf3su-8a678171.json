@@ -1,0 +1,19 @@
+{
+  "id": "mtcjf3su-8a678171",
+  "col": "cars",
+  "vehicleId": "byd-atto-1",
+  "judul": "BYD Atto 1",
+  "mode": "lengkapi",
+  "model": "deepseek-v4-flash",
+  "status": "gagal",
+  "mulaiPada": 1787896509439,
+  "langkah": [],
+  "hasil": null,
+  "biaya": null,
+  "errorKey": "err.ai.kunciSalah",
+  "detail": "Authentication Fails, Your api key: ****ffff is invalid",
+  "userId": "656a7cea-45be-4be7-8626-3caf6c580f83",
+  "userName": "Maryam",
+  "selesaiPada": 1787896509612,
+  "usage": null
+}

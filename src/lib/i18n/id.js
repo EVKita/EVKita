@@ -1074,4 +1074,8 @@ export default {
   "err.ai.modelTidakDikenal": "Model itu tidak dikenali.",
   "err.ai.jawabanTerpotong": "Jawaban AI terpotong sebelum selesai. Coba lagi, atau persempit yang dicari.",
   "err.ai.dibatalkan": "Riset dibatalkan.",
+
+  "ai.cobaLagi": "Coba lagi",
+  "ai.sejauhIni": "Sejauh mana AI sempat berjalan",
+  "ai.gagalDetail": "Pesan dari DeepSeek",
 };
