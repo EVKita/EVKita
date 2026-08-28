@@ -157,50 +157,128 @@ function vehicleFields(col) {
   };
 }
 
-/* Field per koleksi direktori. Semua field skema tercakup. */
-function dirFields(col) {
+/* Saran isi untuk field direktori. Sama seperti tipe bodi dan nama merek,
+   nilainya tersimpan apa adanya ke content.json dan ikut tampil di situs
+   publik yang berbahasa Indonesia — jadi sengaja tidak diterjemahkan. */
+const DIR_SUGGESTIONS = {
+  spkluOperator: ["PLN", "Starvo", "Utomo Charge+", "Charge+", "Voltron", "Casion"],
+  spkluConnector: ["CCS2", "CHAdeMO", "AC Type 2", "CCS2 + CHAdeMO", "GB/T"],
+  spkluPower: ["7 kW", "11 kW", "22 kW", "25 kW", "50 kW", "60 kW", "120 kW", "200 kW"],
+  hoursSpklu: ["24 jam", "06.00-22.00", "08.00-20.00", "Mengikuti jam mal"],
+  hoursBengkel: ["Senin-Sabtu 08.00-17.00", "Senin-Jumat 08.00-16.30", "Setiap hari 09.00-18.00"],
+  bengkelType: ["Resmi", "Umum", "Spesialis"],
+};
+
+/**
+ * Field direktori, dikelompokkan per bagian.
+ *
+ * Pengelompokannya bukan hiasan. Formulir SPKLU punya 13 field, dan tiga belas
+ * kotak beruntun tanpa jeda tidak memberi tahu apa pun soal urutan pengisian
+ * maupun mana yang boleh dilewati. Bagian bernama menjawab keduanya sekaligus,
+ * dan membuat field yang saling berhubungan terlihat berhubungan.
+ *
+ * `src` menyalakan kontrol combo — daftar saran yang isinya diambil dari data
+ * yang sudah ada. Untuk field yang ikut menjadi filter (area, operator, jenis
+ * bengkel, sumber berita) ini bukan sekadar kemudahan mengetik: filter
+ * mencocokkan nilai **persis**, jadi "Jakarta Pusat" dan "Jakarta pusat"
+ * berakhir sebagai dua pilihan filter yang berbeda.
+ */
+function dirGroups(col) {
+  const urlPh = "https://maps.google.com/…";
+
   if (col === "spklu") {
     return [
-      { k: "name", l: t("field.spklu.name"), t: "text", req: true, ph: t("field.spklu.name.ph") },
-      { k: "operator", l: t("field.spklu.operator"), t: "text", ph: t("field.spklu.operator.ph") },
-      { k: "area", l: t("field.area"), t: "text", ph: t("field.area.ph") },
-      { k: "address", l: t("field.address"), t: "textarea", full: true, rows: 2 },
-      { k: "power", l: t("field.spklu.power"), t: "text", ph: t("field.spklu.power.ph") },
-      { k: "connector", l: t("field.spklu.connector"), t: "text", ph: t("field.spklu.connector.ph") },
-      { k: "count", l: t("field.spklu.count"), t: "number" },
-      { k: "hours", l: t("field.hours"), t: "text", ph: t("field.hours.phSpklu") },
-      { k: "price", l: t("field.spklu.price"), t: "text", ph: t("field.spklu.price.ph") },
-      { k: "website", l: t("field.website"), t: "url", ph: "https://" },
-      { k: "mapUrl", l: t("field.mapUrl"), t: "url", ph: "https://maps.google.com/…" },
-      { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2 },
-      { k: "featured", l: t("field.featured"), t: "switch" },
+      {
+        l: t("dir.spklu.sec.identitas"), d: t("dir.spklu.sec.identitas.d"), f: [
+          { k: "name", l: t("field.spklu.name"), t: "text", req: true, full: true, ph: t("field.spklu.name.ph") },
+          { k: "operator", l: t("field.spklu.operator"), t: "combo", src: "spkluOperator", ph: t("field.spklu.operator.ph") },
+          { k: "area", l: t("field.area"), t: "combo", src: "area", ph: t("field.area.ph"), hint: t("field.area.hint") },
+        ],
+      },
+      {
+        l: t("dir.spklu.sec.lokasi"), d: t("dir.spklu.sec.lokasi.d"), f: [
+          { k: "address", l: t("field.address"), t: "textarea", full: true, rows: 2 },
+          { k: "mapUrl", l: t("field.mapUrl"), t: "url", full: true, ph: urlPh, hint: t("field.mapUrl.hint") },
+        ],
+      },
+      {
+        l: t("dir.spklu.sec.pengisian"), d: t("dir.spklu.sec.pengisian.d"), f: [
+          { k: "power", l: t("field.spklu.power"), t: "combo", src: "spkluPower", ph: t("field.spklu.power.ph") },
+          { k: "connector", l: t("field.spklu.connector"), t: "combo", src: "spkluConnector", ph: t("field.spklu.connector.ph") },
+          { k: "count", l: t("field.spklu.count"), t: "number", ph: "2" },
+          { k: "hours", l: t("field.hours"), t: "combo", src: "hours", ph: t("field.hours.phSpklu") },
+          { k: "price", l: t("field.spklu.price"), t: "text", full: true, ph: t("field.spklu.price.ph") },
+        ],
+      },
+      {
+        l: t("dir.sec.lainnya"), d: t("dir.sec.lainnya.d"), f: [
+          { k: "website", l: t("field.website"), t: "url", full: true, ph: "https://" },
+          { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2, ph: t("field.note.ph") },
+          { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
+        ],
+      },
     ];
   }
+
   if (col === "bengkel") {
     return [
-      { k: "name", l: t("field.bengkel.name"), t: "text", req: true },
-      { k: "type", l: t("field.bengkel.type"), t: "text", ph: t("field.bengkel.type.ph") },
-      { k: "brand", l: t("field.bengkel.brand"), t: "text", ph: t("field.bengkel.brand.ph") },
-      { k: "area", l: t("field.area"), t: "text" },
-      { k: "address", l: t("field.address"), t: "textarea", full: true, rows: 2 },
-      { k: "phone", l: t("field.phone"), t: "text", ph: "mis. 021-1234567" },
-      { k: "hours", l: t("field.hours"), t: "text", ph: t("field.hours.phBengkel") },
-      { k: "services", l: t("field.bengkel.services"), t: "textarea", full: true, rows: 2, ph: t("field.bengkel.services.ph") },
-      { k: "website", l: t("field.website"), t: "url", ph: "https://" },
-      { k: "mapUrl", l: t("field.mapUrl"), t: "url", ph: "https://maps.google.com/…" },
-      { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2 },
-      { k: "featured", l: t("field.featured"), t: "switch" },
+      {
+        l: t("dir.bengkel.sec.identitas"), d: t("dir.bengkel.sec.identitas.d"), f: [
+          { k: "name", l: t("field.bengkel.name"), t: "text", req: true, full: true, ph: t("field.bengkel.name.ph") },
+          { k: "type", l: t("field.bengkel.type"), t: "combo", src: "bengkelType", ph: t("field.bengkel.type.ph") },
+          { k: "brand", l: t("field.bengkel.brand"), t: "combo", src: "bengkelBrand", ph: t("field.bengkel.brand.ph") },
+        ],
+      },
+      {
+        l: t("dir.bengkel.sec.kontak"), d: t("dir.bengkel.sec.kontak.d"), f: [
+          { k: "area", l: t("field.area"), t: "combo", src: "area", ph: t("field.area.ph"), hint: t("field.area.hint") },
+          { k: "phone", l: t("field.phone"), t: "tel", ph: t("field.phone.ph") },
+          { k: "hours", l: t("field.hours"), t: "combo", src: "hours", full: true, ph: t("field.hours.phBengkel") },
+          { k: "address", l: t("field.address"), t: "textarea", full: true, rows: 2 },
+          { k: "mapUrl", l: t("field.mapUrl"), t: "url", full: true, ph: urlPh, hint: t("field.mapUrl.hint") },
+        ],
+      },
+      {
+        l: t("dir.bengkel.sec.layanan"), d: t("dir.bengkel.sec.layanan.d"), f: [
+          { k: "services", l: t("field.bengkel.services"), t: "textarea", full: true, rows: 3, ph: t("field.bengkel.services.ph") },
+        ],
+      },
+      {
+        l: t("dir.sec.lainnya"), d: t("dir.sec.lainnya.d"), f: [
+          { k: "website", l: t("field.website"), t: "url", full: true, ph: "https://" },
+          { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2, ph: t("field.note.ph") },
+          { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
+        ],
+      },
     ];
   }
+
   return [
-    { k: "title", l: t("field.berita.title"), t: "text", req: true, full: true },
-    { k: "source", l: t("field.berita.source"), t: "text", ph: t("field.berita.source.ph") },
-    { k: "date", l: t("field.berita.date"), t: "date" },
-    { k: "url", l: t("field.berita.url"), t: "url", full: true, ph: "https://" },
-    { k: "image", l: t("field.berita.image"), t: "image", full: true },
-    { k: "excerpt", l: t("field.berita.excerpt"), t: "textarea", full: true, rows: 3 },
-    { k: "featured", l: t("field.featured"), t: "switch" },
+    {
+      l: t("dir.berita.sec.artikel"), d: t("dir.berita.sec.artikel.d"), f: [
+        { k: "title", l: t("field.berita.title"), t: "text", req: true, full: true, ph: t("field.berita.title.ph") },
+        { k: "source", l: t("field.berita.source"), t: "combo", src: "beritaSource", ph: t("field.berita.source.ph") },
+        { k: "date", l: t("field.berita.date"), t: "date" },
+        { k: "url", l: t("field.berita.url"), t: "url", full: true, ph: "https://", hint: t("field.berita.url.hint") },
+      ],
+    },
+    {
+      l: t("dir.berita.sec.tampilan"), d: t("dir.berita.sec.tampilan.d"), f: [
+        { k: "image", l: t("field.berita.image"), t: "image", full: true, hint: t("field.berita.image.hint") },
+        { k: "excerpt", l: t("field.berita.excerpt"), t: "textarea", full: true, rows: 3, ph: t("field.berita.excerpt.ph") },
+      ],
+    },
+    {
+      l: t("dir.berita.sec.penayangan"), d: t("dir.berita.sec.penayangan.d"), f: [
+        { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
+      ],
+    },
   ];
+}
+
+/* Daftar rata semua field direktori — dipakai saat membaca dan menyimpan. */
+function dirFields(col) {
+  return dirGroups(col).flatMap((g) => g.f);
 }
 
 /* Filter dropdown per koleksi. `options` menghasilkan daftar dari data aktual. */
@@ -487,11 +565,38 @@ function toast(message, kind, action) {
  * 5. Modal & konfirmasi
  * ------------------------------------------------------------------ */
 
+/**
+ * Mengunci guliran halaman selama modal terbuka.
+ *
+ * Tanpa ini, memutar roda tetikus di atas modal ikut menggulir daftar di
+ * belakangnya — isi yang tidak sedang dikerjakan bergerak sendiri, dan posisi
+ * daftar hilang begitu modal ditutup. `--modal-scrollgap` mengganti lebar
+ * batang gulir yang menghilang, supaya halaman tidak melompat beberapa piksel
+ * di peramban yang batang gulirnya memakan tempat (Windows, Linux).
+ */
+function lockPageScroll(on) {
+  // Dipasang di <html>, bukan <body> — persis alasan yang sama seperti di situs
+  // publik: di <body> ia menjadikan <body> kontainer gulir dan seluruh elemen
+  // `position: sticky` (bilah alat daftar, bilah simpan editor) lepas.
+  const root = document.documentElement;
+  if (on) {
+    if (root.classList.contains("modal-open")) return;
+    const gap = window.innerWidth - root.clientWidth;
+    if (gap > 0) root.style.setProperty("--modal-scrollgap", gap + "px");
+    root.classList.add("modal-open");
+    return;
+  }
+  if (modalStack.length) return; // masih ada modal lain di bawahnya
+  root.classList.remove("modal-open");
+  root.style.removeProperty("--modal-scrollgap");
+}
+
 function openModal(el) {
   if (!el) return;
   el.classList.add("open");
   el.removeAttribute("hidden");
   if (!modalStack.includes(el)) modalStack.push(el);
+  lockPageScroll(true);
 }
 
 function closeModal(el) {
@@ -503,6 +608,7 @@ function closeModal(el) {
   // Grid disegarkan saat modal tutup, bukan pada tiap ketikan: menggambar ulang
   // kartu di belakang modal sambil mengetik alt hanya membuang kerja.
   if (el.id === "media-modal") { mediaCtx = null; renderMedia(); }
+  lockPageScroll(false);
 }
 
 /** Menutup modal editor: kalau formulir sudah disentuh, minta konfirmasi dulu. */
@@ -782,8 +888,10 @@ function fieldHtml(def, value, prefix) {
     const v = Array.isArray(value) ? value.join(", ") : value;
     control = `<input type="text" id="${esc(id)}" name="${esc(def.k)}" value="${esc(v)}"${ph} />`;
   } else {
-    const type = def.t === "url" ? "url" : def.t === "date" ? "date" : "text";
-    control = `<input type="${type}" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph} />`;
+    const type = def.t === "url" ? "url" : def.t === "date" ? "date" : def.t === "tel" ? "tel" : "text";
+    // Papan ketik ponsel langsung berupa tombol angka untuk nomor telepon.
+    const mode = def.t === "tel" ? ' inputmode="tel"' : "";
+    control = `<input type="${type}" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph}${mode} />`;
   }
   return `<div class="${cls}" data-field="${esc(def.k)}">${label}${control}${hint}</div>`;
 }
@@ -811,10 +919,23 @@ function readField(form, def) {
  * ------------------------------------------------------------------ */
 
 const comboSources = {};
-const COMBO_LABEL = { brand: "merek" };
+
+/* Nama daftar, dipakai di teks kosong dan kaki panel ("3 dari 12 operator").
+   Nilainya adalah KUNCI kamus, bukan teksnya. */
+const COMBO_LABEL = {
+  brand: "combo.label.brand",
+  bengkelBrand: "combo.label.brand",
+  area: "combo.label.area",
+  spkluOperator: "combo.label.operator",
+  spkluConnector: "combo.label.connector",
+  spkluPower: "combo.label.power",
+  hours: "combo.label.hours",
+  bengkelType: "combo.label.workshopKind",
+  beritaSource: "combo.label.source",
+};
 
 function comboLabel(key) {
-  return COMBO_LABEL[key] || "pilihan";
+  return t(COMBO_LABEL[key] || "combo.label.option");
 }
 
 function comboHtml(id, def, value) {
@@ -873,8 +994,8 @@ function renderCombo(box) {
 
   if (!list.length) {
     pop.innerHTML = `<div class="combo-empty">
-      <strong>Tidak ada ${esc(label)} yang cocok</strong>
-      <span>“${esc(input.value.trim())}” tetap bisa dipakai — cukup lanjut mengisi.</span>
+      <strong>${esc(t("combo.emptyTitle", { label }))}</strong>
+      <span>${esc(t("combo.emptyHint", { q: input.value.trim() }))}</span>
     </div>`;
     input.removeAttribute("aria-activedescendant");
     return;
@@ -890,11 +1011,35 @@ function renderCombo(box) {
     </button>`;
   }).join("")}</div>
   <div class="combo-foot">
-    <span>${list.length} dari ${total} ${esc(label)}</span>
-    <span>Ketik untuk mencari · ${esc(label)} baru boleh langsung diketik</span>
+    <span>${esc(t("combo.footCount", { n: list.length, total, label }))}</span>
+    <span>${esc(t("combo.footHint", { label }))}</span>
   </div>`;
 
   setComboActive(box, pop.querySelector(".combo-opt.is-on") || pop.querySelector(".combo-opt"), true);
+  placeCombo(box);
+}
+
+/**
+ * Menentukan panel dibuka ke bawah atau ke atas.
+ *
+ * Yang memotong panel bukan selalu tepi jendela: di dalam modal, badan
+ * formulir punya `overflow: auto` sendiri, jadi panel yang menjulur ke
+ * bawahnya terpotong walau layarnya masih panjang. Batas yang dipakai di sini
+ * adalah kotak penggulir terdekat kalau ada.
+ */
+function placeCombo(box) {
+  const pop = box.querySelector("[data-combo-pop]");
+  if (!pop) return;
+
+  box.classList.remove("is-up");
+  const scroller = box.closest(".modal-body");
+  const bounds = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+  const r = box.getBoundingClientRect();
+  const need = pop.offsetHeight + 12;
+
+  // Hanya dibalik kalau ruang di atas benar-benar lebih lapang; membalik ke
+  // tempat yang sama sempitnya cuma memindahkan masalahnya.
+  if (r.bottom + need > bounds.bottom && r.top - need > bounds.top) box.classList.add("is-up");
 }
 
 function setComboActive(box, opt, instant) {
@@ -2145,32 +2290,158 @@ function saveVehicle(opts) {
  * 13. Modal direktori
  * ------------------------------------------------------------------ */
 
+/* Ikon peringatan lunak. Ditulis sekali supaya tidak berulang di dua tempat. */
+const WARN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
+
+/**
+ * Mengisi daftar saran combo dari data yang sudah ada di koleksi ini, digabung
+ * dengan daftar bawaan. Dibaca ulang tiap kali modal dibuka supaya nilai yang
+ * baru saja diketik langsung ikut disarankan pada entri berikutnya.
+ */
+function fillDirCombos(col) {
+  const items = content[col] || [];
+  // `numeric` supaya "7 kW" tidak mendarat sesudah "200 kW".
+  const merge = (key, extra) =>
+    [...new Set([...uniqVals(items, key), ...(extra || [])])].sort((a, b) =>
+      a.localeCompare(b, intlLocale(locale), { numeric: true, sensitivity: "base" })
+    );
+
+  comboSources.area = merge("area");
+  if (col === "spklu") {
+    comboSources.spkluOperator = merge("operator", DIR_SUGGESTIONS.spkluOperator);
+    comboSources.spkluConnector = merge("connector", DIR_SUGGESTIONS.spkluConnector);
+    comboSources.spkluPower = merge("power", DIR_SUGGESTIONS.spkluPower);
+    comboSources.hours = merge("hours", DIR_SUGGESTIONS.hoursSpklu);
+  } else if (col === "bengkel") {
+    comboSources.bengkelType = merge("type", DIR_SUGGESTIONS.bengkelType);
+    comboSources.bengkelBrand = merge("brand");
+    comboSources.hours = merge("hours", DIR_SUGGESTIONS.hoursBengkel);
+  } else {
+    comboSources.beritaSource = merge("source");
+  }
+}
+
 function openDir(col, id) {
-  const defs = dirFields(col);
-  if (!defs) return;
+  const groups = dirGroups(col);
+  if (!groups) return;
+  const defs = groups.flatMap((g) => g.f);
   const item = id ? findItem(col, id) : blankItem(col);
   if (!item) return;
 
-  dirCtx = { col, id: id || null, draft: {} };
+  dirCtx = { col, id: id || null, defs, draft: {} };
   editorTouched = false;
   for (const d of defs) if (d.t === "image") dirCtx.draft[d.k] = item[d.k] || "";
+
+  // Berita baru diberi tanggal hari ini. Hampir selalu benar, dan tetap bisa
+  // diubah — lebih baik daripada kolom kosong yang sering lupa diisi.
+  if (!id && col === "berita" && !item.date) item.date = new Date().toISOString().slice(0, 10);
+
+  fillDirCombos(col);
 
   const title = $("dir-modal-title");
   if (title) title.textContent = id ? t("editor.editTitle", { one: colOne(col), name: titleOf(col, item) }) : t("editor.addTitle", { one: colOne(col) });
 
+  const sub = $("dir-modal-sub");
+  if (sub) sub.textContent = id ? t("editor.subEdit") : t("dir.subNew");
+
+  // "Simpan & Tambah Lagi" hanya masuk akal saat menambah, bukan saat mengedit.
+  const again = $("dir-save-add");
+  if (again) again.hidden = !!id;
+
   const wrap = $("dir-fields");
-  if (wrap) wrap.innerHTML = `<div class="field-grid">${defs.map((d) => fieldHtml(d, item[d.k], "d")).join("")}</div>`;
+  if (wrap) {
+    wrap.innerHTML = groups
+      .map((g) => `<section class="form-section">
+        <div class="form-section-head">
+          <h4>${esc(g.l)}</h4>
+          <p>${esc(g.d)}</p>
+        </div>
+        <div class="field-grid">${g.f.map((d) => fieldHtml(d, item[d.k], "d")).join("")}</div>
+      </section>`)
+      .join("");
+  }
+
+  const body = document.querySelector("#dir-form .modal-body");
+  if (body) body.scrollTop = 0;
 
   openModal($("dir-modal"));
+  updateDirMeter();
+  checkDirDuplicate();
+
   const first = document.querySelector("#dir-form input, #dir-form textarea");
-  if (first) setTimeout(() => first.focus(), 30);
+  // `preventScroll`: memfokuskan field pertama TANPA menggulir badan modal.
+  // Tanpa ini peramban menggulir field itu ke tengah pandangan, dan labelnya
+  // ikut terdorong ke atas sampai terpotong kepala modal.
+  if (first) setTimeout(() => first.focus({ preventScroll: true }), 30);
 }
 
-function saveDir() {
+/**
+ * Berapa banyak detail yang sudah terisi. Saklar tidak ikut dihitung: "tidak
+ * dicentang" bukan berarti belum diisi.
+ */
+function dirStats(form) {
+  if (!dirCtx || !form) return null;
+  const isFilled = (v) => (Array.isArray(v) ? v.length > 0 : v !== "" && v !== null && v !== undefined);
+  const defs = dirCtx.defs.filter((d) => d.t !== "switch");
+  let filled = 0;
+  for (const d of defs) {
+    const v = d.t === "image" ? dirCtx.draft[d.k] || "" : readField(form, d);
+    if (isFilled(v)) filled++;
+  }
+  const total = defs.length;
+  return { filled, total, pct: total ? Math.round((filled / total) * 100) : 0 };
+}
+
+function updateDirMeter() {
+  const meter = $("dir-meter");
+  const stats = dirStats($("dir-form"));
+  if (!meter) return;
+  if (!stats) { meter.className = "editor-meter modal-meter"; meter.innerHTML = ""; return; }
+
+  const tone = stats.pct >= 80 ? "good" : stats.pct >= 40 ? "mid" : "low";
+  meter.className = "editor-meter modal-meter " + tone;
+  meter.innerHTML = `<div class="editor-meter-bar"><span style="width:${stats.pct}%"></span></div>
+    <div class="editor-meter-text"><strong>${esc(t("editor.meter", { pct: stats.pct }))}</strong> · ${esc(t("editor.meterDetail", { filled: stats.filled, total: stats.total }))}</div>`;
+}
+
+/**
+ * Peringatan lunak saat namanya sudah dipakai entri lain di koleksi yang sama.
+ * Sengaja tidak memblokir simpan — dua SPKLU boleh saja bernama sama di area
+ * berbeda — tapi jauh lebih sering ini berarti entri yang sama dimasukkan dua
+ * kali, dan itu baru ketahuan setelah muncul di situs.
+ */
+function checkDirDuplicate() {
   const form = $("dir-form");
   if (!form || !dirCtx) return;
+
+  const key = dirCtx.col === "berita" ? "title" : "name";
+  const field = form.querySelector(`.field[data-field="${CSS.escape(key)}"]`);
+  const input = form.elements[key];
+  if (!field || !input) return;
+
+  const old = field.querySelector(".field-warn");
+  if (old) old.remove();
+
+  const val = String(input.value || "").trim().toLowerCase();
+  if (!val) return;
+
+  const hit = (content[dirCtx.col] || []).find(
+    (x) => x.id !== dirCtx.id && String(x[key] || "").trim().toLowerCase() === val
+  );
+  if (!hit) return;
+
+  field.insertAdjacentHTML(
+    "beforeend",
+    `<div class="field-warn">${WARN_ICON}<span>${esc(t("dir.duplicate"))}</span></div>`
+  );
+}
+
+function saveDir(opts) {
+  const form = $("dir-form");
+  if (!form || !dirCtx) return;
+  const again = !!(opts && opts.again);
   const { col, id } = dirCtx;
-  const defs = dirFields(col);
+  const defs = dirCtx.defs;
   clearErrors(form);
 
   const data = {};
@@ -2179,6 +2450,8 @@ function saveDir() {
   const nameKey = col === "berita" ? "title" : "name";
   if (!data[nameKey]) {
     markError(form, nameKey, col === "berita" ? t("valid.titleRequired") : t("valid.dirNameRequired"));
+    const bad = form.querySelector(".field.has-error input, .field.has-error textarea");
+    if (bad) bad.focus();
     toast(t("toast.fixRedFields"), "error");
     return;
   }
@@ -2189,6 +2462,19 @@ function saveDir() {
   } else {
     data.id = uniqueId(col, slugify(data[nameKey]) || col);
     content[col].push(data);
+  }
+
+  const label = titleOf(col, data);
+  editorTouched = false;
+
+  // "Simpan & Tambah Lagi" menahan modal tetap terbuka dengan formulir kosong,
+  // supaya memasukkan beberapa entri berturut-turut tidak perlu klik ulang.
+  if (again) {
+    commit();
+    saveNow();
+    openDir(col, null);
+    toast(t("toast.addedNext", { name: label, one: colOne(col).toLowerCase() }), "success");
+    return;
   }
 
   closeModal($("dir-modal"));
@@ -2990,6 +3276,7 @@ async function handleUpload(dz, files) {
   } else if (dzone && dirCtx) {
     dirCtx.draft[dzone] = urls[0];
     dz.innerHTML = imagePreviewHtml(urls[0], `data-img-del="${esc(dzone)}"`);
+    updateDirMeter();
   } else {
     dz.innerHTML = prev;
   }
@@ -3215,6 +3502,7 @@ function bindEvents() {
     }
 
     if (e.target.closest("#editor-save-add")) { saveVehicle({ again: true }); return; }
+    if (e.target.closest("#dir-save-add")) { saveDir({ again: true }); return; }
     if (e.target.closest("#editor-back") || e.target.closest("#editor-cancel")) { leaveEditor(); return; }
 
     const jump = e.target.closest("[data-goto-section]");
@@ -3440,6 +3728,7 @@ function bindEvents() {
       if (dirCtx) dirCtx.draft[key] = "";
       const dz = imgDel.closest(".dropzone");
       if (dz) dz.innerHTML = imagePreviewHtml("", "");
+      updateDirMeter();
       return;
     }
 
@@ -3487,6 +3776,8 @@ function bindEvents() {
 
     if (el.closest && el.closest("#vehicle-form")) { updateVehiclePreview(); return; }
 
+    if (el.closest && el.closest("#dir-form")) { updateDirMeter(); checkDirDuplicate(); return; }
+
     if (el.id === "media-search") { renderMedia(); return; }
 
     if (el.matches && el.matches("[data-media-field]")) {
@@ -3508,6 +3799,7 @@ function bindEvents() {
   document.addEventListener("change", (e) => {
     const el = e.target;
     if (el.closest && el.closest("#vehicle-form, #dir-form")) editorTouched = true;
+    if (el.closest && el.closest("#dir-form")) updateDirMeter();
 
     const filter = el.closest && el.closest("[data-filter]");
     if (filter) {
@@ -3573,6 +3865,20 @@ function bindEvents() {
       toast(t("toast.siteSaved"), "success");
       return;
     }
+  });
+
+  /* --- Tautan tanpa skema ---
+     "evkita.com" yang diketik apa adanya berakhir sebagai tautan relatif dan
+     tidak bisa dibuka dari situs. Dilengkapi saat field ditinggalkan, bukan
+     saat mengetik: menyisipkan "https://" di tengah ketikan membuat kursor
+     melompat ke tempat yang tidak diminta. */
+  document.addEventListener("focusout", (e) => {
+    const el = e.target;
+    if (!el.matches || !el.matches('#dir-form input[type="url"]')) return;
+    const v = String(el.value || "").trim();
+    if (!v || /^[a-z][a-z0-9+.-]*:/i.test(v)) return;
+    el.value = "https://" + v.replace(/^\/+/, "");
+    updateDirMeter();
   });
 
   /* --- Fokus pencarian global --- */
@@ -3709,6 +4015,13 @@ function bindEvents() {
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) ||
       (document.activeElement && document.activeElement.isContentEditable);
 
+    // Ctrl/⌘ + Enter menyimpan formulir modal dari mana pun kursornya berada —
+    // termasuk dari dalam textarea, tempat Enter biasa berarti baris baru.
+    if (mod && key === "enter" && dirCtx && modalStack[modalStack.length - 1] === $("dir-modal")) {
+      e.preventDefault();
+      saveDir();
+      return;
+    }
     if (mod && key === "k") { e.preventDefault(); openPalette(""); return; }
     if (mod && key === "s") { e.preventDefault(); saveNow(); return; }
     if (mod && key === "z") {
@@ -4306,7 +4619,7 @@ function openUserModal(id) {
 
   openModal($("user-modal"));
   const first = document.querySelector("#user-form input");
-  if (first) setTimeout(() => first.focus(), 30);
+  if (first) setTimeout(() => first.focus({ preventScroll: true }), 30);
 }
 
 async function saveUserForm() {

@@ -57,6 +57,9 @@ const SAMA_SENGAJA = new Set([
   "en:editor.editTitle",
   "en:field.tagline",
   "en:field.spklu.operator",
+  "en:combo.label.operator",
+  "en:combo.label.area",
+  "en:field.phone.ph",
   "en:profile.email",
   "en:users.role.admin",
   "en:users.role.editor",
@@ -103,6 +106,7 @@ const DYNAMIC_PREFIXES = [
   "users.cannot",
   "tampilan.",
   "site.themeMode.",
+  "combo.label.",
 ];
 
 const RED = (s) => `\x1b[31m${s}\x1b[0m`;
@@ -249,6 +253,7 @@ const KONSTAN_DATA = new Set([
   "DRIVE_TYPES",
   "BRAND_SUGGESTIONS",
   "SPEC_PRESETS",
+  "DIR_SUGGESTIONS",
   "HEADING_WEIGHTS",
 ]);
 

@@ -1138,17 +1138,23 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
 
   <!-- ===== Modal direktori (SPKLU / bengkel / berita) ===== -->
   <div id="dir-modal" class="modal-backdrop">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dir-modal-title">
+    <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="dir-modal-title">
       <div class="modal-head">
-        <h3 class="modal-title" id="dir-modal-title"></h3>
+        <div class="modal-head-text">
+          <h3 class="modal-title" id="dir-modal-title"></h3>
+          <p class="modal-sub" id="dir-modal-sub"></p>
+        </div>
         <button type="button" class="modal-close" id="dir-modal-close" aria-label={t("common.close")} data-i18n-aria="common.close">&times;</button>
       </div>
+      <div class="editor-meter modal-meter" id="dir-meter"></div>
       <form id="dir-form">
         <div class="modal-body">
-          <div id="dir-fields" class="field-grid"></div>
+          <div id="dir-fields"></div>
         </div>
         <div class="modal-foot">
+          <p class="modal-foot-hint" data-i18n="editor.saveShortcut">{t("editor.saveShortcut")}</p>
           <button type="button" class="btn btn-ghost" id="dir-cancel" data-close-modal data-i18n="common.cancel">{t("common.cancel")}</button>
+          <button type="button" class="btn btn-outline" id="dir-save-add" hidden data-i18n="editor.saveAndAdd">{t("editor.saveAndAdd")}</button>
           <button type="submit" class="btn btn-primary" data-i18n="common.save">{t("common.save")}</button>
         </div>
       </form>
