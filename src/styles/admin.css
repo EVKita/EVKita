@@ -75,18 +75,13 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* Lambang petir bawaan (LogoMark.astro) — sama dengan favicon dan situs depan. */
 .sidebar-logo {
   width: 32px;
   height: 32px;
   flex: none;
-  display: grid;
-  place-items: center;
+  display: block;
   border-radius: 10px;
-  background: var(--accent-grad);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: -0.3px;
 }
 
 .sidebar-brand-text {
@@ -2962,14 +2957,8 @@ body:has(.modal-backdrop.open) .fab {
   width: 42px;
   height: 42px;
   flex: none;
-  display: grid;
-  place-items: center;
+  display: block;
   border-radius: 13px;
-  background: var(--accent-grad);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
   box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 34%, transparent);
 }
 
@@ -4960,15 +4949,10 @@ body:has(.modal-backdrop.open) .fab {
 }
 
 .tp-logo {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 28px;
   height: 28px;
   border-radius: var(--radius-sm);
-  background: var(--accent-grad);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 900;
   flex-shrink: 0;
 }
 

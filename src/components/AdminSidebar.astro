@@ -1,5 +1,6 @@
 ---
 import { makeT } from "../lib/i18n/index.js";
+import LogoMark from "./LogoMark.astro";
 
 /**
  * Sidebar panel admin, dipakai bersama oleh /admin dan /admin/update supaya
@@ -119,7 +120,7 @@ const SVG_ATTRS = {
 
 <aside id="admin-sidebar" class="admin-sidebar">
   <div class="sidebar-brand">
-    <span class="sidebar-logo">EV</span>
+    <LogoMark size={32} class="sidebar-logo" />
     <span class="sidebar-brand-text">
       <strong>EVKita</strong>
       <small data-i18n="topbar.adminPanel">{t("topbar.adminPanel")}</small>

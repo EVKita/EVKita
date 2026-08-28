@@ -631,7 +631,7 @@ export default {
   "site.brandSuffix": "Akhiran Brand",
   "site.brandSuffix.hint": "Ditempel di belakang nama brand, mis. “.com”.",
   "site.logoMark": "Inisial Logo",
-  "site.logoMark.hint": "Dipakai kalau gambar logo kosong. Maksimal 4 huruf.",
+  "site.logoMark.hint": "Dipakai kalau gambar logo kosong. Maksimal 4 huruf. Kosongkan (atau isi \"EV\") untuk memakai lambang petir bawaan.",
   "site.logoImage": "Gambar Logo",
   "site.logoImage.hint": "PNG transparan disarankan. Klik atau seret berkas ke kotak.",
   "site.themePrimary": "Warna Utama",

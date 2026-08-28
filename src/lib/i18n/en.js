@@ -626,7 +626,7 @@ export default {
   "site.brandSuffix": "Brand Suffix",
   "site.brandSuffix.hint": "Appended after the brand name, e.g. “.com”.",
   "site.logoMark": "Logo Initials",
-  "site.logoMark.hint": "Used when no logo image is set. Four characters at most.",
+  "site.logoMark.hint": "Used when no logo image is set. Four characters at most. Leave it empty (or keep \"EV\") to use the built-in bolt mark.",
   "site.logoImage": "Logo Image",
   "site.logoImage.hint": "A transparent PNG works best. Click or drag a file onto the box.",
   "site.themePrimary": "Primary Colour",

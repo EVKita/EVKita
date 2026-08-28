@@ -9,6 +9,7 @@
  * satu sumber yang dipakai bareng panel admin.
  */
 import { safeUrl } from "../lib/url.js";
+import LogoMark from "./LogoMark.astro";
 import { SOCIAL_NETWORKS, CONTACT_ROWS } from "../lib/footer.js";
 
 interface Props {
@@ -20,7 +21,10 @@ const { site, base = "" } = Astro.props;
 
 const brand = site.brandText || "EVKita";
 const suffix = site.brandSuffix || "";
-const mark = (site.logoMark || brand.slice(0, 2) || "EV").slice(0, 3);
+/** Aturan lambang sama persis dengan SiteHeader — lihat catatan di sana. */
+const typed = String(site.logoMark || "").trim();
+const useInitials = typed !== "" && typed.toUpperCase() !== "EV";
+const mark = typed.slice(0, 3);
 
 const ICON_ATTRS = {
   viewBox: "0 0 24 24",
@@ -97,8 +101,10 @@ const hasSource = site.showFooterSource && (site.footerSourceText || site.footer
         <div class="footer-brand">
           {site.logoImage ? (
             <img class="logo-img" src={safeUrl(site.logoImage)} alt="" width="40" height="40" />
-          ) : (
+          ) : useInitials ? (
             <span class="logo-mark">{mark}</span>
+          ) : (
+            <LogoMark size={40} />
           )}
           <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
         </div>

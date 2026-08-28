@@ -1,0 +1,57 @@
+---
+/**
+ * Lambang EVKita — petir di dalam kotak membulat, bentuk yang sama persis
+ * dengan `public/favicon.svg` supaya ikon tab, ikon layar utama, dan kepala
+ * halaman memakai satu merek yang sama.
+ *
+ * Digambar inline (bukan <img>) karena dua alasan:
+ *  - warnanya ikut aksen situs (`--accent` / `--accent-2`), jadi lambangnya
+ *    berubah sendiri kalau user mengganti warna tema di panel;
+ *  - tidak ada permintaan jaringan tambahan di atas lipatan halaman.
+ *
+ * `id` gradien diacak per pemakaian karena satu halaman memuat lambang ini
+ * lebih dari sekali (kepala, laci mobile, footer) dan id ganda itu tidak sah.
+ */
+interface Props {
+  /** Sisi kotak dalam piksel. Header 40, laci 36, footer 40. */
+  size?: number;
+  class?: string;
+}
+
+const { size = 40, class: extra } = Astro.props;
+const uid = `evk-logo-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<svg
+  class:list={["logo-glyph", extra]}
+  width={size}
+  height={size}
+  viewBox="0 0 64 64"
+  aria-hidden="true"
+  focusable="false"
+>
+  <defs>
+    <linearGradient id={uid} x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="var(--accent, #ff3d2e)" />
+      <stop offset="1" stop-color="var(--accent-2, #ff8a00)" />
+    </linearGradient>
+    <linearGradient id={`${uid}-gloss`} x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.3" />
+      <stop offset="0.55" stop-color="#fff" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill={`url(#${uid})`} />
+  <rect width="64" height="64" rx="16" fill={`url(#${uid}-gloss)`} />
+  <path d="M35.5 8 18 36h11l-2.5 20L46 28H34.5z" fill="#0e1116" />
+  <rect
+    x="0.75"
+    y="0.75"
+    width="62.5"
+    height="62.5"
+    rx="15.25"
+    fill="none"
+    stroke="#fff"
+    stroke-opacity="0.24"
+    stroke-width="1.5"
+  />
+</svg>

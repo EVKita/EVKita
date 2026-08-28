@@ -625,7 +625,7 @@ export default {
   "site.brandSuffix": "品牌后缀",
   "site.brandSuffix.hint": "附加在品牌名称之后，例如“.com”。",
   "site.logoMark": "标志缩写",
-  "site.logoMark.hint": "未设置标志图片时使用。最多 4 个字符。",
+  "site.logoMark.hint": "未设置标志图片时使用。最多 4 个字符。留空（或保持 \"EV\"）即使用内置闪电标志。",
   "site.logoImage": "标志图片",
   "site.logoImage.hint": "建议使用透明 PNG。点击或把文件拖到此框中。",
   "site.themePrimary": "主色",

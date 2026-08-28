@@ -437,6 +437,18 @@ textarea {
   background: var(--bg-tint);
 }
 
+/*
+  Lambang petir bawaan (LogoMark.astro). Ukurannya diatur lewat atribut
+  width/height di komponen, jadi di sini cukup bayangan dan sudut membulat
+  yang menyamakan tampilannya dengan `.logo-mark` dan `.logo-img`.
+*/
+.logo-glyph {
+  display: block;
+  flex: none;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 18px var(--accent-soft);
+}
+
 .logo-text {
   font-size: 20px;
   letter-spacing: -0.4px;
@@ -665,7 +677,8 @@ body.nav-open .nav-drawer {
 }
 
 .nav-drawer-brand .logo-mark,
-.nav-drawer-brand .logo-img {
+.nav-drawer-brand .logo-img,
+.nav-drawer-brand .logo-glyph {
   width: 36px;
   height: 36px;
 }

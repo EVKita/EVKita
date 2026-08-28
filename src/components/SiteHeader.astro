@@ -1,5 +1,6 @@
 ---
 import ThemeToggle from "./ThemeToggle.astro";
+import LogoMark from "./LogoMark.astro";
 import { safeUrl } from "../lib/url.js";
 
 /**
@@ -17,7 +18,15 @@ const { site, base = "", active = "" } = Astro.props;
 
 const brand = site.brandText || "EVKita";
 const suffix = site.brandSuffix || "";
-const mark = (site.logoMark || brand.slice(0, 2) || "EV").slice(0, 3);
+/**
+ * Lambang kepala halaman punya tiga tingkat: gambar logo yang diunggah user,
+ * lalu inisial kalau user memang mengetik inisialnya sendiri, dan terakhir
+ * lambang petir bawaan (sama dengan favicon). "EV" dihitung sebagai bawaan —
+ * itu isi awal kolomnya, bukan pilihan sadar user.
+ */
+const typed = String(site.logoMark || "").trim();
+const useInitials = typed !== "" && typed.toUpperCase() !== "EV";
+const mark = typed.slice(0, 3);
 
 const links = [
   { id: "beranda", label: "Beranda", href: base || "/", mode: "", note: "Ringkasan katalog" },
@@ -51,8 +60,10 @@ const ICONS: Record<string, string> = {
     <a href={base || "/"} class="logo" aria-label={`${brand}${suffix} — beranda`}>
       {site.logoImage ? (
         <img class="logo-img" src={safeUrl(site.logoImage)} alt="" width="40" height="40" />
-      ) : (
+      ) : useInitials ? (
         <span class="logo-mark">{mark}</span>
+      ) : (
+        <LogoMark size={40} />
       )}
       <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
     </a>
@@ -102,8 +113,10 @@ const ICONS: Record<string, string> = {
     <span class="nav-drawer-brand">
       {site.logoImage ? (
         <img class="logo-img" src={site.logoImage} alt="" width="36" height="36" />
-      ) : (
+      ) : useInitials ? (
         <span class="logo-mark">{mark}</span>
+      ) : (
+        <LogoMark size={36} />
       )}
       <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
     </span>

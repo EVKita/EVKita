@@ -1,6 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import AdminSidebar from "../../components/AdminSidebar.astro";
+import LogoMark from "../../components/LogoMark.astro";
 import "../../styles/admin.css";
 import { currentUser } from "../../lib/auth";
 import { makeT, localeMeta, LOCALES } from "../../lib/i18n/index.js";
@@ -643,7 +644,7 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
           <div id="tampilan-preview" class="tp ui-surface ui-bg-layer">
             <div class="tp-inner">
               <div class="tp-bar">
-                <span class="tp-logo">EV</span>
+                <LogoMark size={28} class="tp-logo" />
                 <span class="tp-navline"></span>
                 <span class="tp-navline short"></span>
               </div>

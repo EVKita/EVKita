@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
+import LogoMark from "../../components/LogoMark.astro";
 import "../../styles/admin.css";
 import { isAuthed, LOCALE_COOKIE } from "../../lib/auth";
 import { makeT, localeMeta, normalizeLocale, LOCALES } from "../../lib/i18n/index.js";
@@ -76,7 +77,7 @@ const texts = {
 
     <div class="login-card">
       <div class="login-brand">
-        <span class="login-logo">EV</span>
+        <LogoMark size={42} class="login-logo" />
         <span class="login-brand-text">
           <strong>EVKita</strong>
           <span>{t("topbar.adminPanel")}</span>
