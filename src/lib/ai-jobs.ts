@@ -153,6 +153,24 @@ export function jobMilik(id: string, userId: string): Job | null {
   return job.userId === userId ? job : null;
 }
 
+/**
+ * Job terbaru milik pengguna ini — berjalan maupun sudah selesai.
+ *
+ * Inilah yang membuat menutup kotak riset tidak lagi berarti kehilangan
+ * hasilnya. Job hidup di server, bukan di dalam kotak dialog; panel yang
+ * dibuka lagi cukup bertanya "apa ada punya saya?" dan menyambung ke tempat
+ * ia berhenti. Ini juga yang membuat memuat ulang halaman di tengah riset
+ * tidak lagi membuang apa pun.
+ */
+export function jobTerakhir(userId: string): Job | null {
+  let terbaru: Job | null = null;
+  for (const job of jobs.values()) {
+    if (job.userId !== userId) continue;
+    if (!terbaru || job.mulaiPada > terbaru.mulaiPada) terbaru = job;
+  }
+  return terbaru;
+}
+
 export function jobBerjalan(userId: string): Job | null {
   for (const job of jobs.values()) {
     if (job.userId === userId && job.status === "jalan") return job;

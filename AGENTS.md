@@ -246,6 +246,17 @@ baru Tahap 0a: halaman **Admin → AI** untuk memasang kunci API DeepSeek.
   pencarian yang sudah dibayar jadi tidak terbuang. Jangan menghapus jalur ini
   tanpa membuktikan lebih dulu bahwa panggilan tunggalnya sudah bisa
   diandalkan.
+- **Job hidup di server, bukan di dalam kotak dialog.** Menutup kotak riset,
+  berpindah halaman, atau memuat ulang panel tidak membuang apa pun:
+  `GET /api/ai/riset` tanpa id mengembalikan `terakhir`, dan panel menyambung
+  ulang ke riset yang sedang berjalan atau yang hasilnya belum sempat dilihat —
+  untuk kendaraan yang sama saja.
+- **`pollAiRiset()` dibungkus try/catch sampai ke ujungnya.** Ia dipanggil
+  `setInterval`, jadi pengecualian apa pun di dalamnya jadi penolakan janji yang
+  tidak tertangkap: tidak muncul di mana pun, tidak menghentikan apa pun, dan
+  meninggalkan kotak riset membeku selamanya di layar progres. Itu pernah
+  terjadi sungguhan, karena satu baris membaca `hasil.usulan` pada `hasil` yang
+  kosong.
 - **Panel menanya-kabar berulang (polling), bukan SSE.** Reverse proxy
   OpenLiteSpeed mem-buffer aliran peristiwa; server yang membaca SSE dari
   DeepSeek dan mengubahnya jadi linimasa yang bisa dibaca ulang.

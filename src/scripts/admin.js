@@ -5109,11 +5109,48 @@ async function openAiModal() {
   try {
     const res = await fetch("/api/ai/riset");
     const data = await res.json();
-    if (data && data.ok) {
-      aiCtx.kuota = data.kuota;
-      renderAiModal();
-    }
+    if (!data || !data.ok) return;
+    aiCtx.kuota = data.kuota;
+    sambungJobLama(data.terakhir);
+    renderAiModal();
   } catch { /* kuota cuma pemanis; tanpa itu tombolnya tetap bisa ditekan */ }
+}
+
+/**
+ * Menyambung ulang ke riset yang sudah ada di server.
+ *
+ * Menutup kotak riset dulu berarti kehilangan hasilnya: id job-nya hanya hidup
+ * di dalam kotak itu, jadi membukanya lagi selalu mulai dari layar persiapan
+ * seolah tidak pernah ada riset — padahal di server hasilnya ada dan sudah
+ * dibayar. Sekarang job hidup di server dan panel yang bertanya.
+ *
+ * Hanya untuk kendaraan yang SAMA. Hasil riset Ioniq 5 yang tiba-tiba muncul
+ * saat membuka editor Atto 1 lebih membingungkan daripada berguna.
+ */
+function sambungJobLama(job) {
+  if (!job || !aiCtx) return;
+  const sama = vehicleCtx.id ? job.vehicleId === vehicleCtx.id : job.judul === `${aiCtx.brand} ${aiCtx.name}`.trim();
+  if (!sama) return;
+
+  aiCtx.jobId = job.id;
+  aiCtx.job = job;
+  aiCtx.model = job.model || aiCtx.model;
+  aiCtx.mode = job.mode || aiCtx.mode;
+
+  if (job.status === "jalan") {
+    aiCtx.fase = "jalan";
+    stopAiPoll();
+    aiTimer = setInterval(pollAiRiset, AI_POLL_MS);
+    return;
+  }
+  if (job.status === "selesai" && job.hasil) {
+    aiCtx.pilih = new Set((job.hasil.usulan || []).filter((u) => u.pilih).map((u) => u.key));
+    aiCtx.fase = "hasil";
+    return;
+  }
+  if (job.status === "gagal") {
+    aiCtx.fase = "gagal";
+  }
 }
 
 function closeAiModal() {
@@ -5437,43 +5474,66 @@ async function pollAiRiset() {
     return;
   }
 
-  if (!data || !data.ok) {
+  /*
+   * SELURUH sisanya dibungkus try/catch, dan itu bukan kehati-hatian berlebih.
+   *
+   * Fungsi ini dipanggil `setInterval`. Pengecualian apa pun di dalamnya jadi
+   * penolakan janji yang tidak tertangkap — tidak muncul di mana pun, tidak
+   * menghentikan apa pun, dan meninggalkan kotak riset membeku selamanya di
+   * layar progres yang semua langkahnya sudah bertanda selesai. Persis itu yang
+   * terjadi ketika satu baris di bawah membaca `hasil.usulan` pada `hasil` yang
+   * kosong: riset selesai, tapi hasilnya tidak pernah muncul dan tidak ada
+   * satu pun petunjuk kenapa.
+   */
+  try {
+    if (!data || !data.ok) {
+      stopAiPoll();
+      aiCtx.fase = "gagal";
+      aiCtx.job = { errorKey: data && data.errorKey ? data.errorKey : "err.ai.jobHilang", detail: "", langkah: (aiCtx.job && aiCtx.job.langkah) || [] };
+      renderAiModal();
+      return;
+    }
+
+    aiCtx.job = data.job;
+    aiCtx.kuota = data.kuota;
+
+    if (data.job.status === "jalan") {
+      renderAiModal();
+      return;
+    }
+
     stopAiPoll();
-    aiCtx.fase = "setup";
-    renderAiModal();
-    toast(apiMessage(data, "err.ai.jobHilang"), "error");
-    return;
-  }
 
-  aiCtx.job = data.job;
-  aiCtx.kuota = data.kuota;
-
-  if (data.job.status === "jalan") {
-    renderAiModal();
-    return;
-  }
-
-  stopAiPoll();
-
-  if (data.job.status !== "selesai") {
     // Dibatalkan sendiri oleh penyunting: itu bukan kegagalan, dan mereka sudah
-    // tahu alasannya. Selain itu, modal BERTAHAN di layar kegagalan.
+    // tahu alasannya.
     if (data.job.status === "batal") {
       aiCtx.fase = "setup";
       renderAiModal();
       toast(t("ai.dibatalkan"), "info");
       return;
     }
-    aiCtx.fase = "gagal";
-    renderAiModal();
-    return;
-  }
 
-  // Centang awal datang dari server: ia yang tahu field mana yang benar-benar
-  // masih kosong di disk.
-  aiCtx.pilih = new Set((data.job.hasil.usulan || []).filter((u) => u.pilih).map((u) => u.key));
-  aiCtx.fase = "hasil";
-  renderAiModal();
+    // "Selesai" tanpa hasil seharusnya mustahil — tapi "seharusnya mustahil"
+    // adalah keadaan yang paling mahal kalau ia tetap terjadi, karena tidak ada
+    // yang menanganinya. Diperlakukan sebagai kegagalan yang bisa dibaca.
+    if (data.job.status !== "selesai" || !data.job.hasil) {
+      aiCtx.fase = "gagal";
+      renderAiModal();
+      return;
+    }
+
+    // Centang awal datang dari server: ia yang tahu field mana yang benar-benar
+    // masih kosong di disk.
+    const usulan = data.job.hasil.usulan || [];
+    aiCtx.pilih = new Set(usulan.filter((u) => u.pilih).map((u) => u.key));
+    aiCtx.fase = "hasil";
+    renderAiModal();
+  } catch (err) {
+    stopAiPoll();
+    aiCtx.fase = "gagal";
+    aiCtx.job = { errorKey: "", detail: String((err && err.message) || err), langkah: (aiCtx.job && aiCtx.job.langkah) || [] };
+    renderAiModal();
+  }
 }
 
 async function batalkanAiRiset() {

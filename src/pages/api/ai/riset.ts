@@ -8,6 +8,7 @@ import {
   batalkanRiset,
   jobMilik,
   jobPublik,
+  jobTerakhir,
   KUOTA_HARIAN,
   modelBawaan,
   mulaiRiset,
@@ -48,10 +49,14 @@ export const GET: APIRoute = ({ cookies, url }) => {
   if (!id) {
     // Tanpa id: hanya keadaan kuota, dipakai panel untuk menyalakan atau
     // mematikan tombol Riset sebelum ada yang ditekan.
+    // `terakhir` dipakai panel untuk menyambung ulang ke riset yang sedang
+    // berjalan atau yang hasilnya belum sempat dilihat.
+    const terakhir = jobTerakhir(me.id);
     return json({
       ok: true,
       siap: siapRiset(),
       modelBawaan: modelBawaan(),
+      terakhir: terakhir ? jobPublik(terakhir) : null,
       kuota: { batas: KUOTA_HARIAN, terpakai: pemakaianHariIni(me.id) },
     });
   }
