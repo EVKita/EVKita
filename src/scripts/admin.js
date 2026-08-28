@@ -4243,12 +4243,15 @@ function syncLangSwitch() {
   if (!wrap) return;
   wrap.innerHTML = LOCALES.map(
     (l) => `<button type="button" class="lang-opt${l.code === locale ? " active" : ""}" data-lang="${esc(l.code)}" title="${esc(l.label)}" lang="${esc(l.html)}">
+      <span class="lang-flag">${esc(l.flag)}</span>
       <span class="lang-short">${esc(l.short)}</span>
       <span class="lang-label">${esc(l.label)}</span>
     </button>`
   ).join("");
   const btn = $("lang-toggle");
-  if (btn) btn.textContent = localeMeta(locale).short;
+  // Bendera saja: tombolnya selebar 38px dan sudah punya aria-label serta
+  // judul yang menyebut bahasanya dengan kata-kata.
+  if (btn) btn.innerHTML = `<span class="lang-flag">${esc(localeMeta(locale).flag)}</span>`;
 }
 
 /* ---------- Menyimpan preferensi ---------- */
@@ -4390,7 +4393,7 @@ function renderProfile() {
         <div class="field">
           <label for="p-locale">${esc(t("profile.language"))}</label>
           <select id="p-locale" name="locale">
-            ${LOCALES.map((l) => `<option value="${esc(l.code)}"${l.code === me.locale ? " selected" : ""}>${esc(l.label)}</option>`).join("")}
+            ${LOCALES.map((l) => `<option value="${esc(l.code)}"${l.code === me.locale ? " selected" : ""}>${esc(l.flag)} ${esc(l.label)}</option>`).join("")}
           </select>
         </div>
         <div class="field">

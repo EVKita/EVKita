@@ -13,11 +13,21 @@ import zh from "./zh.js";
 
 export const DEFAULT_LOCALE = "id";
 
-/** Daftar bahasa yang tersedia, sekaligus isi pemilih bahasa di panel. */
+/**
+ * Daftar bahasa yang tersedia, sekaligus isi pemilih bahasa di panel.
+ *
+ * `flag` adalah emoji bendera (sepasang huruf penanda wilayah Unicode).
+ * Benderanya dipilih menurut BAHASA-nya, bukan negara pemakainya: Inggris
+ * memakai bendera Britania walau `intl`-nya `en-US`, karena yang ditunjuk
+ * adalah bahasanya. Tidak semua sistem punya huruf benderanya — Windows,
+ * misalnya, menggambarkannya sebagai sepasang huruf ("ID", "GB", "CN").
+ * Itu sebabnya kode singkat dan judul tetap dipertahankan di sebelahnya:
+ * bendera adalah penanda tambahan, bukan satu-satunya penanda.
+ */
 export const LOCALES = [
-  { code: "id", label: "Bahasa Indonesia", short: "ID", intl: "id-ID", html: "id" },
-  { code: "en", label: "English", short: "EN", intl: "en-US", html: "en" },
-  { code: "zh", label: "中文", short: "中", intl: "zh-CN", html: "zh-Hans" },
+  { code: "id", label: "Bahasa Indonesia", short: "ID", flag: "🇮🇩", intl: "id-ID", html: "id" },
+  { code: "en", label: "English", short: "EN", flag: "🇬🇧", intl: "en-US", html: "en" },
+  { code: "zh", label: "中文", short: "中", flag: "🇨🇳", intl: "zh-CN", html: "zh-Hans" },
 ];
 
 const DICTS = { id, en, zh };

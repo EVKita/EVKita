@@ -61,11 +61,12 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
              yang aktif selalu tersorot setelah bahasa berganti. -->
         <div id="lang-menu" class="lang-menu">
           <button id="lang-toggle" class="btn btn-icon lang-toggle" type="button" aria-label={t("topbar.languageLabel")} data-i18n-aria="topbar.languageLabel" title={t("topbar.language")}>
-            {lang.short}
+            <span class="lang-flag">{lang.flag}</span>
           </button>
           <div id="lang-switch" class="lang-switch">
             {LOCALES.map((l) => (
               <button type="button" class:list={["lang-opt", { active: l.code === locale }]} data-lang={l.code} lang={l.html} title={l.label}>
+                <span class="lang-flag">{l.flag}</span>
                 <span class="lang-short">{l.short}</span>
                 <span class="lang-label">{l.label}</span>
               </button>

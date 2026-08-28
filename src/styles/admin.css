@@ -4741,6 +4741,31 @@ body:has(.modal-backdrop.open) .fab {
   font-weight: 700;
 }
 
+/* Bendera bahasa.
+   Daftar hurufnya disebut satu per satu karena huruf antarmuka biasa tidak
+   punya lambang bendera: tanpa ini peramban memilih sendiri, dan hasilnya
+   bisa berupa dua huruf penanda wilayah yang tingginya tidak sama dengan
+   teks di sebelahnya. Di sistem yang memang tidak punya benderanya (Windows)
+   ia tetap tampil sebagai sepasang huruf — karena itu kode singkat dan judul
+   di sebelahnya tidak dihapus. */
+.lang-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 22px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+    "Twemoji Mozilla", "Segoe UI Symbol", sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  /* Bendera tidak ikut diredupkan bersama teks tombol saat tidak aktif. */
+  filter: none;
+}
+
+.lang-toggle .lang-flag {
+  font-size: 17px;
+}
+
 .lang-short {
   display: inline-flex;
   align-items: center;
@@ -4758,6 +4783,12 @@ body:has(.modal-backdrop.open) .fab {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
+/* Di dalam menu, nama bahasanya sudah tertulis penuh — lencana kode singkat
+   di situ hanya mengulang tanpa menambah apa pun. */
+.lang-menu .lang-short {
+  display: none;
+}
+
 /* Di halaman masuk pemilih bahasa tampil mendatar, bukan sebagai menu. */
 .lang-switch-inline {
   position: static;
@@ -4770,6 +4801,14 @@ body:has(.modal-backdrop.open) .fab {
 
 .lang-switch-inline .lang-label {
   display: none;
+}
+
+/* Mendatar dan tanpa nama bahasa, jadi bendera dan kode singkat berdampingan:
+   bendera memberi pengenalan sekilas, kodenya menjaga arti kalau benderanya
+   tidak tergambar. */
+.lang-switch-inline .lang-opt {
+  gap: 6px;
+  padding: 6px 8px;
 }
 
 .login-top {
