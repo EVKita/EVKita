@@ -87,7 +87,7 @@ const copyright = site.footerCopyright
   ? String(site.footerCopyright).replace(/\{tahun\}/g, String(year)).replace(/\{brand\}/g, brand)
   : `© ${year} ${brand}${site.footerTitle ? ` — ${site.footerTitle}` : ""}.`;
 
-const hasSource = site.footerSourceText || site.footerNote;
+const hasSource = site.showFooterSource && (site.footerSourceText || site.footerNote);
 ---
 
 <footer class="site-footer" id="sumber">

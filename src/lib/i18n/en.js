@@ -716,6 +716,7 @@ export default {
   "site.showFooterMenu": "Show the built-in menu",
   "site.showFooterContact": "Show the contact column",
   "site.showFooterSocial": "Show social icons",
+  "site.showFooterSource": "Show the source column",
   "site.showBackToTop": "Show the back-to-top button",
 
   "site.footerMenus": "Footer Menus",

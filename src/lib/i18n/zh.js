@@ -715,6 +715,7 @@ export default {
   "site.showFooterMenu": "显示内置菜单",
   "site.showFooterContact": "显示联系方式栏",
   "site.showFooterSocial": "显示社交图标",
+  "site.showFooterSource": "显示数据来源栏",
   "site.showBackToTop": "显示返回顶部按钮",
 
   "site.footerMenus": "页脚菜单",

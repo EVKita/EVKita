@@ -721,6 +721,7 @@ export default {
   "site.showFooterMenu": "Tampilkan menu bawaan",
   "site.showFooterContact": "Tampilkan kolom kontak",
   "site.showFooterSocial": "Tampilkan ikon sosial",
+  "site.showFooterSource": "Tampilkan kolom sumber",
   "site.showBackToTop": "Tampilkan tombol kembali ke atas",
 
   "site.footerMenus": "Menu Footer",

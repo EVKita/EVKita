@@ -566,6 +566,17 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
                 <label for="s-footerSourceTitle" data-i18n="site.footerSourceTitle">{t("site.footerSourceTitle")}</label>
                 <input id="s-footerSourceTitle" name="footerSourceTitle" />
                 <label class="switch-row">
+                  <input type="checkbox" name="showFooterSource" />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span data-i18n="site.showFooterSource">{t("site.showFooterSource")}</span>
+                </label>
+              </div>
+
+              <!-- Bukan kolom footer, jadi berdiri sendiri: menaruhnya di bawah
+                   salah satu judul kolom membuatnya terbaca sebagai saklar
+                   kolom itu. -->
+              <div class="field full">
+                <label class="switch-row">
                   <input type="checkbox" name="showBackToTop" />
                   <span class="switch" aria-hidden="true"></span>
                   <span data-i18n="site.showBackToTop">{t("site.showBackToTop")}</span>

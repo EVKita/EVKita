@@ -120,6 +120,7 @@ const SITE_FLAG_DEFAULTS: Record<string, boolean> = {
   showFooterMenu: true,
   showFooterContact: true,
   showFooterSocial: true,
+  showFooterSource: true,
   showBackToTop: true,
   ...APPEARANCE_FLAGS,
 };
