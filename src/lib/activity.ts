@@ -41,7 +41,12 @@ export type ActivityAction =
    * Inggris dan Mandarin.
    */
   | "ai.keySet"
-  | "ai.keyRemoved";
+  | "ai.keyRemoved"
+  /** Model bawaan diganti — ia menentukan berapa mahal setiap riset. */
+  | "ai.modelSet"
+  /** Riset AI dijalankan, dan usulannya diterapkan ke formulir. */
+  | "ai.run"
+  | "ai.apply";
 
 export interface ActivityEntry {
   id: string;

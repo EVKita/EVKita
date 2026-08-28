@@ -16,6 +16,8 @@
  * ikut tercetak.
  */
 
+import { createSseParser, jsonData } from "./sse.js";
+
 const BASE_URL = "https://api.deepseek.com";
 
 /**
@@ -58,19 +60,27 @@ export interface BalanceInfo {
   toppedUp: string;
 }
 
-export interface BalanceOk {
-  ok: true;
-  /** Apakah saldonya cukup untuk memanggil API. */
+/**
+ * Hasil pembacaan saldo.
+ *
+ * Ditulis sebagai satu bentuk dengan seluruh field selalu ada, bukan sebagai
+ * gabungan dua bentuk. `tsconfig` proyek ini memakai setelan bawaan Astro yang
+ * tidak ketat, dan di sana penyempitan tipe lewat pembeda boolean tidak
+ * bekerja — jadi bentuk gabungan hanya menghasilkan galat yang menyesatkan di
+ * setiap pemakainya.
+ */
+export interface BalanceResult {
+  ok: boolean;
+  /** Apakah saldonya cukup untuk memanggil API. Berarti kalau `ok`. */
   available: boolean;
   balances: BalanceInfo[];
-}
-
-export interface BalanceFail {
-  ok: false;
+  /** Kunci terjemahan penyebab gagal. Kosong kalau `ok`. */
   errorKey: string;
 }
 
-export type BalanceResult = BalanceOk | BalanceFail;
+function gagalSaldo(errorKey: string): BalanceResult {
+  return { ok: false, available: false, balances: [], errorKey };
+}
 
 /**
  * Kode HTTP DeepSeek → kunci terjemahan panel.
@@ -100,7 +110,7 @@ function str(v: unknown): string {
  */
 export async function fetchBalance(key: string): Promise<BalanceResult> {
   const trimmed = String(key || "").trim();
-  if (!trimmed) return { ok: false, errorKey: "err.ai.belumAdaKunci" };
+  if (!trimmed) return gagalSaldo("err.ai.belumAdaKunci");
 
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), TIMEOUT_MS);
@@ -115,12 +125,12 @@ export async function fetchBalance(key: string): Promise<BalanceResult> {
   } catch {
     // Jaringan mati, DNS gagal, atau batas waktu tercapai. Ketiganya berarti
     // hal yang sama bagi pembaca panel: kita tidak berhasil menghubunginya.
-    return { ok: false, errorKey: "err.ai.tidakTerhubung" };
+    return gagalSaldo("err.ai.tidakTerhubung");
   } finally {
     clearTimeout(timer);
   }
 
-  if (!res.ok) return { ok: false, errorKey: errorKeyForStatus(res.status) };
+  if (!res.ok) return gagalSaldo(errorKeyForStatus(res.status));
 
   /*
    * Dibaca sebagai teks lalu di-parse sendiri, bukan lewat `res.json()`.
@@ -132,15 +142,16 @@ export async function fetchBalance(key: string): Promise<BalanceResult> {
   let data: any;
   try {
     const raw = (await res.text()).trim();
-    if (!raw) return { ok: false, errorKey: "err.ai.jawabanTidakTerbaca" };
+    if (!raw) return gagalSaldo("err.ai.jawabanTidakTerbaca");
     data = JSON.parse(raw);
   } catch {
-    return { ok: false, errorKey: "err.ai.jawabanTidakTerbaca" };
+    return gagalSaldo("err.ai.jawabanTidakTerbaca");
   }
 
   const list = Array.isArray(data?.balance_infos) ? data.balance_infos : [];
   return {
     ok: true,
+    errorKey: "",
     available: !!data?.is_available,
     balances: list.map((b: any) => ({
       currency: str(b?.currency) || "USD",
@@ -149,4 +160,316 @@ export async function fetchBalance(key: string): Promise<BalanceResult> {
       toppedUp: str(b?.topped_up_balance),
     })),
   };
+}
+
+/* ==========================================================================
+ * Riset kendaraan lewat Responses API
+ *
+ * Bagian ini yang benar-benar menjalankan risetnya. Tiga hal dari
+ * dokumentasi DeepSeek yang membentuknya, dan ketiganya tidak umum:
+ *
+ *   1. `tools: [{ type: "web_search" }]` dijalankan DI SERVER DEEPSEEK, sampai
+ *      sepuluh putaran otomatis. Kita tidak punya infrastruktur pencarian
+ *      sendiri dan memang tidak membutuhkannya.
+ *   2. `text.format` bertipe `json_schema` mengikat bentuk jawabannya, jadi
+ *      field yang tidak ada di skema tidak punya tempat untuk ditulis.
+ *   3. Alirannya memakai peristiwa BERNAMA, bukan potongan teks anonim.
+ *      Itulah yang membuat panel bisa menampilkan apa yang sedang dicari,
+ *      bukan sekadar lingkaran berputar.
+ * ========================================================================== */
+
+
+/** Satu baris di linimasa yang dibaca penyunting. */
+export interface Langkah {
+  id: string;
+  jenis: "mulai" | "pikir" | "cari" | "buka" | "susun";
+  teks: string;
+  status: "jalan" | "selesai";
+}
+
+/** Sepanjang apa kutipan pemikiran yang ditampilkan. Bukan transkrip. */
+const MAX_PIKIR = 400;
+/** Sepanjang apa teks pencarian dan alamat halaman yang ditampilkan. */
+const MAX_LANGKAH = 160;
+
+function potong(v: unknown, batas: number): string {
+  const s = String(v === null || v === undefined ? "" : v).replace(/\s+/g, " ").trim();
+  return s.length > batas ? s.slice(0, batas - 1) + "…" : s;
+}
+
+/**
+ * Menerjemahkan peristiwa DeepSeek jadi linimasa.
+ *
+ * Terpisah dari pemanggilan jaringan dengan sengaja: seluruh logika di sini
+ * bisa diuji dengan aliran peristiwa buatan, tanpa kunci API dan tanpa
+ * menunggu satu menit tiap kali.
+ *
+ * CATATAN KEAMANAN: `teks` di tiap langkah berasal dari model dan dari halaman
+ * web yang ia buka — keduanya konten tak tepercaya. Ia hanya pernah
+ * ditampilkan sebagai TEKS (lewat `esc()` di panel), tidak pernah jadi tautan
+ * yang bisa diklik, dan panjangnya selalu dipotong di sini.
+ */
+export class PembacaRiset {
+  langkah: Langkah[] = [];
+  hasil: any = null;
+  usage: any = null;
+  errorKey = "";
+  selesai = false;
+
+  private teksAkhir = "";
+  private urut = 0;
+
+  private cari(id: string): Langkah | undefined {
+    return this.langkah.find((l) => l.id === id);
+  }
+
+  private tambah(id: string, jenis: Langkah["jenis"], teks: string): Langkah {
+    const ada = this.cari(id);
+    if (ada) return ada;
+    const baru: Langkah = { id: id || `l${++this.urut}`, jenis, teks, status: "jalan" };
+    this.langkah.push(baru);
+    return baru;
+  }
+
+  /** Deskripsi satu aksi pencarian, dari objek `action` milik web_search_call. */
+  private static deskripsiAksi(action: any): { jenis: Langkah["jenis"]; teks: string } {
+    const tipe = String(action?.type || "");
+    if (tipe === "open_page") return { jenis: "buka", teks: potong(action?.url, MAX_LANGKAH) };
+    if (tipe === "find_in_page") {
+      return { jenis: "buka", teks: potong(action?.pattern || action?.url, MAX_LANGKAH) };
+    }
+    return { jenis: "cari", teks: potong(action?.query, MAX_LANGKAH) };
+  }
+
+  terima(nama: string, data: any): void {
+    switch (nama) {
+      case "response.created":
+        this.tambah("mulai", "mulai", "").status = "selesai";
+        break;
+
+      case "response.output_item.added": {
+        const item = data?.item;
+        const id = String(item?.id || "");
+        if (item?.type === "web_search_call") this.tambah(id, "cari", "");
+        else if (item?.type === "reasoning") this.tambah(id, "pikir", "");
+        else if (item?.type === "message") this.tambah(id, "susun", "");
+        break;
+      }
+
+      case "response.reasoning_text.delta": {
+        const l = this.tambah(String(data?.item_id || "pikir"), "pikir", "");
+        // Kutipan pemikiran hanya tampil sepotong. Yang menarik bagi pembaca
+        // adalah apa yang sedang dipikirkan SEKARANG, bukan seluruh riwayatnya.
+        l.teks = potong(l.teks + String(data?.delta || ""), MAX_PIKIR);
+        break;
+      }
+
+      case "response.reasoning_text.done": {
+        const l = this.cari(String(data?.item_id || "pikir"));
+        if (l) l.status = "selesai";
+        break;
+      }
+
+      case "response.web_search_call.in_progress":
+      case "response.web_search_call.searching": {
+        const l = this.tambah(String(data?.item_id || ""), "cari", "");
+        l.status = "jalan";
+        break;
+      }
+
+      case "response.web_search_call.completed": {
+        const l = this.cari(String(data?.item_id || ""));
+        if (l) l.status = "selesai";
+        break;
+      }
+
+      case "response.output_item.done": {
+        const item = data?.item;
+        const l = this.cari(String(item?.id || ""));
+        if (!l) break;
+        l.status = "selesai";
+        if (item?.type === "web_search_call" && item?.action) {
+          const { jenis, teks } = PembacaRiset.deskripsiAksi(item.action);
+          l.jenis = jenis;
+          if (teks) l.teks = teks;
+        }
+        break;
+      }
+
+      case "response.output_text.delta": {
+        const l = this.tambah(String(data?.item_id || "susun"), "susun", "");
+        l.status = "jalan";
+        this.teksAkhir += String(data?.delta || "");
+        break;
+      }
+
+      case "response.completed": {
+        this.selesai = true;
+        for (const l of this.langkah) l.status = "selesai";
+        this.usage = data?.response?.usage || null;
+        const teks = this.teksAkhir || teksPesan(data?.response);
+        this.hasil = uraiJson(teks);
+        if (!this.hasil) this.errorKey = "err.ai.jawabanTidakTerbaca";
+        break;
+      }
+
+      case "response.incomplete":
+        this.selesai = true;
+        this.usage = data?.response?.usage || null;
+        // Jawaban yang terpotong di tengah bukan jawaban. Sebagiannya bisa
+        // saja terbaca sebagai JSON yang sah dan tetap kehilangan separuh
+        // field — menerimanya lebih berbahaya daripada gagal.
+        this.errorKey =
+          data?.response?.incomplete_details?.reason === "content_filter"
+            ? "err.ai.ditolak"
+            : "err.ai.jawabanTerpotong";
+        break;
+
+      case "response.failed":
+        this.selesai = true;
+        this.errorKey = "err.ai.deepseekBermasalah";
+        break;
+    }
+  }
+}
+
+/** Teks jawaban akhir dari objek `response` yang lengkap. */
+function teksPesan(response: any): string {
+  const output = Array.isArray(response?.output) ? response.output : [];
+  const pesan = output.filter((o: any) => o?.type === "message");
+  return pesan
+    .flatMap((p: any) => (Array.isArray(p?.content) ? p.content : []))
+    .filter((c: any) => c?.type === "output_text")
+    .map((c: any) => String(c?.text || ""))
+    .join("");
+}
+
+/**
+ * `text.format` bertipe `json_schema` seharusnya membuat pembungkus markdown
+ * tidak mungkin muncul. "Seharusnya" bukan jaminan, dan membuang tiga tanda
+ * petik jauh lebih murah daripada satu riset yang gagal di ujung.
+ */
+function uraiJson(teks: string): any {
+  const bersih = String(teks || "")
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "");
+  if (!bersih) return null;
+  try {
+    return JSON.parse(bersih);
+  } catch {
+    return null;
+  }
+}
+
+export interface RisetOpts {
+  apiKey: string;
+  model: string;
+  effort: "low" | "high" | "max";
+  instructions: string;
+  input: string;
+  schema: any;
+  maxOutputTokens?: number;
+  /** Id pengguna panel — untuk isolasi KVCache. BUKAN nama atau email. */
+  userId?: string;
+  signal?: AbortSignal;
+  /** Dipanggil tiap kali linimasa berubah, supaya panel bisa ikut bergerak. */
+  onLangkah?: (langkah: Langkah[]) => void;
+}
+
+export interface RisetHasil {
+  ok: boolean;
+  errorKey?: string;
+  hasil?: any;
+  usage?: any;
+  langkah: Langkah[];
+}
+
+/** Menjalankan satu riset sampai selesai. */
+export async function jalankanRiset(opts: RisetOpts): Promise<RisetHasil> {
+  const pembaca = new PembacaRiset();
+  const lapor = () => {
+    if (opts.onLangkah) opts.onLangkah(pembaca.langkah);
+  };
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}/responses`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+        Authorization: `Bearer ${opts.apiKey}`,
+      },
+      signal: opts.signal,
+      body: JSON.stringify({
+        model: opts.model,
+        instructions: opts.instructions,
+        input: opts.input,
+        reasoning: { effort: opts.effort },
+        tools: [{ type: "web_search" }],
+        text: { format: { type: "json_schema", name: "usulan_kendaraan", schema: opts.schema } },
+        max_output_tokens: opts.maxOutputTokens || 16_000,
+        stream: true,
+        ...(opts.userId ? { user: opts.userId } : {}),
+      }),
+    });
+  } catch (err: any) {
+    const dibatalkan = err?.name === "AbortError";
+    return {
+      ok: false,
+      errorKey: dibatalkan ? "err.ai.dibatalkan" : "err.ai.tidakTerhubung",
+      langkah: pembaca.langkah,
+    };
+  }
+
+  if (!res.ok || !res.body) {
+    return { ok: false, errorKey: errorKeyForStatus(res.status), langkah: pembaca.langkah };
+  }
+
+  const parser = createSseParser();
+  const decoder = new TextDecoder();
+  const reader = res.body.getReader();
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const peristiwa = parser.feed(decoder.decode(value, { stream: true }));
+      if (!peristiwa.length) continue;
+      for (const p of peristiwa) pembaca.terima(p.event, jsonData(p));
+      lapor();
+      if (pembaca.selesai) break;
+    }
+    for (const p of parser.flush()) pembaca.terima(p.event, jsonData(p));
+  } catch (err: any) {
+    const dibatalkan = err?.name === "AbortError";
+    return {
+      ok: false,
+      errorKey: dibatalkan ? "err.ai.dibatalkan" : "err.ai.tidakTerhubung",
+      usage: pembaca.usage,
+      langkah: pembaca.langkah,
+    };
+  } finally {
+    // Membaca sisa aliran setelah kita berhenti tidak ada gunanya, dan
+    // membiarkannya terbuka menahan satu koneksi sampai batas waktu server.
+    try {
+      await reader.cancel();
+    } catch {
+      /* sudah tertutup */
+    }
+  }
+
+  lapor();
+
+  if (pembaca.errorKey || !pembaca.hasil) {
+    return {
+      ok: false,
+      errorKey: pembaca.errorKey || "err.ai.jawabanTidakTerbaca",
+      usage: pembaca.usage,
+      langkah: pembaca.langkah,
+    };
+  }
+
+  return { ok: true, hasil: pembaca.hasil, usage: pembaca.usage, langkah: pembaca.langkah };
 }

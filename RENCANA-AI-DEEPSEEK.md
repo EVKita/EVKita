@@ -6,10 +6,11 @@ struktur panel admin EVKita.
 
 **Status:**
 - **Tahap 0a selesai** — halaman Admin → AI untuk memasang kunci API. Rilis v1.0.30.
-- **Fondasi Tahap 1 selesai** — `vehicle-spec.js`, `ai-prompt.js`, `ai-usulan.js`
-  beserta ujinya. Belum dirilis: belum ada yang bisa dilihat pengguna sampai
-  tombol risetnya ada.
-- **Tahap 0b menunggu kunci DeepSeek dipasang lewat panel.**
+- **Tahap 1 selesai** — tombol Riset di editor kendaraan, panel progres
+  linimasa, dialog usulan per field, pemilih model beserta biayanya, dan kuota
+  harian. 293 uji.
+- **Tahap 0b menunggu kunci DeepSeek dipasang lewat panel.** Seluruh jalur sudah
+  diuji kecuali satu: jawaban DeepSeek yang benar-benar berhasil.
 
 Selebihnya belum dikerjakan. Lihat §8.
 
@@ -703,8 +704,9 @@ pastikan pencarian benar-benar menemukan sumber Indonesia.
 
 ### Tahap 1 — Fondasi + riset satu kendaraan (rilis pertama)
 - ✅ `vehicle-spec.js`, `ai-prompt.js`, `ai-usulan.js` — sumber tunggal definisi
-  field, penyusun skema JSON + instruksi, dan penyaring usulan. 39 uji.
-- `ai-jobs.ts` (registri job) dan perluasan `deepseek.ts` ke Responses API
+  field, penyusun skema JSON + instruksi, dan penyaring usulan
+- ✅ `sse.js`, `ai-biaya.js`, `ai-jobs.ts`, dan perluasan `deepseek.ts` ke
+  Responses API dengan `web_search` + `json_schema`
 - Endpoint `/api/ai/riset` dan `/api/ai/pengaturan`
 - Kemampuan `ai.run` & log aktivitas riset, `.env.example`, kunci i18n
 - Kuota harian 30/akun, dengan tombol yang mati saat kuota habis

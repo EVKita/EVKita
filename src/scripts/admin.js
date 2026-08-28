@@ -22,6 +22,12 @@ import {
   normalizeMenus,
 } from "../lib/footer.js";
 import {
+  jamSibuk,
+  perkiraanBiaya,
+  MODEL_BAWAAN,
+  MODEL_PILIHAN,
+} from "../lib/ai-biaya.js";
+import {
   CAR_BODY_TYPES,
   MOTOR_BODY_TYPES,
   RANGE_STANDARDS,
@@ -449,6 +455,19 @@ function formatRupiah(n) {
 }
 
 /* Menerjemahkan teks harga bebas ("Rp 415 jt", "415 juta") jadi angka rupiah. */
+/**
+ * Rupiah untuk angka KECIL — biaya riset AI, yang berkisar ratusan sampai
+ * belasan ribu.
+ *
+ * `formatRupiah()` di atas dirancang untuk harga kendaraan dan meringkasnya
+ * jadi "Rp 415 jt". Aturan yang sama pada angka biaya menghasilkan "Rp 1,23K",
+ * yang bukan cara siapa pun menulis seribu dua ratus rupiah.
+ */
+function formatRupiahKecil(n) {
+  if (n == null) return "";
+  return "Rp " + new Intl.NumberFormat(intlLocale(locale)).format(Math.round(n));
+}
+
 function parseRupiah(text) {
   const s = String(text || "").toLowerCase().replace(/\./g, "").replace(/,/g, ".");
   const m = s.match(/(\d+(?:\.\d+)?)/);
@@ -1897,6 +1916,9 @@ function openVehicle(col, id) {
 
   const again = $("editor-save-add");
   if (again) again.hidden = !!id;
+
+  const aiBtn = $("ai-open");
+  if (aiBtn) aiBtn.hidden = !aiSiap;
 
   setView("editor", { hash: false, nav: col });
   renderEditorNav();
@@ -3459,6 +3481,19 @@ function bindEvents() {
 
     if (e.target.closest("#profile-signout-others")) { signOutOtherDevices(); return; }
 
+    /* --- Riset AI --- */
+    if (e.target.closest("#ai-open")) { openAiModal(); return; }
+    if (e.target.closest("#ai-start")) { startAiRiset(); return; }
+    if (e.target.closest("#ai-cancel")) { batalkanAiRiset(); return; }
+    if (e.target.closest("#ai-apply")) { applyAiUsulan(); return; }
+    if (e.target.closest("#ai-modal-close")) { closeAiModal(); return; }
+    if (e.target.closest("#ai-pick-empty")) {
+      aiCtx.pilih = new Set((aiCtx.job.hasil.usulan || []).filter((u) => u.sekarang === null).map((u) => u.key));
+      renderAiModal();
+      return;
+    }
+    if (e.target.closest("#ai-pick-none")) { aiCtx.pilih.clear(); renderAiModal(); return; }
+
     /* --- Pengaturan AI --- */
     if (e.target.closest("#ai-key-change")) { aiEditing = true; renderAi(); return; }
     if (e.target.closest("#ai-key-cancel")) { aiEditing = false; renderAi(); return; }
@@ -3809,6 +3844,26 @@ function bindEvents() {
     const el = e.target;
     if (el.closest && el.closest("#vehicle-form, #dir-form")) editorTouched = true;
     if (el.closest && el.closest("#dir-form")) updateDirMeter();
+
+    /* --- Riset AI --- */
+    if (el.name === "ai-default-model") { simpanModelBawaan(el.value); return; }
+    if (aiCtx && el.name === "ai-mode") { aiCtx.mode = el.value; renderAiModal(); return; }
+    if (aiCtx && el.name === "ai-model") { aiCtx.model = el.value; renderAiModal(); return; }
+    const aiPick = el.getAttribute && el.getAttribute("data-ai-pick");
+    if (aiCtx && aiPick) {
+      if (el.checked) aiCtx.pilih.add(aiPick);
+      else aiCtx.pilih.delete(aiPick);
+      // Sengaja hanya menggambar ulang bagian kaki: menggambar ulang seluruh
+      // daftar akan memindahkan posisi guliran setiap kali satu kotak dicentang.
+      const tombol = $("ai-apply");
+      if (tombol) {
+        tombol.textContent = t("ai.terapkan", { n: aiCtx.pilih.size });
+        tombol.disabled = aiCtx.pilih.size === 0;
+      }
+      const baris = el.closest(".ai-row");
+      if (baris) baris.classList.toggle("picked", el.checked);
+      return;
+    }
 
     const filter = el.closest && el.closest("[data-filter]");
     if (filter) {
@@ -4776,6 +4831,37 @@ function aiBalanceHtml() {
   </section>`;
 }
 
+/**
+ * Pemilih model bawaan, beserta harganya.
+ *
+ * Harga dihitung dari tarif yang berlaku SAAT INI, bukan konstanta: selisih
+ * jam sibuk dan jam sepi adalah dua kali lipat, dan jam sibuk DeepSeek jatuh
+ * persis di jam kerja Indonesia. Angka yang tidak menyebut itu akan salah
+ * separuh waktu.
+ */
+function aiModelHtml() {
+  const sekarang = new Date();
+  const pilihan = (aiState.pilihanModel || MODEL_PILIHAN)
+    .map((id) => {
+      const { rupiah } = perkiraanBiaya("lengkap", id, sekarang);
+      return `<label class="ai-pick${aiState.model === id ? " active" : ""}">
+        <input type="radio" name="ai-default-model" value="${esc(id)}"${aiState.model === id ? " checked" : ""} />
+        <span class="ai-pick-main"><strong>${esc(id)}</strong><span>${esc(t(`ai.model.${id}`))}</span></span>
+        <span class="ai-pick-cost">${esc(t("ai.perRiset", { rp: formatRupiahKecil(rupiah) }))}</span>
+      </label>`;
+    })
+    .join("");
+
+  return `<section class="panel form-section">
+    <div class="form-section-head">
+      <h2>${esc(t("ai.modelTitle"))}</h2>
+      <p>${esc(t("ai.model.desc"))}</p>
+    </div>
+    <div class="ai-picks">${pilihan}</div>
+    <p class="hint">${esc(jamSibuk(sekarang) ? t("ai.tarifSibuk") : t("ai.tarifSepi"))}</p>
+  </section>`;
+}
+
 function aiKeyFormHtml() {
   return `<form id="ai-key-form" autocomplete="off">
     <div class="field-grid">
@@ -4825,13 +4911,8 @@ function renderAi() {
             <button type="button" class="btn btn-danger" id="ai-key-remove">${esc(t("ai.key.remove"))}</button>
           </div>`}
     </section>
-    ${terpasang ? aiBalanceHtml() : ""}
-    <section class="panel form-section">
-      <div class="form-section-head">
-        <h2>${esc(t("ai.next.title"))}</h2>
-        <p>${esc(t("ai.next.text"))}</p>
-      </div>
-    </section>`;
+    ${terpasang ? aiModelHtml() : ""}
+    ${terpasang ? aiBalanceHtml() : ""}`;
 
   if (showForm) {
     const input = $("ai-key");
@@ -4875,6 +4956,24 @@ async function saveAiKey(form) {
   }
 }
 
+async function simpanModelBawaan(model) {
+  try {
+    const res = await fetch("/api/ai/pengaturan", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model }),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    aiState = data;
+    aiModelBawaan = data.model;
+    renderAi();
+    toast(t("ai.modelSaved", { model }), "success");
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
 async function removeAiKey() {
   const setuju = await confirmDialog({
     title: t("ai.remove.title"),
@@ -4895,6 +4994,455 @@ async function removeAiKey() {
   } catch (err) {
     toast(err.message, "error");
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * 25c. Riset AI di editor kendaraan
+ *
+ * Satu modal, tiga keadaan berurutan:
+ *
+ *   setup → jalan → hasil
+ *
+ * Yang paling penting ada di ujungnya: "Terapkan" hanya MENGISI FORMULIR.
+ * Ia tidak menyimpan apa pun. Sesudah itu penyunting melihat form seperti
+ * biasa, masih bisa mengubah, dan menekan Simpan sendiri — jalur simpan yang
+ * sudah ada tetap satu-satunya jalan menuju content.json, lengkap dengan
+ * validasi, pemeriksaan tabrakan revisi, dan cadangan otomatisnya.
+ * ------------------------------------------------------------------ */
+
+/* Jeda antar tanya-kabar ke server. Bukan SSE: produksi ada di balik reverse
+   proxy OpenLiteSpeed, yang mem-buffer aliran peristiwa sampai selesai —
+   panel progres yang muncul sekaligus di akhir sama saja dengan tidak ada. */
+const AI_POLL_MS = 900;
+
+let aiCtx = null;
+let aiTimer = null;
+
+/* Apakah kunci DeepSeek sudah terpasang, dan model bawaan mana yang dipakai.
+   Dibaca sekali saat panel dimuat: tombol Riset tidak ditampilkan sama sekali
+   kalau kuncinya belum ada — tombol yang selalu menjawab "belum ada kunci"
+   lebih buruk daripada tombol yang tidak ada. */
+let aiSiap = false;
+let aiModelBawaan = MODEL_BAWAAN;
+
+async function muatKeadaanAi() {
+  try {
+    const res = await fetch("/api/ai/riset");
+    const data = await res.json();
+    if (!data || !data.ok) return;
+    aiSiap = !!data.siap;
+    if (data.modelBawaan) aiModelBawaan = data.modelBawaan;
+  } catch {
+    // Editor tetap bisa dipakai tanpa riset AI.
+  }
+}
+
+const AI_MODES = () => [
+  { k: "lengkap", l: t("ai.mode.lengkap"), d: t("ai.mode.lengkap.d") },
+  { k: "lengkapi", l: t("ai.mode.lengkapi"), d: t("ai.mode.lengkapi.d") },
+  { k: "harga", l: t("ai.mode.harga"), d: t("ai.mode.harga.d") },
+];
+
+function aiModal() {
+  return $("ai-modal");
+}
+
+function stopAiPoll() {
+  if (aiTimer) clearInterval(aiTimer);
+  aiTimer = null;
+}
+
+async function openAiModal() {
+  if (!vehicleCtx) return;
+
+  const form = $("vehicle-form");
+  const brand = String((form.elements.brand && form.elements.brand.value) || "").trim();
+  const name = String((form.elements.name && form.elements.name.value) || "").trim();
+  if (!brand || !name) {
+    toast(t("ai.perluMerekNama"), "error");
+    return;
+  }
+
+  aiCtx = {
+    fase: "setup",
+    brand,
+    name,
+    // Kendaraan baru belum punya field terisi, jadi "lengkapi yang kosong"
+    // tidak berarti apa-apa untuknya.
+    mode: vehicleCtx.id ? "lengkapi" : "lengkap",
+    model: aiModelBawaan,
+    hint: "",
+    jobId: null,
+    job: null,
+    kuota: null,
+    pilih: new Set(),
+  };
+
+  openModal(aiModal());
+  renderAiModal();
+
+  try {
+    const res = await fetch("/api/ai/riset");
+    const data = await res.json();
+    if (data && data.ok) {
+      aiCtx.kuota = data.kuota;
+      renderAiModal();
+    }
+  } catch { /* kuota cuma pemanis; tanpa itu tombolnya tetap bisa ditekan */ }
+}
+
+function closeAiModal() {
+  stopAiPoll();
+  aiCtx = null;
+  closeModal(aiModal());
+}
+
+/* ---------- Menggambar ---------- */
+
+function aiBiayaTeks(mode, model) {
+  const { rupiah } = perkiraanBiaya(mode, model, new Date());
+  return t("ai.perkiraanBiaya", { rp: formatRupiahKecil(rupiah) });
+}
+
+function renderAiModal() {
+  if (!aiCtx) return;
+  const judul = $("ai-modal-title");
+  const sub = $("ai-modal-sub");
+  const body = $("ai-modal-body");
+  const foot = $("ai-modal-foot");
+  if (!judul || !body || !foot) return;
+
+  judul.textContent = t("ai.research");
+  sub.textContent = `${aiCtx.brand} ${aiCtx.name}`.trim();
+
+  if (aiCtx.fase === "setup") {
+    body.innerHTML = aiSetupHtml();
+    foot.innerHTML = `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.cancel"))}</button>
+      <button type="button" class="btn btn-primary" id="ai-start">${esc(t("ai.start"))}</button>`;
+    return;
+  }
+
+  if (aiCtx.fase === "jalan") {
+    body.innerHTML = aiProgresHtml();
+    foot.innerHTML = `<p class="modal-foot-hint">${esc(t("ai.jalanHint"))}</p>
+      <button type="button" class="btn btn-outline" id="ai-cancel">${esc(t("ai.batalkan"))}</button>`;
+    return;
+  }
+
+  body.innerHTML = aiHasilHtml();
+  const jumlah = aiCtx.pilih.size;
+  foot.innerHTML = `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.close"))}</button>
+    <button type="button" class="btn btn-primary" id="ai-apply"${jumlah ? "" : " disabled"}>${esc(t("ai.terapkan", { n: jumlah }))}</button>`;
+}
+
+function aiSetupHtml() {
+  const modes = AI_MODES()
+    .map((m) => {
+      // "Lengkapi yang kosong" tidak berlaku untuk kendaraan yang belum ada.
+      if (m.k === "lengkapi" && !vehicleCtx.id) return "";
+      return `<label class="ai-pick${aiCtx.mode === m.k ? " active" : ""}">
+        <input type="radio" name="ai-mode" value="${esc(m.k)}"${aiCtx.mode === m.k ? " checked" : ""} />
+        <span class="ai-pick-main"><strong>${esc(m.l)}</strong><span>${esc(m.d)}</span></span>
+      </label>`;
+    })
+    .join("");
+
+  const models = MODEL_PILIHAN.map((id) => {
+    const { rupiah } = perkiraanBiaya(aiCtx.mode, id, new Date());
+    return `<label class="ai-pick${aiCtx.model === id ? " active" : ""}">
+      <input type="radio" name="ai-model" value="${esc(id)}"${aiCtx.model === id ? " checked" : ""} />
+      <span class="ai-pick-main"><strong>${esc(id)}</strong><span>${esc(t(`ai.model.${id}`))}</span></span>
+      <span class="ai-pick-cost">${esc(formatRupiahKecil(rupiah))}</span>
+    </label>`;
+  }).join("");
+
+  const kuota = aiCtx.kuota
+    ? `<p class="hint">${esc(t("ai.kuotaSisa", { sisa: Math.max(0, aiCtx.kuota.batas - aiCtx.kuota.terpakai), batas: aiCtx.kuota.batas }))}</p>`
+    : "";
+
+  return `<div class="ai-setup">
+    <div class="ai-group">
+      <h4>${esc(t("ai.modeTitle"))}</h4>
+      <div class="ai-picks">${modes}</div>
+    </div>
+    <div class="ai-group">
+      <h4>${esc(t("ai.modelTitle"))}</h4>
+      <div class="ai-picks">${models}</div>
+      <p class="hint">${esc(jamSibuk(new Date()) ? t("ai.tarifSibuk") : t("ai.tarifSepi"))}</p>
+    </div>
+    <div class="field full">
+      <label for="ai-hint">${esc(t("ai.hint"))}</label>
+      <input type="text" id="ai-hint" value="${esc(aiCtx.hint)}" placeholder="${esc(t("ai.hint.ph"))}" />
+      <span class="hint">${esc(t("ai.hint.desc"))}</span>
+    </div>
+    ${kuota}
+  </div>`;
+}
+
+const AI_IKON = {
+  mulai: "◆",
+  pikir: "◇",
+  cari: "○",
+  buka: "▸",
+  susun: "◈",
+};
+
+function aiProgresHtml() {
+  const job = aiCtx.job;
+  const langkah = (job && job.langkah) || [];
+
+  const baris = langkah.length
+    ? langkah
+        .map((l) => `<li class="ai-step ai-step-${esc(l.status)}">
+            <span class="ai-step-icon" aria-hidden="true">${esc(AI_IKON[l.jenis] || "•")}</span>
+            <span class="ai-step-body">
+              <span class="ai-step-label">${esc(t(`ai.step.${l.jenis}`))}</span>
+              ${l.teks ? `<span class="ai-step-text">${esc(l.teks)}</span>` : ""}
+            </span>
+          </li>`)
+        .join("")
+    : `<li class="ai-step ai-step-jalan"><span class="ai-step-icon" aria-hidden="true">◆</span>
+        <span class="ai-step-body"><span class="ai-step-label">${esc(t("ai.step.mulai"))}</span></span></li>`;
+
+  const cari = langkah.filter((l) => l.jenis === "cari").length;
+  const buka = langkah.filter((l) => l.jenis === "buka").length;
+
+  return `<div class="ai-progres">
+    <ul class="ai-steps">${baris}</ul>
+    <p class="ai-progres-meta">${esc(t("ai.progresMeta", { cari, buka }))}</p>
+  </div>`;
+}
+
+function aiNilaiTeks(key, nilai) {
+  if (nilai === null || nilai === undefined || nilai === "") return "—";
+  if (Array.isArray(nilai)) return nilai.join(", ");
+  if (key === "price") return formatRupiah(nilai);
+  return String(nilai);
+}
+
+function aiHasilHtml() {
+  const job = aiCtx.job;
+  const hasil = job && job.hasil;
+
+  if (!hasil || !hasil.usulan.length) {
+    return `<div class="ai-kosong">${emptyStateHtml(t("ai.kosongTitle"), t("ai.kosongText"), "🔍")}</div>`;
+  }
+
+  const baris = hasil.usulan
+    .map((u) => {
+      const dipilih = aiCtx.pilih.has(u.key);
+      // Alamat sumber sudah lewat safeUrl di server. Ia tetap dipasang dengan
+      // rel="noopener noreferrer" — halaman yang dibuka AI bukan halaman yang
+      // pernah kita periksa.
+      const sumber = u.sumber
+        ? `<a class="ai-src" href="${esc(u.sumber)}" target="_blank" rel="noopener noreferrer">${esc(aiHost(u.sumber))}</a>`
+        : `<span class="ai-src ai-src-none">${esc(t("ai.tanpaSumber"))}</span>`;
+
+      return `<label class="ai-row${dipilih ? " picked" : ""}">
+        <input type="checkbox" data-ai-pick="${esc(u.key)}"${dipilih ? " checked" : ""} />
+        <span class="ai-row-key">${esc(aiLabelField(u.key))}</span>
+        <span class="ai-row-now">${esc(aiNilaiTeks(u.key, u.sekarang))}</span>
+        <span class="ai-row-arrow" aria-hidden="true">→</span>
+        <span class="ai-row-new">${esc(aiNilaiTeks(u.key, u.nilai))}</span>
+        <span class="ai-conf ai-conf-${esc(u.keyakinan)}" title="${esc(u.catatan)}">${esc(t(`ai.conf.${u.keyakinan}`))}</span>
+        ${sumber}
+      </label>`;
+    })
+    .join("");
+
+  const peringatan = hasil.peringatan.length
+    ? `<div class="ai-warn">
+        <strong>${esc(t("ai.peringatan"))}</strong>
+        <ul>${hasil.peringatan.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+      </div>`
+    : "";
+
+  const biaya = job.biaya
+    ? `<p class="ai-biaya">${esc(t("ai.biayaNyata", { rp: formatRupiahKecil(job.biaya.rupiah) }))}</p>`
+    : "";
+
+  return `<div class="ai-hasil">
+    ${hasil.ringkasan ? `<p class="ai-ringkasan">${esc(hasil.ringkasan)}</p>` : ""}
+    <div class="ai-tools">
+      <button type="button" class="btn btn-outline btn-sm" id="ai-pick-empty">${esc(t("ai.pilihKosong"))}</button>
+      <button type="button" class="btn btn-outline btn-sm" id="ai-pick-none">${esc(t("ai.bersihkan"))}</button>
+    </div>
+    <div class="ai-rows">${baris}</div>
+    ${peringatan}
+    ${biaya}
+  </div>`;
+}
+
+/* Nama host saja: alamat penuh dari halaman yang dibuka AI bisa sangat panjang
+   dan tidak menambah apa pun pada keputusan "sumber ini bisa dipercaya?". */
+function aiHost(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+/* Label field memakai kamus yang sama dengan formulirnya, supaya baris usulan
+   dan baris form menyebut hal yang sama dengan kata yang sama. */
+function aiLabelField(key) {
+  const defs = vehicleCtx ? vehicleCtx.defs : null;
+  if (defs) {
+    for (const pane of ["dasar", "spesifikasi"]) {
+      const d = (defs[pane] || []).find((x) => x.k === key);
+      if (d) return d.l;
+    }
+  }
+  if (key === "variantNames") return t("editor.section.varian");
+  if (key === "colors") return t("editor.colorsTitle");
+  return key;
+}
+
+/* ---------- Menjalankan ---------- */
+
+async function startAiRiset() {
+  if (!aiCtx || !vehicleCtx) return;
+
+  const hintInput = $("ai-hint");
+  if (hintInput) aiCtx.hint = String(hintInput.value || "").trim();
+
+  aiCtx.fase = "jalan";
+  aiCtx.job = null;
+  renderAiModal();
+
+  try {
+    const res = await fetch("/api/ai/riset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        col: vehicleCtx.col,
+        vehicleId: vehicleCtx.id,
+        brand: aiCtx.brand,
+        name: aiCtx.name,
+        mode: aiCtx.mode,
+        model: aiCtx.model,
+        hint: aiCtx.hint,
+      }),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+
+    aiCtx.jobId = data.job.id;
+    aiCtx.job = data.job;
+    aiCtx.kuota = data.kuota;
+    renderAiModal();
+
+    stopAiPoll();
+    aiTimer = setInterval(pollAiRiset, AI_POLL_MS);
+  } catch (err) {
+    aiCtx.fase = "setup";
+    renderAiModal();
+    toast(err.message, "error");
+  }
+}
+
+async function pollAiRiset() {
+  if (!aiCtx || !aiCtx.jobId) return stopAiPoll();
+
+  let data;
+  try {
+    const res = await fetch(`/api/ai/riset?id=${encodeURIComponent(aiCtx.jobId)}`);
+    data = await res.json();
+  } catch {
+    // Satu permintaan yang gagal bukan alasan membuang risetnya — jaringan
+    // panel bisa tersendat sementara server terus bekerja.
+    return;
+  }
+
+  if (!data || !data.ok) {
+    stopAiPoll();
+    aiCtx.fase = "setup";
+    renderAiModal();
+    toast(apiMessage(data, "err.ai.jobHilang"), "error");
+    return;
+  }
+
+  aiCtx.job = data.job;
+  aiCtx.kuota = data.kuota;
+
+  if (data.job.status === "jalan") {
+    renderAiModal();
+    return;
+  }
+
+  stopAiPoll();
+
+  if (data.job.status !== "selesai") {
+    aiCtx.fase = "setup";
+    renderAiModal();
+    const kunci = data.job.status === "batal" ? "ai.dibatalkan" : (data.job.errorKey || "err.ai.deepseekBermasalah");
+    toast(t(kunci), data.job.status === "batal" ? "info" : "error");
+    return;
+  }
+
+  // Centang awal datang dari server: ia yang tahu field mana yang benar-benar
+  // masih kosong di disk.
+  aiCtx.pilih = new Set((data.job.hasil.usulan || []).filter((u) => u.pilih).map((u) => u.key));
+  aiCtx.fase = "hasil";
+  renderAiModal();
+}
+
+async function batalkanAiRiset() {
+  if (!aiCtx || !aiCtx.jobId) return;
+  stopAiPoll();
+  try {
+    await fetch(`/api/ai/riset?id=${encodeURIComponent(aiCtx.jobId)}`, { method: "DELETE" });
+  } catch { /* kalau gagal, batas waktu di server yang menghentikannya */ }
+  aiCtx.fase = "setup";
+  renderAiModal();
+  toast(t("ai.dibatalkan"), "info");
+}
+
+/* ---------- Menerapkan ---------- */
+
+/* Mengisi ulang satu repeater (varian / warna) dari daftar nilai. */
+function setRepeater(name, values, kind) {
+  const form = $("vehicle-form");
+  const body = form.querySelector(`[data-rep="${CSS.escape(name)}"] [data-rep-body]`);
+  if (!body) return;
+  body.innerHTML = (values || []).map((v, i) => repeaterRowHtml(name, v, kind, i)).join("");
+}
+
+function applyAiUsulan() {
+  if (!aiCtx || !aiCtx.job || !aiCtx.job.hasil) return;
+  const form = $("vehicle-form");
+  if (!form) return;
+
+  const dipakai = (aiCtx.job.hasil.usulan || []).filter((u) => aiCtx.pilih.has(u.key));
+  if (!dipakai.length) return;
+
+  for (const u of dipakai) {
+    if (u.key === "variantNames") { setRepeater("variantNames", u.nilai, "text"); continue; }
+    if (u.key === "colors") { setRepeater("colors", u.nilai, "color"); continue; }
+
+    const el = form.elements[u.key];
+    if (!el) continue;
+    el.value = Array.isArray(u.nilai) ? u.nilai.join(", ") : String(u.nilai);
+  }
+
+  /*
+   * `editorTouched` saja, TANPA `markDirty()` — persis seperti yang terjadi
+   * saat seseorang mengetik nilainya sendiri.
+   *
+   * `markDirty()` menandai DOKUMEN sebagai belum tersimpan, dan dokumennya
+   * memang belum berubah: usulan baru masuk ke formulir, bukan ke `content`.
+   * Menyalakannya di sini membuat bilah atas berbunyi "belum tersimpan" untuk
+   * perubahan yang tidak ada, dan membuat menerapkan usulan terasa berbeda
+   * dari mengetik nilai yang sama.
+   */
+  editorTouched = true;
+  updateVehiclePreview();
+
+  const label = dipakai.map((u) => aiLabelField(u.key)).join(", ");
+  closeAiModal();
+  // Sengaja BUKAN saveNow(): usulan yang diterapkan baru mengisi formulir.
+  // Penyunting yang memutuskan kapan ia tersimpan.
+  toast(t("ai.diterapkan", { n: dipakai.length, daftar: label }), "success");
 }
 
 /* ------------------------------------------------------------------ *
@@ -5073,6 +5621,12 @@ async function init() {
 
   loadActivity();
   checkUpdateBadge();
+  // Tidak di-await: editor boleh terbuka lebih dulu, dan tombol Riset muncul
+  // begitu jawabannya datang.
+  muatKeadaanAi().then(() => {
+    const aiBtn = $("ai-open");
+    if (aiBtn && activeView === "editor") aiBtn.hidden = !aiSiap;
+  });
 
   lastHash = location.hash;
   const route = parseRoute(location.hash);

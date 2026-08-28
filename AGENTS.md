@@ -219,8 +219,33 @@ baru Tahap 0a: halaman **Admin → AI** untuk memasang kunci API DeepSeek.
   2026 `deepseek-chat` dan `deepseek-reasoner` dimatikan seluruhnya. Sisa
   sistem bicara dengan tipe di berkas itu, bukan dengan DeepSeek langsung.
 - Dua kemampuan terpisah di `CAPABILITY_ROLES`: `ai` (memasang kunci dan
-  mengatur kuota) untuk pemilik + admin, dan `ai.run` (menjalankan riset) untuk
-  ketiga peran. Yang menahan pengeluaran adalah kuota harian, bukan peran.
+  mengatur model bawaan) untuk pemilik + admin, dan `ai.run` (menjalankan riset)
+  untuk ketiga peran. Yang menahan pengeluaran adalah kuota harian, bukan peran.
+
+**Riset kendaraan (Tahap 1).** Tombol "Riset dengan AI" di editor kendaraan.
+
+- **Keluaran AI tidak pernah disimpan.** Ia jadi usulan yang ditampilkan
+  berdampingan dengan nilai sekarang, dan "Terapkan" hanya MENGISI FORMULIR.
+  Jalur simpan yang sudah ada tetap satu-satunya jalan ke `content.json`.
+- **Field yang tidak boleh diisi AI tidak ada di dalam skema JSON**, bukan
+  sekadar dilarang lewat kalimat prompt. Daftarnya di `NEVER_RESEARCHED`
+  (`src/lib/vehicle-spec.js`), dan `tests/ai-skema.test.ts` membuktikan tak satu
+  pun bocor. Deskripsi, tagline, dan sorotan termasuk di dalamnya — itu suara
+  situs, ditulis manusia.
+- **Hasil pencarian web adalah konten tak tepercaya.** `src/lib/ai-usulan.js`
+  membuang nilai di luar batas wajar, membakukan ejaan pilihan ke daftar kita
+  sendiri, menyaring alamat sumber lewat `safeUrl()`, dan membuang kunci asing
+  tanpa jejak. Kalau dua pembacaan angka sama-sama masuk akal, nilainya dibuang
+  — tidak ditebak.
+- **Panel menanya-kabar berulang (polling), bukan SSE.** Reverse proxy
+  OpenLiteSpeed mem-buffer aliran peristiwa; server yang membaca SSE dari
+  DeepSeek dan mengubahnya jadi linimasa yang bisa dibaca ulang.
+- **Kuota dikembalikan kalau tidak ada token yang terpakai** — kunci ditolak,
+  DeepSeek tumbang, jaringan putus. Riset yang dibatalkan setelah sempat
+  memakai token tetap dihitung.
+- Tarif dan jam sibuk DeepSeek ada di `src/lib/ai-biaya.js`, dan **hanya di
+  sana**. Jam sibuknya jatuh persis di jam kerja WIB, jadi angka biaya yang
+  ditampilkan selalu menghitung tarif yang berlaku saat itu.
 
 ### Pengguna & peran
 

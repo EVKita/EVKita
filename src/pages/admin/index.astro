@@ -1069,6 +1069,7 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
               <h1 class="editor-title" id="editor-title"></h1>
             </div>
             <div class="editor-bar-actions">
+              <button type="button" class="btn btn-outline btn-ai" id="ai-open" hidden data-i18n="ai.research">{t("ai.research")}</button>
               <button type="button" class="btn btn-ghost editor-cancel" id="editor-cancel" data-i18n="common.cancel">{t("common.cancel")}</button>
               <button type="button" class="btn btn-outline" id="editor-save-add" hidden data-i18n="editor.saveAndAdd">{t("editor.saveAndAdd")}</button>
               <button type="submit" form="vehicle-form" class="btn btn-primary" id="editor-save" data-i18n="common.save">{t("common.save")}</button>
@@ -1147,6 +1148,25 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
         <div id="users-root"></div>
       </section>
     </main>
+  </div>
+
+  <!-- ===== Modal riset AI =====
+       Satu modal dengan tiga keadaan berurutan — persiapan, progres, usulan —
+       yang seluruh isinya digambar admin.js. Ketiganya adalah satu alur, dan
+       memisahkannya jadi tiga dialog berarti memaksa penyunting kehilangan
+       konteks dua kali di tengah pekerjaan yang sama. -->
+  <div id="ai-modal" class="modal-backdrop">
+    <div class="modal modal-form modal-ai" role="dialog" aria-modal="true" aria-labelledby="ai-modal-title">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3 class="modal-title" id="ai-modal-title"></h3>
+          <p class="modal-sub" id="ai-modal-sub"></p>
+        </div>
+        <button type="button" class="modal-close" id="ai-modal-close" aria-label={t("common.close")} data-i18n-aria="common.close">&times;</button>
+      </div>
+      <div class="modal-body" id="ai-modal-body"></div>
+      <div class="modal-foot" id="ai-modal-foot"></div>
+    </div>
   </div>
 
   <!-- ===== Modal direktori (SPKLU / bengkel / berita) ===== -->

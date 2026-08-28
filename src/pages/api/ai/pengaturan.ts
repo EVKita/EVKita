@@ -6,6 +6,8 @@ import { logActivity } from "../../../lib/activity";
 import { json, apiError, unauthorized, forbidden } from "../../../lib/api";
 import { checkLimit, clearLimit, clientKey, recordFailure } from "../../../lib/ratelimit";
 import { fetchBalance, keyLooksValid, keyTail, type BalanceResult } from "../../../lib/deepseek";
+import { modelBawaan } from "../../../lib/ai-jobs";
+import { MODEL_PILIHAN } from "../../../lib/ai-biaya.js";
 
 /**
  * Pengaturan AI: memasang, mengganti, dan menghapus kunci API DeepSeek.
@@ -28,6 +30,7 @@ import { fetchBalance, keyLooksValid, keyTail, type BalanceResult } from "../../
  */
 
 const KEY_NAME = "DEEPSEEK_API_KEY";
+const MODEL_NAME = "DEEPSEEK_MODEL";
 
 /**
  * Saldo yang sudah dibaca, disimpan sebentar.
@@ -75,6 +78,8 @@ function statePayload(key: string, balance: BalanceResult | null) {
   return {
     ok: true,
     terpasang,
+    model: modelBawaan(),
+    pilihanModel: MODEL_PILIHAN,
     ekor: terpasang ? keyTail(key) : "",
     saldo,
     saldoErrorKey: balance && !balance.ok ? balance.errorKey : "",
@@ -116,6 +121,21 @@ export const PUT: APIRoute = async ({ request, cookies, clientAddress }) => {
     body = await request.json();
   } catch {
     return apiError("err.badJson");
+  }
+
+  /*
+   * Satu endpoint, dua hal yang bisa diubah — dan sengaja tidak digabung jadi
+   * satu penyimpanan. Mengganti model bawaan tidak boleh memaksa siapa pun
+   * menempelkan ulang kuncinya, dan mengganti kunci tidak boleh diam-diam
+   * mengubah model.
+   */
+  const model = String(body?.model || "").trim();
+  if (model) {
+    if (!MODEL_PILIHAN.includes(model)) return apiError("err.ai.modelTidakDikenal");
+    writeEnvFile({ [MODEL_NAME]: model });
+    logActivity(me, "ai.modelSet", { model });
+    const key = getEnv(KEY_NAME, "");
+    return json(statePayload(key, key ? await readBalance(key, false) : null));
   }
 
   const apiKey = String(body?.apiKey || "").trim();

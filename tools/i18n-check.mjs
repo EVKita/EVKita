@@ -109,6 +109,11 @@ const DYNAMIC_PREFIXES = [
   "tampilan.",
   "site.themeMode.",
   "combo.label.",
+  // Dirakit saat berjalan: t(`ai.step.${jenis}`), t(`ai.conf.${keyakinan}`),
+  // t(`ai.model.${id}`).
+  "ai.step.",
+  "ai.conf.",
+  "ai.model.",
 ];
 
 const RED = (s) => `\x1b[31m${s}\x1b[0m`;
