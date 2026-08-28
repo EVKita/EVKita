@@ -2197,22 +2197,38 @@ function saveDir() {
  * 14. Form pengaturan situs (generik)
  * ------------------------------------------------------------------ */
 
-function renderSiteForm() {
+/**
+ * Menggambar ulang kedua form `site` dari `content.site`.
+ *
+ * Kolom yang sedang diketik dilewati — TAPI hanya kolom itu sendiri, bukan
+ * seluruh form. Melewati seluruh form pernah membuat menu Tampilan menolak
+ * setiap preset: mengklik kartu preset memindahkan fokus ke kartu itu (yang
+ * berada di dalam <form>), jadi tidak ada satu pun input yang ikut diperbarui,
+ * dan `collectSiteForm()` berikutnya menulis nilai lama dari DOM kembali ke
+ * `content.site` — situs kembali ke preset bawaan tepat setelah disimpan.
+ *
+ * @param {{force?: boolean}} [options] `force` mengabaikan penjagaan fokus.
+ *   Dipakai tindakan yang memang mengganti SELURUH setelan sekaligus (pilih
+ *   preset, kembalikan ke bawaan): di sebagian peramban fokus tidak berpindah
+ *   saat sebuah tombol diklik, jadi kolom yang tadi disentuh akan tertinggal
+ *   basi kalau penjagaan itu tetap berlaku.
+ */
+function renderSiteForm(options) {
   if (!content) return;
+  const force = !!(options && options.force);
   for (const id of SITE_FORMS) {
     const form = $(id);
     if (!form) continue;
-    // Jangan timpa apa yang sedang diketik pengguna.
-    if (form.contains(document.activeElement)) continue;
 
     for (const el of form.elements) {
       const key = el.name;
       if (!key || !(key in content.site)) continue;
+      if (!force && el === document.activeElement) continue;
       if (el.type === "checkbox") el.checked = !!content.site[key];
       else if (el.value !== String(content.site[key])) el.value = String(content.site[key]);
     }
-    form.querySelectorAll("[data-image-field]").forEach(renderSiteImageField);
-    renderFooterMenus(form);
+    form.querySelectorAll("[data-image-field]").forEach((wrap) => renderSiteImageField(wrap, force));
+    renderFooterMenus(form, force);
   }
   syncRangeOutputs();
   syncPresetCards();
@@ -2242,12 +2258,12 @@ function syncRangeOutputs() {
   }
 }
 
-function renderSiteImageField(wrap) {
+function renderSiteImageField(wrap, force) {
   const key = wrap.getAttribute("data-image-field");
   const dz = wrap.querySelector("[data-dropzone]");
   const url = (content.site && content.site[key]) || "";
   const input = wrap.querySelector(`input[name="${CSS.escape(key)}"]`);
-  if (input) input.value = url;
+  if (input && (force || input !== document.activeElement)) input.value = url;
   if (dz) dz.innerHTML = imagePreviewHtml(url, `data-site-img-del="${esc(key)}"`);
 }
 
@@ -2318,15 +2334,24 @@ function footerMenuEmptyHtml() {
   return `<p class="fmenu-empty" data-i18n="site.footerMenus.empty">${esc(t("site.footerMenus.empty"))}</p>`;
 }
 
-/** @param {HTMLElement} root Form yang sedang digambar; halaman Tampilan tidak punya penyusun ini. */
-function renderFooterMenus(root) {
+/**
+ * @param {HTMLElement} root Form yang sedang digambar; halaman Tampilan tidak punya penyusun ini.
+ * @param {boolean} [force] Lihat renderSiteForm().
+ *
+ * Kedua daftar digambar ulang lewat `innerHTML`, jadi penjagaan fokusnya harus
+ * sekelompok, bukan per input: menyusun ulang barisnya saat ada yang sedang
+ * diketik akan merebut fokus di tengah ketikan.
+ */
+function renderFooterMenus(root, force) {
+  const idle = (el) => force || !el.contains(document.activeElement);
+
   const wrap = root.querySelector("[data-footer-menus]");
-  if (wrap) {
+  if (wrap && idle(wrap)) {
     const cols = content.site.footerMenus || [];
     wrap.innerHTML = cols.length ? cols.map(footerMenuHtml).join("") : footerMenuEmptyHtml();
   }
   const legal = root.querySelector("[data-footer-legal]");
-  if (legal) {
+  if (legal && idle(legal)) {
     legal.innerHTML = (content.site.footerLegal || []).map((l, i) => footerLinkRowHtml(l, `g${i}`)).join("");
   }
   syncFooterMenuLimits(root);
@@ -2430,7 +2455,7 @@ function applyPreset(id) {
   if (!preset || !content) return;
   for (const key of PRESET_FIELDS) content.site[key] = preset[key];
   content.site.themePreset = preset.id;
-  renderSiteForm();
+  renderSiteForm({ force: true });
   commit({ render: false });
   saveNow();
   toast(t("toast.presetApplied", { name: preset.label }), "success");
@@ -2441,7 +2466,7 @@ function resetTampilan() {
   if (!content) return;
   if (!confirm(t("tampilan.reset.confirm"))) return;
   Object.assign(content.site, APPEARANCE_DEFAULTS, APPEARANCE_FLAGS);
-  renderSiteForm();
+  renderSiteForm({ force: true });
   commit({ render: false });
   saveNow();
   toast(t("toast.tampilanReset"), "success");
