@@ -1917,8 +1917,21 @@ function openVehicle(col, id) {
   const again = $("editor-save-add");
   if (again) again.hidden = !!id;
 
-  const aiBtn = $("ai-open");
-  if (aiBtn) aiBtn.hidden = !aiSiap;
+  syncAiButton();
+  /*
+   * Kalau menurut catatan kita kuncinya belum ada, TANYAKAN LAGI.
+   *
+   * `aiSiap` dulu hanya dibaca sekali saat panel dimuat, dan panel ini tidak
+   * pernah memuat ulang sendiri. Akibatnya memasang kunci di halaman
+   * Pengaturan AI — di tab yang sama, atau oleh admin lain di tab lain — tidak
+   * pernah memunculkan tombol Riset sampai seseorang menekan F5. Tombol yang
+   * tidak pernah muncul jauh lebih mahal daripada satu permintaan yang
+   * jawabannya satu baris JSON.
+   *
+   * Hanya saat belum siap: begitu kuncinya ada, tidak ada yang perlu ditanya
+   * lagi tiap kali editor dibuka.
+   */
+  if (!aiSiap) muatKeadaanAi().then(syncAiButton);
 
   setView("editor", { hash: false, nav: col });
   renderEditorNav();
@@ -4943,6 +4956,10 @@ async function saveAiKey(form) {
     form.reset();
     aiState = data;
     aiEditing = false;
+    // Tombol Riset di editor membaca `aiSiap`. Tanpa baris ini, kunci yang
+    // baru saja terbukti sah tetap tidak memunculkan tombolnya.
+    aiSiap = !!data.terpasang;
+    if (data.model) aiModelBawaan = data.model;
     renderAi();
     toast(t("ai.saved"), "success");
   } catch (err) {
@@ -4989,6 +5006,7 @@ async function removeAiKey() {
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     aiState = data;
     aiEditing = false;
+    aiSiap = false;
     renderAi();
     toast(t("ai.removed"), "success");
   } catch (err) {
@@ -5024,6 +5042,12 @@ let aiTimer = null;
    lebih buruk daripada tombol yang tidak ada. */
 let aiSiap = false;
 let aiModelBawaan = MODEL_BAWAAN;
+
+/** Menyalakan atau mematikan tombol Riset menurut catatan `aiSiap` saat ini. */
+function syncAiButton() {
+  const btn = $("ai-open");
+  if (btn) btn.hidden = !aiSiap;
+}
 
 async function muatKeadaanAi() {
   try {
@@ -5624,8 +5648,7 @@ async function init() {
   // Tidak di-await: editor boleh terbuka lebih dulu, dan tombol Riset muncul
   // begitu jawabannya datang.
   muatKeadaanAi().then(() => {
-    const aiBtn = $("ai-open");
-    if (aiBtn && activeView === "editor") aiBtn.hidden = !aiSiap;
+    if (activeView === "editor") syncAiButton();
   });
 
   lastHash = location.hash;
