@@ -29,7 +29,19 @@ export type ActivityAction =
   | "password.change"
   | "update.start"
   | "sessions.revoke"
-  | "login.blocked";
+  | "login.blocked"
+  /**
+   * Kunci API DeepSeek dipasang atau dihapus. Yang dicatat hanya SIAPA dan
+   * KAPAN — kuncinya sendiri tidak pernah masuk ke sini, dan
+   * `data/activity.json` bukan tempat yang tepat untuk menyimpannya.
+   *
+   * Dua aksi terpisah, bukan satu aksi dengan `meta.aksi`: nilai di `meta`
+   * disisipkan ke kalimat terjemahan apa adanya, jadi "pasang"/"hapus" yang
+   * ditulis di sana akan muncul dalam Bahasa Indonesia di panel berbahasa
+   * Inggris dan Mandarin.
+   */
+  | "ai.keySet"
+  | "ai.keyRemoved";
 
 export interface ActivityEntry {
   id: string;

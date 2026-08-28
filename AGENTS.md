@@ -200,6 +200,28 @@ menggambarnya).
 - Tiap blok footer punya saklar `show*` sendiri. Blok yang datanya kosong tidak
   pernah tampil, jadi footer situs yang baru dipasang tetap rapi.
 
+### Fitur AI (DeepSeek)
+
+Rancangan lengkapnya ada di **`RENCANA-AI-DEEPSEEK.md`**. Yang sudah berjalan
+baru Tahap 0a: halaman **Admin → AI** untuk memasang kunci API DeepSeek.
+
+- **Kunci API tidak pernah dimasukkan dengan menyunting `.env` lewat SSH.** Ia
+  masuk lewat panel, dan `/api/ai/pengaturan` **menguji kunci itu ke DeepSeek
+  lebih dulu** (`GET /user/balance`) sebelum menyimpannya. Kunci yang salah
+  ketik harus gagal di detik itu, bukan berhari-hari kemudian.
+- **Endpoint itu tidak pernah mengembalikan kuncinya.** Yang keluar hanya
+  `terpasang`, empat karakter terakhir, dan saldo. Menambahkan field baru yang
+  memuat kuncinya akan membuat ia sampai ke DOM — jangan.
+- `writeEnvFile()` sekarang meng-`chmod 0600` `.env` setiap kali menulis, dan
+  nilai `null` menghapus barisnya, bukan menuliskannya sebagai nilai kosong.
+- `src/lib/deepseek.ts` adalah **satu-satunya** berkas yang tahu bentuk API
+  DeepSeek. Nama model dan bentuk permintaan berubah cukup sering — pada Juli
+  2026 `deepseek-chat` dan `deepseek-reasoner` dimatikan seluruhnya. Sisa
+  sistem bicara dengan tipe di berkas itu, bukan dengan DeepSeek langsung.
+- Dua kemampuan terpisah di `CAPABILITY_ROLES`: `ai` (memasang kunci dan
+  mengatur kuota) untuk pemilik + admin, dan `ai.run` (menjalankan riset) untuk
+  ketiga peran. Yang menahan pengeluaran adalah kuota harian, bukan peran.
+
 ### Pengguna & peran
 
 - Akun panel disimpan di **`data/users.json`** (kata sandi ter-hash `scrypt`),

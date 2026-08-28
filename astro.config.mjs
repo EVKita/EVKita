@@ -16,6 +16,17 @@ export default defineConfig({
   output: "server",
   adapter: node({ mode: "standalone" }),
 
+  server: {
+    /**
+     * `astro dev` tidak membaca PORT sendiri — kalau 4321 sedang dipakai ia
+     * diam-diam pindah ke 4322, dan siapa pun yang menunggu di alamat yang
+     * mereka tentukan menemukan halaman kosong. Server produksi
+     * (`dist/server/entry.mjs`) sudah membaca PORT, jadi baris ini membuat
+     * keduanya berperilaku sama. Tanpa PORT, angkanya tetap 4321 seperti dulu.
+     */
+    port: Number(process.env.PORT) || 4321,
+  },
+
   security: {
     // Tanpa daftar ini Astro tidak mempercayai header Host sama sekali dan
     // menganggap setiap permintaan datang ke "http://localhost". Akibatnya

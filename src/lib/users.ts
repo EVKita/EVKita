@@ -362,7 +362,7 @@ export function touchLogin(id: string): void {
  * Kemampuan yang dibatasi peran. Semua yang tidak disebut di sini (konten,
  * pengaturan situs, media) terbuka untuk ketiga peran.
  */
-export type Capability = "users" | "update" | "backups";
+export type Capability = "users" | "update" | "backups" | "ai" | "ai.run";
 
 /**
  * Peran mana yang boleh melakukan apa, ditulis lengkap.
@@ -377,6 +377,21 @@ const CAPABILITY_ROLES: Record<Capability, readonly Role[]> = {
   users: ["owner", "admin"],
   update: ["owner", "admin"],
   backups: ["owner", "admin"],
+
+  /*
+   * Dua kemampuan berbeda untuk fitur AI, dan pemisahannya disengaja.
+   *
+   * `ai` memegang kunci API dan pengaturan yang menentukan berapa mahal setiap
+   * riset — itu keputusan pemilik akun, bukan penyunting.
+   *
+   * `ai.run` justru terbuka untuk Editor. Merekalah yang paling sering mengisi
+   * katalog; menutup fitur ini untuk mereka berarti membangunnya untuk orang
+   * yang paling jarang memakainya. Yang menahan pengeluaran adalah KUOTA
+   * HARIAN per akun, bukan peran — karena peran hanya bisa menjawab "boleh atau
+   * tidak", sementara pertanyaan sebenarnya adalah "seberapa banyak".
+   */
+  ai: ["owner", "admin"],
+  "ai.run": ["owner", "admin", "editor"],
 };
 
 export function can(user: { role: Role } | null, capability: Capability): boolean {

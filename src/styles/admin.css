@@ -1019,6 +1019,12 @@
   border-color: color-mix(in srgb, var(--danger) 32%, transparent);
 }
 
+.badge-ok {
+  background: color-mix(in srgb, var(--adm-ok) 14%, transparent);
+  color: var(--adm-ok);
+  border-color: color-mix(in srgb, var(--adm-ok) 34%, transparent);
+}
+
 .badge-draft {
   background: color-mix(in srgb, var(--text) 8%, transparent);
   color: var(--text-muted);
@@ -5617,4 +5623,83 @@ body:has(.modal-backdrop.open) .fab {
   white-space: pre;
   overflow-wrap: normal;
   overflow-x: auto;
+}
+
+/* =========================================================================
+   22. Pengaturan AI
+
+   Halaman ini sengaja memakai `.panel.form-section` yang sama dengan Profil
+   dan Pengaturan Situs; yang ditambahkan di sini hanya tiga hal yang belum
+   punya bentuk di tempat lain: baris status kunci, kunci yang tersamar, dan
+   daftar saldo.
+   ========================================================================= */
+
+.ai-key-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* Kunci yang tersamar. Monospace supaya empat karakter terakhirnya — satu-satunya
+   bagian yang nyata — bisa dibandingkan sekilas dengan kunci di layar DeepSeek. */
+.ai-key-mask {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--adm-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-sm);
+  padding: 4px 10px;
+  overflow-wrap: anywhere;
+}
+
+.ai-balance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1px;
+  margin: 0 0 16px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r);
+  overflow: hidden;
+}
+
+.ai-balance > div {
+  background: var(--bg);
+  padding: 12px 14px;
+}
+
+.ai-balance dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.ai-balance dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  /* Angka saldo dibaca berdampingan di tiga kotak; lebar digit yang sama
+     membuat perbandingannya tidak perlu diusahakan. */
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-note {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: var(--adm-r-sm);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-note-warn {
+  background: color-mix(in srgb, var(--adm-warn) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--adm-warn) 30%, transparent);
+  color: var(--text);
 }

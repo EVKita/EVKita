@@ -76,6 +76,8 @@ const SAMA_SENGAJA = new Set([
   "en:tampilan.bgPattern.aurora",
   "en:tampilan.customCss.ph",
   "zh:tampilan.customCss.ph",
+  // "Total" memang kata yang sama di kedua bahasa.
+  "en:ai.balance.total",
 ]);
 
 /**

@@ -59,7 +59,7 @@ let t = makeT(locale);
 
 /* "editor", "profile", dan "users" adalah halaman penuh tanpa butir sidebar
    sendiri di kelompok koleksi. */
-const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "tampilan", "site", "media", "backups", "editor", "profile", "users"];
+const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users"];
 
 /* Dua form yang isinya sama-sama field `site`: Pengaturan Situs dan Tampilan.
    Keduanya ditangani mesin yang sama supaya menambah field cukup satu baris
@@ -1258,6 +1258,7 @@ function setView(view, opts) {
   if (view === "backups") loadBackups();
   if (view === "profile") renderProfile();
   if (view === "users") loadUsers();
+  if (view === "ai") loadAi();
   if (view !== "editor") window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -3456,6 +3457,12 @@ function bindEvents() {
 
     if (e.target.closest("#profile-signout-others")) { signOutOtherDevices(); return; }
 
+    /* --- Pengaturan AI --- */
+    if (e.target.closest("#ai-key-change")) { aiEditing = true; renderAi(); return; }
+    if (e.target.closest("#ai-key-cancel")) { aiEditing = false; renderAi(); return; }
+    if (e.target.closest("#ai-key-remove")) { removeAiKey(); return; }
+    if (e.target.closest("#ai-balance-refresh")) { loadAi({ segar: true }); return; }
+
     /* --- Dialog konfirmasi --- */
     if (e.target.closest("#confirm-ok")) { if (confirmResolver) confirmResolver(true); return; }
     if (e.target.closest("#confirm-cancel")) { if (confirmResolver) confirmResolver(false); return; }
@@ -3857,6 +3864,7 @@ function bindEvents() {
     if (form.id === "profile-identity") { e.preventDefault(); saveProfileIdentity(form); return; }
     if (form.id === "profile-password") { e.preventDefault(); saveProfilePassword(form); return; }
     if (form.id === "profile-prefs") { e.preventDefault(); saveProfilePrefs(form); return; }
+    if (form.id === "ai-key-form") { e.preventDefault(); saveAiKey(form); return; }
     if (SITE_FORMS.includes(form.id)) {
       e.preventDefault();
       collectSiteForm();
@@ -4212,6 +4220,7 @@ function setLocale(code, opts) {
     renderAll();
     if (activeView === "profile") renderProfile();
     if (activeView === "users") renderUsers();
+    if (activeView === "ai") renderAi();
   }
 
   if (o.save && me) {
@@ -4678,6 +4687,209 @@ async function deleteUserById(id) {
     usersList = data.users;
     renderUsers();
     toast(t("users.deleted", { name: user.name || user.username }), "success");
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 25b. Halaman Pengaturan AI
+ *
+ * Kunci DeepSeek dimasukkan di sini, bukan dengan menyunting .env lewat SSH.
+ *
+ * Yang perlu diingat saat menyentuh berkas ini: halaman ini tidak pernah
+ * MENERIMA kuncinya dari server. Endpoint-nya hanya mengembalikan "terpasang
+ * atau belum", empat karakter terakhirnya, dan saldonya. Akibatnya kunci tidak
+ * pernah ada di DOM dan tidak bisa dibaca ekstensi peramban siapa pun — dan
+ * itu hanya bertahan selama tidak ada yang menambahkan field baru ke jawaban
+ * endpoint-nya.
+ * ------------------------------------------------------------------ */
+
+let aiState = null;
+/* Formulir kunci sedang dibuka meski kunci lama masih terpasang ("Ganti kunci"). */
+let aiEditing = false;
+
+async function loadAi(opts) {
+  const root = $("ai-root");
+  if (!root) return;
+  if (!aiState) root.innerHTML = `<div class="skeleton"></div>`;
+
+  const url = opts && opts.segar ? "/api/ai/pengaturan?segar=1" : "/api/ai/pengaturan";
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    aiState = data;
+  } catch (err) {
+    aiState = null;
+    root.innerHTML = emptyStateHtml(t("ai.title"), err.message, "⚡");
+    return;
+  }
+  renderAi();
+}
+
+/* Empat karakter terakhir saja yang nyata; sisanya titik. Panjang titiknya
+   sengaja tetap, bukan sepanjang kunci aslinya — panjang kunci pun bukan
+   sesuatu yang perlu ikut ditampilkan. */
+function aiKeyMask(tail) {
+  return "sk-" + "•".repeat(24) + String(tail || "");
+}
+
+function aiBalanceHtml() {
+  const saldo = aiState.saldo;
+  const refresh = `<div class="form-actions">
+      <button type="button" class="btn btn-outline btn-sm" id="ai-balance-refresh">${esc(t("ai.balance.refresh"))}</button>
+    </div>`;
+
+  if (!saldo) {
+    return `<section class="panel form-section">
+      <div class="form-section-head">
+        <h2>${esc(t("ai.balance.title"))}</h2>
+        <p>${esc(aiState.saldoErrorKey ? t(aiState.saldoErrorKey) : t("ai.balance.unreadable"))}</p>
+      </div>
+      ${refresh}
+    </section>`;
+  }
+
+  const rows = (saldo.baris || [])
+    .map(
+      (b) => `<dl class="ai-balance">
+        <div><dt>${esc(t("ai.balance.total"))}</dt><dd>${esc(b.total)} ${esc(b.mataUang)}</dd></div>
+        <div><dt>${esc(t("ai.balance.granted"))}</dt><dd>${esc(b.hadiah)} ${esc(b.mataUang)}</dd></div>
+        <div><dt>${esc(t("ai.balance.toppedUp"))}</dt><dd>${esc(b.isiUlang)} ${esc(b.mataUang)}</dd></div>
+      </dl>`
+    )
+    .join("");
+
+  const habis = saldo.tersedia ? "" : `<p class="ai-note ai-note-warn">${esc(t("ai.balance.empty"))}</p>`;
+
+  return `<section class="panel form-section">
+    <div class="form-section-head">
+      <h2>${esc(t("ai.balance.title"))}</h2>
+      <p>${esc(t("ai.balance.checked", { when: formatAgo(aiState.diperiksaPada) }))}</p>
+    </div>
+    ${rows}
+    ${habis}
+    ${refresh}
+  </section>`;
+}
+
+function aiKeyFormHtml() {
+  return `<form id="ai-key-form" autocomplete="off">
+    <div class="field-grid">
+      <div class="field full">
+        <label for="ai-key">${esc(t("ai.key.label"))}</label>
+        <input
+          id="ai-key"
+          name="apiKey"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          autocapitalize="none"
+          placeholder="sk-…"
+          required
+        />
+        <span class="hint">${esc(t("ai.key.hint"))}</span>
+      </div>
+    </div>
+    <div class="form-actions">
+      ${aiState.terpasang ? `<button type="button" class="btn btn-ghost" id="ai-key-cancel">${esc(t("common.cancel"))}</button>` : ""}
+      <button type="submit" class="btn btn-primary" id="ai-key-save">${esc(t("ai.key.save"))}</button>
+    </div>
+  </form>`;
+}
+
+function renderAi() {
+  const root = $("ai-root");
+  if (!root || !aiState) return;
+
+  const terpasang = !!aiState.terpasang;
+  const showForm = !terpasang || aiEditing;
+
+  root.innerHTML = `
+    <section class="panel form-section">
+      <div class="form-section-head">
+        <h2>${esc(t("ai.key.title"))}</h2>
+        <p>${esc(t("ai.key.desc"))}</p>
+      </div>
+      <div class="ai-key-state">
+        <span class="badge ${terpasang ? "badge-ok" : "badge-muted"}">${esc(terpasang ? t("ai.state.on") : t("ai.state.off"))}</span>
+        ${terpasang ? `<code class="ai-key-mask">${esc(aiKeyMask(aiState.ekor))}</code>` : ""}
+      </div>
+      ${showForm
+        ? aiKeyFormHtml()
+        : `<div class="form-actions">
+            <button type="button" class="btn btn-outline" id="ai-key-change">${esc(t("ai.key.change"))}</button>
+            <button type="button" class="btn btn-danger" id="ai-key-remove">${esc(t("ai.key.remove"))}</button>
+          </div>`}
+    </section>
+    ${terpasang ? aiBalanceHtml() : ""}
+    <section class="panel form-section">
+      <div class="form-section-head">
+        <h2>${esc(t("ai.next.title"))}</h2>
+        <p>${esc(t("ai.next.text"))}</p>
+      </div>
+    </section>`;
+
+  if (showForm) {
+    const input = $("ai-key");
+    if (input && aiEditing) setTimeout(() => input.focus(), 40);
+  }
+}
+
+async function saveAiKey(form) {
+  const apiKey = String(form.elements.apiKey.value || "").trim();
+  if (!apiKey) return;
+
+  const btn = $("ai-key-save");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = t("ai.key.testing");
+  }
+
+  try {
+    const res = await fetch("/api/ai/pengaturan", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apiKey }),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    // Nilai di field dibuang lebih dulu, baru markup-nya diganti: menggambar
+    // ulang saja meninggalkan kuncinya di objek form lama sampai GC berjalan.
+    form.reset();
+    aiState = data;
+    aiEditing = false;
+    renderAi();
+    toast(t("ai.saved"), "success");
+  } catch (err) {
+    // Ketikannya sengaja TIDAK dihapus: kunci yang ditolak biasanya kurang satu
+    // karakter, dan menyuruh orang menempel ulang dari awal tidak menolong.
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = t("ai.key.save");
+    }
+    toast(err.message, "error");
+  }
+}
+
+async function removeAiKey() {
+  const setuju = await confirmDialog({
+    title: t("ai.remove.title"),
+    text: t("ai.remove.text"),
+    okText: t("ai.key.remove"),
+    danger: true,
+  });
+  if (!setuju) return;
+
+  try {
+    const res = await fetch("/api/ai/pengaturan", { method: "DELETE" });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    aiState = data;
+    aiEditing = false;
+    renderAi();
+    toast(t("ai.removed"), "success");
   } catch (err) {
     toast(err.message, "error");
   }
