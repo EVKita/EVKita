@@ -56,10 +56,44 @@ export interface User {
    * belum pernah ada pencabutan.
    */
   sessionsValidFrom: string;
+  /**
+   * Rahasia TOTP dalam base32, kosong berarti dua faktor belum dipasang.
+   *
+   * Disimpan apa adanya, TIDAK di-hash — dan itu memang satu-satunya cara:
+   * server harus bisa menghitung kode yang sama dengan yang muncul di ponsel,
+   * jadi ia harus memegang rahasianya. Yang menjaganya adalah `data/users.json`
+   * yang tidak pernah terkirim ke browser dan tidak pernah masuk ke commit.
+   */
+  totpSecret: string;
+  /**
+   * Sudah DIVERIFIKASI, bukan sekadar sudah dibuatkan rahasia.
+   *
+   * Rahasia dibuat saat orangnya menekan "Pasang", tapi baru berlaku setelah
+   * ia berhasil memasukkan satu kode dari ponselnya. Tanpa pemisahan ini,
+   * seseorang yang salah memindai bisa mengunci dirinya sendiri keluar dari
+   * akunnya di percobaan masuk berikutnya.
+   */
+  totpEnabled: boolean;
+  /** Kode cadangan ter-hash, sekali pakai. Kosong berarti sudah habis dipakai. */
+  backupCodes: string[];
 }
 
-/** Bentuk pengguna yang aman dikirim ke browser — tanpa hash kata sandi. */
-export type PublicUser = Omit<User, "password">;
+/**
+ * Bentuk pengguna yang aman dikirim ke browser.
+ *
+ * Tiga hal yang dibuang, dan alasannya berbeda-beda:
+ *   - `password`: hash yang bisa dicoba tebak di luar jangkauan pembatasan laju.
+ *   - `totpSecret`: rahasianya SENDIRI. Mengirimkannya ke browser membuat dua
+ *     faktor tidak berarti apa-apa — siapa pun yang bisa membaca DOM panel bisa
+ *     menghitung kodenya sendiri, selamanya.
+ *   - `backupCodes`: kode masuk sekali pakai, sama berbahayanya.
+ *
+ * Yang tersisa dari kode cadangan hanya JUMLAHNYA, karena halaman Profil harus
+ * bisa berkata "tinggal 3 kode" tanpa pernah menyebut kodenya.
+ */
+export type PublicUser = Omit<User, "password" | "totpSecret" | "backupCodes"> & {
+  backupCodesLeft: number;
+};
 
 /* ------------------------------------------------------------------ *
  * Kata sandi
@@ -141,6 +175,9 @@ function normalizeUser(raw: any): User {
     lastLoginAt: str(raw?.lastLoginAt),
     previousLoginAt: str(raw?.previousLoginAt),
     sessionsValidFrom: str(raw?.sessionsValidFrom),
+    totpSecret: str(raw?.totpSecret),
+    totpEnabled: !!raw?.totpEnabled && !!str(raw?.totpSecret),
+    backupCodes: Array.isArray(raw?.backupCodes) ? raw.backupCodes.map((x: unknown) => str(x)).filter(Boolean) : [],
   };
 }
 
@@ -253,8 +290,8 @@ export function listUsers(): User[] {
 }
 
 export function publicUser(u: User): PublicUser {
-  const { password, ...rest } = u;
-  return rest;
+  const { password, totpSecret, backupCodes, ...rest } = u;
+  return { ...rest, backupCodesLeft: Array.isArray(backupCodes) ? backupCodes.length : 0 };
 }
 
 export function listPublicUsers(): PublicUser[] {
@@ -343,6 +380,33 @@ export function revokeSessions(id: string): void {
   if (!u) return;
   u.sessionsValidFrom = new Date().toISOString();
   writeFile(users);
+}
+
+/**
+ * Memakai satu kode cadangan, kalau kode yang diberikan memang salah satunya.
+ *
+ * Kode yang cocok LANGSUNG DIHAPUS, sebelum sesi apa pun terbit. Kode cadangan
+ * yang bisa dipakai dua kali bukan kode cadangan melainkan kata sandi kedua
+ * yang lebih pendek.
+ *
+ * Perbandingannya lewat `verifyPassword` karena kodenya memang disimpan
+ * ter-hash: berkas `data/users.json` yang bocor tidak boleh langsung menjadi
+ * delapan tiket masuk.
+ */
+export function pakaiKodeCadangan(id: string, kode: unknown): boolean {
+  const bersih = String(kode ?? "").toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  if (bersih.length < 6) return false;
+
+  const users = listUsers();
+  const u = users.find((x) => x.id === id);
+  if (!u || !u.backupCodes.length) return false;
+
+  const i = u.backupCodes.findIndex((h) => verifyPassword(bersih, h));
+  if (i < 0) return false;
+
+  u.backupCodes.splice(i, 1);
+  writeFile(users);
+  return true;
 }
 
 export function touchLogin(id: string): void {

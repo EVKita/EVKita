@@ -47,6 +47,10 @@ const texts = {
   processing: t("login.processing"),
   redirecting: t("login.redirecting"),
   submit: t("login.submit"),
+  codeTitle: t("login.codeTitle"),
+  codeSub: t("login.codeSub"),
+  verify: t("login.verify"),
+  wrongCode: t("login.wrongCode"),
   show: t("login.showPassword"),
   hide: t("login.hidePassword"),
 };
@@ -105,6 +109,15 @@ const texts = {
           </div>
         </div>
 
+        <!-- Langkah kedua. Disembunyikan sampai server menjawab bahwa akun ini
+             memang memakai verifikasi dua langkah — sebelum kata sandinya
+             benar, keberadaannya bukan urusan pengirim permintaan. -->
+        <div class="field" id="code-field" hidden>
+          <label for="code">{t("login.code")}</label>
+          <input type="text" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="000000" />
+          <span class="hint">{t("login.codeSub")}</span>
+        </div>
+
         <div class="login-error" id="login-error" role="alert">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" width="17" height="17" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
           <span id="login-error-text"></span>
@@ -125,6 +138,9 @@ const texts = {
     const userInput = document.getElementById("username");
     const passInput = document.getElementById("password");
     const eyeBtn = document.getElementById("toggle-pass");
+    const codeField = document.getElementById("code-field");
+    const codeInput = document.getElementById("code");
+    let butuhKode = false;
 
     userInput.focus();
 
@@ -163,7 +179,7 @@ const texts = {
       passInput.focus();
     });
 
-    [userInput, passInput].forEach((el) => el.addEventListener("input", clearError));
+    [userInput, passInput, codeInput].forEach((el) => el.addEventListener("input", clearError));
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -184,6 +200,7 @@ const texts = {
           body: JSON.stringify({
             username: userInput.value,
             password: passInput.value,
+            code: codeInput.value,
           }),
         });
         const data = await res.json();
@@ -200,6 +217,21 @@ const texts = {
           showError(texts.tooMany.replace("{minutes}", String(menit)));
           return;
         }
+
+        /* Server meminta faktor kedua. Kata sandinya sudah benar — yang
+           ditampilkan karena itu bukan galat, melainkan langkah berikutnya. */
+        if (data && data.perluKode) {
+          const baru = !butuhKode;
+          butuhKode = true;
+          codeField.hidden = false;
+          btn.textContent = texts.verify;
+          if (!baru) showError(texts.wrongCode);
+          codeInput.value = "";
+          codeInput.focus();
+          btn.disabled = false;
+          return;
+        }
+
         showError(texts.wrong);
         passInput.select();
       } catch {
@@ -207,7 +239,7 @@ const texts = {
       }
 
       btn.disabled = false;
-      btn.textContent = texts.submit;
+      btn.textContent = butuhKode ? texts.verify : texts.submit;
     });
   </script>
 </Base>

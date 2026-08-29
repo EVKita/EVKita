@@ -271,6 +271,49 @@ baru Tahap 0a: halaman **Admin → AI** untuk memasang kunci API DeepSeek.
   sana**. Jam sibuknya jatuh persis di jam kerja WIB, jadi angka biaya yang
   ditampilkan selalu menghitung tarif yang berlaku saat itu.
 
+### Yang tidak boleh dilanggar di subsistem baru
+
+Semuanya lahir dari sesi ini dan punya satu sifat yang sama: keputusannya ada
+di SERVER, bukan di panel.
+
+- **Pratinjau draf** (`src/lib/pratinjau.ts`). Token ditandatangani
+  `SESSION_SECRET`, berlaku untuk satu kendaraan, dan mati dalam dua jam.
+  Diterbitkan `/api/pratinjau`, tidak pernah di browser — rahasianya tidak
+  boleh sampai ke sana.
+- **"Boleh dilihat pengunjung?"** hanya dijawab `src/lib/tayang.js`. Aturannya
+  dulu ditulis ulang di sembilan halaman; jangan menambah yang kesepuluh.
+- **Log perubahan** (`src/lib/perubahan.ts`) membandingkan dokumen di server.
+  Panel tidak pernah melaporkan apa yang diubahnya sendiri. Penyimpanan
+  beruntun digabung dan tindakan massal diringkas di `activity.ts` — dua aturan
+  itu yang membuat log ini bisa dibaca sama sekali.
+- **Stempel `updatedAt`/`updatedBy`** dipasang server, hanya pada item yang
+  isinya benar-benar berbeda. Jangan menstempel di panel.
+- **Berkas unggahan tidak ikut dicadangkan.** `data/backups/` cuma menyimpan
+  `content.json`, jadi penghapusan berkas tidak punya tombol urung. Yang
+  menentukan sebuah berkas yatim adalah `src/lib/uploads.ts` di server — dan ia
+  wajib ikut memeriksa foto profil di `data/users.json`, yang tidak ada di
+  `content.json` sama sekali.
+- **Gambar dikecilkan di peramban** (`src/scripts/gambar.js`), memakai
+  `createImageBitmap()`. JANGAN kembali ke `<img src=URL.createObjectURL()>`:
+  CSP panel ini tidak mengizinkan `blob:` di `img-src`, dan kegagalannya tidak
+  terlihat di mana pun karena pengoptimalan yang gagal memang mengembalikan
+  berkas aslinya.
+- **Kotak konfirmasi** selalu `src/scripts/konfirmasi.js`, tidak pernah
+  `window.confirm()`. Ia membangun DOM-nya sendiri supaya halaman Pembaruan
+  bisa memakainya tanpa memuat seluruh CMS.
+- **Dua faktor** (`src/lib/totp.ts`). `totpSecret` dan `backupCodes` TIDAK
+  BOLEH keluar lewat `publicUser()` — memeriksanya adalah hal pertama yang
+  dilakukan kalau bentuk `User` berubah. Kode cadangan disimpan ter-hash dan
+  dihapus begitu dipakai. Ujinya memakai vektor resmi RFC 6238, bukan keluaran
+  implementasinya sendiri.
+- **Impor CSV** membaca berkas dengan `readAsText(file, "utf-8")` yang
+  eksplisit. Lihat DATA-9: satu nama merek di `content.json` sudah pernah rusak
+  karena UTF-8 dibaca sebagai Latin-1, dan jalur impor adalah tempat kesalahan
+  seperti itu masuk.
+- **`renderAll()` hanya menggambar tampilan yang terlihat.** Yang dilewati
+  ditandai basi lewat `perluGambar` dan digambar saat dibuka. Menambah tampilan
+  baru berarti menambahnya ke daftar itu.
+
 ### Pengguna & peran
 
 - Akun panel disimpan di **`data/users.json`** (kata sandi ter-hash `scrypt`),

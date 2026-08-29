@@ -57,6 +57,10 @@ export type ActivityAction =
   | "password.change"
   | "update.start"
   | "sessions.revoke"
+  /** Dua faktor dipasang, dimatikan, atau kode cadangannya diganti. */
+  | "2fa.on"
+  | "2fa.off"
+  | "2fa.codes"
   | "login.blocked"
   /**
    * Kunci API DeepSeek dipasang atau dihapus. Yang dicatat hanya SIAPA dan

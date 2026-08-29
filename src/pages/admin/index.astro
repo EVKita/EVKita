@@ -55,6 +55,11 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
       </div>
 
       <div class="topbar-right">
+        <!-- Penanda pekerjaan yang sedang berjalan di server. Riset AI hidup di
+             sana, bukan di dalam kotak dialognya — jadi tanpa penanda ini,
+             berpindah halaman membuatnya seolah-olah tidak pernah dimulai. -->
+        <button id="job-chip" class="job-chip" type="button" hidden></button>
+
         <span id="save-state" class="save-state" data-i18n="save.ready">{t("save.ready")}</span>
 
         <!-- Pemilih bahasa. Isinya digambar ulang oleh admin.js supaya pilihan
@@ -1240,6 +1245,29 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
           <button type="submit" class="btn btn-primary" data-i18n="common.save">{t("common.save")}</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ===== Modal impor CSV =====
+       Impor yang ada hanya menerima JSON berbentuk sama persis dengan
+       ekspornya — berguna untuk memindahkan data antar-pemasangan, tapi tidak
+       menolong untuk kasus yang sesungguhnya: daftar SPKLU atau bengkel yang
+       datang sebagai spreadsheet. -->
+  <div id="impor-modal" class="modal-backdrop">
+    <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="impor-modal-title">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3 class="modal-title" id="impor-modal-title"></h3>
+          <p class="modal-sub" id="impor-modal-sub"></p>
+        </div>
+        <button type="button" class="modal-close" aria-label={t("common.close")} data-i18n-aria="common.close">&times;</button>
+      </div>
+      <div class="modal-body" id="impor-body"></div>
+      <div class="modal-foot">
+        <p class="modal-foot-hint" id="impor-hint"></p>
+        <button type="button" class="btn btn-ghost" data-close-modal data-i18n="common.cancel">{t("common.cancel")}</button>
+        <button type="button" class="btn btn-primary" id="impor-apply" hidden></button>
+      </div>
     </div>
   </div>
 

@@ -13,6 +13,7 @@ import {
   formatNumber as i18nNumber,
 } from "../lib/i18n/index.js";
 import { safeUrl } from "../lib/url.js";
+import { bacaTabel, tebakPemetaan } from "../lib/csv.js";
 import { konfirmasi } from "./konfirmasi.js";
 import { optimalkanGambar } from "./gambar.js";
 import { mediaEntry, MEDIA_LIMITS } from "../lib/media.js";
@@ -678,6 +679,7 @@ function closeModal(el) {
   if (el.id === "dir-modal") { dirCtx = null; editorTouched = false; }
   if (el.id === "bulk-modal") bulkCtx = null;
   if (el.id === "riwayat-modal") riwayatCtx = null;
+  if (el.id === "impor-modal") imporCtx = null;
   // Grid disegarkan saat modal tutup, bukan pada tiap ketikan: menggambar ulang
   // kartu di belakang modal sambil mengetik alt hanya membuang kerja.
   if (el.id === "media-modal") { mediaCtx = null; renderMedia(); }
@@ -1349,10 +1351,11 @@ function setView(view, opts) {
     const target = "#/" + view;
     if (location.hash !== target) setHash(target);
   }
+  gambarTampilan(view);
   const app = $("admin-app");
   if (app) app.classList.remove("sidebar-open");
   if (view === "backups") loadBackups();
-  if (view === "profile") { renderProfile(); loadLoginHistory(); }
+  if (view === "profile") { tfaCtx = null; renderProfile(); render2fa(); loadLoginHistory(); }
   if (view === "users") loadUsers();
   if (view === "ai") loadAi();
   if (view === "activity") loadActivityPage();
@@ -1653,6 +1656,33 @@ function thumbInnerHtml(url, label) {
  * 10. Daftar koleksi: toolbar + daftar
  * ------------------------------------------------------------------ */
 
+/**
+ * Teks yang dicari untuk satu item, dihitung sekali lalu disimpan.
+ *
+ * Sebelumnya seluruh nilai tiap item dirakit ulang menjadi satu untaian pada
+ * SETIAP ketikan di kotak pencarian — untuk setiap item, termasuk yang
+ * larik-lariknya harus ditelusuri. Hasilnya sama persis setiap kali sampai
+ * itemnya benar-benar berubah, jadi menghitungnya ulang tidak pernah
+ * menghasilkan apa pun selain pekerjaan.
+ *
+ * WeakMap, bukan Map: kuncinya objek item itu sendiri, dan begitu item diganti
+ * (setiap penyimpanan mengganti seluruh dokumen dengan jawaban server)
+ * entrinya ikut hilang tanpa perlu dibersihkan.
+ */
+const indeksCari = new WeakMap();
+
+function teksCari(it) {
+  let hay = indeksCari.get(it);
+  if (hay === undefined) {
+    hay = Object.values(it)
+      .map((v) => (Array.isArray(v) ? v.map((x) => (x && typeof x === "object" ? Object.values(x).join(" ") : x)).join(" ") : v))
+      .join(" ")
+      .toLowerCase();
+    indeksCari.set(it, hay);
+  }
+  return hay;
+}
+
 function visibleItems(col) {
   const state = ui[col];
   const items = (content[col] || []).slice();
@@ -1664,11 +1694,7 @@ function visibleItems(col) {
       if (v && !f.match(it, v)) return false;
     }
     if (!q) return true;
-    const hay = Object.values(it)
-      .map((v) => (Array.isArray(v) ? v.map((x) => (x && typeof x === "object" ? Object.values(x).join(" ") : x)).join(" ") : v))
-      .join(" ")
-      .toLowerCase();
-    return hay.includes(q);
+    return teksCari(it).includes(q);
   });
 
   const s = state.sort;
@@ -1719,6 +1745,7 @@ function toolbarHtml(col) {
     <div class="toolbar-actions">
       <button type="button" class="btn btn-outline btn-sm" data-export="${esc(col)}">${esc(t("common.exportJson"))}</button>
       <button type="button" class="btn btn-outline btn-sm" data-import="${esc(col)}">${esc(t("common.importJson"))}</button>
+      <button type="button" class="btn btn-outline btn-sm" data-import-csv="${esc(col)}">${esc(t("impor.csv"))}</button>
     </div>
   </div>
   <div class="bulk-bar" data-bulkbar="${esc(col)}" hidden>
@@ -3918,6 +3945,12 @@ function downloadJson(filename, data) {
 
 let jsonPickerHandler = null;
 
+function pickCsv() {
+  const input = $("__csv-picker");
+  input.value = "";
+  input.click();
+}
+
 function pickJson(handler) {
   jsonPickerHandler = handler;
   const input = $("__json-picker");
@@ -3950,6 +3983,167 @@ async function importCollection(col, parsed) {
  * ------------------------------------------------------------------ */
 
 let filePickerTarget = null;
+
+/* ---------------- Impor CSV ---------------- */
+
+let imporCtx = null; // { col, header[], rows[][], peta[] }
+
+/** Field yang boleh diisi dari CSV — sama dengan yang ada di formulirnya. */
+function imporDefs(col) {
+  return isVehicle(col)
+    ? [...vehicleFields(col).dasar, ...vehicleFields(col).spesifikasi].filter((d) => d.t !== "image" && d.t !== "switch")
+    : dirFields(col).filter((d) => d.t !== "image" && d.t !== "switch");
+}
+
+function openImporCsv(col) {
+  imporCtx = { col, header: [], rows: [], peta: [] };
+  const title = $("impor-modal-title");
+  if (title) title.textContent = t("impor.title", { col: colLabel(col) });
+  const sub = $("impor-modal-sub");
+  if (sub) sub.textContent = t("impor.sub");
+  renderImpor();
+  openModal($("impor-modal"));
+}
+
+function renderImpor() {
+  const body = $("impor-body");
+  const apply = $("impor-apply");
+  const hint = $("impor-hint");
+  if (!body || !imporCtx) return;
+
+  if (!imporCtx.rows.length) {
+    body.innerHTML = `<div class="field full">
+      <label for="impor-teks">${esc(t("impor.paste"))}</label>
+      <textarea id="impor-teks" rows="9" placeholder="${esc(t("impor.paste.ph"))}"></textarea>
+      <span class="hint">${esc(t("impor.paste.hint"))}</span>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" id="impor-file">${esc(t("impor.pickFile"))}</button>
+      <button type="button" class="btn btn-primary" id="impor-read">${esc(t("impor.read"))}</button>
+    </div>`;
+    if (apply) apply.hidden = true;
+    if (hint) hint.textContent = "";
+    return;
+  }
+
+  const defs = imporDefs(imporCtx.col);
+  const pilihan = [["", t("impor.ignore")], ...defs.map((d) => [d.k, d.l])];
+  const dipakai = imporCtx.peta.filter(Boolean);
+
+  const kolom = imporCtx.header
+    .map((h, i) => `<div class="field">
+      <label for="impor-map-${i}">${esc(h)}</label>
+      <select id="impor-map-${i}" data-impor-map="${i}">${optionsHtml(pilihan, imporCtx.peta[i] || "")}</select>
+      <span class="hint">${esc(contohKolom(i))}</span>
+    </div>`)
+    .join("");
+
+  const tampil = imporCtx.peta.map((k, i) => (k ? { k, i, l: defs.find((d) => d.k === k)?.l || k } : null)).filter(Boolean);
+  const pratinjau = tampil.length
+    ? `<div class="table-scroll"><table class="impor-preview">
+        <thead><tr>${tampil.map((c) => `<th>${esc(c.l)}</th>`).join("")}</tr></thead>
+        <tbody>${imporCtx.rows.slice(0, 5)
+          .map((r) => `<tr>${tampil.map((c) => `<td>${esc(r[c.i] || "")}</td>`).join("")}</tr>`)
+          .join("")}</tbody>
+      </table></div>`
+    : `<p class="row-meta">${esc(t("impor.noMapping"))}</p>`;
+
+  const nameKey = imporCtx.col === "berita" ? "title" : "name";
+  const punyaNama = imporCtx.peta.includes(nameKey);
+  const tanpaNama = punyaNama ? imporCtx.rows.filter((r) => !String(r[imporCtx.peta.indexOf(nameKey)] || "").trim()).length : 0;
+
+  body.innerHTML = `<div class="form-section-head"><h2>${esc(t("impor.mapTitle"))}</h2><p>${esc(t("impor.mapDesc"))}</p></div>
+    <div class="field-grid">${kolom}</div>
+    <div class="form-section-head"><h2>${esc(t("impor.previewTitle"))}</h2><p>${esc(t("impor.previewDesc", { n: imporCtx.rows.length }))}</p></div>
+    ${pratinjau}
+    ${!punyaNama ? `<p class="warn-text">${esc(t("impor.needName"))}</p>` : ""}
+    ${tanpaNama ? `<p class="warn-text">${esc(t("impor.rowsNoName", { n: tanpaNama }))}</p>` : ""}`;
+
+  if (apply) {
+    apply.hidden = false;
+    apply.disabled = !punyaNama || dipakai.length === 0;
+    apply.textContent = t("impor.apply", { n: imporCtx.rows.length - tanpaNama });
+  }
+  if (hint) hint.textContent = t("impor.asDraft");
+}
+
+/** Contoh isi kolom, diambil dari baris pertama yang tidak kosong. */
+function contohKolom(i) {
+  const contoh = (imporCtx.rows.find((r) => String(r[i] || "").trim()) || [])[i] || "";
+  return contoh ? t("impor.example", { v: String(contoh).slice(0, 40) }) : t("impor.emptyColumn");
+}
+
+function bacaTeksImpor(teks) {
+  if (!imporCtx) return;
+  const { header, rows } = bacaTabel(teks);
+  if (!rows.length) { toast(t("impor.nothing"), "error"); return; }
+  imporCtx.header = header;
+  imporCtx.rows = rows;
+  imporCtx.peta = tebakPemetaan(header, imporDefs(imporCtx.col));
+  renderImpor();
+}
+
+/**
+ * Menerapkan hasil impor.
+ *
+ * Dua aturan yang membuatnya aman dipakai pada data sungguhan:
+ *
+ *   1. Semua yang masuk berstatus DRAF. Impor tidak pernah langsung mengubah
+ *      situs publik — lima puluh baris dari spreadsheet orang lain adalah
+ *      hal terakhir yang pantas tayang tanpa pernah dilihat.
+ *   2. Baris yang namanya cocok dengan entri yang sudah ada memperbarui entri
+ *      itu, bukan membuat kembarannya. Tanpa ini, mengimpor ulang berkas yang
+ *      sama untuk membetulkan satu kolom akan menggandakan seluruh daftar.
+ */
+function terapkanImpor() {
+  if (!imporCtx) return;
+  const { col, rows, peta } = imporCtx;
+  const defs = imporDefs(col);
+  const nameKey = col === "berita" ? "title" : "name";
+  const iNama = peta.indexOf(nameKey);
+  if (iNama < 0) return;
+
+  const kunci = (v) => String(v || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const lama = new Map((content[col] || []).map((x) => [kunci(x[nameKey]), x]));
+
+  let baru = 0;
+  let diperbarui = 0;
+
+  for (const r of rows) {
+    const nama = String(r[iNama] || "").trim();
+    if (!nama) continue;
+
+    const nilai = {};
+    peta.forEach((k, i) => {
+      if (!k) return;
+      const def = defs.find((d) => d.k === k);
+      const mentah = String(r[i] === undefined ? "" : r[i]).trim();
+      if (mentah === "") return; // sel kosong tidak menghapus nilai yang sudah ada
+      nilai[k] = def && def.t === "number" ? numOrNull(mentah) : def && def.t === "tags" ? splitList(mentah) : mentah;
+    });
+
+    const ada = lama.get(kunci(nama));
+    if (ada) {
+      Object.assign(ada, nilai);
+      diperbarui++;
+    } else {
+      const item = Object.assign(blankItem(col), nilai, {
+        id: uniqueId(col, slugify(isVehicle(col) ? `${nilai.brand || ""} ${nama}` : nama) || col),
+        status: "draft",
+      });
+      content[col].push(item);
+      lama.set(kunci(nama), item);
+      baru++;
+    }
+  }
+
+  closeModal($("impor-modal"));
+  imporCtx = null;
+  if (!baru && !diperbarui) { toast(t("impor.nothing"), "info"); return; }
+  commit();
+  saveNow();
+  toast(t("impor.done", { baru, diperbarui }), "success");
+}
 
 function pickImages(dz) {
   filePickerTarget = dz;
@@ -4212,13 +4406,41 @@ function openPalette(initial) {
  * 20. Render menyeluruh
  * ------------------------------------------------------------------ */
 
+/**
+ * Menggambar ulang apa yang SEDANG TERLIHAT, bukan seluruh panel.
+ *
+ * Dulu fungsi ini menggambar kelima koleksi, formulir Pengaturan Situs, menu
+ * Tampilan, dan seluruh pustaka media sekaligus — termasuk ketika yang berubah
+ * hanyalah satu penggeser warna. Dan ia dipanggil pada SETIAP penyimpanan yang
+ * berhasil, yang berarti setiap 1,2 detik selama seseorang mengetik.
+ *
+ * Yang tetap digambar tanpa syarat cuma penghitung di sidebar: angka itu
+ * terlihat dari halaman mana pun, jadi ia tidak boleh tertinggal.
+ *
+ * Tampilan yang dilewati ditandai basi, dan digambar ulang saat dibuka. Tanpa
+ * penandaan itu, berpindah ke Mobil setelah mengimpor lima puluh baris akan
+ * menampilkan daftar yang lama.
+ */
+const perluGambar = new Set();
+
 function renderAll() {
   if (!content) return;
   renderNavCounts();
-  renderDashboard();
-  for (const col of COLLECTIONS) renderCollection(col);
-  renderSiteForm();
-  renderMedia();
+  for (const view of ["dashboard", ...COLLECTIONS, "site", "tampilan", "media"]) perluGambar.add(view);
+  gambarTampilan(activeView);
+  // Editor bukan salah satu tampilan di atas, tapi daftar di belakangnya ikut
+  // berubah — dan orang kembali ke sana dengan tombol Batal, bukan lewat menu.
+  if (activeView === "editor" && vehicleCtx) gambarTampilan(vehicleCtx.col);
+}
+
+/** Menggambar satu tampilan kalau ia memang perlu digambar ulang. */
+function gambarTampilan(view) {
+  if (!content || !perluGambar.has(view)) return;
+  perluGambar.delete(view);
+  if (view === "dashboard") renderDashboard();
+  else if (COLLECTIONS.includes(view)) renderCollection(view);
+  else if (view === "site" || view === "tampilan") renderSiteForm();
+  else if (view === "media") renderMedia();
 }
 
 /* ------------------------------------------------------------------ *
@@ -4318,12 +4540,36 @@ function bindEvents() {
 
     if (e.target.closest("#profile-signout-others")) { signOutOtherDevices(); return; }
 
+    /* --- Verifikasi dua langkah --- */
+    if (e.target.closest("#tfa-start")) { tfaAksi("mulai"); return; }
+    if (e.target.closest("#tfa-activate")) { tfaAksi("aktifkan"); return; }
+    if (e.target.closest("#tfa-cancel")) { tfaCtx = null; render2fa(); return; }
+    if (e.target.closest("#tfa-newcodes")) { tfaAksi("kodeBaru"); return; }
+    if (e.target.closest("#tfa-disable")) { tfaAksi("matikan"); return; }
+    if (e.target.closest("#tfa-done")) { tfaCtx = null; render2fa(); return; }
+    if (e.target.closest("#tfa-copy")) {
+      const teks = (tfaCtx && tfaCtx.kodeCadangan ? tfaCtx.kodeCadangan : []).join("\n");
+      navigator.clipboard.writeText(teks).then(() => toast(t("toast.codesCopied"), "success"), () => {});
+      return;
+    }
+
     /* --- Log aktivitas --- */
     if (e.target.closest("#activity-refresh")) { loadActivityPage(); return; }
     const halAktivitas = e.target.closest("[data-activity-page]");
     if (halAktivitas) {
       activityView.page = Number(halAktivitas.getAttribute("data-activity-page")) || 1;
       loadActivityPage();
+      return;
+    }
+
+    /* --- Penanda pekerjaan --- */
+    const chip = e.target.closest("#job-chip");
+    if (chip) {
+      const ref = chip.getAttribute("data-job") || "";
+      tandaiJobDilihat(chip.getAttribute("data-job-id") || "");
+      chip.hidden = true;
+      const { col, id } = parseRef(ref);
+      if (col && id && findItem(col, id)) { openEditor(col, id); setTimeout(openAiModal, 300); }
       return;
     }
 
@@ -4494,6 +4740,17 @@ function bindEvents() {
     if (imp) { const col = imp.getAttribute("data-import"); pickJson((parsed) => importCollection(col, parsed)); return; }
 
     /* --- Cadangan --- */
+    /* --- Impor CSV --- */
+    const imporBtn = e.target.closest("[data-import-csv]");
+    if (imporBtn) { openImporCsv(imporBtn.getAttribute("data-import-csv")); return; }
+    if (e.target.closest("#impor-read")) {
+      const ta = $("impor-teks");
+      bacaTeksImpor(ta ? ta.value : "");
+      return;
+    }
+    if (e.target.closest("#impor-file")) { pickCsv(); return; }
+    if (e.target.closest("#impor-apply")) { terapkanImpor(); return; }
+
     const cmd = e.target.closest("[data-cmd]");
     if (cmd) { jalankanPerintah(cmd.getAttribute("data-cmd")); return; }
 
@@ -4732,6 +4989,18 @@ function bindEvents() {
     /* --- Ubah field massal --- */
     if (bulkCtx && el.name === "__key") { bulkCtx.key = el.value; renderBulkField(); return; }
 
+    /* --- Pemetaan kolom impor --- */
+    const kolom = el.getAttribute && el.getAttribute("data-impor-map");
+    if (kolom !== null && kolom !== undefined && imporCtx) {
+      const i = Number(kolom);
+      // Field yang sama tidak boleh dipetakan dua kali: yang belakangan akan
+      // diam-diam menimpa yang depan saat impor dijalankan.
+      if (el.value) imporCtx.peta = imporCtx.peta.map((k, j) => (j !== i && k === el.value ? "" : k));
+      imporCtx.peta[i] = el.value;
+      renderImpor();
+      return;
+    }
+
     /* --- Saringan log aktivitas --- */
     const saringan = el.getAttribute && el.getAttribute("data-activity");
     if (saringan) {
@@ -4949,6 +5218,23 @@ function bindEvents() {
     reader.readAsText(file);
   });
 
+  $("__csv-picker").addEventListener("change", (e) => {
+    const file = (e.target.files || [])[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => bacaTeksImpor(String(reader.result || ""));
+    /*
+     * Pengkodean disebut EKSPLISIT.
+     *
+     * `readAsText(file)` tanpa argumen menebak pengkodeannya, dan tebakan itu
+     * pernah salah di repo ini: satu nama merek di content.json tersimpan
+     * sebagai "CitroÃ«n" — bentuk khas UTF-8 yang dibaca sebagai Latin-1.
+     * Jalur impor adalah persis tempat kesalahan seperti itu masuk, dan sekali
+     * masuk ia tersimpan sebagai data dan tampil rusak di seluruh situs.
+     */
+    reader.readAsText(file, "utf-8");
+  });
+
   /* --- Dimensi gambar di modal media ---
      Ukuran piksel baru diketahui setelah gambarnya benar-benar termuat, dan itu
      berlaku untuk gambar dari domain mana pun — tidak seperti ukuran berkas. */
@@ -5086,6 +5372,14 @@ function ensureHiddenInputs() {
     js.accept = "application/json,.json";
     js.hidden = true;
     document.body.appendChild(js);
+  }
+  if (!$("__csv-picker")) {
+    const cs = document.createElement("input");
+    cs.type = "file";
+    cs.id = "__csv-picker";
+    cs.accept = "text/csv,.csv,.tsv,.txt";
+    cs.hidden = true;
+    document.body.appendChild(cs);
   }
 }
 
@@ -5315,6 +5609,8 @@ function renderProfile() {
       </div>
     </form>
 
+    <section class="panel form-section" id="profile-2fa"></section>
+
     <form id="profile-password" class="panel form-section">
       <div class="form-section-head">
         <h2>${esc(t("profile.security"))}</h2>
@@ -5398,6 +5694,138 @@ function renderProfile() {
  * yang memberi tahu apakah ADA sesi lain yang perlu dikeluarkan. Ini yang
  * menjawabnya.
  */
+/* ---------------- Verifikasi dua langkah ---------------- */
+
+/* { rahasia, uri, kodeCadangan[] } selama pemasangan berlangsung. */
+let tfaCtx = null;
+
+function render2fa() {
+  const root = $("profile-2fa");
+  if (!root || !me) return;
+
+  const kepala = `<div class="form-section-head">
+    <h2>${esc(t("tfa.title"))} <span class="badge ${me.totpEnabled ? "badge-featured" : "badge-muted"}">${esc(me.totpEnabled ? t("tfa.on") : t("tfa.off"))}</span></h2>
+    <p>${esc(t("tfa.desc"))}</p>
+  </div>`;
+
+  /* Kode cadangan yang baru dibuat ditampilkan lebih dulu, apa pun keadaan
+     lainnya: inilah satu-satunya kali kode itu pernah terbaca, dan menyembunyikannya
+     di balik keadaan lain berarti ada yang akan kehilangannya. */
+  if (tfaCtx && tfaCtx.kodeCadangan) {
+    root.innerHTML = kepala + `
+      <div class="tfa-codes-box">
+        <h3>${esc(t("tfa.codesTitle"))}</h3>
+        <p>${esc(t("tfa.codesDesc"))}</p>
+        <ul class="tfa-codes">${tfaCtx.kodeCadangan.map((k) => `<li>${esc(k)}</li>`).join("")}</ul>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" id="tfa-copy">${esc(t("tfa.codesCopy"))}</button>
+          <button type="button" class="btn btn-primary" id="tfa-done">${esc(t("common.close"))}</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (tfaCtx && tfaCtx.rahasia) {
+    root.innerHTML = kepala + `
+      <div class="field full">
+        <label>${esc(t("tfa.step1"))}</label>
+        <div class="tfa-secret" id="tfa-secret">${esc(tfaCtx.rahasia)}</div>
+        <span class="hint">${esc(t("tfa.step1.hint"))}</span>
+      </div>
+      <div class="field">
+        <label for="tfa-code">${esc(t("tfa.step2"))}</label>
+        <input id="tfa-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" />
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="tfa-cancel">${esc(t("tfa.cancel"))}</button>
+        <button type="button" class="btn btn-primary" id="tfa-activate">${esc(t("tfa.activate"))}</button>
+      </div>`;
+    return;
+  }
+
+  if (!me.totpEnabled) {
+    root.innerHTML = kepala + `<div class="form-actions">
+      <button type="button" class="btn btn-primary" id="tfa-start">${esc(t("tfa.start"))}</button>
+    </div>`;
+    return;
+  }
+
+  root.innerHTML = kepala + `
+    <p class="row-meta">${esc(t("tfa.codesLeft", { n: me.backupCodesLeft || 0 }))}</p>
+    <div class="field full">
+      <label for="tfa-pass">${esc(t("tfa.password"))}</label>
+      <input id="tfa-pass" type="password" autocomplete="current-password" />
+      <span class="hint">${esc(t("tfa.passwordHint"))}</span>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" id="tfa-newcodes">${esc(t("tfa.codesNew"))}</button>
+      <button type="button" class="btn btn-danger" id="tfa-disable">${esc(t("tfa.disable"))}</button>
+    </div>`;
+}
+
+async function kirim2fa(body) {
+  const res = await fetch("/api/auth/2fa", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
+  const data = await res.json();
+  if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
+  return data;
+}
+
+async function tfaAksi(aksi) {
+  try {
+    if (aksi === "mulai") {
+      tfaCtx = await kirim2fa({ aksi: "mulai" });
+      render2fa();
+      return;
+    }
+
+    if (aksi === "aktifkan") {
+      const kode = ($("tfa-code") || {}).value || "";
+      const data = await kirim2fa({ aksi: "aktifkan", kode });
+      tfaCtx = { kodeCadangan: data.kodeCadangan };
+      await loadMe();
+      render2fa();
+      toast(t("toast.2faOn"), "success");
+      return;
+    }
+
+    if (aksi === "kodeBaru") {
+      const password = ($("tfa-pass") || {}).value || "";
+      const data = await kirim2fa({ aksi: "kodeBaru", password });
+      tfaCtx = { kodeCadangan: data.kodeCadangan };
+      await loadMe();
+      render2fa();
+      return;
+    }
+
+    if (aksi === "matikan") {
+      const password = ($("tfa-pass") || {}).value || "";
+      const ok = await confirmDialog({
+        title: t("tfa.disableTitle"),
+        text: t("tfa.disableText"),
+        detail: t("tfa.disableDetail"),
+        okText: t("tfa.disable"),
+      });
+      if (!ok) return;
+      await kirim2fa({ aksi: "matikan", password });
+      tfaCtx = null;
+      await loadMe();
+      render2fa();
+      toast(t("toast.2faOff"), "success");
+      /* Mematikan dua faktor mencabut seluruh sesi lain — termasuk, kadang,
+         sesi ini sendiri kalau tokennya terbit di milidetik yang sama. Panel
+         tidak perlu menebaknya: permintaan berikutnya yang menjawab 401 akan
+         mengantar orangnya ke halaman masuk. */
+    }
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
 async function loadLoginHistory() {
   const box = $("profile-logins");
   if (!box) return;
@@ -6763,6 +7191,98 @@ function renderActivityView() {
   list.innerHTML = activityRowsHtml(entries, { detail: true }) + halaman;
 }
 
+/* ---------------- Penanda pekerjaan berjalan ---------------- */
+
+/**
+ * Riset AI berjalan di SERVER, bukan di dalam kotak dialognya.
+ *
+ * Itu keputusan yang sudah diambil sejak fitur itu lahir, dan benar: menutup
+ * kotaknya atau berpindah halaman tidak membuang apa pun. Tapi konsekuensinya
+ * belum pernah ditangani — begitu kotaknya ditutup, tidak ada satu pun tanda
+ * di seluruh panel bahwa ada yang sedang berjalan, dan orangnya kembali ke
+ * kendaraan itu hanya kalau ia ingat sendiri.
+ *
+ * Penanda ini yang menjadikannya terlihat. Ia juga pijakan pertama untuk
+ * "pusat pekerjaan" yang dibutuhkan riset massal nanti — halaman Pembaruan
+ * masih punya pemantau progresnya sendiri, dan menyatukan keduanya baru
+ * sepadan ketika ada pekerjaan jenis ketiga.
+ */
+let jobChipTimer = null;
+
+/**
+ * Riset selesai yang hasilnya sudah pernah dibuka, ditandai di peramban ini.
+ *
+ * Bukan di server: "sudah dilihat" adalah keadaan per orang per perangkat, dan
+ * menyimpannya di job berarti riset yang dibuka satu admin ikut hilang dari
+ * penanda admin lain yang belum melihatnya.
+ */
+const JOB_KEY = "evkita.jobSeen";
+
+function jobDilihat(id) {
+  try {
+    return (JSON.parse(localStorage.getItem(JOB_KEY) || "[]") || []).includes(id);
+  } catch {
+    return false;
+  }
+}
+
+function tandaiJobDilihat(id) {
+  try {
+    const lama = JSON.parse(localStorage.getItem(JOB_KEY) || "[]") || [];
+    localStorage.setItem(JOB_KEY, JSON.stringify([id, ...lama.filter((x) => x !== id)].slice(0, 20)));
+  } catch {
+    /* Penyimpanan bisa ditolak; penandanya cuma akan muncul lagi. */
+  }
+}
+
+async function syncJobChip() {
+  const chip = $("job-chip");
+  if (!chip) return;
+  try {
+    const res = await fetch("/api/ai/riset");
+    if (!res.ok) { chip.hidden = true; return; }
+    const data = await res.json();
+    const job = data && data.terakhir;
+
+    if (job && job.status === "jalan") {
+      chip.hidden = false;
+      chip.className = "job-chip is-running";
+      chip.innerHTML = `<span class="spinner"></span> ${esc(t("job.running", { name: job.judul || "" }))}`;
+      chip.setAttribute("data-job", `${job.col || "cars"}:${job.vehicleId || ""}`);
+      chip.setAttribute("data-job-id", job.id);
+      // Ditanya lebih sering saat ada yang berjalan; selebihnya diam.
+      jadwalJobChip(8000);
+      return;
+    }
+
+    /* Riset yang SUDAH SELESAI tapi hasilnya belum pernah dibuka juga
+       ditampilkan: hasil yang tidak pernah dilihat sama saja dengan riset yang
+       tidak pernah dijalankan, dan tokennya sudah terlanjur dibayar. */
+    if (job && job.status === "selesai" && job.hasil && job.vehicleId && !jobDilihat(job.id)) {
+      chip.hidden = false;
+      chip.className = "job-chip is-done";
+      chip.textContent = t("job.ready", { name: job.judul || "" });
+      chip.setAttribute("data-job", `${job.col || "cars"}:${job.vehicleId}`);
+      chip.setAttribute("data-job-id", job.id);
+      jadwalJobChip(60000);
+      return;
+    }
+
+    chip.hidden = true;
+    jadwalJobChip(60000);
+  } catch {
+    chip.hidden = true;
+  }
+}
+
+function jadwalJobChip(ms) {
+  clearTimeout(jobChipTimer);
+  // Hanya selama tabnya terlihat: menanya-kabar di tab yang tersembunyi
+  // membebani server tanpa ada yang membaca jawabannya.
+  if (document.hidden) return;
+  jobChipTimer = setTimeout(syncJobChip, ms);
+}
+
 /** Nama & foto di bilah atas, sekaligus pintasan ke halaman Profil. */
 function syncAccountChip() {
   const chip = $("account-chip");
@@ -6829,6 +7349,11 @@ async function init() {
 
   loadActivity();
   checkUpdateBadge();
+  syncJobChip();
+  // Tab yang kembali terlihat langsung ditanyakan ulang: riset bisa saja
+  // selesai selama tabnya tersembunyi, dan `jadwalJobChip()` sengaja berhenti
+  // di sana.
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) syncJobChip(); });
   // Tidak di-await: editor boleh terbuka lebih dulu, dan tombol Riset muncul
   // begitu jawabannya datang.
   muatKeadaanAi().then(() => {

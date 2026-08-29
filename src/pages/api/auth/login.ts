@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { makeSession, authenticate, SESSION_COOKIE, LOCALE_COOKIE } from "../../../lib/auth";
-import { touchLogin, saveUser, normalizeLocale } from "../../../lib/users";
+import { touchLogin, saveUser, normalizeLocale, pakaiKodeCadangan } from "../../../lib/users";
+import { periksaKode } from "../../../lib/totp";
 import { logActivity } from "../../../lib/activity";
 import { json, apiError } from "../../../lib/api";
 import { checkLimit, recordFailure, clearLimit, clientKey, usernameKey } from "../../../lib/ratelimit";
@@ -42,6 +43,28 @@ export const POST: APIRoute = async ({ request, cookies, url, clientAddress }) =
   if (!user) {
     recordFailure(keys);
     return apiError("login.wrong", 401);
+  }
+
+  /*
+   * Faktor kedua.
+   *
+   * Diperiksa SETELAH kata sandi, dan kegagalannya dihitung oleh pembatas laju
+   * yang sama. Enam digit bisa ditebak dalam sejuta percobaan kalau boleh
+   * dicoba tanpa henti — dan penyerang yang sampai di sini sudah memegang kata
+   * sandinya, jadi justru di titik inilah pembatasan itu paling dibutuhkan.
+   *
+   * Jawaban `perluKode` sengaja tidak menyebut apa pun yang belum diketahui
+   * pengirimnya: ia baru dikirim setelah kata sandinya benar.
+   */
+  if (user.totpEnabled) {
+    const kode = String(body?.code || "").trim();
+    if (!kode) return json({ ok: false, perluKode: true }, 401);
+
+    const cocok = periksaKode(user.totpSecret, kode) || pakaiKodeCadangan(user.id, kode);
+    if (!cocok) {
+      recordFailure(keys);
+      return json({ ok: false, perluKode: true, errorKey: "login.wrongCode", errorVars: {}, error: "Kode tidak cocok." }, 401);
+    }
   }
 
   // Masuk yang berhasil menghapus hitungannya: orang yang salah ketik tiga
