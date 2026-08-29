@@ -4094,6 +4094,167 @@ a.pager-arrow:hover {
 }
 
 
+/* ===== Halaman statis (Tentang, Kebijakan Privasi, Disclaimer, …) =====
+
+   Satu kolom sempit dan tidak lebih. Halaman ini isinya teks panjang yang
+   dibaca dari atas ke bawah, dan lebar baris yang melar mengikuti layar 27 inci
+   adalah cara tercepat membuat orang kehilangan barisnya sendiri. 68ch kira-kira
+   sembilan puluh karakter — batas atas yang masih nyaman dibaca. */
+
+.laman {
+  padding-block: clamp(18px, 3vw, 30px) clamp(40px, 6vw, 72px);
+}
+
+.laman-artikel {
+  max-width: 68ch;
+}
+
+.laman-head {
+  margin-bottom: clamp(20px, 3vw, 30px);
+}
+
+.laman-head h1 {
+  font-size: clamp(26px, 4.4vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.laman-lead {
+  font-size: clamp(15px, 1.9vw, 18px);
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.laman-stamp {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Daftar isi. Kotaknya sengaja tenang: ia alat bantu, bukan isi halaman. */
+.laman-toc {
+  margin-bottom: clamp(22px, 3vw, 34px);
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-tint);
+}
+
+.laman-toc h2 {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.laman-toc ol {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  font-size: 14.5px;
+}
+
+.laman-toc a {
+  color: var(--text);
+}
+
+/* ----- Isi Markdown -----
+   Selektor turunan, bukan kelas per elemen: HTML-nya dirakit
+   `src/lib/markdown.ts` dan tidak menempelkan kelas apa pun. */
+
+.laman-isi {
+  font-size: clamp(15px, 1.85vw, 17px);
+  line-height: 1.75;
+  overflow-wrap: break-word;
+}
+
+.laman-isi > * + * {
+  margin-top: 1em;
+}
+
+.laman-isi h2,
+.laman-isi h3,
+.laman-isi h4 {
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  /* Judul butuh jarak lebih di atasnya daripada di bawahnya: yang menandai
+     awal bagian baru adalah ruang kosong sebelum judulnya, bukan sesudahnya. */
+  margin-top: 1.9em;
+  scroll-margin-top: 90px;
+}
+
+.laman-isi h2 {
+  font-size: clamp(19px, 2.6vw, 24px);
+}
+
+.laman-isi h3 {
+  font-size: clamp(17px, 2.2vw, 20px);
+}
+
+.laman-isi h4 {
+  font-size: 16px;
+}
+
+.laman-isi ul,
+.laman-isi ol {
+  padding-left: 24px;
+  display: grid;
+  gap: 8px;
+}
+
+.laman-isi li::marker {
+  color: var(--text-muted);
+}
+
+.laman-isi a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.laman-isi code {
+  font-size: 0.9em;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--bg-tint);
+}
+
+.laman-isi pre {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-tint);
+  overflow-x: auto;
+}
+
+.laman-isi pre code {
+  padding: 0;
+  background: none;
+}
+
+.laman-isi hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin-block: 2em;
+}
+
+.laman-lain {
+  max-width: 68ch;
+  margin-top: clamp(32px, 5vw, 52px);
+  padding-top: clamp(20px, 3vw, 28px);
+  border-top: 1px solid var(--border);
+}
+
+.laman-lain h2 {
+  font-size: clamp(16px, 2.2vw, 19px);
+  margin-bottom: 12px;
+}
+
+
 /* =========================================================================
    MENU TAMPILAN
    -------------------------------------------------------------------------

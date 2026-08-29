@@ -200,6 +200,43 @@ menggambarnya).
 - Tiap blok footer punya saklar `show*` sendiri. Blok yang datanya kosong tidak
   pernah tampil, jadi footer situs yang baru dipasang tetap rapi.
 
+### Halaman statis (Tentang, Kebijakan Privasi, Disclaimer)
+
+Koleksi keenam, `content.halaman`, disunting lewat **Admin → Halaman**. Semua
+aturannya bermuara ke **`src/lib/laman.js`** — normalisasi, slug, letak footer,
+penanda `{brand}`/`{tahun}`, dan templat bawaan.
+
+- **Satu halaman = satu alamat di AKAR situs** (`/kebijakan-privasi`), dilayani
+  `src/pages/[slug].astro`. Rute itu sekaligus yang menjawab setiap alamat yang
+  tidak dikenali rute lain, jadi 404 di akar situs kini punya header dan footer.
+- **`SLUG_TERPAKAI` wajib ikut tumbuh setiap kali ada rute baru di akar
+  `src/pages/`.** Rute statis memang menang atas `[slug].astro`, jadi halaman
+  berslug `katalog` tidak bisa menimpa katalog yang asli — ia cuma tidak akan
+  pernah terbuka, tanpa satu pun pesan galat. Panel menolaknya saat disimpan;
+  daftar itulah yang dipakai.
+- **Slug adalah ALAMAT, jadi ia diperiksa, bukan diam-diam dibetulkan.** Kosong,
+  bentrok dengan rute, atau kembar dengan halaman lain: ketiganya menolak simpan
+  dengan pesan sendiri. `ensureSlugs()` di `store.ts` hanya jaring pengaman untuk
+  berkas yang disunting tangan lewat SSH.
+- **Isinya Markdown**, dirender `src/lib/markdown.ts` — berkas yang sama dengan
+  catatan rilis. Penyunting HTML utuh berarti menerima HTML sembarang dari peran
+  Editor, dan itu tidak sepadan dengan apa pun yang didapat.
+- **Footer diputuskan `tautanFooter()`, bukan di panel.** `SiteFooter.astro`
+  memanggilnya langsung (dan membaca `content` sendiri, bukan lewat prop —
+  footernya dipasang di tujuh tempat, dua di antaranya komponen yang tidak
+  pernah menyentuh `content`). Tiap halaman punya saklar `showInFooter`
+  (bawaannya **menyala**) dan pilihan letak `footerSlot`: `legal` untuk bilah
+  bawah, `menu` untuk kolom Jelajahi.
+- **Aturan tayang sama dengan koleksi lain** (`tayang.js`): halaman draf dan
+  yang belum tiba jadwalnya tidak tampil di footer, tidak masuk peta situs, dan
+  menjawab 404 — kecuali lewat tautan pratinjau. Untuk halaman, tokennya
+  menandatangani `id` sementara alamatnya memakai `slug`, supaya mengganti
+  alamat tidak mematikan tautan yang sudah dikirim.
+- **Templat bawaan hanya disemai kalau kunci `halaman` BELUM PERNAH ADA** di
+  dokumen, bukan kalau daftarnya kosong. Pemilik situs yang sengaja menghapus
+  semua halamannya tidak akan menemukannya tumbuh kembali. Isinya templat, bukan
+  nasihat hukum, dan panel mengatakan itu di subjudul halamannya.
+
 ### Fitur AI (DeepSeek)
 
 Rancangan lengkapnya ada di **`RENCANA-AI-DEEPSEEK.md`**. Yang sudah berjalan

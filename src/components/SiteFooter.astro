@@ -11,6 +11,8 @@
 import { safeUrl } from "../lib/url.js";
 import LogoMark from "./LogoMark.astro";
 import { SOCIAL_NETWORKS, CONTACT_ROWS } from "../lib/footer.js";
+import { readContent } from "../lib/store";
+import { tautanFooter } from "../lib/laman.js";
 
 interface Props {
   site: Record<string, any>;
@@ -18,6 +20,23 @@ interface Props {
 }
 
 const { site, base = "" } = Astro.props;
+
+/**
+ * Tautan halaman statis (Tentang, Kebijakan Privasi, …).
+ *
+ * Dibaca langsung dari penyimpan, bukan diterima sebagai prop. Footer ini
+ * dipasang di tujuh tempat, dua di antaranya komponen yang tidak pernah
+ * menyentuh `content` sama sekali (`KoleksiPage`, `VehicleDetail`) — menambah
+ * satu prop berarti menambah satu jalur yang bisa lupa diisi di salah satunya,
+ * dan footer yang kehilangan tautan kebijakan di sebagian halaman jauh lebih
+ * sulit disadari daripada yang kehilangan seluruhnya. `readContent()` memakai
+ * cache yang sama dengan halaman pemanggilnya, jadi tidak ada pembacaan berkas
+ * tambahan.
+ *
+ * Mana yang tampil, di mana letaknya, dan mana yang draf — semuanya diputuskan
+ * `tautanFooter()` di src/lib/laman.js, satu tempat yang sama dengan panel.
+ */
+const lamanFooter = tautanFooter(readContent().halaman);
 
 const brand = site.brandText || "EVKita";
 const suffix = site.brandSuffix || "";
@@ -48,6 +67,8 @@ const defaultLinks = site.showFooterMenu
       site.showBengkel ? { label: "Bengkel", href: `${base}#bengkel` } : null,
       site.showBerita ? { label: "Berita", href: `${base}#berita` } : null,
       site.showAbout ? { label: "Tentang", href: `${base}#tentang` } : null,
+      // Halaman statis yang letaknya dipilih "Kolom menu" ikut di sini.
+      ...lamanFooter.menu,
     ].filter(Boolean) as { label: string; href: string }[])
   : [];
 
@@ -82,9 +103,15 @@ const contacts = site.showFooterContact
     }).filter(Boolean)
   : [];
 
-const legal = (Array.isArray(site.footerLegal) ? site.footerLegal : [])
-  .map((l: any) => ({ label: String(l?.label || "").trim(), href: safeUrl(l?.url) }))
-  .filter((l: any) => l.label && l.href);
+const legal = [
+  ...(Array.isArray(site.footerLegal) ? site.footerLegal : [])
+    .map((l: any) => ({ label: String(l?.label || "").trim(), href: safeUrl(l?.url) }))
+    .filter((l: any) => l.label && l.href),
+  // Halaman statis yang letaknya "Bilah bawah" — tempat lazim tautan
+  // kebijakan privasi dan disclaimer. Alamatnya dirakit sendiri dari slug,
+  // jadi tidak perlu lewat safeUrl().
+  ...lamanFooter.legal,
+];
 
 const year = new Date().getFullYear();
 const copyright = site.footerCopyright

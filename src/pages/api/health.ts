@@ -53,6 +53,7 @@ export const GET: APIRoute = () => {
         spklu: (content.spklu || []).length,
         bengkel: (content.bengkel || []).length,
         berita: (content.berita || []).length,
+        halaman: (content.halaman || []).length,
       },
     }),
     {

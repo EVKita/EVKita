@@ -6,6 +6,7 @@ import { PER_PAGE, pageCount, pageHref } from "../lib/pagination.js";
 import { groupByField } from "../lib/taxonomy.js";
 import { vehicleHref } from "../lib/card-html.js";
 import { hanyaTayang } from "../lib/tayang.js";
+import { hrefLaman } from "../lib/laman.js";
 
 /**
  * Peta situs yang dirakit saat diminta, bukan saat build.
@@ -26,6 +27,22 @@ export const GET: APIRoute = ({ url }) => {
     { loc: `${origin}/kalkulator/hemat-listrik-vs-bensin`, priority: "0.7" },
     { loc: `${origin}/kalkulator/biaya-pengisian`, priority: "0.7" },
   ];
+
+  /*
+   * Halaman statis (Tentang, Kebijakan Privasi, Disclaimer, …).
+   *
+   * Diletakkan lebih dulu daripada katalog karena inilah halaman yang paling
+   * jarang berubah dan paling sering diminta perayap sebagai penanda bahwa
+   * situs ini dikelola sungguhan. Yang ditandai `noindex` tidak ikut —
+   * mengumumkan alamat di peta situs sambil melarang mengindeksnya adalah dua
+   * perintah yang saling bertentangan.
+   */
+  for (const laman of (content.halaman || []).filter(hanyaTayang())) {
+    if (laman.noindex) continue;
+    const href = hrefLaman(laman);
+    if (!href) continue;
+    entries.push({ loc: `${origin}${href}`, lastmod: laman.updatedAt || undefined, priority: "0.5" });
+  }
 
   const liveCars = (content.cars || []).filter(hanyaTayang());
   /* Saklar "tampilkan motor" mematikan seluruh sisi publik motor. Peta situs

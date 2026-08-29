@@ -13,7 +13,7 @@
  */
 
 /** Koleksi item yang punya id dan bisa dibandingkan satu per satu. */
-export const KOLEKSI = ["cars", "motors", "spklu", "bengkel", "berita"] as const;
+export const KOLEKSI = ["cars", "motors", "spklu", "bengkel", "berita", "halaman"] as const;
 
 export type JenisPerubahan = "tambah" | "ubah" | "hapus" | "urut";
 
@@ -58,7 +58,7 @@ function sama(a: unknown, b: unknown): boolean {
 
 export function judulItem(col: string, item: any): string {
   if (!item) return "";
-  if (col === "berita") return String(item.title || "").trim();
+  if (col === "berita" || col === "halaman") return String(item.title || "").trim();
   if (col === "cars" || col === "motors") {
     return [item.brand, item.name].map((s) => String(s || "").trim()).filter(Boolean).join(" ");
   }

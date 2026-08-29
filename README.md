@@ -13,7 +13,15 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
     bisa diganti seketika tanpa memuat ulang halaman.
   - Dasbor dengan sapaan personal, skor kelengkapan data, aksi cepat, dan
     log aktivitas (siapa mengubah apa, kapan).
-  - Kelola semua konten: mobil, motor listrik, SPKLU, bengkel, berita.
+  - Kelola semua konten: mobil, motor listrik, SPKLU, bengkel, berita, halaman statis.
+  - **Halaman statis dengan alamatnya sendiri** (`/tentang-kami`,
+    `/kebijakan-privasi`, `/disclaimer`, `/syarat-ketentuan`, atau apa pun yang
+    kamu buat): ditulis dalam Markdown lewat panel, lengkap dengan judul &amp;
+    deskripsi untuk mesin pencari, gambar pratinjau, daftar isi otomatis, data
+    terstruktur, dan barisnya sendiri di peta situs. Tiap halaman bisa
+    ditampilkan di footer — bawaannya menyala — dengan letak yang bisa dipilih:
+    bilah bawah atau kolom menu. Pemasangan baru sudah membawa empat halaman
+    templat yang tinggal disesuaikan.
   - Tambah / edit / hapus model mobil &amp; motor (merek, tipe bodi, spesifikasi, varian, warna, harga, video).
   - Upload gambar per mobil (disimpan di `data/uploads/` dan disajikan lewat `/api/uploads/...`); mobil tanpa gambar memakai siluet yang bisa diganti warna.
   - Edit teks halaman (hero, tentang, footer).

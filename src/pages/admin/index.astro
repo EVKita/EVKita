@@ -222,6 +222,24 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
         <div id="berita-list" class="item-list"></div>
       </section>
 
+      <!-- ===== Halaman statis =====
+           Tentang, Kebijakan Privasi, Disclaimer, dan halaman buatan sendiri.
+           Memakai kerangka daftar yang sama dengan direktori; formulirnya
+           digambar `dirGroups("halaman")` di admin.js. -->
+      <section class="view" data-view="halaman" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title" data-i18n="view.halaman.title">{t("view.halaman.title")}</h1>
+            <p class="view-sub" data-i18n="view.halaman.sub">{t("view.halaman.sub")}</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="add-halaman" class="btn btn-primary" type="button" data-add="halaman" data-i18n="view.halaman.add">{t("view.halaman.add")}</button>
+          </div>
+        </div>
+        <div id="halaman-toolbar"></div>
+        <div id="halaman-list" class="item-list"></div>
+      </section>
+
       <!-- ===== Pengaturan Situs ===== -->
       <section class="view" data-view="site" hidden>
         <div class="view-head">

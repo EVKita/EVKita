@@ -20,7 +20,7 @@ export function namaBerkasAman(nama: unknown): boolean {
   return /^[a-zA-Z0-9._-]+$/.test(s) && !s.startsWith(".") && s !== "..";
 }
 
-const KOLEKSI = ["cars", "motors", "spklu", "bengkel", "berita"];
+const KOLEKSI = ["cars", "motors", "spklu", "bengkel", "berita", "halaman"];
 
 /** Field `site` yang isinya alamat gambar. */
 const FIELD_SITE = ["logoImage", "heroImage", "seoOgImage", "bgImage"];

@@ -1,0 +1,203 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { readContent } from "../lib/store";
+import { markdownToHtml } from "../lib/markdown";
+import { hanyaTayang } from "../lib/tayang.js";
+import { verifyPreviewToken } from "../lib/pratinjau";
+import { hrefLaman, isiLaman, ringkasLaman, slugLaman } from "../lib/laman.js";
+import { canonicalUrl, absoluteUrl } from "../lib/site-url";
+
+/**
+ * Halaman statis: Tentang, Kebijakan Privasi, Disclaimer, dan apa pun yang
+ * dibuat pemilik situs lewat **Admin → Halaman**.
+ *
+ * Rute ini ada di AKAR, jadi ia juga yang menjawab setiap alamat yang tidak
+ * dikenali rute lain. Dua peran itu memang menyatu dengan sendirinya: alamat
+ * yang bukan halaman mana pun memang 404, dan sebelum ini 404 di akar situs
+ * dijawab halaman kosong bawaan Astro tanpa header maupun footer.
+ *
+ * Rute statis (`/katalog`, `/merek`, `/mobil/...`) menang atas rute dinamis di
+ * Astro, jadi berkas ini tidak bisa menutupi salah satunya. Yang tetap harus
+ * dijaga adalah arah sebaliknya — slug halaman yang kebetulan sama dengan
+ * salah satu rute itu tidak akan pernah terbuka — dan itu ditolak di panel
+ * lewat `SLUG_TERPAKAI` di `src/lib/laman.js`.
+ */
+const content = readContent();
+const site = content.site;
+const brand = site.brandText || "EVKita";
+
+const slug = slugLaman(Astro.params.slug || "");
+const semua = content.halaman || [];
+
+let laman = slug ? semua.filter(hanyaTayang()).find((p: any) => p.slug === slug) || null : null;
+
+/**
+ * Jalur pratinjau, sama seperti halaman kendaraan: halaman draf boleh dibuka,
+ * tapi hanya oleh pemegang tautan bertanda tangan untuk halaman ITU. Tokennya
+ * menandatangani `id`, bukan slug — lihat catatan di `previewPath()`.
+ */
+let pratinjau = false;
+if (!laman && slug) {
+  const draf = semua.find((p: any) => p.slug === slug);
+  if (draf && verifyPreviewToken(Astro.url.searchParams.get("pratinjau"), "halaman", draf.id)) {
+    laman = draf;
+    pratinjau = true;
+  }
+}
+
+if (!laman) Astro.response.status = 404;
+
+const vars = { brand, tahun: String(new Date().getFullYear()) };
+
+const judul = laman ? isiLaman(laman.title, vars) : "";
+const isiHtml = laman ? markdownToHtml(isiLaman(laman.body, vars)) : "";
+const deskripsi = laman ? ringkasLaman(laman, vars) : "";
+
+const pageTitle = laman
+  ? isiLaman(laman.seoTitle, vars) || `${judul} — ${brand}`
+  : `Halaman tidak ditemukan — ${brand}`;
+
+const ogImage = laman && laman.image ? absoluteUrl(Astro.url, laman.image) : site.seoOgImage;
+
+/**
+ * Daftar isi, hanya untuk halaman yang benar-benar panjang.
+ *
+ * Judul bagian sudah punya `id` dari `markdownToHtml()`, jadi yang tersisa
+ * cuma mengumpulkannya. Batas tiga bukan angka bulat yang dipilih asal:
+ * halaman dengan dua bagian sudah muat di satu layar, dan daftar isi di
+ * atasnya hanya menambah satu layar lagi yang harus dilewati.
+ */
+const bagian = [...isiHtml.matchAll(/<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g)].map((m) => ({
+  id: m[1],
+  label: m[2].replace(/<[^>]+>/g, ""),
+}));
+const daftarIsi = bagian.length >= 3 ? bagian : [];
+
+/** Halaman lain yang tayang — tautan silang di kaki halaman. */
+const lainnya = semua
+  .filter(hanyaTayang())
+  .filter((p: any) => p.id !== (laman && laman.id))
+  .slice(0, 6);
+
+const diperbarui = laman && laman.updatedAt ? new Date(laman.updatedAt) : null;
+const diperbaruiTeks =
+  diperbarui && !Number.isNaN(diperbarui.getTime())
+    ? diperbarui.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    : "";
+
+const jsonLd = laman
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebPage",
+          "@id": canonicalUrl(Astro.url),
+          url: canonicalUrl(Astro.url),
+          name: judul,
+          description: deskripsi,
+          inLanguage: "id-ID",
+          ...(laman.updatedAt ? { dateModified: laman.updatedAt } : {}),
+          isPartOf: {
+            "@type": "WebSite",
+            name: `${brand}${site.brandSuffix || ""}`,
+            url: absoluteUrl(Astro.url, "/"),
+          },
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Beranda", item: absoluteUrl(Astro.url, "/") },
+            { "@type": "ListItem", position: 2, name: judul, item: canonicalUrl(Astro.url) },
+          ],
+        },
+      ],
+    }
+  : null;
+---
+
+<Base
+  title={pageTitle}
+  description={deskripsi}
+  keywords={laman ? laman.keywords || site.seoKeywords : site.seoKeywords}
+  ogImage={ogImage}
+  ogType="article"
+  site={site}
+  noindex={!laman || pratinjau || !!laman.noindex}
+>
+  {jsonLd && !pratinjau && !laman?.noindex ? (
+    <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+  ) : null}
+
+  <SiteHeader site={site} base="/" active="" />
+
+  {!laman ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>Halaman tidak ditemukan</h1>
+      <p class="notfound-text">
+        Alamat ini mungkin sudah berubah atau halamannya belum dipublikasikan.
+      </p>
+      <a class="btn btn-primary" href="/">Kembali ke beranda</a>
+    </main>
+  ) : (
+    <main class="container laman" id="konten">
+      <nav class="breadcrumb" aria-label="Remah roti">
+        <a href="/">Beranda</a>
+        <span aria-hidden="true">/</span>
+        <span class="breadcrumb-current">{judul}</span>
+      </nav>
+
+      <article class="laman-artikel">
+        <header class="laman-head">
+          <h1>{judul}</h1>
+          {deskripsi ? <p class="laman-lead">{deskripsi}</p> : null}
+          {diperbaruiTeks ? (
+            <p class="laman-stamp">
+              Terakhir diperbarui <time datetime={laman.updatedAt}>{diperbaruiTeks}</time>
+            </p>
+          ) : null}
+        </header>
+
+        {daftarIsi.length ? (
+          <nav class="laman-toc" aria-label="Daftar isi halaman">
+            <h2>Di halaman ini</h2>
+            <ol>
+              {daftarIsi.map((b) => (
+                <li><a href={`#${b.id}`}>{b.label}</a></li>
+              ))}
+            </ol>
+          </nav>
+        ) : null}
+
+        <div class="laman-isi" set:html={isiHtml} />
+      </article>
+
+      {lainnya.length ? (
+        <section class="laman-lain">
+          <h2>Halaman lainnya</h2>
+          <div class="tag-row">
+            {lainnya.map((p: any) => (
+              <a class="tag-pill" href={hrefLaman(p)}>{isiLaman(p.title, vars)}</a>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </main>
+  )}
+
+  <SiteFooter site={site} base="/" />
+
+  {/* Bilah pratinjau menempel di tepi BAWAH dan karena itu harus jadi elemen
+      terakhir — alasan lengkapnya ada di VehicleDetail.astro. */}
+  {pratinjau ? (
+    <div class="preview-bar" role="status">
+      <span class="preview-bar-tag">Pratinjau</span>
+      <p class="preview-bar-text">
+        Halaman ini <strong>belum tayang</strong>. Tautan pratinjau ini kedaluwarsa dalam dua jam.
+      </p>
+      <a class="preview-bar-link" href="/admin">Buka panel</a>
+    </div>
+  ) : null}
+</Base>

@@ -2,7 +2,8 @@ import crypto from "node:crypto";
 import { signWithSecret } from "./auth";
 
 /**
- * Tautan pratinjau untuk kendaraan yang belum tayang.
+ * Tautan pratinjau untuk isi yang belum tayang — kendaraan maupun halaman
+ * statis.
  *
  * Sebelum berkas ini ada, penyunting tidak punya cara apa pun melihat hasil
  * kerjanya sebelum menayangkannya: halaman detail menyaring `status === "draft"`
@@ -13,7 +14,7 @@ import { signWithSecret } from "./auth";
  *
  * Tiga hal yang menentukan bentuk tokennya:
  *
- *   1. **Terikat ke satu kendaraan.** Bukan saklar "tampilkan semua draf".
+ *   1. **Terikat ke satu item.** Bukan saklar "tampilkan semua draf".
  *      Tautan yang bocor hanya membuka satu halaman, bukan seluruh isi yang
  *      belum siap.
  *   2. **Kedaluwarsa.** Tautan dibagikan lewat WhatsApp dan surel, dan di sana
@@ -38,12 +39,14 @@ export const PREVIEW_TTL_MS = 2 * 60 * 60 * 1000;
 export const PREVIEW_PATHS = {
   cars: "/mobil/",
   motors: "/motor/",
+  /* Halaman statis tinggal di akar situs — lihat src/lib/laman.js. */
+  halaman: "/",
 } as const;
 
 export type PreviewCollection = keyof typeof PREVIEW_PATHS;
 
 export function isPreviewCollection(v: unknown): v is PreviewCollection {
-  return v === "cars" || v === "motors";
+  return v === "cars" || v === "motors" || v === "halaman";
 }
 
 /**
@@ -118,9 +121,22 @@ export function verifyPreviewToken(
   }
 }
 
-/** Alamat lengkap halaman pratinjau, atau null kalau token tidak bisa dibuat. */
-export function previewPath(col: PreviewCollection, id: string, now = Date.now()): string | null {
+/**
+ * Alamat lengkap halaman pratinjau, atau null kalau token tidak bisa dibuat.
+ *
+ * @param segment Bagian alamat sesudah awalan koleksinya. Untuk kendaraan ia
+ *   memang id-nya, tapi halaman statis dialamati lewat SLUG sementara tokennya
+ *   tetap menandatangani id — slug bisa diganti, id tidak, dan tautan
+ *   pratinjau yang sudah dikirim tidak boleh berubah artinya karena
+ *   penyuntingnya merapikan alamat halaman.
+ */
+export function previewPath(
+  col: PreviewCollection,
+  id: string,
+  segment: string = id,
+  now = Date.now()
+): string | null {
   const token = makePreviewToken(col, id, now);
   if (!token) return null;
-  return `${PREVIEW_PATHS[col]}${encodeURIComponent(id)}?pratinjau=${encodeURIComponent(token)}`;
+  return `${PREVIEW_PATHS[col]}${encodeURIComponent(segment)}?pratinjau=${encodeURIComponent(token)}`;
 }

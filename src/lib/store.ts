@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfile";
 import { APPEARANCE_DEFAULTS, APPEARANCE_FLAGS } from "./theme.js";
 import { MAX_LEGAL_LINKS, normalizeLinks, normalizeMenus } from "./footer.js";
+import { lamanBawaan, normalizeLaman, slugLaman } from "./laman.js";
 import { normalizeMediaMap } from "./media.js";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -316,6 +317,27 @@ function ensureIds(list: any[], prefix: string, key: string): any[] {
 }
 
 /**
+ * Melengkapi dan membuat unik slug halaman.
+ *
+ * Slug adalah ALAMAT halaman, jadi dua halaman berslug sama berarti satu di
+ * antaranya tidak akan pernah terbuka. Yang belakangan diberi akhiran angka —
+ * sama seperti `ensureIds()` melakukannya untuk id — bukan ditolak: dokumen
+ * ini juga bisa disunting tangan lewat SSH, dan penyimpan yang menolak isi
+ * yang sudah telanjur ada tidak menyelamatkan siapa pun.
+ */
+function ensureSlugs(list: any[]): any[] {
+  const used = new Set<string>();
+  return list.map((item, i) => {
+    let slug = slugLaman(item.slug) || slugLaman(item.title) || slugLaman(item.id) || `halaman-${i + 1}`;
+    let unique = slug;
+    let n = 2;
+    while (used.has(unique)) unique = `${slug}-${n++}`;
+    used.add(unique);
+    return { ...item, slug: unique };
+  });
+}
+
+/**
  * Penanda versi dokumen konten.
  *
  * Panel mengirim SELURUH dokumen setiap kali menyimpan, dan server dulu
@@ -368,6 +390,23 @@ function normalize(content: any): any {
     spklu: ensureIds(asList(content?.spklu).map(normalizeSpklu), "spklu", "name"),
     bengkel: ensureIds(asList(content?.bengkel).map(normalizeBengkel), "bengkel", "name"),
     berita: ensureIds(asList(content?.berita).map(normalizeBerita), "berita", "title"),
+
+    /*
+     * Halaman statis (Tentang, Kebijakan Privasi, Disclaimer, …).
+     *
+     * Bedanya dengan koleksi lain: dokumen yang BELUM PERNAH punya kunci
+     * `halaman` diisi templat bawaan. Penandanya `undefined`, bukan daftar
+     * kosong — begitu dokumen ini tersimpan sekali, kuncinya selalu ada, jadi
+     * pemilik situs yang sengaja menghapus semua halamannya tidak menemukannya
+     * tumbuh kembali di muat ulang berikutnya. Lihat src/lib/laman.js.
+     */
+    halaman: ensureSlugs(
+      ensureIds(
+        (content?.halaman === undefined ? lamanBawaan() : asList(content?.halaman)).map(normalizeLaman),
+        "halaman",
+        "title"
+      )
+    ),
 
     /*
      * Metadata gambar (judul, teks alternatif, catatan), berkunci alamat

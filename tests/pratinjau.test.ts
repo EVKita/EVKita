@@ -108,12 +108,23 @@ describe("alamat pratinjau", () => {
     assert.equal(pratinjau.verifyPreviewToken(token, "cars", "byd-atto-3"), true);
   });
 
-  it("hanya cars dan motors yang dikenali sebagai koleksi pratinjau", () => {
+  it("hanya cars, motors, dan halaman yang dikenali sebagai koleksi pratinjau", () => {
     assert.equal(pratinjau.isPreviewCollection("cars"), true);
     assert.equal(pratinjau.isPreviewCollection("motors"), true);
+    assert.equal(pratinjau.isPreviewCollection("halaman"), true);
     for (const nilai of ["spklu", "bengkel", "berita", "site", "", null]) {
       assert.equal(pratinjau.isPreviewCollection(nilai), false);
     }
+  });
+
+  /* Halaman statis dialamati lewat slug, sementara tokennya menandatangani id:
+     mengganti alamat halaman tidak boleh mematikan tautan yang sudah dikirim. */
+  it("halaman memakai slug di alamatnya, tapi id di tanda tangannya", () => {
+    const alamat = pratinjau.previewPath("halaman", "kebijakan-privasi", "privasi") as string;
+    assert.ok(alamat.startsWith("/privasi?pratinjau="));
+    const token = new URL(alamat, "https://contoh.id").searchParams.get("pratinjau");
+    assert.equal(pratinjau.verifyPreviewToken(token, "halaman", "kebijakan-privasi"), true);
+    assert.equal(pratinjau.verifyPreviewToken(token, "halaman", "privasi"), false);
   });
 });
 

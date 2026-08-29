@@ -32,6 +32,7 @@ import {
   MODEL_PILIHAN,
 } from "../lib/ai-biaya.js";
 import { tayang, terjadwal } from "../lib/tayang.js";
+import { slugLaman, slugBentrok, hrefLaman } from "../lib/laman.js";
 import { nilaiJanggal, konsumsiJanggal, cariKembar, basi, HARI_BASI } from "../lib/mutu.js";
 import {
   CAR_BODY_TYPES,
@@ -77,15 +78,18 @@ let t = makeT(locale);
 
 /* "editor", "profile", dan "users" adalah halaman penuh tanpa butir sidebar
    sendiri di kelompok koleksi. */
-const VIEWS = ["dashboard", "analitik", "cars", "motors", "spklu", "bengkel", "berita", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
+const VIEWS = ["dashboard", "analitik", "cars", "motors", "spklu", "bengkel", "berita", "halaman", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
 
 /* Dua form yang isinya sama-sama field `site`: Pengaturan Situs dan Tampilan.
    Keduanya ditangani mesin yang sama supaya menambah field cukup satu baris
    markup, tanpa penangan baru. */
 const SITE_FORMS = ["site-form", "tampilan-form"];
-const COLLECTIONS = ["cars", "motors", "spklu", "bengkel", "berita"];
+const COLLECTIONS = ["cars", "motors", "spklu", "bengkel", "berita", "halaman"];
 const VEHICLE_COLS = ["cars", "motors"];
-const DIR_COLS = ["spklu", "bengkel", "berita"];
+/* Koleksi yang disunting lewat modal berformulir, bukan halaman editor penuh.
+   "halaman" ikut di sini: bentuk datanya datar seperti direktori, jadi seluruh
+   mesin daftar, saringan, aksi massal, dan modalnya dipakai apa adanya. */
+const DIR_COLS = ["spklu", "bengkel", "berita", "halaman"];
 
 const colLabel = (col) => t(`col.${col}`);
 const colOne = (col) => t(`col.${col}.one`);
@@ -198,8 +202,51 @@ const DIR_SUGGESTIONS = {
  * mencocokkan nilai **persis**, jadi "Jakarta Pusat" dan "Jakarta pusat"
  * berakhir sebagai dua pilihan filter yang berbeda.
  */
+/** Pilihan letak tautan halaman di footer. */
+const footerSlotOpts = () => [
+  ["legal", t("field.halaman.footerSlot.legal")],
+  ["menu", t("field.halaman.footerSlot.menu")],
+];
+
 function dirGroups(col) {
   const urlPh = "https://maps.google.com/…";
+
+  if (col === "halaman") {
+    return [
+      {
+        l: t("dir.halaman.sec.konten"), d: t("dir.halaman.sec.konten.d"), f: [
+          { k: "title", l: t("field.halaman.title"), t: "text", req: true, full: true, ph: t("field.halaman.title.ph") },
+          { k: "slug", l: t("field.halaman.slug"), t: "text", req: true, full: true, ph: t("field.halaman.slug.ph"), hint: t("field.halaman.slug.hint") },
+          /* Naskahnya panjang, jadi kotaknya juga. Dua puluh baris kira-kira
+             setinggi badan modal — cukup untuk melihat satu bagian utuh tanpa
+             menggulir dua kali (badan modal, lalu isi kotaknya). */
+          { k: "body", l: t("field.halaman.body"), t: "textarea", full: true, rows: 20, mono: true, ph: t("field.halaman.body.ph"), hint: t("field.halaman.body.hint") },
+        ],
+      },
+      {
+        l: t("dir.halaman.sec.seo"), d: t("dir.halaman.sec.seo.d"), f: [
+          { k: "seoTitle", l: t("field.halaman.seoTitle"), t: "text", full: true, ph: t("field.halaman.seoTitle.ph"), hint: t("field.halaman.seoTitle.hint") },
+          { k: "excerpt", l: t("field.halaman.excerpt"), t: "textarea", full: true, rows: 3, ph: t("field.halaman.excerpt.ph"), hint: t("field.halaman.excerpt.hint") },
+          { k: "keywords", l: t("field.halaman.keywords"), t: "text", full: true, ph: t("field.halaman.keywords.ph") },
+          { k: "image", l: t("field.halaman.image"), t: "image", full: true, hint: t("field.halaman.image.hint") },
+          { k: "noindex", l: t("field.halaman.noindex"), t: "switch", full: true, hint: t("field.halaman.noindex.hint") },
+        ],
+      },
+      {
+        l: t("dir.halaman.sec.footer"), d: t("dir.halaman.sec.footer.d"), f: [
+          { k: "showInFooter", l: t("field.halaman.showInFooter"), t: "switch", full: true, hint: t("field.halaman.showInFooter.hint") },
+          { k: "footerSlot", l: t("field.halaman.footerSlot"), t: "select", opts: footerSlotOpts(), hint: t("field.halaman.footerSlot.hint") },
+          { k: "footerLabel", l: t("field.halaman.footerLabel"), t: "text", ph: t("field.halaman.footerLabel.ph"), hint: t("field.halaman.footerLabel.hint") },
+        ],
+      },
+      {
+        l: t("dir.halaman.sec.penayangan"), d: t("dir.halaman.sec.penayangan.d"), f: [
+          { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
+          { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
+        ],
+      },
+    ];
+  }
 
   if (col === "spklu") {
     return [
@@ -345,6 +392,20 @@ const dirStatusFilter = () => ({
   match: (it, v) => (v === "scheduled" ? terjadwal(it) : (it.status || "published") === v),
 });
 
+/* Saringan letak footer. "Tidak tampil" adalah pilihan tersendiri, bukan
+   ketiadaan pilihan: pertanyaan "halaman mana yang belum muncul di footer?"
+   justru yang paling sering ditanyakan di daftar ini. */
+const footerFilter = () => ({
+  id: "footer",
+  label: t("filter.allFooter"),
+  options: () => [
+    ["legal", t("filter.footerLegal")],
+    ["menu", t("filter.footerMenu")],
+    ["off", t("filter.footerOff")],
+  ],
+  match: (i, v) => (v === "off" ? !i.showInFooter : !!i.showInFooter && (i.footerSlot || "legal") === v),
+});
+
 const featuredFilter = () => ({
   id: "featured",
   label: t("filter.allItems"),
@@ -370,6 +431,9 @@ function filtersFor(col) {
   }
   if (col === "berita") {
     return [{ id: "source", label: t("filter.allSources"), options: (it) => uniqVals(it, "source"), match: (i, v) => i.source === v }, dirStatusFilter(), featuredFilter()];
+  }
+  if (col === "halaman") {
+    return [dirStatusFilter(), footerFilter()];
   }
   return [];
 }
@@ -403,6 +467,7 @@ function sortsFor(col) {
     return [...common, ["price-asc", t("sort.priceAsc")], ["price-desc", t("sort.priceDesc")], ["range-desc", t("sort.rangeDesc")], ["updated", t("sort.updated")]];
   }
   if (col === "berita") return [...common, ["date-desc", t("sort.dateDesc")], ["date-asc", t("sort.dateAsc")]];
+  if (col === "halaman") return [...common, ["updated", t("sort.updated")]];
   return common;
 }
 
@@ -553,7 +618,7 @@ function isVehicle(col) {
 
 function titleOf(col, item) {
   if (!item) return "";
-  if (col === "berita") return item.title || t("common.noTitle");
+  if (col === "berita" || col === "halaman") return item.title || t("common.noTitle");
   if (isVehicle(col)) return `${item.brand || ""} ${item.name || ""}`.trim() || t("common.noName");
   return item.name || t("common.noName");
 }
@@ -569,7 +634,23 @@ function metaOf(col, item) {
   if (col === "spklu") return [item.operator, item.area, item.power, item.count ? t("meta.units", { n: item.count }) : ""].filter(Boolean).join(" · ") || t("meta.noDetail");
   if (col === "bengkel") return [item.type, item.brand, item.area].filter(Boolean).join(" · ") || t("meta.noDetail");
   if (col === "berita") return [item.source, formatDate(item.date)].filter(Boolean).join(" · ") || t("meta.noDetail");
+  if (col === "halaman") {
+    const letak = !item.showInFooter
+      ? t("meta.footerOff")
+      : (item.footerSlot || "legal") === "menu"
+        ? t("meta.footerMenu")
+        : t("meta.footerLegal");
+    return [hrefLaman(item), t("meta.words", { n: jumlahKata(item.body) }), letak].filter(Boolean).join(" · ");
+  }
   return "";
+}
+
+/* Panjang naskah dalam kata. Angka kasar dan memang cukup kasar: yang
+   dijawabnya di baris daftar adalah "halaman ini sudah berisi atau masih
+   kerangka?", bukan hitungan yang perlu tepat. */
+function jumlahKata(teks) {
+  const bersih = String(teks || "").trim();
+  return bersih ? bersih.split(/\s+/).length : 0;
 }
 
 function imageOf(col, item) {
@@ -988,11 +1069,23 @@ function fieldHtml(def, value, prefix) {
   const label = `<label for="${esc(id)}">${esc(def.l)}${req}</label>`;
 
   if (def.t === "switch") {
+    /*
+     * Bentuk markupnya WAJIB sama persis dengan saklar yang ditulis tangan di
+     * admin/index.astro: `<input>` lalu `<span class="switch">` sebagai
+     * SAUDARA, keduanya di dalam `<label class="switch-row">`. Aturan CSS-nya
+     * (`input:checked + .switch`) memang bergantung pada urutan itu.
+     *
+     * Sebelum ini fungsi ini membungkus inputnya di dalam `.switch`, sehingga
+     * pemilihnya tidak pernah cocok: saklar "Unggulan" di modal direktori
+     * tampil abu-abu baik saat menyala maupun mati. Nilainya tersimpan benar
+     * sepanjang waktu — yang salah hanya satu-satunya hal yang dilihat orang.
+     */
     return `<div class="${cls}" data-field="${esc(def.k)}">
-      <div class="switch-row">
+      <label class="switch-row">
+        <input type="checkbox" id="${esc(id)}" name="${esc(def.k)}"${value ? " checked" : ""} />
+        <span class="switch" aria-hidden="true"></span>
         <span>${esc(def.l)}</span>
-        <label class="switch"><input type="checkbox" id="${esc(id)}" name="${esc(def.k)}"${value ? " checked" : ""} /><span></span></label>
-      </div>${hint}
+      </label>${hint}
     </div>`;
   }
 
@@ -1005,7 +1098,10 @@ function fieldHtml(def, value, prefix) {
 
   let control = "";
   if (def.t === "textarea") {
-    control = `<textarea id="${esc(id)}" name="${esc(def.k)}" rows="${def.rows || 4}"${ph}>${esc(value)}</textarea>`;
+    // `mono`: naskah Markdown dibaca jauh lebih mudah dengan lebar huruf tetap
+    // — pagar judul dan tanda daftar berbaris rapi di tepi kiri.
+    const monoCls = def.mono ? ' class="mono"' : "";
+    control = `<textarea id="${esc(id)}" name="${esc(def.k)}" rows="${def.rows || 4}"${monoCls}${ph}>${esc(value)}</textarea>`;
   } else if (def.t === "select") {
     control = `<select id="${esc(id)}" name="${esc(def.k)}">${optionsHtml(def.opts, value)}</select>`;
   } else if (def.t === "number") {
@@ -1881,7 +1977,9 @@ function rowHtml(col, it, dragEnabled) {
      ikut kebagian tombol ini (dulu hanya mobil, karena hanya mobil yang punya
      halaman), dan barisnya yang berstatus draf tetap bisa dibuka — justru
      baris itu yang paling sering perlu dilihat. */
-  const view = isVehicle(col)
+  /* Halaman statis ikut kebagian tombol ini: ia juga punya alamat sendiri, dan
+     yang berstatus draf juga cuma bisa dilihat lewat tautan bertanda tangan. */
+  const view = isVehicle(col) || col === "halaman"
     ? `<a class="btn btn-ghost btn-sm" href="${esc(previewHref(col, it.id))}" target="_blank" rel="noopener">${esc(t("common.view"))}</a>`
     : "";
   // Skema disaring lebih dulu: field ini teks bebas, dan esc() tidak menolak
@@ -2009,17 +2107,41 @@ function blankItem(col) {
   }
   const item = { id: "" };
   for (const def of dirFields(col)) item[def.k] = def.t === "switch" ? false : def.t === "number" ? null : "";
+  /* Halaman baru tampil di footer secara bawaan — itulah gunanya membuatnya.
+     Saklar yang mati secara bawaan berarti setiap halaman baru harus
+     dinyalakan dua kali, dan yang lupa dinyalakan tidak terlihat di mana pun. */
+  if (col === "halaman") {
+    item.showInFooter = true;
+    item.footerSlot = "legal";
+  }
   return item;
+}
+
+/** Slug halaman yang belum dipakai halaman lain. `kecuali` = id yang boleh bentrok dengan dirinya sendiri. */
+function slugUnik(dasar, kecuali) {
+  const awal = slugLaman(dasar) || "halaman";
+  let slug = awal;
+  let n = 2;
+  const dipakai = (v) => (content.halaman || []).some((x) => x.id !== kecuali && x.slug === v);
+  while (dipakai(slug) || slugBentrok(slug)) slug = `${awal}-${n++}`;
+  return slug;
 }
 
 function duplicateItem(col, id) {
   const src = findItem(col, id);
   if (!src) return;
   const copy = JSON.parse(JSON.stringify(src));
-  const nameKey = col === "berita" ? "title" : "name";
+  const nameKey = col === "berita" || col === "halaman" ? "title" : "name";
   copy[nameKey] = String(copy[nameKey] || "") + t("common.copySuffix");
   copy.id = uniqueId(col, slugify(isVehicle(col) ? `${copy.brand} ${copy.name}` : copy[nameKey]) || col);
   if (isVehicle(col)) copy.status = "draft";
+  /* Alamat halaman tidak boleh kembar: yang belakangan tidak akan pernah
+     terbuka. Salinannya juga lahir sebagai draf — dua halaman kebijakan yang
+     sama-sama tayang bukan sesuatu yang pernah dimaksudkan siapa pun. */
+  if (col === "halaman") {
+    copy.slug = slugUnik(copy.slug || copy.title, copy.id);
+    copy.status = "draft";
+  }
   const idx = (content[col] || []).findIndex((x) => x.id === id);
   content[col].splice(idx + 1, 0, copy);
   commit();
@@ -2108,6 +2230,7 @@ const BULK_FIELDS = {
   spklu: ["operator", "area", "power", "connector", "hours", "status", "publishAt", "featured"],
   bengkel: ["type", "brand", "area", "hours", "status", "publishAt", "featured"],
   berita: ["source", "status", "publishAt", "featured"],
+  halaman: ["showInFooter", "footerSlot", "status", "publishAt"],
 };
 
 let bulkCtx = null; // { col, ids, key }
@@ -2908,7 +3031,9 @@ function openDir(col, id) {
   const item = id ? findItem(col, id) : blankItem(col);
   if (!item) return;
 
-  dirCtx = { col, id: id || null, defs, draft: {} };
+  /* `slugTouched` menyala sejak awal saat MENYUNTING: alamat halaman yang
+     sudah tayang tidak boleh ikut berubah hanya karena judulnya dirapikan. */
+  dirCtx = { col, id: id || null, defs, draft: {}, slugTouched: !!id };
   editorTouched = false;
   for (const d of defs) if (d.t === "image") dirCtx.draft[d.k] = item[d.k] || "";
 
@@ -2985,6 +3110,34 @@ function updateDirMeter() {
 }
 
 /**
+ * Mengisi alamat halaman sambil judulnya diketik.
+ *
+ * Berhenti begitu kotak alamat disentuh sendiri. Slug yang terus dihitung
+ * ulang dari judul akan menimpa alamat yang baru saja diketik orang, dan
+ * karena alamatnya ada di kotak lain, ia bahkan tidak terlihat berubah sampai
+ * halamannya tersimpan.
+ */
+function syncSlugLaman(el) {
+  if (!dirCtx || dirCtx.col !== "halaman" || !el || !el.name) return;
+  if (el.name === "slug") { dirCtx.slugTouched = true; return; }
+  if (el.name !== "title" || dirCtx.slugTouched) return;
+  const form = $("dir-form");
+  const slug = form && form.elements.slug;
+  if (slug) slug.value = slugLaman(el.value);
+}
+
+/**
+ * Membakukan alamat yang diketik tangan, tapi hanya setelah kotaknya
+ * ditinggalkan. Membakukannya di setiap ketikan berarti tanda hubung yang baru
+ * diketik langsung dibuang, dan kata kedua tidak akan pernah bisa diketik.
+ */
+function rapikanSlug(el) {
+  if (!dirCtx || dirCtx.col !== "halaman" || !el || el.name !== "slug") return;
+  const bersih = slugLaman(el.value);
+  if (el.value !== bersih) el.value = bersih;
+}
+
+/**
  * Peringatan lunak saat namanya sudah dipakai entri lain di koleksi yang sama.
  * Sengaja tidak memblokir simpan — dua SPKLU boleh saja bernama sama di area
  * berbeda — tapi jauh lebih sering ini berarti entri yang sama dimasukkan dua
@@ -2994,7 +3147,7 @@ function checkDirDuplicate() {
   const form = $("dir-form");
   if (!form || !dirCtx) return;
 
-  const key = dirCtx.col === "berita" ? "title" : "name";
+  const key = dirCtx.col === "berita" || dirCtx.col === "halaman" ? "title" : "name";
   const field = form.querySelector(`.field[data-field="${CSS.escape(key)}"]`);
   const input = form.elements[key];
   if (!field || !input) return;
@@ -3027,13 +3180,41 @@ function saveDir(opts) {
   const data = {};
   for (const def of defs) data[def.k] = def.t === "image" ? dirCtx.draft[def.k] || "" : readField(form, def);
 
-  const nameKey = col === "berita" ? "title" : "name";
-  if (!data[nameKey]) {
-    markError(form, nameKey, col === "berita" ? t("valid.titleRequired") : t("valid.dirNameRequired"));
+  const nameKey = col === "berita" || col === "halaman" ? "title" : "name";
+  const gagal = (key, pesan) => {
+    markError(form, key, pesan);
     const bad = form.querySelector(".field.has-error input, .field.has-error textarea");
     if (bad) bad.focus();
     toast(t("toast.fixRedFields"), "error");
+  };
+
+  if (!data[nameKey]) {
+    gagal(nameKey, col === "berita" || col === "halaman" ? t("valid.titleRequired") : t("valid.dirNameRequired"));
     return;
+  }
+
+  /*
+   * Alamat halaman diperiksa di sini, bukan diam-diam dibetulkan saat
+   * menyimpan. Slug adalah ALAMAT: alamat yang bentrok berarti satu halaman
+   * tidak akan pernah terbuka, dan alamat yang diam-diam diganti membuat
+   * tautan yang baru saja disalin orang berhenti bekerja. Keduanya kegagalan
+   * yang tidak terlihat sampai ada yang mengeluh.
+   */
+  if (col === "halaman") {
+    const slug = slugLaman(data.slug || data.title);
+    if (!slug) {
+      gagal("slug", t("valid.slugRequired"));
+      return;
+    }
+    if (slugBentrok(slug)) {
+      gagal("slug", t("valid.slugReserved"));
+      return;
+    }
+    if ((content.halaman || []).some((x) => x.id !== id && x.slug === slug)) {
+      gagal("slug", t("valid.slugTaken"));
+      return;
+    }
+    data.slug = slug;
   }
 
   if (id) {
@@ -3429,7 +3610,9 @@ function collectMedia() {
       );
     }
   }
-  for (const it of content.berita || []) add(it.image, `${colLabel("berita")} · ${titleOf("berita", it)}`, { col: "berita", id: it.id });
+  for (const col of ["berita", "halaman"]) {
+    for (const it of content[col] || []) add(it.image, `${colLabel(col)} · ${titleOf(col, it)}`, { col, id: it.id });
+  }
   /* Berkas yang ada di disk tapi tidak dirujuk siapa pun tetap masuk daftar,
      dengan pemakaian kosong. Justru berkas itu yang orang cari saat membuka
      halaman ini untuk merapikan. */
@@ -5084,7 +5267,7 @@ function bindEvents() {
 
     if (el.closest && el.closest("#vehicle-form")) { updateVehiclePreview(); return; }
 
-    if (el.closest && el.closest("#dir-form")) { updateDirMeter(); checkDirDuplicate(); return; }
+    if (el.closest && el.closest("#dir-form")) { syncSlugLaman(el); updateDirMeter(); checkDirDuplicate(); return; }
 
     if (el.id === "media-search") { renderMedia(); return; }
 
@@ -5107,7 +5290,7 @@ function bindEvents() {
   document.addEventListener("change", (e) => {
     const el = e.target;
     if (el.closest && el.closest("#vehicle-form, #dir-form")) editorTouched = true;
-    if (el.closest && el.closest("#dir-form")) updateDirMeter();
+    if (el.closest && el.closest("#dir-form")) { rapikanSlug(el); updateDirMeter(); }
 
     /* --- Ubah field massal --- */
     if (bulkCtx && el.name === "__key") { bulkCtx.key = el.value; renderBulkField(); return; }
