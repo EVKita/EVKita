@@ -24,6 +24,21 @@ function sign(value: string): string {
 }
 
 /**
+ * Tanda tangan HMAC memakai kunci sesi, untuk pemakai di luar berkas ini —
+ * saat ini token pratinjau di `pratinjau.ts`.
+ *
+ * Bedanya dengan `sign()`: yang ini mengembalikan null kalau `SESSION_SECRET`
+ * belum dipasang, alih-alih menandatangani dengan kunci kosong. `sign()` boleh
+ * berperilaku begitu karena setiap jalur yang memanggilnya sudah dijaga lebih
+ * dulu — `authenticate()` menolak sebelum ada token yang terbit, `readSession()`
+ * memeriksa `secret()` di baris pertamanya. Pemanggil baru belum tentu ingat
+ * penjagaan itu, jadi di sini kegagalannya dibuat kelihatan.
+ */
+export function signWithSecret(value: string): string | null {
+  return secret() ? sign(value) : null;
+}
+
+/**
  * Umur maksimum satu sesi. Angkanya sama dengan `maxAge` cookie, tapi yang ini
  * yang benar-benar mengikat: `maxAge` hanya instruksi untuk peramban, dan
  * peramban bukan pihak yang bisa dipercaya menegakkannya. Token yang tersalin

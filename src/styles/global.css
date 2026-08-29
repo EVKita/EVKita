@@ -4420,3 +4420,88 @@ html {
 .ui-no-lift .btn:hover {
   transform: none;
 }
+
+/* ===== Bilah pratinjau =====
+   Tampil hanya saat halaman dibuka lewat tautan pratinjau (lihat
+   src/lib/pratinjau.ts). Menempel di tepi BAWAH, bukan atas: `.masthead` sudah
+   `position: sticky; top: 0`, dan dua penghuni tepi atas selalu berakhir
+   dengan salah satu menutupi yang lain begitu halaman digulir.
+
+   `sticky`, bukan `fixed`. Elemen sticky tetap memesan ruangnya sendiri di
+   aliran dokumen, jadi bilah ini menempel di layar sepanjang halaman digulir
+   lalu duduk rapi di bawah footer di ujungnya — tanpa perlu menebak tinggi
+   badannya lewat padding di <body>. Tinggi itu berubah mengikuti lebar layar,
+   dan tebakan yang meleset berarti baris terakhir footer tertutup.
+
+   Warnanya dipatok, tidak mengikuti tema situs: ini pesan dari sistem tentang
+   halaman itu sendiri, dan ia harus terbaca sama persis di situs yang temanya
+   dibuat gelap maupun terang. */
+.preview-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 130;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px max(16px, var(--safe-r)) calc(12px + var(--safe-b)) max(16px, var(--safe-l));
+  background: #17211d;
+  border-top: 2px solid #f0b429;
+  color: #e8ece9;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.32);
+}
+
+.preview-bar-tag {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #17211d;
+  background: #f0b429;
+  border-radius: 4px;
+  padding: 4px 9px;
+}
+
+.preview-bar-text {
+  margin: 0;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.preview-bar-text strong {
+  color: #ffd982;
+  font-weight: 700;
+}
+
+.preview-bar-link {
+  flex: none;
+  color: #e8ece9;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid rgba(232, 236, 233, 0.35);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+.preview-bar-link:hover,
+.preview-bar-link:focus-visible {
+  border-color: #f0b429;
+  color: #ffd982;
+}
+
+/* Di layar sempit bilah ini memakan tinggi yang berarti, jadi barisnya
+   dirapatkan: label dan kalimatnya mengalir bersama, tombolnya menyusul. */
+@media (max-width: 560px) {
+  .preview-bar {
+    font-size: 13px;
+    gap: 6px 10px;
+    padding-top: 10px;
+  }
+
+  .preview-bar-link {
+    padding: 5px 10px;
+  }
+}

@@ -33,9 +33,14 @@ interface Props {
   kind: "mobil" | "motor";
   /** Metadata gambar dari Admin → Media, dipakai untuk teks alternatif. */
   media?: Record<string, any>;
+  /**
+   * Halaman ini dibuka lewat tautan pratinjau, jadi isinya belum tayang.
+   * Menyalakan bilah penanda di atas halaman dan `noindex` di kepalanya.
+   */
+  pratinjau?: boolean;
 }
 
-const { site, vehicle: car, pool, kind, media: mediaMeta = {} } = Astro.props;
+const { site, vehicle: car, pool, kind, media: mediaMeta = {}, pratinjau = false } = Astro.props;
 
 const isMotor = kind === "motor";
 const noun = isMotor ? "motor listrik" : "mobil listrik";
@@ -266,8 +271,12 @@ const pageTitle = car
   ogImage={ogImage}
   ogType={car ? "product" : "website"}
   site={site}
+  noindex={pratinjau}
 >
-  {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+  {/* Data terstruktur ikut ditahan saat pratinjau: `noindex` sudah menutup
+      pintunya, tapi mengumumkan harga dan ketersediaan barang yang belum
+      tayang tetap tidak ada gunanya bagi siapa pun. */}
+  {jsonLd && !pratinjau ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
   <SiteHeader site={site} base="/" active={kind} />
 
@@ -494,6 +503,23 @@ const pageTitle = car
   ) : null}
 
   <SiteFooter site={site} base="/" />
+
+  {/* Bilah pratinjau sengaja jadi elemen TERAKHIR halaman. Ia `position:
+      sticky` ke tepi bawah, dan elemen sticky tetap memesan ruangnya sendiri di
+      aliran dokumen — jadi ia menempel di layar sepanjang halaman digulir, lalu
+      duduk di bawah footer di ujungnya, tanpa satu pun angka tinggi yang harus
+      ditebak di CSS. Bilah `position: fixed` tidak punya sifat itu: ia menutupi
+      baris terakhir footer, dan seberapa banyak yang tertutup berubah mengikuti
+      lebar layar. */}
+  {pratinjau ? (
+    <div class="preview-bar" role="status">
+      <span class="preview-bar-tag">Pratinjau</span>
+      <p class="preview-bar-text">
+        Halaman ini <strong>belum tayang</strong>. Tautan pratinjau ini kedaluwarsa dalam dua jam.
+      </p>
+      <a class="preview-bar-link" href="/admin">Buka panel</a>
+    </div>
+  ) : null}
 
   <script>
     // Galeri + lightbox sederhana. Sumber gambar dibaca dari tombol thumbnail

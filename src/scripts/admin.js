@@ -1682,7 +1682,13 @@ function rowHtml(col, it, dragEnabled) {
   if (isVehicle(col) && it.stale) badges.push(`<span class="badge badge-warn">${esc(t("badge.stale"))}</span>`);
   if (isVehicle(col) && !it.image) badges.push(`<span class="badge badge-muted">${esc(t("badge.noImage"))}</span>`);
 
-  const view = col === "cars" ? `<a class="btn btn-ghost btn-sm" href="/mobil/${encodeURIComponent(it.id)}" target="_blank" rel="noopener">${esc(t("common.view"))}</a>` : "";
+  /* Lewat /api/pratinjau, bukan langsung ke /mobil/<id>. Dua sebabnya: motor
+     ikut kebagian tombol ini (dulu hanya mobil, karena hanya mobil yang punya
+     halaman), dan barisnya yang berstatus draf tetap bisa dibuka — justru
+     baris itu yang paling sering perlu dilihat. */
+  const view = isVehicle(col)
+    ? `<a class="btn btn-ghost btn-sm" href="${esc(previewHref(col, it.id))}" target="_blank" rel="noopener">${esc(t("common.view"))}</a>`
+    : "";
   // Skema disaring lebih dulu: field ini teks bebas, dan esc() tidak menolak
   // `javascript:`. Tautan yang ditolak tidak dirender sama sekali.
   const itemUrl = col === "berita" ? safeUrl(it.url) : "";
@@ -1887,6 +1893,68 @@ function moveItem(col, dragId, targetId) {
  * 12. Modal kendaraan
  * ------------------------------------------------------------------ */
 
+/**
+ * Alamat pratinjau satu kendaraan.
+ *
+ * Bukan `/mobil/<id>` langsung: kendaraan berstatus draf menjawab 404 di sana.
+ * `/api/pratinjau` menandatangani tautan berumur pendek lebih dulu lalu
+ * mengalihkan ke sana — lihat src/lib/pratinjau.ts. Untuk kendaraan yang sudah
+ * tayang hasilnya sama saja dengan membuka halamannya langsung.
+ */
+function previewHref(col, id) {
+  return `/api/pratinjau?col=${encodeURIComponent(col)}&id=${encodeURIComponent(id)}`;
+}
+
+/** Menyalakan tautan pratinjau di bilah editor, atau menyembunyikannya. */
+function syncPreviewLink(col, id) {
+  const link = $("editor-preview");
+  if (!link) return;
+  // Kendaraan yang belum pernah disimpan belum punya halaman untuk dilihat.
+  link.hidden = !id;
+  link.href = id ? previewHref(col, id) : "#";
+}
+
+/**
+ * Menjaga agar pratinjau tidak pernah menampilkan isi yang sudah basi.
+ *
+ * Halaman pratinjau membaca `content.json` di server, jadi ia hanya bisa
+ * menunjukkan apa yang sudah sampai ke sana. Ada dua jenis "belum sampai", dan
+ * keduanya butuh jawaban yang berbeda:
+ *
+ *   1. `editorTouched` — formulir kendaraan sudah disunting, tapi isinya belum
+ *      pernah masuk ke dokumen sama sekali. Hanya tombol Simpan yang
+ *      memindahkannya (lihat `saveVehicle()`), dan Simpan juga menutup editor.
+ *      Jadi klik pratinjau DITAHAN, bukan diam-diam disimpan: tombol bernama
+ *      "Lihat pratinjau" tidak boleh punya efek samping menutup halaman yang
+ *      sedang dikerjakan orang.
+ *   2. `dirty` — dokumen sudah berubah (mis. tanda unggulan diklik dari daftar)
+ *      dan tinggal menunggu simpan otomatis yang berjalan 1,2 detik setelah
+ *      ketikan berhenti. Itu bisa dituntaskan tanpa siapa pun perlu tahu.
+ *
+ * Untuk kasus kedua, jendelanya dibuka SEKARANG — di dalam gerakan klik — lalu
+ * diarahkan setelah simpanan selesai. `window.open()` yang dipanggil setelah
+ * `await` dianggap peramban sebagai popup yang tidak diminta siapa pun.
+ */
+function bukaPratinjau(e, link) {
+  const href = link.getAttribute("href") || "";
+  if (!href || href === "#") { e.preventDefault(); return; }
+
+  if (editorTouched) {
+    e.preventDefault();
+    toast(t("toast.previewSaveFirst"), "info");
+    return;
+  }
+
+  if (!dirty) return; // Biarkan tautannya bekerja seperti tautan biasa.
+
+  e.preventDefault();
+  const tab = window.open("", "_blank");
+  saveNow().then(() => {
+    if (tab && !tab.closed) tab.location.replace(href);
+    else toast(t("toast.previewBlocked"), "error");
+  });
+}
+
 function openVehicle(col, id) {
   const item = id ? findItem(col, id) : blankItem(col);
   if (!item) {
@@ -1917,6 +1985,7 @@ function openVehicle(col, id) {
   const again = $("editor-save-add");
   if (again) again.hidden = !!id;
 
+  syncPreviewLink(col, id);
   syncAiButton();
   /*
    * Kalau menurut catatan kita kuncinya belum ada, TANYAKAN LAGI.
@@ -3493,6 +3562,10 @@ function bindEvents() {
     }
 
     if (e.target.closest("#profile-signout-others")) { signOutOtherDevices(); return; }
+
+    /* --- Pratinjau --- */
+    const pratinjauLink = e.target.closest("#editor-preview");
+    if (pratinjauLink) { bukaPratinjau(e, pratinjauLink); return; }
 
     /* --- Riset AI --- */
     if (e.target.closest("#ai-open")) { openAiModal(); return; }

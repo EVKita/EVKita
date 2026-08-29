@@ -1,6 +1,7 @@
 ---
 import VehicleDetail from "../../components/VehicleDetail.astro";
 import { readContent } from "../../lib/store";
+import { verifyPreviewToken } from "../../lib/pratinjau";
 
 /**
  * Halaman detail satu motor listrik.
@@ -22,7 +23,28 @@ const slug = String(Astro.params.slug || "");
    disembunyikan adalah pintu belakang ke konten yang sengaja ditutup. */
 const isLive = (v: any) => v && v.status !== "draft";
 const motors = content.site.showMotor ? (content.motors || []).filter(isLive) : [];
-const motor = motors.find((m: any) => m.id === slug);
+let motor = motors.find((m: any) => m.id === slug);
+
+/**
+ * Jalur pratinjau — sama seperti di `/mobil/[slug]`, dengan satu perbedaan
+ * yang disengaja: ia tetap bekerja meski saklar "tampilkan motor" dimatikan.
+ *
+ * Saklar itu menutup sisi publik motor, dan penjagaan di atas tetap berlaku
+ * untuk siapa pun yang datang tanpa tautan. Tapi tautan pratinjau bukan pintu
+ * belakang: ia ditandatangani `SESSION_SECRET`, hanya bisa diterbitkan oleh
+ * akun panel yang sedang masuk, berlaku untuk satu motor saja, dan mati dalam
+ * dua jam. Menolaknya di sini hanya akan membuat penyunting tidak bisa
+ * menyiapkan katalog motor sebelum katalognya dinyalakan — yaitu persis saat
+ * pratinjau paling dibutuhkan.
+ */
+let pratinjau = false;
+if (!motor && verifyPreviewToken(Astro.url.searchParams.get("pratinjau"), "motors", slug)) {
+  const draf = (content.motors || []).find((m: any) => m.id === slug);
+  if (draf) {
+    motor = draf;
+    pratinjau = true;
+  }
+}
 
 if (!motor) {
   /* Kebalikan dari pengalihan di `/mobil/[slug]`: alamat yang salah kamar
@@ -36,4 +58,4 @@ if (!motor) {
 }
 ---
 
-<VehicleDetail site={content.site} vehicle={motor || null} pool={motors} kind="motor" media={content.media} />
+<VehicleDetail site={content.site} vehicle={motor || null} pool={motors} kind="motor" media={content.media} pratinjau={pratinjau} />

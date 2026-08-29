@@ -1069,6 +1069,22 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
               <h1 class="editor-title" id="editor-title"></h1>
             </div>
             <div class="editor-bar-actions">
+              <!-- Tautan sungguhan, bukan tombol: /api/pratinjau menjawab
+                   dengan pengalihan, jadi target="_blank" sudah cukup dan tidak
+                   ada jendela yang perlu dibuka lebih dulu. admin.js hanya
+                   mengisi alamatnya, dan menahan klik saat masih ada perubahan
+                   yang belum tersimpan. -->
+              <a
+                class="btn btn-outline"
+                id="editor-preview"
+                href="#"
+                target="_blank"
+                rel="noopener"
+                hidden
+                title={t("editor.preview.title")}
+                data-i18n-title="editor.preview.title"
+                data-i18n="editor.preview"
+              >{t("editor.preview")}</a>
               <button type="button" class="btn btn-outline btn-ai" id="ai-open" hidden data-i18n="ai.research">{t("ai.research")}</button>
               <button type="button" class="btn btn-ghost editor-cancel" id="editor-cancel" data-i18n="common.cancel">{t("common.cancel")}</button>
               <button type="button" class="btn btn-outline" id="editor-save-add" hidden data-i18n="editor.saveAndAdd">{t("editor.saveAndAdd")}</button>
