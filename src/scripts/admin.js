@@ -5215,7 +5215,11 @@ function bindEvents() {
       catch (err) { toast(t("toast.invalidJson"), "error"); }
       jsonPickerHandler = null;
     };
-    reader.readAsText(file);
+    // Pengkodean disebut eksplisit, sama seperti jalur CSV di bawah. Bawaannya
+    // memang UTF-8, tapi Blob yang membawa `charset=` di tipenya bisa
+    // mengalahkannya — dan satu-satunya jejak kesalahan itu adalah nama yang
+    // tampil rusak di situs berbulan-bulan kemudian (lihat DATA-9).
+    reader.readAsText(file, "utf-8");
   });
 
   $("__csv-picker").addEventListener("change", (e) => {
