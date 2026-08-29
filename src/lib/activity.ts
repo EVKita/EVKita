@@ -48,6 +48,8 @@ export type ActivityAction =
   | "login"
   | "content.save"
   | "backup.restore"
+  /** Satu item dikembalikan dari cadangan, tanpa menyentuh sisanya. */
+  | "backup.restoreItem"
   | "user.create"
   | "user.update"
   | "user.delete"

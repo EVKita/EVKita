@@ -6321,3 +6321,100 @@ body:has(.modal-backdrop.open) .fab {
   margin-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
+
+/* --- Palet perintah --- */
+
+/* Judul kelompok di dalam palet. Kecil dan tenang: ia penanda arah, bukan
+   sesuatu yang perlu dibaca setiap kali. */
+.palette-group {
+  padding: 12px 2px 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.palette-group:first-child {
+  padding-top: 2px;
+}
+
+.palette-cmd {
+  cursor: pointer;
+}
+
+/* --- Riwayat item & pratinjau cadangan --- */
+
+.riwayat-row .row-main {
+  min-width: 0;
+}
+
+.riwayat-diff {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  table-layout: fixed;
+}
+
+.riwayat-diff th,
+.riwayat-diff td {
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid var(--border);
+  word-break: break-word;
+}
+
+.riwayat-diff thead th {
+  border-top: 0;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.riwayat-diff tbody th {
+  width: 30%;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Kolom "Sekarang" disorot: itu yang akan tergantikan, dan mata perlu tahu
+   sisi mana yang dipertaruhkan sebelum menekan Kembalikan. */
+.riwayat-diff tbody td:last-child {
+  background: var(--adm-surface);
+}
+
+.backup-diff {
+  margin-top: 8px;
+}
+
+.backup-diff-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.modal-note {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* --- Riwayat masuk di Profil --- */
+.profile-logins:not(:empty) {
+  margin-bottom: 18px;
+}
+
+.profile-logins-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

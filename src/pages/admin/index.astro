@@ -1097,6 +1097,7 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
                 data-i18n-title="editor.preview.title"
                 data-i18n="editor.preview"
               >{t("editor.preview")}</a>
+              <button type="button" class="btn btn-outline" id="editor-history" hidden data-i18n="riwayat.open">{t("riwayat.open")}</button>
               <button type="button" class="btn btn-outline btn-ai" id="ai-open" hidden data-i18n="ai.research">{t("ai.research")}</button>
               <button type="button" class="btn btn-ghost editor-cancel" id="editor-cancel" data-i18n="common.cancel">{t("common.cancel")}</button>
               <button type="button" class="btn btn-outline" id="editor-save-add" hidden data-i18n="editor.saveAndAdd">{t("editor.saveAndAdd")}</button>
@@ -1239,6 +1240,27 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
           <button type="submit" class="btn btn-primary" data-i18n="common.save">{t("common.save")}</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ===== Modal riwayat item =====
+       Jaring pengaman panel ini dulu bekerja di dua ukuran ekstrem: batal-ketik
+       yang hilang saat halaman dimuat ulang, dan pemulihan cadangan yang
+       mengganti SELURUH content.json. Di antara keduanya tidak ada apa-apa —
+       jadi memulihkan satu mobil berarti ikut membuang pekerjaan orang lain. -->
+  <div id="riwayat-modal" class="modal-backdrop">
+    <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="riwayat-modal-title">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3 class="modal-title" id="riwayat-modal-title"></h3>
+          <p class="modal-sub" id="riwayat-modal-sub"></p>
+        </div>
+        <button type="button" class="modal-close" aria-label={t("common.close")} data-i18n-aria="common.close">&times;</button>
+      </div>
+      <div class="modal-body" id="riwayat-body"></div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-primary" data-close-modal data-i18n="common.close">{t("common.close")}</button>
+      </div>
     </div>
   </div>
 

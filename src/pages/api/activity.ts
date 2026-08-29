@@ -27,6 +27,24 @@ export const GET: APIRoute = ({ cookies, url }) => {
   const page = Number(q.get("hal")) || 1;
   const penuh = !!(month || userId || action || page > 1 || q.get("penuh"));
 
+
+  /*
+   * Riwayat masuk milik sendiri.
+   *
+   * Tidak butuh kemampuan `activity`: ini catatan tentang akun orang yang
+   * sedang bertanya, dan menutupnya berarti satu-satunya cara seseorang tahu
+   * ada yang mencoba masuk ke akunnya adalah bertanya kepada admin.
+   *
+   * Percobaan yang DIBLOKIR sengaja tidak ikut. Ia dicatat tanpa id pengguna —
+   * yang gagal masuk memang belum terbukti siapa pun — jadi menampilkannya di
+   * sini berarti menampilkan percobaan terhadap akun ORANG LAIN sebagai kalau
+   * itu percobaan terhadap akun ini.
+   */
+  if (q.get("saya")) {
+    const hasil = queryActivity({ userId: me.id, action: "login", perPage: 10 });
+    return json({ ok: true, entries: hasil.entries, total: hasil.total });
+  }
+
   if (!penuh) {
     const limit = Math.min(100, Math.max(1, Number(q.get("limit")) || 20));
     return json({ ok: true, entries: listActivity(limit) });

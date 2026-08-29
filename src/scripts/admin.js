@@ -677,6 +677,7 @@ function closeModal(el) {
   if (i >= 0) modalStack.splice(i, 1);
   if (el.id === "dir-modal") { dirCtx = null; editorTouched = false; }
   if (el.id === "bulk-modal") bulkCtx = null;
+  if (el.id === "riwayat-modal") riwayatCtx = null;
   // Grid disegarkan saat modal tutup, bukan pada tiap ketikan: menggambar ulang
   // kartu di belakang modal sambil mengetik alt hanya membuang kerja.
   if (el.id === "media-modal") { mediaCtx = null; renderMedia(); }
@@ -1351,7 +1352,7 @@ function setView(view, opts) {
   const app = $("admin-app");
   if (app) app.classList.remove("sidebar-open");
   if (view === "backups") loadBackups();
-  if (view === "profile") renderProfile();
+  if (view === "profile") { renderProfile(); loadLoginHistory(); }
   if (view === "users") loadUsers();
   if (view === "ai") loadAi();
   if (view === "activity") loadActivityPage();
@@ -2123,10 +2124,15 @@ function previewHref(col, id) {
 /** Menyalakan tautan pratinjau di bilah editor, atau menyembunyikannya. */
 function syncPreviewLink(col, id) {
   const link = $("editor-preview");
-  if (!link) return;
-  // Kendaraan yang belum pernah disimpan belum punya halaman untuk dilihat.
-  link.hidden = !id;
-  link.href = id ? previewHref(col, id) : "#";
+  if (link) {
+    // Kendaraan yang belum pernah disimpan belum punya halaman untuk dilihat.
+    link.hidden = !id;
+    link.href = id ? previewHref(col, id) : "#";
+  }
+  const riwayat = $("editor-history");
+  // Riwayat dirakit dari cadangan, dan cadangan hanya terbuka untuk peran yang
+  // boleh memulihkannya. Kendaraan baru juga belum punya masa lalu.
+  if (riwayat) riwayat.hidden = !id || !isAdmin();
 }
 
 /**
@@ -2168,6 +2174,118 @@ function bukaPratinjau(e, link) {
     if (tab && !tab.closed) tab.location.replace(href);
     else toast(t("toast.previewBlocked"), "error");
   });
+}
+
+/* ---------------- Riwayat satu item ---------------- */
+
+let riwayatCtx = null; // { col, id, versi[], sekarang, buka: Set<string> }
+
+/** Nilai satu field dalam bentuk yang bisa dibaca sebaris. */
+function nilaiRingkas(v) {
+  if (v === null || v === undefined || v === "") return t("common.emptyValue");
+  if (Array.isArray(v)) return v.length ? v.map((x) => (x && typeof x === "object" ? Object.values(x).join(" ") : x)).join(", ") : t("common.emptyValue");
+  if (typeof v === "boolean") return v ? t("common.yes") : t("common.no");
+  const s = String(v);
+  return s.length > 80 ? s.slice(0, 79) + "…" : s;
+}
+
+async function openRiwayat(col, id) {
+  riwayatCtx = { col, id, versi: [], sekarang: null, buka: new Set() };
+  const body = $("riwayat-body");
+  const title = $("riwayat-modal-title");
+  const sub = $("riwayat-modal-sub");
+  const item = findItem(col, id);
+  if (title) title.textContent = t("riwayat.title");
+  if (sub) sub.textContent = item ? titleOf(col, item) : "";
+  if (body) body.innerHTML = `<div class="skeleton"></div>`;
+  openModal($("riwayat-modal"));
+
+  try {
+    const res = await fetch(`/api/backups?col=${encodeURIComponent(col)}&id=${encodeURIComponent(id)}`);
+    if (res.status === 401) { location.href = "/admin/login"; return; }
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
+    if (!riwayatCtx) return; // modal sudah ditutup sebelum jawabannya tiba
+    riwayatCtx.versi = data.versi || [];
+    riwayatCtx.sekarang = data.sekarang || null;
+    renderRiwayat();
+  } catch (err) {
+    if (body) body.innerHTML = emptyStateHtml(t("backups.failTitle"), err.message, "⚠️");
+  }
+}
+
+function renderRiwayat() {
+  const body = $("riwayat-body");
+  if (!body || !riwayatCtx) return;
+  const { versi, sekarang, buka } = riwayatCtx;
+
+  if (!versi.length) {
+    body.innerHTML = emptyStateHtml(t("riwayat.emptyTitle"), t("riwayat.emptyText"), "🕘");
+    return;
+  }
+
+  body.innerHTML = `<p class="modal-note">${esc(t("riwayat.note"))}</p><div class="item-list">${versi
+    .map((v) => {
+      const beda = v.beda || [];
+      const terbuka = buka.has(v.name);
+      const tabel = terbuka && beda.length
+        ? `<table class="riwayat-diff">
+            <thead><tr><th>${esc(t("riwayat.field"))}</th><th>${esc(t("riwayat.then"))}</th><th>${esc(t("riwayat.now"))}</th></tr></thead>
+            <tbody>${beda
+              .map((k) => `<tr><th>${esc(fieldLabel(k))}</th><td>${esc(nilaiRingkas(v.item[k]))}</td><td>${esc(nilaiRingkas(sekarang ? sekarang[k] : undefined))}</td></tr>`)
+              .join("")}</tbody>
+          </table>`
+        : "";
+
+      return `<div class="item-row riwayat-row">
+        <div class="row-main">
+          <div class="row-title">${esc(formatDateTime(v.time))} <span class="row-meta">· ${esc(formatAgo(v.time))}</span></div>
+          <div class="row-meta">${esc(beda.length ? t("riwayat.diffCount", { n: beda.length }) : t("riwayat.same"))}</div>
+          ${tabel}
+        </div>
+        <div class="row-actions">
+          ${beda.length ? `<button type="button" class="btn btn-ghost btn-sm" data-riwayat-toggle="${esc(v.name)}">${esc(terbuka ? t("riwayat.hide") : t("riwayat.show"))}</button>` : ""}
+          ${beda.length ? `<button type="button" class="btn btn-outline btn-sm" data-riwayat-restore="${esc(v.name)}">${esc(t("riwayat.restore"))}</button>` : ""}
+        </div>
+      </div>`;
+    })
+    .join("")}</div>`;
+}
+
+async function kembalikanItem(name) {
+  if (!riwayatCtx) return;
+  const { col, id } = riwayatCtx;
+  const item = findItem(col, id);
+  const ok = await confirmDialog({
+    title: t("riwayat.restoreTitle"),
+    text: t("riwayat.restoreText", { name: item ? titleOf(col, item) : id }),
+    detail: t("riwayat.restoreDetail"),
+    okText: t("riwayat.restore"),
+    tone: "warning",
+  });
+  if (!ok) return;
+
+  try {
+    const res = await fetch("/api/backups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, col, id }),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
+    content = data.content;
+    dirty = false;
+    setSaveState("saved");
+    resetHistory();
+    renderAll();
+    closeModal($("riwayat-modal"));
+    // Editor digambar ulang dari isi yang baru: kalau tidak, formulir di
+    // belakang modal masih memegang nilai yang barusan diganti.
+    if (vehicleCtx && vehicleCtx.col === col && vehicleCtx.id === id) openVehicle(col, id);
+    toast(t("toast.itemRestored"), "success");
+  } catch (err) {
+    toast(err.message, "error");
+  }
 }
 
 function openVehicle(col, id) {
@@ -3677,16 +3795,79 @@ async function loadBackups() {
     }
 
     el.innerHTML = actions + `<div class="item-list">${backups
-      .map((b) => `<div class="item-row">
+      .map((b) => `<div class="item-row" data-backup="${esc(b.name)}">
         <div class="row-main">
-          <div class="row-title">${esc(formatDateTime(b.time))}</div>
-          <div class="row-meta">${esc(b.name)} · ${esc(formatSize(b.size))}</div>
+          <div class="row-title">${esc(formatDateTime(b.time))} <span class="row-meta">· ${esc(formatAgo(b.time))}</span></div>
+          <div class="row-meta">${esc(ringkasIsiCadangan(b))}</div>
+          <div class="backup-diff" data-backup-diff="${esc(b.name)}" hidden></div>
         </div>
-        <div class="row-actions"><button type="button" class="btn btn-outline btn-sm" data-restore="${esc(b.name)}">${esc(t("common.restore"))}</button></div>
+        <div class="row-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-backup-diff-open="${esc(b.name)}">${esc(t("backups.compare"))}</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-backup-get="${esc(b.name)}">${esc(t("backups.downloadOne"))}</button>
+          <button type="button" class="btn btn-outline btn-sm" data-restore="${esc(b.name)}">${esc(t("common.restore"))}</button>
+        </div>
       </div>`)
       .join("")}</div>`;
   } catch (err) {
     el.innerHTML = emptyStateHtml(t("backups.failTitle"), t("backups.failText"), "⚠️");
+  }
+}
+
+/**
+ * Baris ringkasan isi sebuah cadangan.
+ *
+ * "84 KB, kemarin 14.20" tidak memberi tahu siapa pun apakah di dalamnya ada
+ * mobil yang dicari. "28 mobil · 12 motor · 10 berita" memberi tahu.
+ */
+function ringkasIsiCadangan(b) {
+  const bagian = [];
+  if (b.isi) for (const col of COLLECTIONS) if (b.isi[col]) bagian.push(`${b.isi[col]} ${colLabel(col).toLowerCase()}`);
+  bagian.push(formatSize(b.size));
+  return bagian.join(" · ");
+}
+
+/** Apa bedanya cadangan ini dengan isi sekarang? */
+async function bandingkanCadangan(name) {
+  const box = document.querySelector(`[data-backup-diff="${CSS.escape(name)}"]`);
+  if (!box) return;
+  if (!box.hidden) { box.hidden = true; return; }
+
+  box.hidden = false;
+  box.innerHTML = `<div class="skeleton"></div>`;
+  try {
+    const res = await fetch(`/api/backups?nama=${encodeURIComponent(name)}`);
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
+
+    const p = data.perubahan || [];
+    if (!p.length) { box.innerHTML = `<p class="row-meta">${esc(t("backups.same"))}</p>`; return; }
+
+    /* Arah kalimatnya penting: perbandingannya CADANGAN → SEKARANG, jadi
+       "ditambah" berarti ada di sekarang tapi tidak ada di cadangan — yaitu
+       yang akan HILANG kalau cadangan ini dipulihkan. */
+    const baris = p.slice(0, 12).map((x) => {
+      const kunci = x.jenis === "tambah" ? "backups.willVanish"
+        : x.jenis === "hapus" ? "backups.willReturn"
+          : x.jenis === "urut" ? "backups.willReorder"
+            : "backups.willRevert";
+      const nama = x.title || (x.col === "site" ? t("nav.site") : x.col === "media" ? t("nav.media") : colLabel(x.col));
+      return `<li>${esc(t(kunci, { name: nama }))}</li>`;
+    });
+    const sisa = p.length > baris.length ? `<li class="row-meta">${esc(t("dash.health.more", { n: p.length - baris.length }))}</li>` : "";
+    box.innerHTML = `<ul class="backup-diff-list">${baris.join("")}${sisa}</ul>`;
+  } catch (err) {
+    box.innerHTML = `<p class="row-meta">${esc(err.message)}</p>`;
+  }
+}
+
+async function unduhCadangan(name) {
+  try {
+    const res = await fetch(`/api/backups?nama=${encodeURIComponent(name)}&unduh=1`);
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
+    downloadJson(name, data.content);
+  } catch (err) {
+    toast(err.message, "error");
   }
 }
 
@@ -3853,6 +4034,92 @@ function buildPalette() {
   return palette;
 }
 
+/* ---------------- Perintah palet ---------------- */
+
+/**
+ * Daftar perintah yang bisa dijalankan dari palet.
+ *
+ * Palet sudah punya pintasan, modal, dan tempat di bilah atas — tapi isinya
+ * hanya mencari ITEM. Mengganti bahasa, membuka menu Tampilan, menambah motor,
+ * mengekspor JSON: semuanya tetap butuh perjalanan lewat sidebar. Ini jarak
+ * terpendek antara panel yang "berfungsi" dan panel yang terasa mahal, dan
+ * seluruh kerangkanya sudah berdiri.
+ *
+ * `syarat` menahan perintah yang perannya tidak boleh menjalankan. Yang
+ * ditahan tidak muncul sama sekali — perintah yang tampil lalu ditolak lebih
+ * buruk daripada perintah yang tidak pernah ada.
+ */
+function perintahPalet() {
+  const out = [];
+  const admin = isAdmin();
+
+  for (const view of ["dashboard", ...COLLECTIONS, "tampilan", "site", "media", "profile"]) {
+    out.push({ id: `buka:${view}`, grup: "palette.group.open", label: t(`nav.${view}`), jalan: () => setView(view) });
+  }
+  for (const view of ["ai", "backups", "users", "activity"]) {
+    if (admin) out.push({ id: `buka:${view}`, grup: "palette.group.open", label: t(`nav.${view}`), jalan: () => setView(view) });
+  }
+  if (admin) out.push({ id: "buka:update", grup: "palette.group.open", label: t("nav.update"), jalan: () => { location.href = "/admin/update"; } });
+
+  for (const col of COLLECTIONS) {
+    out.push({ id: `tambah:${col}`, grup: "palette.group.add", label: t("palette.addTo", { col: colOne(col) }), jalan: () => openEditor(col, null) });
+  }
+
+  for (const l of LOCALES) {
+    if (l.code === locale) continue;
+    out.push({ id: `bahasa:${l.code}`, grup: "palette.group.action", label: `${l.flag} ${l.label}`, jalan: () => setLocale(l.code, { toast: true }) });
+  }
+
+  out.push({ id: "aksi:tema", grup: "palette.group.action", label: t("topbar.themeToggle"), jalan: () => { const b = $("themeToggle"); if (b) b.click(); } });
+  out.push({ id: "aksi:simpan", grup: "palette.group.action", label: t("shortcut.save"), jalan: () => saveNow() });
+  out.push({ id: "aksi:situs", grup: "palette.group.action", label: t("nav.viewSite"), jalan: () => window.open("/", "_blank", "noopener") });
+  out.push({ id: "aksi:keluar", grup: "palette.group.action", label: t("topbar.logout"), jalan: () => { const b = $("logout"); if (b) b.click(); } });
+
+  return out;
+}
+
+/**
+ * Perintah yang terakhir dipakai naik ke atas.
+ *
+ * Sepuluh detik pertama tiap sesi hampir selalu perintah yang sama, dan
+ * mengetik ulang tiga huruf yang sama setiap hari adalah biaya kecil yang
+ * dibayar berkali-kali.
+ */
+const PALET_KEY = "evkita.palette";
+
+function paletTerakhir() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PALET_KEY) || "[]");
+    return Array.isArray(v) ? v.slice(0, 5) : [];
+  } catch {
+    return [];
+  }
+}
+
+function catatPalet(id) {
+  try {
+    const daftar = [id, ...paletTerakhir().filter((x) => x !== id)].slice(0, 5);
+    localStorage.setItem(PALET_KEY, JSON.stringify(daftar));
+  } catch {
+    /* Penyimpanan bisa ditolak (mode penyamaran); urutannya cuma kenyamanan. */
+  }
+}
+
+function cariPerintah(q) {
+  const s = String(q || "").trim().toLowerCase();
+  const semua = perintahPalet();
+  const terakhir = paletTerakhir();
+  const cocok = s ? semua.filter((c) => c.label.toLowerCase().includes(s)) : semua;
+  return cocok.slice().sort((a, b) => {
+    const ia = terakhir.indexOf(a.id);
+    const ib = terakhir.indexOf(b.id);
+    if (ia === ib) return 0;
+    if (ia < 0) return 1;
+    if (ib < 0) return -1;
+    return ia - ib;
+  });
+}
+
 function searchAll(q) {
   const query = String(q || "").trim().toLowerCase();
   if (!query) return [];
@@ -3870,26 +4137,64 @@ function searchAll(q) {
 function renderPalette(q) {
   const box = $("palette-results");
   if (!box) return;
-  const results = searchAll(q);
-  if (!String(q || "").trim()) {
-    box.innerHTML = `<div class="empty-state-text">${esc(t("palette.startHint"))}</div>`;
-    return;
-  }
-  if (!results.length) {
+
+  const kata = String(q || "").trim();
+  /* Dibatasi PER KELOMPOK, bukan sekian teratas keseluruhan. Membatasi
+     totalnya membuat palet yang baru dibuka hanya berisi kelompok pertama,
+     dan dua kelompok lain tidak pernah terlihat oleh orang yang belum tahu
+     bahwa mereka ada. */
+  const semuaPerintah = cariPerintah(kata);
+  const perKelompok = (grup) => semuaPerintah.filter((c) => c.grup === grup).slice(0, kata ? 6 : 4);
+  const results = kata ? searchAll(kata) : [];
+  const perintah = ["palette.group.open", "palette.group.add", "palette.group.action"].flatMap(perKelompok);
+
+  if (!perintah.length && !results.length) {
     box.innerHTML = emptyStateHtml(t("common.noResults"), t("palette.emptyText"), "🔍");
     return;
   }
-  box.innerHTML = results
-    .slice(0, 40)
-    .map(({ col, it }) => `<div class="item-row" data-open="${esc(col)}:${esc(it.id)}">
-      <div class="row-thumb">${thumbInnerHtml(imageOf(col, it), titleOf(col, it))}</div>
-      <div class="row-main">
-        <div class="row-title">${esc(titleOf(col, it))}</div>
-        <div class="row-meta">${esc(metaOf(col, it))}</div>
-      </div>
-      <div class="row-badges"><span class="badge badge-muted">${esc(colLabel(col))}</span></div>
-    </div>`)
-    .join("");
+
+  const kepala = (kunci) => `<div class="palette-group">${esc(t(kunci))}</div>`;
+
+  /* Perintah dikelompokkan menurut jenisnya, dan urutan kelompoknya tetap:
+     "Buka" sebelum "Tambah" sebelum "Tindakan". Daftar yang urutannya berubah
+     mengikuti hasil pencarian memaksa mata membaca ulang setiap kali. */
+  let html = "";
+  for (const grup of ["palette.group.open", "palette.group.add", "palette.group.action"]) {
+    const isi = perintah.filter((c) => c.grup === grup);
+    if (!isi.length) continue;
+    html += kepala(grup) + isi
+      .map((c) => `<div class="item-row palette-cmd" data-cmd="${esc(c.id)}">
+        <div class="row-main"><div class="row-title">${esc(c.label)}</div></div>
+      </div>`)
+      .join("");
+  }
+
+  if (results.length) {
+    html += kepala("palette.group.content") + results
+      .slice(0, 30)
+      .map(({ col, it }) => `<div class="item-row" data-open="${esc(col)}:${esc(it.id)}">
+        <div class="row-thumb">${thumbInnerHtml(imageOf(col, it), titleOf(col, it))}</div>
+        <div class="row-main">
+          <div class="row-title">${esc(titleOf(col, it))}</div>
+          <div class="row-meta">${esc(metaOf(col, it))}</div>
+        </div>
+        <div class="row-badges"><span class="badge badge-muted">${esc(colLabel(col))}</span></div>
+      </div>`)
+      .join("");
+  } else if (kata) {
+    html += kepala("palette.group.content") + `<div class="empty-state-text">${esc(t("palette.emptyText"))}</div>`;
+  }
+
+  box.innerHTML = html;
+}
+
+/** Menjalankan satu perintah palet, lalu menutup paletnya. */
+function jalankanPerintah(id) {
+  const cmd = perintahPalet().find((c) => c.id === id);
+  if (!cmd) return;
+  catatPalet(id);
+  closeModal(palette);
+  cmd.jalan();
 }
 
 function openPalette(initial) {
@@ -4021,6 +4326,22 @@ function bindEvents() {
       loadActivityPage();
       return;
     }
+
+    /* --- Riwayat item --- */
+    if (e.target.closest("#editor-history")) {
+      if (vehicleCtx && vehicleCtx.id) openRiwayat(vehicleCtx.col, vehicleCtx.id);
+      return;
+    }
+    const rwToggle = e.target.closest("[data-riwayat-toggle]");
+    if (rwToggle && riwayatCtx) {
+      const n = rwToggle.getAttribute("data-riwayat-toggle");
+      if (riwayatCtx.buka.has(n)) riwayatCtx.buka.delete(n);
+      else riwayatCtx.buka.add(n);
+      renderRiwayat();
+      return;
+    }
+    const rwRestore = e.target.closest("[data-riwayat-restore]");
+    if (rwRestore) { kembalikanItem(rwRestore.getAttribute("data-riwayat-restore")); return; }
 
     /* --- Pratinjau --- */
     const pratinjauLink = e.target.closest("#editor-preview");
@@ -4173,6 +4494,14 @@ function bindEvents() {
     if (imp) { const col = imp.getAttribute("data-import"); pickJson((parsed) => importCollection(col, parsed)); return; }
 
     /* --- Cadangan --- */
+    const cmd = e.target.closest("[data-cmd]");
+    if (cmd) { jalankanPerintah(cmd.getAttribute("data-cmd")); return; }
+
+    const bandingBtn = e.target.closest("[data-backup-diff-open]");
+    if (bandingBtn) { bandingkanCadangan(bandingBtn.getAttribute("data-backup-diff-open")); return; }
+    const unduhBtn = e.target.closest("[data-backup-get]");
+    if (unduhBtn) { unduhCadangan(unduhBtn.getAttribute("data-backup-get")); return; }
+
     const restore = e.target.closest("[data-restore]");
     if (restore) { restoreBackup(restore.getAttribute("data-restore")); return; }
 
@@ -5016,6 +5345,11 @@ function renderProfile() {
         <h2>${esc(t("profile.sessions"))}</h2>
         <p>${esc(t("profile.sessionsDesc"))}</p>
       </div>
+      <!-- Daftar sesi aktif tidak bisa ditampilkan: token sesi sengaja tidak
+           punya penyimpanan di server (lihat auth.ts), jadi tidak ada yang
+           bisa dihitung. Yang menjawab pertanyaan yang sama dengan harga
+           hampir nol adalah riwayat masuk, yang sudah tercatat sejak dulu. -->
+      <div id="profile-logins" class="profile-logins"></div>
       <div class="form-actions">
         <button type="button" class="btn btn-outline" id="profile-signout-others">${esc(t("profile.signOutOthers"))}</button>
       </div>
@@ -5055,6 +5389,37 @@ function renderProfile() {
         <button type="submit" class="btn btn-primary">${esc(t("common.save"))}</button>
       </div>
     </form>`;
+}
+
+/**
+ * Sepuluh peristiwa masuk terakhir untuk akun ini.
+ *
+ * Tombol "keluarkan sesi lain" sudah ada sejak lama, tapi tidak ada apa pun
+ * yang memberi tahu apakah ADA sesi lain yang perlu dikeluarkan. Ini yang
+ * menjawabnya.
+ */
+async function loadLoginHistory() {
+  const box = $("profile-logins");
+  if (!box) return;
+  try {
+    const res = await fetch("/api/activity?saya=1");
+    if (!res.ok) { box.innerHTML = ""; return; }
+    const data = await res.json();
+    const entries = (data && data.entries) || [];
+    if (!entries.length) { box.innerHTML = ""; return; }
+    box.innerHTML = `<h4 class="profile-logins-title">${esc(t("profile.loginHistory"))}</h4>
+      <ul class="activity-list">${entries
+        .map((e) => `<li class="activity-item">
+          <span class="activity-dot" aria-hidden="true"></span>
+          <div class="activity-body">
+            <div class="activity-text">${esc(formatDateTime(e.at))}</div>
+            <div class="row-meta">${esc(formatAgo(e.at))}</div>
+          </div>
+        </li>`)
+        .join("")}</ul>`;
+  } catch {
+    /* Riwayat masuk bersifat pelengkap — kegagalannya tidak boleh mengosongkan halaman Profil. */
+  }
 }
 
 async function saveProfileIdentity(form) {

@@ -56,7 +56,7 @@ function sama(a: unknown, b: unknown): boolean {
   return false;
 }
 
-function judul(col: string, item: any): string {
+export function judulItem(col: string, item: any): string {
   if (!item) return "";
   if (col === "berita") return String(item.title || "").trim();
   if (col === "cars" || col === "motors") {
@@ -65,7 +65,15 @@ function judul(col: string, item: any): string {
   return String(item.name || "").trim();
 }
 
-function fieldBerbeda(lama: any, baru: any): string[] {
+/**
+ * Nama field yang berbeda antara dua bentuk item.
+ *
+ * Diekspor karena dipakai dua arah: mencatat perubahan saat menyimpan, DAN
+ * membandingkan sebuah item dengan versinya di dalam cadangan (lihat
+ * `api/backups.ts`). Dua perbandingan yang berbeda aturannya akan membuat
+ * riwayat menyebut field yang tidak pernah dicatat log, dan sebaliknya.
+ */
+export function fieldBerbeda(lama: any, baru: any): string[] {
   const kunci = new Set([...Object.keys(lama || {}), ...Object.keys(baru || {})]);
   const out: string[] = [];
   for (const k of kunci) {
@@ -106,15 +114,15 @@ export function bandingkanKonten(lama: any, baru: any): Perubahan[] {
     for (const [id, item] of b) {
       const sebelum = a.get(id);
       if (!sebelum) {
-        out.push({ col, id, title: judul(col, item), jenis: "tambah", fields: [] });
+        out.push({ col, id, title: judulItem(col, item), jenis: "tambah", fields: [] });
         continue;
       }
       const fields = fieldBerbeda(sebelum, item);
-      if (fields.length) out.push({ col, id, title: judul(col, item), jenis: "ubah", fields });
+      if (fields.length) out.push({ col, id, title: judulItem(col, item), jenis: "ubah", fields });
     }
 
     for (const [id, item] of a) {
-      if (!b.has(id)) out.push({ col, id, title: judul(col, item), jenis: "hapus", fields: [] });
+      if (!b.has(id)) out.push({ col, id, title: judulItem(col, item), jenis: "hapus", fields: [] });
     }
 
     /*

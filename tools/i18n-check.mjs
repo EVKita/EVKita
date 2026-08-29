@@ -43,6 +43,7 @@ const SCAN_EXT = new Set([".js", ".ts", ".astro", ".mjs"]);
 const SAMA_SENGAJA = new Set([
   "en:common.edit",
   "en:field.id",
+  "en:riwayat.field",
   "en:field.status",
   "en:col.spklu",
   "en:nav.media",
@@ -105,6 +106,11 @@ const DYNAMIC_PREFIXES = [
   // sebuah tabel, dan peringatan nilai janggal memilihnya dari arah selisihnya.
   "dash.health.show",
   "warn.",
+  // Dirakit saat berjalan: kelompok palet dipilih dari sebuah daftar tetap.
+  "palette.group.",
+  // Dirakit saat berjalan: kalimat perbandingan cadangan dipilih menurut jenis
+  // perubahannya (tambah/hapus/ubah/urut).
+  "backups.will",
   "err.",
   "save.",
   "update.step.",
