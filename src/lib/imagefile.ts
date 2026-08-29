@@ -8,13 +8,14 @@
  * sejak awal jauh lebih baik daripada menyimpan sesuatu yang bukan gambar.
  */
 
-export type ImageMime = "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+export type ImageMime = "image/jpeg" | "image/png" | "image/webp" | "image/gif" | "image/avif";
 
 export const IMAGE_EXT: Record<ImageMime, string> = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
   "image/webp": ".webp",
   "image/gif": ".gif",
+  "image/avif": ".avif",
 };
 
 /** Ukuran maksimum satu berkas unggahan. */
@@ -49,5 +50,34 @@ export function sniffImage(buf: Buffer): ImageMime | null {
   ) {
     return "image/webp";
   }
+  if (isAvif(buf)) return "image/avif";
   return null;
+}
+
+/**
+ * AVIF: kotak ISO-BMFF `ftyp` yang salah satu mereknya `avif`/`avis`.
+ *
+ * Bukan sekadar memeriksa merek utama di offset 8. Berkas AVIF yang ditulis
+ * peramban dan sebagian besar perkakas memakai merek utama `avif`, tapi yang
+ * ditulis kamera dan beberapa pustaka memakai `mif1` dengan `avif` di daftar
+ * merek yang KOMPATIBEL — bentuk yang sah dan yang akan ditolak kalau hanya
+ * offset 8 yang dibaca.
+ *
+ * Yang tidak ikut lolos, dan memang tidak boleh: `heic`/`heix`. Wadahnya
+ * serumpun, isinya HEVC, dan tidak ada peramban yang menampilkannya.
+ */
+function isAvif(buf: Buffer): boolean {
+  if (buf.length < 12) return false;
+  if (buf.subarray(4, 8).toString("latin1") !== "ftyp") return false;
+
+  // Panjang kotak ftyp ada di empat byte pertama. Merek kompatibel mulai di
+  // offset 16, empat byte sekali, sampai kotaknya habis.
+  const panjang = buf.readUInt32BE(0);
+  const akhir = Math.min(buf.length, panjang > 0 ? panjang : buf.length);
+
+  if (["avif", "avis"].includes(buf.subarray(8, 12).toString("latin1"))) return true;
+  for (let i = 16; i + 4 <= akhir; i += 4) {
+    if (["avif", "avis"].includes(buf.subarray(i, i + 4).toString("latin1"))) return true;
+  }
+  return false;
 }

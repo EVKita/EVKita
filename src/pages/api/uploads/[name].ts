@@ -7,6 +7,7 @@ const UPLOAD_DIR = path.resolve(process.cwd(), "data", "uploads");
 const MIME_BY_EXT: Record<string, string> = {
   ".png": "image/png",
   ".webp": "image/webp",
+  ".avif": "image/avif",
   ".gif": "image/gif",
   ".svg": "image/svg+xml",
   ".jpg": "image/jpeg",

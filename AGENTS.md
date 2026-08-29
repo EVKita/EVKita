@@ -297,7 +297,23 @@ di SERVER, bukan di panel.
   `createImageBitmap()`. JANGAN kembali ke `<img src=URL.createObjectURL()>`:
   CSP panel ini tidak mengizinkan `blob:` di `img-src`, dan kegagalannya tidak
   terlihat di mana pun karena pengoptimalan yang gagal memang mengembalikan
-  berkas aslinya.
+  berkas aslinya. Format keluarannya AVIF kalau peramban bisa menulisnya, WebP
+  kalau tidak — keduanya benar-benar dicoba lalu yang berkasnya paling kecil
+  yang dipakai. `toBlob()` untuk tipe yang tidak didukung mengembalikan PNG,
+  bukan null, jadi tipe blob hasilnya WAJIB diperiksa: tanpa itu PNG raksasa
+  bisa tersimpan dengan akhiran `.avif`.
+- **Gambar dari situs lain diambil server, lalu jadi berkas kita**
+  (`src/pages/api/gambar-url.ts` + `src/lib/gambar-url.js`). Endpoint itu tidak
+  menulis apa pun ke disk: ia mengembalikan byte-nya ke panel, panel
+  mengubahnya ke AVIF/WebP, dan `/api/upload` tetap satu-satunya pintu ke
+  `data/uploads/`. Yang menembus batas domain memang harus server — peramban
+  dihalang CORS dan `connect-src 'self'` — dan karena itu penyaring alamatnya
+  tidak boleh dilonggarkan: hanya http/https, hanya port 80/443, tanpa
+  kredensial, hanya nama domain (BUKAN alamat IP, dalam bentuk apa pun), dan
+  setiap loncatan pengalihan diperiksa ulang termasuk hasil penerjemahan DNS-nya.
+  Melewatkan satu saja membuat server ini bisa disuruh membaca
+  `http://169.254.169.254/` atau `/api/users`-nya sendiri. Ujinya di
+  `tests/gambar-url.test.ts`.
 - **Kotak konfirmasi** selalu `src/scripts/konfirmasi.js`, tidak pernah
   `window.confirm()`. Ia membangun DOM-nya sendiri supaya halaman Pembaruan
   bisa memakainya tanpa memuat seluruh CMS.

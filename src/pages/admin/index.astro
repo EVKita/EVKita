@@ -1085,6 +1085,23 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
             <button id="media-sweep" class="btn btn-danger btn-sm" type="button" hidden data-requires-admin></button>
           </div>
         </div>
+        <!-- Ambil gambar dari situs lain. Berkasnya TIDAK di-hotlink: server
+             mengunduhnya (`/api/gambar-url`), peramban mengubahnya ke
+             AVIF/WebP, lalu ia menjadi berkas kita sendiri seperti unggahan
+             biasa. Barisnya di luar #media-grid karena isi grid digambar ulang
+             setiap kali daftar berubah — alamat yang sedang diketik akan ikut
+             terhapus kalau ia di dalam sana. -->
+        <div id="media-url-row" class="media-url-row">
+          <input
+            id="media-url"
+            class="search-input"
+            type="url"
+            placeholder={t("upload.fromUrl.ph")}
+            data-i18n-ph="upload.fromUrl.ph"
+            autocomplete="off"
+          />
+          <button id="media-url-go" class="btn btn-outline btn-sm" type="button" data-i18n="upload.fromUrl">{t("upload.fromUrl")}</button>
+        </div>
         <div id="media-grid"></div>
       </section>
 

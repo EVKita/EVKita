@@ -893,10 +893,10 @@ async function resolveConflict(serverContent) {
 }
 
 async function uploadImage(file) {
-  /* Dikecilkan dan diubah ke WebP di peramban lebih dulu — lihat gambar.js.
-     Fungsi itu tidak pernah melempar dan mengembalikan berkas aslinya kalau
-     tidak ada yang bisa diperbaiki, jadi tidak ada jalur unggah yang bisa
-     gagal gara-gara langkah ini. */
+  /* Dikecilkan dan diubah ke AVIF/WebP di peramban lebih dulu — lihat
+     gambar.js. Fungsi itu tidak pernah melempar dan mengembalikan berkas
+     aslinya kalau tidak ada yang bisa diperbaiki, jadi tidak ada jalur unggah
+     yang bisa gagal gara-gara langkah ini. */
   const siap = await optimalkanGambar(file);
   const fd = new FormData();
   fd.append("image", siap);
@@ -905,6 +905,67 @@ async function uploadImage(file) {
   const data = await res.json();
   if (!data || !data.ok) throw new Error(apiMessage(data, "toast.uploadRejected"));
   return data.url;
+}
+
+/**
+ * Mengambil gambar dari situs lain, dan berhenti di berkas — bukan di alamat.
+ *
+ * Yang dikembalikan fungsi ini adalah `File`, persis seperti berkas yang
+ * dipilih dari cakram, jadi ia masuk ke `uploadImage()` yang sama: dikecilkan,
+ * diubah ke AVIF/WebP, lalu disimpan sebagai berkas kita sendiri. Alamat
+ * aslinya tidak pernah tersimpan di konten — gambar yang ditumpangkan dari
+ * domain orang bisa hilang kapan saja, dan itu sudah pernah terjadi di sini
+ * (lihat tests/gambar.test.ts).
+ *
+ * Pengambilannya lewat server karena hanya server yang bisa: peramban dihalang
+ * CORS, dan CSP panel mengunci `connect-src` ke 'self'.
+ */
+async function berkasDariUrl(url) {
+  const res = await fetch("/api/gambar-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
+
+  const tipe = (res.headers.get("content-type") || "").split(";")[0].trim();
+  if (!res.ok || !tipe.startsWith("image/")) {
+    let data = null;
+    try { data = await res.json(); } catch { /* jawaban galat tanpa JSON */ }
+    throw new Error(apiMessage(data, "toast.fetchRejected"));
+  }
+  return new File([await res.blob()], namaDariUrl(url), { type: tipe });
+}
+
+/**
+ * Nama berkas tebakan dari alamatnya.
+ *
+ * Kosmetik saja: `optimalkanGambar()` mengganti akhirannya dan server memberi
+ * nama acak sendiri. Yang tetap perlu dijaga adalah tidak membawa karakter
+ * aneh dari alamat orang ke dalam `FormData`.
+ */
+function namaDariUrl(url) {
+  const ekor = String(url).split(/[?#]/)[0].split("/").filter(Boolean).pop() || "";
+  const bersih = ekor.replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 60);
+  return bersih || "gambar";
+}
+
+/** Alamat gambar yang ikut dalam sebuah operasi seret-lepas. */
+function urlDariDrop(dt) {
+  if (!dt) return [];
+  // `text/uri-list` adalah yang diisi peramban saat gambar diseret dari tab
+  // lain; barisnya boleh diawali komentar `#`. `text/plain` cadangannya, untuk
+  // alamat yang diseret dari bilah alamat atau dari teks biasa.
+  const mentah = dt.getData("text/uri-list") || dt.getData("text/plain") || "";
+  return mentah
+    .split(/[\r\n]+/)
+    .map((s) => s.trim())
+    .filter((s) => /^https?:\/\//i.test(s))
+    // Gambar yang diseret dari dalam panel ini sendiri sudah berupa berkas
+    // kita. Mengambilnya lagi lewat server cuma menghasilkan salinan kedua di
+    // `data/uploads/` yang isinya sama persis dengan yang pertama.
+    .filter((s) => { try { return new URL(s).origin !== location.origin; } catch { return false; } })
+    .slice(0, 10);
 }
 
 /* ------------------------------------------------------------------ *
@@ -3450,6 +3511,25 @@ async function loadMediaDisk() {
 }
 
 /**
+ * Menyalin satu gambar dari situs lain ke pustaka media.
+ *
+ * Kotak unggahnya yang dipakai sebagai tempat menampilkan kemajuan, bukan
+ * kotak baru: hasil akhirnya sama persis dengan menyeret berkas ke sana, jadi
+ * tidak ada gunanya membuat tempat kedua yang harus dijaga ikut berubah.
+ */
+function ambilMediaDariUrl() {
+  const input = $("media-url");
+  const dz = document.querySelector('#media-grid [data-dzone="__media"]');
+  if (!input || !dz) return;
+
+  const url = String(input.value || "").trim();
+  if (!url) { input.focus(); return; }
+
+  input.value = "";
+  handleUploadUrls(dz, [url]);
+}
+
+/**
  * Daftar yang sedang tampil, setelah pencarian dan saringan.
  *
  * Grid dan panah di modal memakai fungsi yang SAMA: kalau tidak, menekan panah
@@ -4154,6 +4234,34 @@ function pickImages(dz) {
   input.click();
 }
 
+/**
+ * Alamat gambar yang dilepas atau ditempel: diambil dulu, sesudah itu jalannya
+ * sama persis dengan berkas biasa.
+ *
+ * Dipisahkan dari `handleUpload()` karena kegagalannya berbeda dan pesannya
+ * harus ikut berbeda — situs sumber yang menolak bukan hal yang sama dengan
+ * unggahan yang ditolak server ini.
+ */
+async function handleUploadUrls(dz, urls) {
+  if (!urls.length) return;
+  const prev = dz.innerHTML;
+  dz.innerHTML = `<div class="upload-progress"><span class="spinner"></span> ${esc(t("upload.fetching", { n: urls.length }))}</div>`;
+
+  const files = [];
+  for (const url of urls) {
+    try {
+      files.push(await berkasDariUrl(url));
+    } catch (err) {
+      dz.innerHTML = prev;
+      toast(t("toast.fetchFailed", { error: err.message }), "error");
+      return;
+    }
+  }
+
+  dz.innerHTML = prev;
+  await handleUpload(dz, files);
+}
+
 async function handleUpload(dz, files) {
   if (!files.length) return;
   const prev = dz.innerHTML;
@@ -4663,6 +4771,7 @@ function bindEvents() {
       return;
     }
     if (e.target.closest("#media-sweep")) { hapusMediaYatim(); return; }
+    if (e.target.closest("#media-url-go")) { ambilMediaDariUrl(); return; }
     const mediaDel = e.target.closest("#media-delete");
     if (mediaDel) { hapusMediaSatu(mediaDel.getAttribute("data-name")); return; }
     const mediaOpen = e.target.closest("[data-media-open]");
@@ -5216,7 +5325,11 @@ function bindEvents() {
       e.preventDefault();
       dz.classList.remove("dragover");
       const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter((f) => f.type.startsWith("image/"));
-      if (files.length) handleUpload(dz, files);
+      if (files.length) { handleUpload(dz, files); return; }
+      // Gambar yang diseret dari tab lain tidak membawa berkas, cuma alamat.
+      // Alamatnya diambil server lalu disimpan sebagai berkas kita — bukan
+      // dipasang sebagai tautan ke domain orang.
+      handleUploadUrls(dz, urlDariDrop(e.dataTransfer));
     }
   });
 
@@ -5282,6 +5395,15 @@ function bindEvents() {
   document.addEventListener("keydown", (e) => {
     /* Combobox lebih dulu: panah, Enter, dan Escape miliknya sendiri. */
     if (comboKeydown(e)) return;
+
+    // Enter di kolom alamat gambar sama dengan menekan tombolnya. Tanpa ini,
+    // menempel alamat lalu menekan Enter tidak melakukan apa-apa — dan itu
+    // gerakan yang dilakukan semua orang.
+    if (e.key === "Enter" && document.activeElement && document.activeElement.id === "media-url") {
+      e.preventDefault();
+      ambilMediaDariUrl();
+      return;
+    }
 
     const mod = e.ctrlKey || e.metaKey;
     const key = String(e.key || "").toLowerCase();

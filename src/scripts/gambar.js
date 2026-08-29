@@ -14,6 +14,11 @@
  * sudah ada di setiap peramban, gratis, dan ia bekerja di mesin orang yang
  * mengunggah alih-alih di VPS yang melayani seluruh pengunjung.
  *
+ * Formatnya AVIF kalau peramban bisa menulisnya, WebP kalau tidak, dan format
+ * aslinya kalau dua-duanya tidak bisa. Ketiganya lewat jalur yang sama, jadi
+ * gambar yang datang dari unggahan biasa dan gambar yang diambil dari situs
+ * lain (lihat `api/gambar-url.ts`) berakhir sebagai berkas yang sama bentuknya.
+ *
  * Yang TIDAK disentuh berkas ini: pemeriksaan di server. `api/upload.ts` tetap
  * membaca byte pertama tiap berkas dan menolak yang bukan gambar. Apa pun yang
  * dikerjakan di sini hanya boleh membuat berkasnya lebih kecil — bukan
@@ -25,6 +30,16 @@ export const MAX_SISI = 2000;
 
 /** Mutu WebP. 0,82 adalah titik ketika mata berhenti melihat bedanya. */
 export const MUTU = 0.82;
+
+/**
+ * Mutu AVIF, dan angkanya sengaja BERBEDA dari WebP.
+ *
+ * Angka mutu bukan satuan yang sama di dua penyandi berbeda. AVIF pada 0,60
+ * kira-kira setara WebP pada 0,82 di mata, sambil menghasilkan berkas yang
+ * kerap 20–40% lebih kecil lagi. Memakai 0,82 untuk keduanya berarti membayar
+ * ukuran untuk mutu yang tidak ada yang bisa melihatnya.
+ */
+export const MUTU_AVIF = 0.6;
 
 /**
  * Berkas di bawah ukuran ini dibiarkan apa adanya.
@@ -42,18 +57,46 @@ export const BATAS_LEWATI = 200 * 1024;
  * "mengoptimalkan" GIF animasi berarti diam-diam mengubahnya jadi gambar diam.
  * SVG juga tidak — ia sudah ditolak di server, dan ia bukan gambar raster.
  */
-const BISA_DIPROSES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const BISA_DIPROSES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 
-/** Apakah peramban ini bisa mengeluarkan WebP dari canvas? */
-function dukungWebp() {
+/**
+ * Format keluaran yang dicoba, berurutan dari yang paling hemat.
+ *
+ * Keduanya benar-benar DICOBA, bukan dipilih di depan berdasarkan dukungan
+ * peramban saja: pada foto tertentu — gambar kecil, gambar dengan banyak
+ * bidang datar — AVIF justru kalah dari WebP karena ongkos tetap wadahnya.
+ * Yang menang adalah berkas yang benar-benar paling kecil, bukan format yang
+ * secara umum lebih baik.
+ */
+const KELUARAN = [
+  { tipe: "image/avif", mutu: MUTU_AVIF, ext: ".avif" },
+  { tipe: "image/webp", mutu: MUTU, ext: ".webp" },
+];
+
+const dukunganTersimpan = new Map();
+
+/**
+ * Apakah peramban ini bisa MENGELUARKAN format ini dari canvas?
+ *
+ * Menampilkan dan menulis adalah dua kemampuan berbeda: hampir semua peramban
+ * hari ini menampilkan AVIF, hampir tidak ada yang bisa menulisnya. Yang
+ * membuat pemeriksaan ini bekerja adalah perilaku `toDataURL` untuk tipe yang
+ * tidak didukung — ia tidak melempar, ia diam-diam mengembalikan PNG. Karena
+ * itu yang diperiksa adalah awalan hasilnya, bukan ada tidaknya galat.
+ */
+function dukungKeluaran(tipe) {
+  if (dukunganTersimpan.has(tipe)) return dukunganTersimpan.get(tipe);
+  let bisa = false;
   try {
     const c = document.createElement("canvas");
     c.width = 1;
     c.height = 1;
-    return c.toDataURL("image/webp").startsWith("data:image/webp");
+    bisa = c.toDataURL(tipe).startsWith(`data:${tipe}`);
   } catch {
-    return false;
+    bisa = false;
   }
+  dukunganTersimpan.set(tipe, bisa);
+  return bisa;
 }
 
 /**
@@ -101,7 +144,6 @@ export async function optimalkanGambar(file) {
 
     const skala = Math.min(1, MAX_SISI / Math.max(w, h));
     const perluKecil = skala < 1;
-    const webp = dukungWebp();
 
     /*
      * Berkas yang sudah cukup kecil DAN tidak kebesaran dimensinya dibiarkan
@@ -129,16 +171,34 @@ export async function optimalkanGambar(file) {
     // kehabisan memori di ponsel.
     img.close?.();
 
-    const tipe = webp ? "image/webp" : file.type === "image/png" ? "image/png" : "image/jpeg";
-    const blob = await keBlob(canvas, tipe, MUTU);
-    if (!blob) return file;
+    /*
+     * Semua format modern yang bisa ditulis peramban ini dicoba, lalu yang
+     * paling kecil yang dipakai. Peramban yang tidak bisa menulis satu pun —
+     * dan sampai hari ini itu berarti hampir semuanya untuk AVIF — jatuh ke
+     * format aslinya, yang tetap menghemat lewat pengecilan dimensi.
+     */
+    const calon = KELUARAN.filter((k) => dukungKeluaran(k.tipe));
+    if (!calon.length) {
+      const asal = file.type === "image/png" ? "image/png" : "image/jpeg";
+      calon.push({ tipe: asal, mutu: MUTU, ext: asal === "image/png" ? ".png" : ".jpg" });
+    }
+
+    let menang = null;
+    for (const k of calon) {
+      const blob = await keBlob(canvas, k.tipe, k.mutu);
+      // `toBlob` untuk tipe yang tidak didukung mengembalikan PNG, bukan null.
+      // Tanpa memeriksa tipe hasilnya, PNG raksasa itu bisa "menang" dan
+      // tersimpan dengan akhiran .avif.
+      if (!blob || blob.type !== k.tipe) continue;
+      if (!menang || blob.size < menang.blob.size) menang = { blob, ...k };
+    }
 
     // Kalau hasilnya tidak lebih kecil, tidak ada yang didapat — dan berkas
     // asli setidaknya belum pernah dikodekan ulang.
-    if (blob.size >= file.size) return file;
+    if (!menang || menang.blob.size >= file.size) return file;
 
-    const nama = file.name.replace(/\.[^.]+$/, "") + (tipe === "image/webp" ? ".webp" : tipe === "image/png" ? ".png" : ".jpg");
-    return new File([blob], nama, { type: tipe, lastModified: Date.now() });
+    const nama = file.name.replace(/\.[^.]+$/, "") + menang.ext;
+    return new File([menang.blob], nama, { type: menang.tipe, lastModified: Date.now() });
   } catch {
     return file;
   }

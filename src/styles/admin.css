@@ -2519,6 +2519,20 @@ html.modal-open {
   gap: 12px;
 }
 
+/* Baris "ambil dari URL": sengaja tanpa kartu sendiri, supaya terbaca sebagai
+   pelengkap kotak unggah di bawahnya, bukan sebagai alat yang terpisah. */
+.media-url-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.media-url-row .search-input {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
 .media-item {
   position: relative;
   aspect-ratio: 4 / 3;
