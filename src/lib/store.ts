@@ -226,6 +226,7 @@ function normalizeCar(c: any, kind: "mobil" | "motor"): any {
     gallery: strArr(c?.gallery),
     video: str(c?.video),
     updatedAt: str(c?.updatedAt),
+    updatedBy: str(c?.updatedBy),
   };
 }
 
@@ -245,6 +246,8 @@ function normalizeSpklu(v: any): any {
     mapUrl: str(v?.mapUrl),
     note: str(v?.note),
     featured: !!v?.featured,
+    updatedAt: str(v?.updatedAt),
+    updatedBy: str(v?.updatedBy),
   };
 }
 
@@ -263,6 +266,8 @@ function normalizeBengkel(v: any): any {
     mapUrl: str(v?.mapUrl),
     note: str(v?.note),
     featured: !!v?.featured,
+    updatedAt: str(v?.updatedAt),
+    updatedBy: str(v?.updatedBy),
   };
 }
 
@@ -276,6 +281,8 @@ function normalizeBerita(v: any): any {
     image: str(v?.image),
     excerpt: str(v?.excerpt),
     featured: !!v?.featured,
+    updatedAt: str(v?.updatedAt),
+    updatedBy: str(v?.updatedBy),
   };
 }
 
@@ -311,6 +318,22 @@ function ensureIds(list: any[], prefix: string, key: string): any[] {
  */
 function newRevision(): string {
   return `${Date.now().toString(36)}-${crypto.randomBytes(4).toString("hex")}`;
+}
+
+/**
+ * Bentuk baku sebuah dokumen konten.
+ *
+ * Diekspor supaya pemanggil bisa MEMBANDINGKAN dokumen yang masuk dengan yang
+ * tersimpan sebelum menuliskannya (lihat `perubahan.ts`). Keduanya harus lewat
+ * normalisasi yang sama persis: membandingkan dokumen mentah dengan dokumen
+ * yang sudah dinormalkan akan melaporkan setiap field bawaan sebagai perubahan
+ * pada penyimpanan pertama.
+ *
+ * Idempoten — menjalankannya dua kali menghasilkan yang sama, jadi aman
+ * dipanggil di luar `writeContent()` lalu dipanggil lagi di dalamnya.
+ */
+export function normalizeContent(content: any): any {
+  return normalize(content);
 }
 
 function normalize(content: any): any {

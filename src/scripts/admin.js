@@ -71,7 +71,7 @@ let t = makeT(locale);
 
 /* "editor", "profile", dan "users" adalah halaman penuh tanpa butir sidebar
    sendiri di kelompok koleksi. */
-const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users"];
+const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
 
 /* Dua form yang isinya sama-sama field `site`: Pengaturan Situs dan Tampilan.
    Keduanya ditangani mesin yang sama supaya menambah field cukup satu baris
@@ -1280,6 +1280,7 @@ function setView(view, opts) {
   if (view === "profile") renderProfile();
   if (view === "users") loadUsers();
   if (view === "ai") loadAi();
+  if (view === "activity") loadActivityPage();
   if (view !== "editor") window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -1696,6 +1697,17 @@ function rowHtml(col, it, dragEnabled) {
   const link = itemUrl ? `<a class="btn btn-ghost btn-sm" href="${esc(itemUrl)}" target="_blank" rel="noopener">${esc(t("common.open"))}</a>` : "";
   const map = itemMap ? `<a class="btn btn-ghost btn-sm" href="${esc(itemMap)}" target="_blank" rel="noopener">${esc(t("common.map"))}</a>` : "";
 
+  /* Jejak sentuhan terakhir. Stempelnya dipasang server saat isinya benar-benar
+     berbeda, jadi baris ini menjawab "kapan ini terakhir diubah, dan oleh
+     siapa" tanpa perlu membuka Log Aktivitas. */
+  const stamp = it.updatedAt
+    ? `<div class="row-meta row-stamp">${esc(
+        it.updatedBy
+          ? t("meta.changedBy", { who: it.updatedBy, when: formatAgo(it.updatedAt) })
+          : t("meta.changedAt", { when: formatAgo(it.updatedAt) })
+      )}</div>`
+    : "";
+
   return `<div class="item-row${selected ? " selected" : ""}" data-col="${esc(col)}" data-id="${esc(it.id)}"${dragEnabled ? "" : ' data-nodrag="1"'}>
     <input type="checkbox" class="row-check" data-check data-col="${esc(col)}" data-id="${esc(it.id)}"${selected ? " checked" : ""} aria-label="${esc(t("common.selectItem", { name: titleOf(col, it) }))}" />
     <span class="drag-handle" title="${esc(dragEnabled ? t("common.dragToSort") : t("common.dragNeedsManual"))}">⋮⋮</span>
@@ -1703,6 +1715,7 @@ function rowHtml(col, it, dragEnabled) {
     <div class="row-main">
       <div class="row-title">${esc(titleOf(col, it))}</div>
       <div class="row-meta">${esc(metaOf(col, it))}</div>
+      ${stamp}
     </div>
     <div class="row-badges">${badges.join("")}</div>
     <div class="row-actions">
@@ -1812,7 +1825,7 @@ function duplicateItem(col, id) {
   const nameKey = col === "berita" ? "title" : "name";
   copy[nameKey] = String(copy[nameKey] || "") + t("common.copySuffix");
   copy.id = uniqueId(col, slugify(isVehicle(col) ? `${copy.brand} ${copy.name}` : copy[nameKey]) || col);
-  if (isVehicle(col)) { copy.status = "draft"; copy.updatedAt = new Date().toISOString(); }
+  if (isVehicle(col)) copy.status = "draft";
   const idx = (content[col] || []).findIndex((x) => x.id === id);
   content[col].splice(idx + 1, 0, copy);
   commit();
@@ -1873,7 +1886,6 @@ async function bulkAction(col, action) {
     else if (action === "draft") it.status = "draft";
     else if (action === "featured") it.featured = true;
     else if (action === "unfeatured") it.featured = false;
-    if (isVehicle(col)) it.updatedAt = new Date().toISOString();
   }
   commit();
   toast(t("toast.updatedBulk", { n: ids.length }), "success");
@@ -2358,7 +2370,10 @@ function saveVehicle(opts) {
     return;
   }
 
-  data.updatedAt = new Date().toISOString();
+  /* Stempel `updatedAt`/`updatedBy` dipasang SERVER, di PUT /api/content.
+     Hanya di sana yang tahu item mana yang benar-benar berbeda dari isi yang
+     tersimpan — menstempel di sini menandai item sebagai "baru diubah" bahkan
+     ketika tombol Simpan ditekan tanpa satu pun nilai yang berubah. */
 
   if (id) {
     const idx = content[col].findIndex((x) => x.id === id);
@@ -3563,6 +3578,15 @@ function bindEvents() {
 
     if (e.target.closest("#profile-signout-others")) { signOutOtherDevices(); return; }
 
+    /* --- Log aktivitas --- */
+    if (e.target.closest("#activity-refresh")) { loadActivityPage(); return; }
+    const halAktivitas = e.target.closest("[data-activity-page]");
+    if (halAktivitas) {
+      activityView.page = Number(halAktivitas.getAttribute("data-activity-page")) || 1;
+      loadActivityPage();
+      return;
+    }
+
     /* --- Pratinjau --- */
     const pratinjauLink = e.target.closest("#editor-preview");
     if (pratinjauLink) { bukaPratinjau(e, pratinjauLink); return; }
@@ -3931,6 +3955,15 @@ function bindEvents() {
     const el = e.target;
     if (el.closest && el.closest("#vehicle-form, #dir-form")) editorTouched = true;
     if (el.closest && el.closest("#dir-form")) updateDirMeter();
+
+    /* --- Saringan log aktivitas --- */
+    const saringan = el.getAttribute && el.getAttribute("data-activity");
+    if (saringan) {
+      activityView[saringan] = el.value;
+      activityView.page = 1; // Halaman 7 dari saringan lama hampir pasti tidak ada di saringan baru.
+      loadActivityPage();
+      return;
+    }
 
     /* --- Riset AI --- */
     if (el.name === "ai-default-model") { simpanModelBawaan(el.value); return; }
@@ -5757,6 +5790,74 @@ async function loadActivity() {
   renderDashActivity();
 }
 
+/**
+ * Nama field yang bisa dibaca manusia.
+ *
+ * Log menyimpan kunci mentah (`price`, `rangeKm`), bukan kalimat jadi — itu
+ * yang membuat satu entri bisa dibaca dalam tiga bahasa. Kunci yang tidak
+ * punya terjemahan dikembalikan apa adanya: metadata gambar memakai NAMA
+ * BERKAS sebagai "field", dan nama berkas memang tidak untuk diterjemahkan.
+ */
+function fieldLabel(key) {
+  /* Dua kamus, karena field datang dari dua formulir: kendaraan dan direktori
+     memakai awalan `field.`, sedangkan Pengaturan Situs dan menu Tampilan
+     memakai `site.` dan `tampilan.`. Tanpa yang kedua, satu-satunya baris log
+     yang tidak pernah bisa dibaca justru yang paling sering muncul. */
+  for (const kunci of [`field.${key}`, `site.${key}`, `tampilan.${key}`]) {
+    const teks = t(kunci);
+    if (teks !== kunci) return teks;
+  }
+  return key;
+}
+
+/** Berapa nama field yang disebut sebelum sisanya diringkas jadi angka. */
+const ACTIVITY_FIELD_MAX = 6;
+
+/**
+ * Menyiapkan nilai `meta` sebuah entri untuk disisipkan ke kalimatnya.
+ *
+ * Nama koleksi dan nama field disimpan sebagai kunci, jadi keduanya harus
+ * lewat kamus dulu — kalau tidak, panel berbahasa Inggris akan berbunyi
+ * "changed 3 items in cars".
+ */
+function activityVars(a) {
+  const meta = Object.assign({}, a.meta || {});
+  if (meta.col && meta.col !== "site" && meta.col !== "media") meta.col = colLabel(meta.col);
+
+  const fields = String(meta.fields || "").split(",").map((x) => x.trim()).filter(Boolean);
+  if (fields.length) {
+    const tampil = fields.slice(0, ACTIVITY_FIELD_MAX).map(fieldLabel);
+    const sisa = fields.length - tampil.length;
+    meta.fields = sisa > 0 ? `${tampil.join(", ")} ${t("activity.more", { n: sisa })}` : tampil.join(", ");
+  }
+  return meta;
+}
+
+const activityLine = (a) => t(`activity.${a.action}`, activityVars(a));
+
+/**
+ * Satu daftar untuk dua tempat: panel ringkas di dasbor dan halaman penuh.
+ * Kalau keduanya menggambar sendiri-sendiri, cepat atau lambat kalimat yang
+ * sama akan tampil berbeda di dua layar.
+ */
+function activityRowsHtml(list, opts) {
+  const detail = !!(opts && opts.detail);
+  return `<ul class="activity-list">${list
+    .map(
+      (a) => `<li class="activity-item">
+      <span class="activity-dot" aria-hidden="true"></span>
+      <div class="activity-body">
+        <div class="activity-text"><strong>${esc(a.userName || "—")}</strong> ${esc(activityLine(a))}</div>
+        <div class="row-meta">${esc(detail ? `${formatDateTime(a.at)} · ${formatAgo(a.at)}` : formatAgo(a.at))}</div>
+      </div>
+      ${detail && a.meta && a.meta.id && a.meta.col && findItem(a.meta.col, a.meta.id)
+        ? `<div class="row-actions"><button type="button" class="btn btn-ghost btn-sm" data-open="${esc(a.meta.col)}:${esc(a.meta.id)}">${esc(t("common.open"))}</button></div>`
+        : ""}
+    </li>`
+    )
+    .join("")}</ul>`;
+}
+
 function renderDashActivity() {
   const el = $("dash-activity");
   if (!el) return;
@@ -5764,17 +5865,86 @@ function renderDashActivity() {
     el.innerHTML = emptyStateHtml(t("dash.activity.emptyTitle"), t("dash.activity.emptyText"), "🕘");
     return;
   }
-  el.innerHTML = `<ul class="activity-list">${activityList
-    .map(
-      (a) => `<li class="activity-item">
-      <span class="activity-dot" aria-hidden="true"></span>
-      <div class="activity-body">
-        <div class="activity-text"><strong>${esc(a.userName || "—")}</strong> ${esc(t(`activity.${a.action}`, a.meta || {}))}</div>
-        <div class="row-meta">${esc(formatAgo(a.at))}</div>
-      </div>
-    </li>`
-    )
-    .join("")}</ul>`;
+  el.innerHTML = activityRowsHtml(activityList);
+}
+
+/* ---------------- Halaman Log Aktivitas ---------------- */
+
+/* Golongan aksi, harus sama persis dengan GOLONGAN_AKSI di src/lib/activity.ts. */
+const ACTIVITY_KINDS = ["konten", "akun", "masuk", "sistem", "ai"];
+
+const activityView = { month: "", user: "", action: "", page: 1 };
+let activityPage = null;
+
+async function loadActivityPage() {
+  const list = $("activity-list");
+  if (!list) return;
+  list.innerHTML = `<div class="skeleton"></div>`;
+
+  const q = new URLSearchParams({ penuh: "1", hal: String(activityView.page) });
+  if (activityView.month) q.set("bulan", activityView.month);
+  if (activityView.user) q.set("pengguna", activityView.user);
+  if (activityView.action) q.set("aksi", activityView.action);
+
+  try {
+    const res = await fetch(`/api/activity?${q}`);
+    if (res.status === 401) { location.href = "/admin/login"; return; }
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
+    activityPage = data;
+    renderActivityView();
+  } catch (err) {
+    activityPage = null;
+    list.innerHTML = emptyStateHtml(t("activity.failTitle"), err && err.message ? err.message : t("err.forbidden"), "⚠️");
+    const bar = $("activity-toolbar");
+    if (bar) bar.innerHTML = "";
+  }
+}
+
+function renderActivityView() {
+  const bar = $("activity-toolbar");
+  const list = $("activity-list");
+  if (!bar || !list || !activityPage) return;
+
+  const months = activityPage.months || [];
+  const users = activityPage.users || [];
+
+  bar.innerHTML = `<div class="toolbar">
+    <div class="toolbar-filters">
+      <select class="select-mini" data-activity="month">
+        <option value="">${esc(t("activity.monthLatest"))}</option>
+        ${months.map((m) => `<option value="${esc(m)}"${m === activityView.month ? " selected" : ""}>${esc(m)}</option>`).join("")}
+      </select>
+      <select class="select-mini" data-activity="user">
+        <option value="">${esc(t("activity.allUsers"))}</option>
+        ${users.map((u) => `<option value="${esc(u.id)}"${u.id === activityView.user ? " selected" : ""}>${esc(u.name)}</option>`).join("")}
+      </select>
+      <select class="select-mini" data-activity="action">
+        <option value="">${esc(t("activity.allKinds"))}</option>
+        ${ACTIVITY_KINDS.map((k) => `<option value="${esc(k)}"${k === activityView.action ? " selected" : ""}>${esc(t(`activity.kind.${k}`))}</option>`).join("")}
+      </select>
+    </div>
+    <div class="toolbar-actions">
+      <span class="row-meta">${esc(t("activity.count", { n: activityPage.total }))}</span>
+    </div>
+  </div>`;
+
+  const entries = activityPage.entries || [];
+  if (!entries.length) {
+    list.innerHTML = emptyStateHtml(t("activity.emptyTitle"), t("activity.emptyText"), "🕘");
+    return;
+  }
+
+  const pages = activityPage.pages || 1;
+  const halaman = pages > 1
+    ? `<div class="pagination">
+        <button type="button" data-activity-page="${Math.max(1, activityPage.page - 1)}"${activityPage.page === 1 ? " disabled" : ""}>&larr;</button>
+        <span class="row-meta">${esc(t("activity.pageOf", { page: activityPage.page, pages }))}</span>
+        <button type="button" data-activity-page="${Math.min(pages, activityPage.page + 1)}"${activityPage.page === pages ? " disabled" : ""}>&rarr;</button>
+      </div>`
+    : "";
+
+  list.innerHTML = activityRowsHtml(entries, { detail: true }) + halaman;
 }
 
 /** Nama & foto di bilah atas, sekaligus pintasan ke halaman Profil. */

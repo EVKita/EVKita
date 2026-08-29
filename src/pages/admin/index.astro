@@ -1163,6 +1163,26 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
         </div>
         <div id="users-root"></div>
       </section>
+
+      <!-- ===== Log Aktivitas =====
+           Dasbor hanya menampilkan dua belas baris terakhir, dan arsip bulanan
+           di data/activity-<bulan>.json selama ini ditulis tanpa satu pun
+           pembaca. Halaman ini pembacanya. -->
+      <section class="view" data-view="activity" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title" data-i18n="activity.title">{t("activity.title")}</h1>
+            <p class="view-sub" data-i18n="activity.sub">{t("activity.sub")}</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="activity-refresh" class="btn btn-outline btn-sm" type="button" data-i18n="common.refresh">{t("common.refresh")}</button>
+          </div>
+        </div>
+        <div id="activity-toolbar"></div>
+        <div class="panel">
+          <div class="panel-body" id="activity-list"></div>
+        </div>
+      </section>
     </main>
   </div>
 

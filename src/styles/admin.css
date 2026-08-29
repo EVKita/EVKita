@@ -5110,6 +5110,15 @@ body:has(.modal-backdrop.open) .fab {
 
 .activity-body {
   min-width: 0;
+  /* Tumbuh mengisi baris supaya tombol di sebelahnya terdorong ke tepi kanan,
+     bukan menempel di ujung kalimat — panjang kalimatnya berbeda-beda, dan
+     tombol yang ikut berpindah-pindah membuat daftar sulit dipindai. */
+  flex: 1 1 auto;
+}
+
+.activity-item .row-actions {
+  flex: none;
+  align-self: center;
 }
 
 .activity-text {
@@ -6057,3 +6066,12 @@ body:has(.modal-backdrop.open) .fab {
   overflow-y: auto;
 }
 
+
+/* Jejak sentuhan terakhir di baris daftar. Sengaja lebih redup daripada baris
+   meta di atasnya: ia jawaban untuk pertanyaan yang baru muncul setelah orang
+   menemukan barisnya, bukan sesuatu yang dipakai untuk menemukannya. */
+.row-stamp {
+  margin-top: 2px;
+  font-size: 11px;
+  opacity: 0.72;
+}

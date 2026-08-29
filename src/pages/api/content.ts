@@ -1,7 +1,8 @@
 import type { APIRoute } from "astro";
 import { currentUser } from "../../lib/auth";
-import { readContent, writeContent } from "../../lib/store";
-import { logActivity } from "../../lib/activity";
+import { readContent, writeContent, normalizeContent } from "../../lib/store";
+import { logContentChanges } from "../../lib/activity";
+import { bandingkanKonten, type Perubahan } from "../../lib/perubahan";
 import { json, apiError, unauthorized } from "../../lib/api";
 
 export const GET: APIRoute = ({ cookies }) => {
@@ -65,7 +66,50 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
     );
   }
 
-  const content = writeContent(body);
-  logActivity(me, "content.save");
+  /**
+   * Apa yang sebenarnya berubah?
+   *
+   * Panel mengirim SELURUH dokumen setiap kali menyimpan, jadi permintaan ini
+   * sendiri tidak memberi tahu apa pun. Perbandingannya dilakukan di sini,
+   * bukan di panel: yang boleh dipercaya adalah isi yang benar-benar tersimpan
+   * di disk, bukan laporan dari pihak yang mengirim perubahannya.
+   *
+   * Keduanya dinormalkan lebih dulu supaya yang dibandingkan adalah dokumen
+   * dengan bentuk yang sama. Tanpa itu, penyimpanan pertama setelah pembaruan
+   * versi akan melaporkan setiap field baru sebagai perubahan.
+   */
+  const berikutnya = normalizeContent(body);
+  const perubahan = bandingkanKonten(current, berikutnya);
+  stempelPengubah(berikutnya, perubahan, me.name || me.username);
+
+  const content = writeContent(berikutnya);
+  logContentChanges(me, perubahan);
   return json({ ok: true, content });
 };
+
+/**
+ * Menandai item yang berubah dengan waktu dan nama pengubahnya.
+ *
+ * Dilakukan di server, bukan di panel, karena hanya di sini yang tahu item
+ * MANA yang benar-benar berbeda — panel dulu menstempel `updatedAt` pada
+ * kendaraan yang tombol Simpan-nya ditekan, termasuk ketika tidak ada satu pun
+ * nilai yang berubah, dan tidak pernah menstempel item direktori sama sekali.
+ *
+ * `updatedBy` menyimpan NAMA, bukan id. Ia hanya label yang dibaca manusia di
+ * baris daftar, dan Editor tidak boleh membaca daftar pengguna — menyimpan id
+ * di sini berarti separuh panel tidak akan pernah bisa menerjemahkannya. Jejak
+ * audit yang sesungguhnya ada di `data/activity.json`, yang menyimpan id dan
+ * nama sekaligus.
+ */
+function stempelPengubah(content: any, perubahan: Perubahan[], nama: string): void {
+  const sekarang = new Date().toISOString();
+  for (const p of perubahan) {
+    if (p.jenis !== "tambah" && p.jenis !== "ubah") continue;
+    const daftar = content?.[p.col];
+    if (!Array.isArray(daftar)) continue; // "site" dan "media" bukan daftar item
+    const item = daftar.find((x: any) => String(x?.id) === p.id);
+    if (!item) continue;
+    item.updatedAt = sekarang;
+    item.updatedBy = nama;
+  }
+}

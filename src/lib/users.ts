@@ -362,7 +362,7 @@ export function touchLogin(id: string): void {
  * Kemampuan yang dibatasi peran. Semua yang tidak disebut di sini (konten,
  * pengaturan situs, media) terbuka untuk ketiga peran.
  */
-export type Capability = "users" | "update" | "backups" | "ai" | "ai.run";
+export type Capability = "users" | "update" | "backups" | "activity" | "ai" | "ai.run";
 
 /**
  * Peran mana yang boleh melakukan apa, ditulis lengkap.
@@ -377,6 +377,17 @@ const CAPABILITY_ROLES: Record<Capability, readonly Role[]> = {
   users: ["owner", "admin"],
   update: ["owner", "admin"],
   backups: ["owner", "admin"],
+
+  /*
+   * Log aktivitas PENUH — saringan, halaman, dan arsip bulan-bulan sebelumnya.
+   * Ia alat audit, satu golongan dengan Pengguna dan Cadangan.
+   *
+   * Yang TIDAK ditutup adalah dua belas baris terakhir di dasbor. Itu bukan
+   * alat audit melainkan rasa kehadiran orang lain — berguna justru bagi
+   * Editor, yang paling sering bekerja berbarengan dengan orang lain di
+   * katalog yang sama.
+   */
+  activity: ["owner", "admin"],
 
   /*
    * Dua kemampuan berbeda untuk fitur AI, dan pemisahannya disengaja.
