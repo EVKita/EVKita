@@ -13,6 +13,7 @@ import {
 } from "../lib/i18n/index.js";
 import { safeUrl } from "../lib/url.js";
 import { konfirmasi } from "./konfirmasi.js";
+import { optimalkanGambar } from "./gambar.js";
 import { mediaEntry, MEDIA_LIMITS } from "../lib/media.js";
 import {
   MAX_MENU_COLS,
@@ -395,7 +396,15 @@ for (const col of COLLECTIONS) {
 let activeView = "dashboard";
 let vehicleCtx = null; // { col, id, draft:{ image, gallery[] } }
 let dirCtx = null;     // { col, id, draft:{ [key]: url } }
-let mediaUploads = [];
+/**
+ * Isi `data/uploads/` menurut server: [{ url, name, size, mtime, used }].
+ *
+ * Menggantikan daftar "yang baru saja diunggah di tab ini" yang dulu ada di
+ * sini. Daftar itu hilang setiap kali halaman dimuat ulang, jadi berkas yang
+ * pernah dilepas dari sebuah kendaraan tidak pernah bisa ditemukan lagi lewat
+ * panel — apalagi dihapus.
+ */
+let mediaDisk = [];
 let editorTouched = false;
 const modalStack = [];
 
@@ -839,8 +848,13 @@ async function resolveConflict(serverContent) {
 }
 
 async function uploadImage(file) {
+  /* Dikecilkan dan diubah ke WebP di peramban lebih dulu — lihat gambar.js.
+     Fungsi itu tidak pernah melempar dan mengembalikan berkas aslinya kalau
+     tidak ada yang bisa diperbaiki, jadi tidak ada jalur unggah yang bisa
+     gagal gara-gara langkah ini. */
+  const siap = await optimalkanGambar(file);
   const fd = new FormData();
-  fd.append("image", file);
+  fd.append("image", siap);
   const res = await fetch("/api/upload", { method: "POST", body: fd });
   if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
   const data = await res.json();
@@ -1268,6 +1282,7 @@ function setView(view, opts) {
   if (view === "users") loadUsers();
   if (view === "ai") loadAi();
   if (view === "activity") loadActivityPage();
+  if (view === "media") loadMediaDisk();
   if (view !== "editor") window.scrollTo({ top: 0, behavior: "instant" });
 }
 
@@ -2930,6 +2945,8 @@ function applyThemePreview() {
 
 /** Saringan "belum ada alt" di bilah alat. */
 let mediaOnlyMissingAlt = false;
+let mediaOnlyUnused = false;
+let mediaSort = "default";
 
 /** Gambar yang sedang dibuka: { list, index, zoom }. `null` kalau modal tutup. */
 let mediaCtx = null;
@@ -2958,7 +2975,10 @@ function collectMedia() {
     }
   }
   for (const it of content.berita || []) add(it.image, `${colLabel("berita")} · ${titleOf("berita", it)}`, { col: "berita", id: it.id });
-  for (const u of mediaUploads) add(u, t("media.unused"));
+  /* Berkas yang ada di disk tapi tidak dirujuk siapa pun tetap masuk daftar,
+     dengan pemakaian kosong. Justru berkas itu yang orang cari saat membuka
+     halaman ini untuk merapikan. */
+  for (const f of mediaDisk) if (!map.has(f.url)) map.set(f.url, []);
 
   return [...map.entries()];
 }
@@ -2990,6 +3010,51 @@ function mediaIsLocal(url) {
   return u.startsWith("/") && !u.startsWith("//");
 }
 
+/** Keterangan berkas dari disk untuk satu alamat, kalau ada. */
+function mediaFile(url) {
+  return mediaDisk.find((f) => f.url === url) || null;
+}
+
+/**
+ * Apakah gambar ini dipakai di suatu tempat?
+ *
+ * Untuk berkas milik sendiri, jawabannya datang dari SERVER (`used`), bukan
+ * dari peta pemakaian yang dirakit panel. Peta itu hanya membaca
+ * `content.json`, sementara foto profil tinggal di `data/users.json` — dan
+ * menghitungnya sebagai yatim berarti menawarkan wajah orang untuk dihapus.
+ * Untuk gambar tautan luar tidak ada berkasnya di disk, jadi peta pemakaian
+ * itulah satu-satunya yang tahu.
+ */
+function mediaTerpakai(url, uses) {
+  const berkas = mediaFile(url);
+  return berkas ? !!berkas.used : uses.length > 0;
+}
+
+/**
+ * Berkas milik sendiri yang tidak dirujuk apa pun.
+ *
+ * Yang menentukan tetap server (lihat `src/lib/uploads.ts`) — `used` di sini
+ * datang dari sana, bukan dihitung ulang di browser. Panel hanya menampilkan
+ * penilaian itu, dan penghapusannya diperiksa sekali lagi saat permintaannya
+ * tiba.
+ */
+function mediaYatim() {
+  return mediaDisk.filter((f) => !f.used);
+}
+
+/** Memuat isi direktori unggahan dari server. */
+async function loadMediaDisk() {
+  try {
+    const res = await fetch("/api/uploads");
+    if (res.status === 401) { location.href = "/admin/login"; return; }
+    const data = await res.json();
+    if (data && data.ok) mediaDisk = Array.isArray(data.files) ? data.files : [];
+  } catch {
+    /* Pustaka tetap bisa dipakai dengan gambar yang dirujuk konten saja. */
+  }
+  renderMedia();
+}
+
 /**
  * Daftar yang sedang tampil, setelah pencarian dan saringan.
  *
@@ -3000,13 +3065,23 @@ function mediaIsLocal(url) {
 function mediaList() {
   const search = $("media-search");
   const q = ((search && search.value) || "").trim().toLowerCase();
-  return collectMedia().filter(([url, uses]) => {
+  const list = collectMedia().filter(([url, uses]) => {
     const meta = mediaMeta(url);
     if (mediaOnlyMissingAlt && meta.alt) return false;
+    // Gambar tautan luar tidak pernah "yatim": tidak ada berkas kita yang
+    // bisa dirapikan di sana.
+    if (mediaOnlyUnused && (!mediaFile(url) || mediaTerpakai(url, uses))) return false;
     if (!q) return true;
     const hay = [url, meta.title, meta.alt, meta.note, ...uses.map((u) => u.label)].join(" ").toLowerCase();
     return hay.includes(q);
   });
+
+  if (mediaSort === "size") {
+    // Yang tidak diketahui ukurannya (tautan luar) selalu di bawah: mereka
+    // bukan berkas kita, jadi tidak ada yang bisa dihemat dari sana.
+    list.sort((a, b) => (mediaFile(b[0])?.size || -1) - (mediaFile(a[0])?.size || -1));
+  }
+  return list;
 }
 
 function renderMedia() {
@@ -3016,6 +3091,8 @@ function renderMedia() {
   const all = collectMedia();
   const items = mediaList();
   const missing = all.filter(([url]) => !mediaMeta(url).alt).length;
+  const yatim = mediaYatim();
+  const bytesYatim = yatim.reduce((n, f) => n + (f.size || 0), 0);
 
   const summary = $("media-summary");
   if (summary) {
@@ -3033,6 +3110,30 @@ function renderMedia() {
     filterBtn.setAttribute("aria-pressed", String(mediaOnlyMissingAlt));
   }
 
+  const unusedBtn = $("media-filter-unused");
+  if (unusedBtn) {
+    unusedBtn.hidden = !yatim.length;
+    unusedBtn.classList.toggle("active", mediaOnlyUnused);
+    unusedBtn.setAttribute("aria-pressed", String(mediaOnlyUnused));
+    unusedBtn.textContent = t("media.onlyUnused", { n: yatim.length });
+  }
+
+  const sortBtn = $("media-sort-size");
+  if (sortBtn) {
+    sortBtn.hidden = !mediaDisk.length;
+    sortBtn.classList.toggle("active", mediaSort === "size");
+    sortBtn.setAttribute("aria-pressed", String(mediaSort === "size"));
+  }
+
+  /* Tombol bersih-bersih hanya untuk peran yang boleh menghapus — endpoint-nya
+     pun menolak yang lain. Ia menyebut jumlah DAN totalnya: "12 berkas" saja
+     tidak memberi tahu apakah merapikannya sepadan. */
+  const sweepBtn = $("media-sweep");
+  if (sweepBtn) {
+    sweepBtn.hidden = !yatim.length || !isAdmin();
+    sweepBtn.textContent = t("media.sweep", { n: yatim.length, size: formatSize(bytesYatim) });
+  }
+
   const search = $("media-search");
   const q = ((search && search.value) || "").trim();
 
@@ -3044,6 +3145,7 @@ function renderMedia() {
     let empty;
     if (q) empty = emptyStateHtml(t("common.noResults"), t("media.noMatch", { q }), "🔍");
     else if (mediaOnlyMissingAlt && all.length) empty = emptyStateHtml(t("media.noMissingAlt"), t("media.summaryAllSet", { n: all.length }), "✅");
+    else if (mediaOnlyUnused && all.length) empty = emptyStateHtml(t("media.noUnused"), t("media.noUnusedText"), "✅");
     else empty = emptyStateHtml(t("media.emptyTitle"), t("media.emptyText"), "🖼️");
     el.innerHTML = uploader + empty;
     return;
@@ -3052,10 +3154,15 @@ function renderMedia() {
   el.innerHTML = uploader + `<div class="media-grid">${items
     .map(([url, uses]) => {
       const meta = mediaMeta(url);
-      return `<button type="button" class="media-card" data-media-open="${esc(url)}">
+      const berkas = mediaFile(url);
+      const yatim = !!berkas && !mediaTerpakai(url, uses);
+      return `<button type="button" class="media-card${yatim ? " is-unused" : ""}" data-media-open="${esc(url)}">
         <span class="media-card-thumb">
           <img src="${esc(safeUrl(url))}" alt="" loading="lazy" />
-          <span class="media-card-uses">${esc(String(uses.length))}</span>
+          ${yatim
+            ? `<span class="media-card-uses is-unused">${esc(t("media.unused"))}</span>`
+            : uses.length ? `<span class="media-card-uses">${esc(String(uses.length))}</span>` : ""}
+          ${berkas ? `<span class="media-card-size">${esc(formatSize(berkas.size))}</span>` : ""}
         </span>
         <span class="media-card-name">${esc(mediaLabel(url))}</span>
         ${meta.alt
@@ -3170,6 +3277,13 @@ function renderMediaModal() {
   if (copyBtn) copyBtn.setAttribute("data-copy", url);
   const openLink = $("media-open");
   if (openLink) openLink.href = safeUrl(url);
+  const delBtn = $("media-delete");
+  if (delBtn) {
+    const berkas = mediaFile(url);
+    delBtn.hidden = !berkas || mediaTerpakai(url, uses) || !isAdmin();
+    delBtn.setAttribute("data-name", berkas ? berkas.name : "");
+  }
+
   const dl = $("media-download");
   if (dl) {
     // `download` diabaikan peramban untuk berkas lintas domain: tombolnya akan
@@ -3188,6 +3302,10 @@ function renderMediaModal() {
 async function fillMediaSize(url) {
   const el = $("media-fact-size");
   if (!el) return;
+  // Daftar dari /api/uploads sudah membawa ukuran sebenarnya dari disk —
+  // tidak perlu mengambil berkasnya lagi hanya untuk menghitung byte.
+  const berkas = mediaFile(url);
+  if (berkas) { el.textContent = formatSize(berkas.size); return; }
   if (!mediaIsLocal(url)) { el.textContent = t("media.sizeUnknown"); return; }
   el.textContent = "…";
   try {
@@ -3201,6 +3319,65 @@ async function fillMediaSize(url) {
     el.textContent = size ? formatSize(size) : "—";
   } catch {
     if (currentMediaUrl() === url) el.textContent = "—";
+  }
+}
+
+/**
+ * Menghapus berkas unggahan lewat server.
+ *
+ * Server memeriksa ulang bahwa tiap berkas benar-benar tidak dirujuk apa pun,
+ * jadi jawabannya bisa berbeda dari yang panel kira — misalnya ketika orang
+ * lain baru saja memakai gambar itu di tab sebelah. `dilewati` menyampaikan
+ * selisih itu apa adanya alih-alih melaporkan keberhasilan yang tidak terjadi.
+ */
+async function kirimHapusMedia(names) {
+  const res = await fetch("/api/uploads", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ names }),
+  });
+  if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
+  const data = await res.json();
+  if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
+  return data;
+}
+
+async function hapusMediaSatu(name) {
+  if (!name) return;
+  const ok = await confirmDialog({
+    title: t("media.deleteTitle"),
+    text: t("media.deleteText", { name }),
+    detail: t("media.deleteDetail"),
+    okText: t("common.delete"),
+  });
+  if (!ok) return;
+  try {
+    const hasil = await kirimHapusMedia([name]);
+    closeModal($("media-modal"));
+    await loadMediaDisk();
+    toast(hasil.dihapus ? t("toast.mediaDeleted", { n: hasil.dihapus }) : t("toast.mediaSkipped"), hasil.dihapus ? "success" : "info");
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+async function hapusMediaYatim() {
+  const yatim = mediaYatim();
+  if (!yatim.length) return;
+  const bytes = yatim.reduce((n, f) => n + (f.size || 0), 0);
+  const ok = await confirmDialog({
+    title: t("media.sweepTitle"),
+    text: t("media.sweepText", { n: yatim.length, size: formatSize(bytes) }),
+    detail: t("media.deleteDetail"),
+    okText: t("common.deleteAll"),
+  });
+  if (!ok) return;
+  try {
+    const hasil = await kirimHapusMedia(yatim.map((f) => f.name));
+    await loadMediaDisk();
+    toast(hasil.dihapus ? t("toast.mediaDeleted", { n: hasil.dihapus }) : t("toast.mediaSkipped"), hasil.dihapus ? "success" : "info");
+  } catch (err) {
+    toast(err.message, "error");
   }
 }
 
@@ -3382,8 +3559,10 @@ async function handleUpload(dz, files) {
     if (input) input.value = urls[0];
     dz.innerHTML = imagePreviewHtml(urls[0], 'data-avatar-del="1"');
   } else if (dzone === "__media") {
-    mediaUploads.push(...urls);
-    renderMedia();
+    // Disegarkan dari server, bukan ditambahkan ke daftar di memori: ukuran
+    // berkas yang benar baru diketahui setelah server menyimpannya, dan
+    // gambar yang dikecilkan di peramban ukurannya jauh berbeda dari aslinya.
+    await loadMediaDisk();
     toast(t("toast.uploadedCopy"), "success");
   } else if (siteField) {
     const key = siteField.getAttribute("data-image-field");
@@ -3622,7 +3801,9 @@ function bindEvents() {
       return;
     }
 
-    if (e.target.closest("#media-refresh")) { renderMedia(); toast(t("toast.mediaReloaded"), "info"); return; }
+    // Menyegarkan berarti bertanya ulang ke server, bukan menggambar ulang
+    // dari data yang sama: berkas bisa bertambah dari tab atau orang lain.
+    if (e.target.closest("#media-refresh")) { loadMediaDisk(); toast(t("toast.mediaReloaded"), "info"); return; }
 
     /* --- Media --- */
     if (e.target.closest("#media-filter-alt")) {
@@ -3630,6 +3811,19 @@ function bindEvents() {
       renderMedia();
       return;
     }
+    if (e.target.closest("#media-filter-unused")) {
+      mediaOnlyUnused = !mediaOnlyUnused;
+      renderMedia();
+      return;
+    }
+    if (e.target.closest("#media-sort-size")) {
+      mediaSort = mediaSort === "size" ? "default" : "size";
+      renderMedia();
+      return;
+    }
+    if (e.target.closest("#media-sweep")) { hapusMediaYatim(); return; }
+    const mediaDel = e.target.closest("#media-delete");
+    if (mediaDel) { hapusMediaSatu(mediaDel.getAttribute("data-name")); return; }
     const mediaOpen = e.target.closest("[data-media-open]");
     if (mediaOpen) { openMediaModal(mediaOpen.getAttribute("data-media-open")); return; }
     if (e.target.closest("#media-prev")) { mediaStep(-1); return; }

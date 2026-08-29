@@ -6250,3 +6250,36 @@ body:has(.modal-backdrop.open) .fab {
     transform: none;
   }
 }
+
+/* --- Pustaka Media: berkas yatim & ukuran --- */
+
+/* Lencana "Tidak dipakai" memakai tempat yang sama dengan penghitung pemakaian,
+   karena keduanya menjawab pertanyaan yang sama — dipakai di berapa tempat? —
+   dan nol adalah salah satu jawabannya. */
+.media-card-uses.is-unused {
+  background: color-mix(in srgb, var(--adm-warn) 88%, #000);
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.media-card-size {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(9, 11, 15, 0.62);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Garis tipis, bukan latar berwarna: kartu yatim harus mudah dikenali saat
+   memindai, tanpa berteriak seolah-olah ia sebuah kesalahan. Berkas yang tidak
+   dipakai adalah keadaan yang wajar — hanya perlu dirapikan sesekali. */
+.media-card.is-unused {
+  border-color: color-mix(in srgb, var(--adm-warn) 45%, var(--border));
+}

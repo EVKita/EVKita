@@ -362,7 +362,7 @@ export function touchLogin(id: string): void {
  * Kemampuan yang dibatasi peran. Semua yang tidak disebut di sini (konten,
  * pengaturan situs, media) terbuka untuk ketiga peran.
  */
-export type Capability = "users" | "update" | "backups" | "activity" | "ai" | "ai.run";
+export type Capability = "users" | "update" | "backups" | "activity" | "media.delete" | "ai" | "ai.run";
 
 /**
  * Peran mana yang boleh melakukan apa, ditulis lengkap.
@@ -388,6 +388,16 @@ const CAPABILITY_ROLES: Record<Capability, readonly Role[]> = {
    * katalog yang sama.
    */
   activity: ["owner", "admin"],
+
+  /*
+   * Menghapus berkas unggahan dari disk.
+   *
+   * Mengurus Media adalah pekerjaan Editor, dan mereka tetap bisa melihat
+   * seluruh pustakanya. Yang ditutup hanya penghapusannya: berkas unggahan
+   * TIDAK ikut ke dalam cadangan konten, jadi ini satu-satunya tindakan di
+   * panel yang benar-benar tidak punya tombol urung.
+   */
+  "media.delete": ["owner", "admin"],
 
   /*
    * Dua kemampuan berbeda untuk fitur AI, dan pemisahannya disengaja.

@@ -1048,6 +1048,18 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
               aria-pressed="false"
               data-i18n="media.onlyMissingAlt"
             >{t("media.onlyMissingAlt")}</button>
+            <!-- Teks kedua tombol ini memuat angka yang baru diketahui setelah
+                 daftar berkas dimuat, jadi admin.js yang mengisinya. -->
+            <button id="media-filter-unused" class="btn btn-outline btn-sm" type="button" aria-pressed="false" hidden></button>
+            <button
+              id="media-sort-size"
+              class="btn btn-outline btn-sm"
+              type="button"
+              aria-pressed="false"
+              hidden
+              data-i18n="media.sortSize"
+            >{t("media.sortSize")}</button>
+            <button id="media-sweep" class="btn btn-danger btn-sm" type="button" hidden data-requires-admin></button>
           </div>
         </div>
         <div id="media-grid"></div>
@@ -1316,6 +1328,9 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
 
       <div class="modal-foot mediaview-foot">
         <div class="mediaview-foot-actions">
+          <!-- Hanya muncul untuk berkas milik sendiri yang tidak dirujuk apa
+               pun, dan hanya untuk peran yang boleh menghapus. -->
+          <button type="button" class="btn btn-danger btn-sm" id="media-delete" hidden data-i18n="media.deleteFile">{t("media.deleteFile")}</button>
           <button type="button" class="btn btn-outline btn-sm" id="media-copy" data-i18n="common.copyUrl">{t("common.copyUrl")}</button>
           <a class="btn btn-outline btn-sm" id="media-open" href="#" target="_blank" rel="noopener" data-i18n="media.openFile">{t("media.openFile")}</a>
           <a class="btn btn-outline btn-sm" id="media-download" href="#" download data-i18n="media.download">{t("media.download")}</a>
