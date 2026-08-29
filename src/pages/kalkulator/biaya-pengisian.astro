@@ -19,6 +19,7 @@ import {
 } from "../../lib/pengisian.js";
 import { rupiahPenuh, rupiahHalus } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
+import { hanyaTayang } from "../../lib/tayang.js";
 
 /**
  * Kalkulator waktu & biaya sekali mengisi daya.
@@ -39,9 +40,8 @@ import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 const content = readContent();
 const site = content.site;
 
-const isLive = (v: any) => v && v.status !== "draft";
-const cars = (content.cars || []).filter(isLive);
-const motors = site.showMotor ? (content.motors || []).filter(isLive) : [];
+const cars = (content.cars || []).filter(hanyaTayang());
+const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [];
 
 /** Hanya kendaraan yang kapasitas baterainya tercatat — tanpa itu tak ada yang bisa dihitung. */
 const punyaBaterai = (v: any) => v.batteryKwh !== null && v.batteryKwh !== undefined && Number(v.batteryKwh) > 0;

@@ -6283,3 +6283,41 @@ body:has(.modal-backdrop.open) .fab {
 .media-card.is-unused {
   border-color: color-mix(in srgb, var(--adm-warn) 45%, var(--border));
 }
+
+/* --- Terjadwal & peringatan nilai --- */
+
+/* Lencana "Terjadwal": garis putus-putus seperti Draf, karena keduanya sama
+   artinya bagi pembaca situs (belum ada di sana) — bedanya cuma apakah sudah
+   ada tanggalnya. Warnanya kuning, bukan abu-abu: draf menunggu keputusan,
+   terjadwal menunggu waktu. */
+.badge-sched {
+  background: color-mix(in srgb, var(--adm-warn) 12%, transparent);
+  color: var(--adm-warn);
+  border-color: color-mix(in srgb, var(--adm-warn) 34%, transparent);
+  border-style: dashed;
+}
+
+/* Peringatan nilai janggal. Sengaja lebih lunak daripada `.has-error`: yang
+   merah menahan penyimpanan, yang kuning hanya minta dilihat sekali. */
+.field.has-warn input,
+.field.has-warn select {
+  border-color: color-mix(in srgb, var(--adm-warn) 55%, transparent);
+  background: color-mix(in srgb, var(--adm-warn) 5%, transparent);
+}
+
+.warn-text {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--adm-warn);
+}
+
+/* Pintasan di kepala panel Kesehatan Konten. */
+.health-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}

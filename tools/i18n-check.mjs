@@ -101,6 +101,10 @@ const DYNAMIC_PREFIXES = [
   "dash.hello.",
   "dash.stat.",
   "dash.quick.",
+  // Dirakit saat berjalan: pintasan panel Kesehatan memilih kuncinya dari
+  // sebuah tabel, dan peringatan nilai janggal memilihnya dari arah selisihnya.
+  "dash.health.show",
+  "warn.",
   "err.",
   "save.",
   "update.step.",

@@ -5,6 +5,7 @@ import { comparePairs } from "../lib/compare-pairs.js";
 import { PER_PAGE, pageCount, pageHref } from "../lib/pagination.js";
 import { groupByField } from "../lib/taxonomy.js";
 import { vehicleHref } from "../lib/card-html.js";
+import { hanyaTayang } from "../lib/tayang.js";
 
 /**
  * Peta situs yang dirakit saat diminta, bukan saat build.
@@ -19,7 +20,6 @@ import { vehicleHref } from "../lib/card-html.js";
 export const GET: APIRoute = ({ url }) => {
   const origin = siteOrigin(url);
   const content = readContent();
-  const isLive = (v: any) => v && v.status !== "draft";
 
   const entries: { loc: string; lastmod?: string; priority: string }[] = [
     { loc: `${origin}/`, priority: "1.0" },
@@ -27,10 +27,10 @@ export const GET: APIRoute = ({ url }) => {
     { loc: `${origin}/kalkulator/biaya-pengisian`, priority: "0.7" },
   ];
 
-  const liveCars = (content.cars || []).filter(isLive);
+  const liveCars = (content.cars || []).filter(hanyaTayang());
   /* Saklar "tampilkan motor" mematikan seluruh sisi publik motor. Peta situs
      harus ikut diam, bukan mengumumkan alamat yang menjawab 404. */
-  const liveMotors = content.site.showMotor ? (content.motors || []).filter(isLive) : [];
+  const liveMotors = content.site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [];
   const semua = [...liveCars, ...liveMotors];
 
   // Setiap halaman katalog diumumkan sendiri-sendiri: itulah satu-satunya cara

@@ -2,6 +2,7 @@
 import KoleksiPage from "../../components/KoleksiPage.astro";
 import { readContent } from "../../lib/store";
 import { groupByField, findGroup } from "../../lib/taxonomy.js";
+import { hanyaTayang } from "../../lib/tayang.js";
 
 /**
  * `/tipe` dan `/tipe/<tipe-bodi>`.
@@ -14,10 +15,9 @@ import { groupByField, findGroup } from "../../lib/taxonomy.js";
 const content = readContent();
 const site = content.site;
 
-const isLive = (v: any) => v && v.status !== "draft";
 const pool = [
-  ...(content.cars || []).filter(isLive),
-  ...(site.showMotor ? (content.motors || []).filter(isLive) : []),
+  ...(content.cars || []).filter(hanyaTayang()),
+  ...(site.showMotor ? (content.motors || []).filter(hanyaTayang()) : []),
 ];
 
 const raw = Astro.params.slug;

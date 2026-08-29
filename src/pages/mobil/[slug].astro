@@ -2,6 +2,7 @@
 import VehicleDetail from "../../components/VehicleDetail.astro";
 import { readContent } from "../../lib/store";
 import { verifyPreviewToken } from "../../lib/pratinjau";
+import { hanyaTayang } from "../../lib/tayang.js";
 
 /**
  * Halaman detail satu mobil.
@@ -14,8 +15,7 @@ import { verifyPreviewToken } from "../../lib/pratinjau";
 const content = readContent();
 const slug = String(Astro.params.slug || "");
 
-const isLive = (v: any) => v && v.status !== "draft";
-const cars = (content.cars || []).filter(isLive);
+const cars = (content.cars || []).filter(hanyaTayang());
 let car = cars.find((c: any) => c.id === slug);
 
 /**
@@ -46,7 +46,7 @@ if (!car) {
    * tersebar berhenti bekerja.
    */
   const motor = content.site.showMotor
-    ? (content.motors || []).filter(isLive).find((m: any) => m.id === slug)
+    ? (content.motors || []).filter(hanyaTayang()).find((m: any) => m.id === slug)
     : null;
   if (motor) {
     return Astro.redirect(`/motor/${encodeURIComponent(motor.id)}`, 301);

@@ -1242,6 +1242,32 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
     </div>
   </div>
 
+  <!-- ===== Modal ubah field massal =====
+       Bilah tindakan massal sudah bisa menerbitkan, menjadikan draf, menandai
+       unggulan, menggandakan, dan menghapus — tapi tidak satu pun yang bisa
+       MENGUBAH NILAI sebuah field. Menaikkan tahun model dua belas motor
+       dulu berarti membuka dua belas editor satu per satu. -->
+  <div id="bulk-modal" class="modal-backdrop">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="bulk-modal-title">
+      <div class="modal-head">
+        <div class="modal-head-text">
+          <h3 class="modal-title" id="bulk-modal-title"></h3>
+          <p class="modal-sub" id="bulk-modal-sub"></p>
+        </div>
+        <button type="button" class="modal-close" aria-label={t("common.close")} data-i18n-aria="common.close">&times;</button>
+      </div>
+      <form id="bulk-form">
+        <div class="modal-body">
+          <div id="bulk-fields" class="field-grid"></div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close-modal data-i18n="common.cancel">{t("common.cancel")}</button>
+          <button type="submit" class="btn btn-primary" id="bulk-apply"></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ===== Modal pengguna ===== -->
   <div id="user-modal" class="modal-backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">

@@ -10,6 +10,7 @@ import {
   formatDate as i18nDate,
   formatDateTime as i18nDateTime,
   formatRelative,
+  formatNumber as i18nNumber,
 } from "../lib/i18n/index.js";
 import { safeUrl } from "../lib/url.js";
 import { konfirmasi } from "./konfirmasi.js";
@@ -29,6 +30,8 @@ import {
   MODEL_BAWAAN,
   MODEL_PILIHAN,
 } from "../lib/ai-biaya.js";
+import { tayang, terjadwal } from "../lib/tayang.js";
+import { nilaiJanggal, konsumsiJanggal, cariKembar, basi, HARI_BASI } from "../lib/mutu.js";
 import {
   CAR_BODY_TYPES,
   MOTOR_BODY_TYPES,
@@ -137,6 +140,7 @@ function vehicleFields(col) {
       { k: "bodyType", l: motor ? t("field.bodyTypeMotor") : t("field.bodyTypeCar"), t: "select", opts: motor ? MOTOR_BODY_TYPES : CAR_BODY_TYPES },
       { k: "year", l: t("field.year"), t: "number", ph: "2025" },
       { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
+      { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
       { k: "tagline", l: t("field.tagline"), t: "text", ph: t("field.tagline.ph") },
       { k: "description", l: t("field.description"), t: "textarea", full: true, rows: 5, ph: t("field.description.ph", { one }) },
       { k: "tags", l: t("field.tags"), t: "tags", full: true, hint: t("field.tags.hint") },
@@ -224,6 +228,8 @@ function dirGroups(col) {
         l: t("dir.sec.lainnya"), d: t("dir.sec.lainnya.d"), f: [
           { k: "website", l: t("field.website"), t: "url", full: true, ph: "https://" },
           { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2, ph: t("field.note.ph") },
+          { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
+          { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
           { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
         ],
       },
@@ -257,6 +263,8 @@ function dirGroups(col) {
         l: t("dir.sec.lainnya"), d: t("dir.sec.lainnya.d"), f: [
           { k: "website", l: t("field.website"), t: "url", full: true, ph: "https://" },
           { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2, ph: t("field.note.ph") },
+          { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
+          { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
           { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
         ],
       },
@@ -280,6 +288,8 @@ function dirGroups(col) {
     },
     {
       l: t("dir.berita.sec.penayangan"), d: t("dir.berita.sec.penayangan.d"), f: [
+        { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
+        { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
         { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
       ],
     },
@@ -303,17 +313,35 @@ const vehicleStatusFilter = () => ({
   options: () => [
     ["published", t("filter.published")],
     ["draft", t("filter.draft")],
+    ["scheduled", t("filter.scheduled")],
     ["featured", t("filter.featured")],
     ["stale", t("filter.stale")],
+    ["odd", t("filter.odd")],
     ["noimage", t("filter.noImage")],
     ["noprice", t("filter.noPrice")],
   ],
   match: (it, v) =>
     v === "featured" ? !!it.featured
-      : v === "stale" ? !!it.stale
-        : v === "noimage" ? !it.image
-          : v === "noprice" ? it.price == null && !it.priceText
-            : it.status === v,
+      : v === "scheduled" ? terjadwal(it)
+        // Basi manual DAN basi karena lama tidak disentuh: saringannya menjawab
+        // pertanyaan yang sama, jadi tidak ada gunanya dua pilihan terpisah.
+        : v === "stale" ? (!!it.stale || basi(it))
+          : v === "odd" ? adaNilaiJanggal(it)
+            : v === "noimage" ? !it.image
+              : v === "noprice" ? it.price == null && !it.priceText
+                : (it.status || "published") === v,
+});
+
+/** Saringan status untuk direktori — tanpa pilihan yang khusus kendaraan. */
+const dirStatusFilter = () => ({
+  id: "status",
+  label: t("filter.allStatus"),
+  options: () => [
+    ["published", t("filter.published")],
+    ["draft", t("filter.draft")],
+    ["scheduled", t("filter.scheduled")],
+  ],
+  match: (it, v) => (v === "scheduled" ? terjadwal(it) : (it.status || "published") === v),
 });
 
 const featuredFilter = () => ({
@@ -334,15 +362,28 @@ function filtersFor(col) {
     return [byBrand, { id: "bodyType", label: t("filter.allTypes"), options: (it) => uniqVals(it, "bodyType"), match: (i, v) => i.bodyType === v }, vehicleStatusFilter()];
   }
   if (col === "spklu") {
-    return [byArea, { id: "operator", label: t("filter.allOperators"), options: (it) => uniqVals(it, "operator"), match: (i, v) => i.operator === v }, featuredFilter()];
+    return [byArea, { id: "operator", label: t("filter.allOperators"), options: (it) => uniqVals(it, "operator"), match: (i, v) => i.operator === v }, dirStatusFilter(), featuredFilter()];
   }
   if (col === "bengkel") {
-    return [byArea, { id: "type", label: t("filter.allKinds"), options: (it) => uniqVals(it, "type"), match: (i, v) => i.type === v }, byBrand];
+    return [byArea, { id: "type", label: t("filter.allKinds"), options: (it) => uniqVals(it, "type"), match: (i, v) => i.type === v }, byBrand, dirStatusFilter()];
   }
   if (col === "berita") {
-    return [{ id: "source", label: t("filter.allSources"), options: (it) => uniqVals(it, "source"), match: (i, v) => i.source === v }, featuredFilter()];
+    return [{ id: "source", label: t("filter.allSources"), options: (it) => uniqVals(it, "source"), match: (i, v) => i.source === v }, dirStatusFilter(), featuredFilter()];
   }
   return [];
+}
+
+/**
+ * Ada nilai di luar batas wajar pada kendaraan ini?
+ *
+ * Koleksinya diturunkan dari `item.kind` yang sudah dipasang `normalizeCar()`,
+ * bukan diminta sebagai argumen: pemanggilnya termasuk penyaring status, yang
+ * dipakai bersama oleh mobil dan motor dan karena itu tidak tahu sedang
+ * melihat yang mana.
+ */
+function adaNilaiJanggal(item) {
+  const col = item && item.kind === "motor" ? "motors" : "cars";
+  return nilaiJanggal(item, col).length > 0 || !!konsumsiJanggal(item, col);
 }
 
 const cmpText = (a, b) => String(a || "").localeCompare(String(b || ""), intlLocale(locale), { sensitivity: "base" });
@@ -635,6 +676,7 @@ function closeModal(el) {
   const i = modalStack.indexOf(el);
   if (i >= 0) modalStack.splice(i, 1);
   if (el.id === "dir-modal") { dirCtx = null; editorTouched = false; }
+  if (el.id === "bulk-modal") bulkCtx = null;
   // Grid disegarkan saat modal tutup, bukan pada tiap ketikan: menggambar ulang
   // kartu di belakang modal sambil mengetik alt hanya membuang kerja.
   if (el.id === "media-modal") { mediaCtx = null; renderMedia(); }
@@ -909,6 +951,8 @@ function fieldHtml(def, value, prefix) {
   } else if (def.t === "tags") {
     const v = Array.isArray(value) ? value.join(", ") : value;
     control = `<input type="text" id="${esc(id)}" name="${esc(def.k)}" value="${esc(v)}"${ph} />`;
+  } else if (def.t === "datetime") {
+    control = `<input type="datetime-local" id="${esc(id)}" name="${esc(def.k)}" value="${esc(isoKeLokal(value))}" />`;
   } else {
     const type = def.t === "url" ? "url" : def.t === "date" ? "date" : def.t === "tel" ? "tel" : "text";
     // Papan ketik ponsel langsung berupa tombol angka untuk nomor telepon.
@@ -918,10 +962,39 @@ function fieldHtml(def, value, prefix) {
   return `<div class="${cls}" data-field="${esc(def.k)}">${label}${control}${hint}</div>`;
 }
 
+/**
+ * Waktu tayang disimpan sebagai ISO ber-zona, tapi ditampilkan dan diketik
+ * dalam waktu setempat.
+ *
+ * `<input type="datetime-local">` tidak mengenal zona waktu sama sekali: yang
+ * keluar darinya adalah "2026-09-01T09:00" tanpa keterangan apa pun. Kalau
+ * nilai itu disimpan apa adanya, yang membacanya nanti adalah SERVER, dan
+ * server menafsirkannya menurut zona waktunya sendiri. Selama server dan
+ * penyuntingnya kebetulan sama-sama di WIB, tidak ada yang terlihat salah —
+ * dan begitu tidak lagi sama, berita terbit tujuh jam lebih awal tanpa satu
+ * pun pesan galat.
+ */
+function isoKeLokal(iso) {
+  const s = String(iso || "").trim();
+  if (!s) return "";
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function lokalKeIso(v) {
+  const s = String(v || "").trim();
+  if (!s) return "";
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
+
 function readField(form, def) {
   const el = form.elements[def.k];
   if (!el) return def.t === "tags" ? [] : def.t === "switch" ? false : "";
   if (def.t === "switch") return !!el.checked;
+  if (def.t === "datetime") return lokalKeIso(el.value);
   if (def.t === "number") return numOrNull(el.value);
   if (def.t === "tags") return splitList(el.value);
   return String(el.value || "").trim();
@@ -1485,6 +1558,8 @@ function renderDashRecent() {
 function healthIssues() {
   const issues = [];
   for (const col of VEHICLE_COLS) {
+    const kembar = cariKembar(content[col] || []);
+    const idKembar = new Set([...kembar.values()].flat());
     for (const it of content[col] || []) {
       const why = [];
       if (!it.image) why.push("issue.noImage");
@@ -1492,7 +1567,11 @@ function healthIssues() {
       if (it.rangeKm == null) why.push("issue.noRange");
       if (!it.description) why.push("issue.noDescription");
       if (it.status === "draft") why.push("issue.draft");
-      if (it.stale) why.push("issue.stale");
+      // Basi karena ditandai manusia ATAU karena lama tidak disentuh; keduanya
+      // menuntut hal yang sama, yaitu ditinjau ulang.
+      if (it.stale || basi(it)) why.push("issue.stale");
+      if (adaNilaiJanggal(it)) why.push("issue.odd");
+      if (idKembar.has(it.id)) why.push("issue.duplicate");
       if (why.length) issues.push({ col, id: it.id, title: titleOf(col, it), why });
     }
   }
@@ -1521,8 +1600,26 @@ function renderDashHealth() {
     el.innerHTML = emptyStateHtml(t("dash.health.emptyTitle"), t("dash.health.emptyText"), "✅");
     return;
   }
+  /*
+   * Daftar temuan tanpa jalan menuju pekerjaannya hanya bisa dibaca, tidak
+   * bisa dikerjakan. Tiga pintasan ini memasang saringan yang bersangkutan di
+   * katalog lalu membukanya — dari "ada yang salah" ke "ini daftarnya" dalam
+   * satu klik.
+   */
+  const pintasan = [
+    ["odd", "dash.health.showOdd", issues.filter((x) => x.why.includes("issue.odd")).length],
+    ["stale", "dash.health.showStale", issues.filter((x) => x.why.includes("issue.stale")).length],
+    ["draft", "dash.health.showDraft", issues.filter((x) => x.why.includes("issue.draft")).length],
+  ].filter(([, , n]) => n > 0);
+
+  const bar = pintasan.length
+    ? `<div class="health-quick">${pintasan
+        .map(([v, key, n]) => `<button type="button" class="btn btn-outline btn-sm" data-health-filter="${esc(v)}">${esc(t(key, { n }))}</button>`)
+        .join("")}</div>`
+    : "";
+
   const shown = issues.slice(0, 40);
-  el.innerHTML = `<div class="item-list">${shown
+  el.innerHTML = bar + `<div class="item-list">${shown
     .map((x) => `<div class="item-row" data-open="${esc(x.col)}:${esc(x.id)}">
       <div class="row-main">
         <div class="row-title">${esc(x.title)}</div>
@@ -1601,10 +1698,10 @@ function toolbarHtml(col) {
 
   const sorts = `<select class="select-mini" data-sort data-col="${esc(col)}">${optionsHtml(sortsFor(col), state.sort)}</select>`;
 
-  const bulk = isVehicle(col)
-    ? `<button type="button" class="btn btn-ghost btn-sm" data-bulk="publish">${esc(t("toolbar.publish"))}</button>
-       <button type="button" class="btn btn-ghost btn-sm" data-bulk="draft">${esc(t("toolbar.makeDraft"))}</button>`
-    : "";
+  /* Terbitkan/jadikan draf sekarang berlaku untuk semua koleksi: direktori
+     ikut mengenal status sejak versi ini. */
+  const bulk = `<button type="button" class="btn btn-ghost btn-sm" data-bulk="publish">${esc(t("toolbar.publish"))}</button>
+       <button type="button" class="btn btn-ghost btn-sm" data-bulk="draft">${esc(t("toolbar.makeDraft"))}</button>`;
 
   return `<div class="toolbar">
     <div class="toolbar-search">
@@ -1628,6 +1725,7 @@ function toolbarHtml(col) {
     ${bulk}
     <button type="button" class="btn btn-ghost btn-sm" data-bulk="featured">${esc(t("toolbar.markFeatured"))}</button>
     <button type="button" class="btn btn-ghost btn-sm" data-bulk="unfeatured">${esc(t("toolbar.unmarkFeatured"))}</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-bulk="field">${esc(t("toolbar.editField"))}</button>
     <button type="button" class="btn btn-ghost btn-sm" data-bulk="duplicate">${esc(t("common.duplicate"))}</button>
     <button type="button" class="btn btn-danger btn-sm" data-bulk="delete">${esc(t("common.delete"))}</button>
     <button type="button" class="btn btn-ghost btn-sm" data-bulk="clear">${esc(t("toolbar.clearSelection"))}</button>
@@ -1680,9 +1778,13 @@ function rowHtml(col, it, dragEnabled) {
   const state = ui[col];
   const selected = state.sel.has(it.id);
   const badges = [];
-  if (isVehicle(col) && it.status === "draft") badges.push(`<span class="badge badge-draft">${esc(t("badge.draft"))}</span>`);
+  // Draf dan terjadwal berlaku untuk KELIMA koleksi sejak direktori ikut
+  // mengenal status; sisanya memang hanya berarti untuk kendaraan.
+  if (it.status === "draft") badges.push(`<span class="badge badge-draft">${esc(t("badge.draft"))}</span>`);
+  else if (terjadwal(it)) badges.push(`<span class="badge badge-sched">${esc(t("badge.scheduled"))}</span>`);
   if (it.featured) badges.push(`<span class="badge badge-featured">${esc(t("badge.featured"))}</span>`);
-  if (isVehicle(col) && it.stale) badges.push(`<span class="badge badge-warn">${esc(t("badge.stale"))}</span>`);
+  if (isVehicle(col) && (it.stale || basi(it))) badges.push(`<span class="badge badge-warn">${esc(t("badge.stale"))}</span>`);
+  if (isVehicle(col) && adaNilaiJanggal(it)) badges.push(`<span class="badge badge-warn">${esc(t("badge.odd"))}</span>`);
   if (isVehicle(col) && !it.image) badges.push(`<span class="badge badge-muted">${esc(t("badge.noImage"))}</span>`);
 
   /* Lewat /api/pratinjau, bukan langsung ke /mobil/<id>. Dua sebabnya: motor
@@ -1875,6 +1977,8 @@ async function bulkAction(col, action) {
     return;
   }
 
+  if (action === "field") { openBulkField(col); return; }
+
   if (action === "duplicate") {
     for (const id of ids) duplicateItem(col, id);
     state.sel.clear();
@@ -1885,13 +1989,109 @@ async function bulkAction(col, action) {
   for (const id of ids) {
     const it = findItem(col, id);
     if (!it) continue;
-    if (action === "publish") it.status = "published";
+    // Menerbitkan berarti benar-benar tayang: waktu tayang yang masih di masa
+    // depan ikut dibersihkan, kalau tidak tombolnya berbohong.
+    if (action === "publish") { it.status = "published"; it.publishAt = ""; }
     else if (action === "draft") it.status = "draft";
     else if (action === "featured") it.featured = true;
     else if (action === "unfeatured") it.featured = false;
   }
   commit();
   toast(t("toast.updatedBulk", { n: ids.length }), "success");
+}
+
+/* ---------------- Penyuntingan massal satu field ---------------- */
+
+/**
+ * Field yang boleh diubah massal, per koleksi.
+ *
+ * Daftar putih, bukan daftar hitam. Yang masuk hanyalah field yang nilainya
+ * memang WAJAR sama untuk banyak entri sekaligus — merek, tahun, area,
+ * operator, status. Yang tidak masuk: nama, harga, deskripsi, gambar, dan
+ * segala yang khas per entri. Menyeragamkan salah satu dari itu ke dua belas
+ * item tidak pernah menjadi maksud siapa pun, dan sekali terjadi ia menimpa
+ * dua belas nilai berbeda dengan satu nilai.
+ */
+const BULK_FIELDS = {
+  cars: ["brand", "bodyType", "year", "rangeStandard", "driveType", "status", "publishAt", "featured", "stale"],
+  motors: ["brand", "bodyType", "year", "rangeStandard", "status", "publishAt", "featured", "stale"],
+  spklu: ["operator", "area", "power", "connector", "hours", "status", "publishAt", "featured"],
+  bengkel: ["type", "brand", "area", "hours", "status", "publishAt", "featured"],
+  berita: ["source", "status", "publishAt", "featured"],
+};
+
+let bulkCtx = null; // { col, ids, key }
+
+/** Definisi field dari formulir yang sudah ada — bukan salinan baru. */
+function bulkDefs(col) {
+  const semua = isVehicle(col)
+    ? [...vehicleFields(col).dasar, ...vehicleFields(col).spesifikasi]
+    : dirFields(col);
+  const urutan = BULK_FIELDS[col] || [];
+  return urutan.map((k) => semua.find((d) => d.k === k)).filter(Boolean);
+}
+
+function openBulkField(col) {
+  const ids = [...ui[col].sel];
+  const defs = bulkDefs(col);
+  if (!ids.length || !defs.length) return;
+
+  bulkCtx = { col, ids, key: defs[0].k };
+  renderBulkField();
+  openModal($("bulk-modal"));
+}
+
+function renderBulkField() {
+  if (!bulkCtx) return;
+  const { col, ids, key } = bulkCtx;
+  const defs = bulkDefs(col);
+  const def = defs.find((d) => d.k === key) || defs[0];
+
+  const title = $("bulk-modal-title");
+  if (title) title.textContent = t("bulk.title", { n: ids.length, col: colLabel(col) });
+  const sub = $("bulk-modal-sub");
+  if (sub) sub.textContent = t("bulk.sub");
+
+  const box = $("bulk-fields");
+  if (box) {
+    box.innerHTML = `
+      <div class="field full">
+        <label for="bulk-key">${esc(t("bulk.field"))}</label>
+        <select id="bulk-key" name="__key">${optionsHtml(defs.map((d) => [d.k, d.l]), def.k)}</select>
+      </div>
+      ${fieldHtml(Object.assign({}, def, { full: true, hint: "" }), def.t === "switch" ? false : "", "bulk")}`;
+  }
+
+  const apply = $("bulk-apply");
+  if (apply) apply.textContent = t("bulk.apply", { n: ids.length });
+}
+
+function applyBulkField() {
+  const form = $("bulk-form");
+  if (!form || !bulkCtx) return;
+  const { col, ids, key } = bulkCtx;
+  const def = bulkDefs(col).find((d) => d.k === key);
+  if (!def) return;
+
+  const nilai = readField(form, def);
+  let berubah = 0;
+  for (const id of ids) {
+    const it = findItem(col, id);
+    if (!it) continue;
+    // Item yang nilainya memang sudah sama tidak dihitung — angka yang
+    // dilaporkan harus angka yang benar-benar terjadi.
+    if (JSON.stringify(it[def.k] ?? null) === JSON.stringify(nilai ?? null)) continue;
+    it[def.k] = nilai;
+    berubah++;
+  }
+
+  closeModal($("bulk-modal"));
+  bulkCtx = null;
+  if (!berubah) { toast(t("toast.bulkNoChange"), "info"); return; }
+  ui[col].sel.clear();
+  commit();
+  saveNow();
+  toast(t("toast.bulkFieldDone", { n: berubah, field: def.l }), "success");
 }
 
 function moveItem(col, dragId, targetId) {
@@ -2297,6 +2497,7 @@ function vehicleStats(form) {
 }
 
 function updateVehicleMeter(form) {
+  syncVehicleWarnings(form);
   const stats = vehicleStats(form || $("vehicle-form"));
   if (!stats) return;
 
@@ -2315,6 +2516,53 @@ function updateVehicleMeter(form) {
     badge.textContent = `${p.filled}/${p.total}`;
     badge.classList.toggle("is-empty", p.filled === 0);
     badge.classList.toggle("is-done", p.filled === p.total);
+  }
+}
+
+/**
+ * Peringatan lunak di bawah field yang nilainya di luar batas wajar.
+ *
+ * MEMPERINGATKAN, bukan menolak — dan itu keputusan yang disengaja. Ada motor
+ * listrik berbaterai 1,2 kWh dan ada mobil seharga sepuluh miliar; panel tidak
+ * berhak memutuskan mana yang benar. Yang berhak dipastikannya hanyalah bahwa
+ * tidak ada angka janggal yang lolos tanpa pernah dilihat.
+ */
+function syncVehicleWarnings(form) {
+  const f = form || $("vehicle-form");
+  if (!f || !vehicleCtx) return;
+
+  f.querySelectorAll(".field.has-warn").forEach((x) => x.classList.remove("has-warn"));
+  f.querySelectorAll(".warn-text").forEach((x) => x.remove());
+
+  const { col, defs } = vehicleCtx;
+  const draft = {};
+  for (const pane of ["dasar", "spesifikasi"]) for (const def of defs[pane]) draft[def.k] = readField(f, def);
+
+  const pasang = (key, pesan) => {
+    const field = f.querySelector(`.field[data-field="${CSS.escape(key)}"]`);
+    if (!field || field.classList.contains("has-error")) return;
+    // Satu peringatan per field. Dua baris di bawah kotak yang sama membuat
+    // keduanya terbaca sebagai satu kalimat panjang yang tidak masuk akal,
+    // dan yang lebih spesifik selalu dipasang lebih dulu.
+    if (field.classList.contains("has-warn")) return;
+    field.classList.add("has-warn");
+    const el = document.createElement("div");
+    el.className = "warn-text";
+    el.textContent = pesan;
+    field.appendChild(el);
+  };
+
+  for (const w of nilaiJanggal(draft, col)) {
+    pasang(w.key, t(w.jenis === "rendah" ? "warn.tooLow" : "warn.tooHigh", { batas: i18nNumber(locale, w.batas) }));
+  }
+
+  const konsumsi = konsumsiJanggal(draft, col);
+  if (konsumsi) {
+    // Dipasang di kedua field sekaligus: yang janggal adalah PASANGANNYA, dan
+    // menunjuk salah satunya saja berarti menuduh field yang mungkin benar.
+    const pesan = t(konsumsi.jenis === "rendah" ? "warn.consumptionLow" : "warn.consumptionHigh", { n: i18nNumber(locale, konsumsi.konsumsi) });
+    pasang("rangeKm", pesan);
+    pasang("batteryKwh", pesan);
   }
 }
 
@@ -3696,6 +3944,18 @@ function bindEvents() {
       return;
     }
 
+    const health = e.target.closest("[data-health-filter]");
+    if (health) {
+      const v = health.getAttribute("data-health-filter");
+      // Dipasang di kedua koleksi kendaraan: temuannya memang datang dari
+      // keduanya, dan membuka salah satu saja menyembunyikan separuh daftar.
+      for (const col of VEHICLE_COLS) { ui[col].filters.status = v; ui[col].page = 1; }
+      renderCollection("motors");
+      setView("cars");
+      renderCollection("cars");
+      return;
+    }
+
     const stat = e.target.closest("[data-goto]");
     if (stat) { setView(stat.getAttribute("data-goto")); return; }
 
@@ -4140,6 +4400,9 @@ function bindEvents() {
     if (el.closest && el.closest("#vehicle-form, #dir-form")) editorTouched = true;
     if (el.closest && el.closest("#dir-form")) updateDirMeter();
 
+    /* --- Ubah field massal --- */
+    if (bulkCtx && el.name === "__key") { bulkCtx.key = el.value; renderBulkField(); return; }
+
     /* --- Saringan log aktivitas --- */
     const saringan = el.getAttribute && el.getAttribute("data-activity");
     if (saringan) {
@@ -4222,6 +4485,7 @@ function bindEvents() {
     if (form.id === "vehicle-form") { e.preventDefault(); saveVehicle(); return; }
     if (form.id === "dir-form") { e.preventDefault(); saveDir(); return; }
     if (form.id === "user-form") { e.preventDefault(); saveUserForm(); return; }
+    if (form.id === "bulk-form") { e.preventDefault(); applyBulkField(); return; }
     if (form.id === "profile-identity") { e.preventDefault(); saveProfileIdentity(form); return; }
     if (form.id === "profile-password") { e.preventDefault(); saveProfilePassword(form); return; }
     if (form.id === "profile-prefs") { e.preventDefault(); saveProfilePrefs(form); return; }

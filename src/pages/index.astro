@@ -9,6 +9,7 @@ import { cardHTML, defaultSort, vehicleHref } from "../lib/card-html.js";
 import { PER_PAGE } from "../lib/pagination.js";
 import { siteOrigin } from "../lib/site-url";
 import { altMapFor, mediaAlt } from "../lib/media.js";
+import { hanyaTayang } from "../lib/tayang.js";
 
 const content = readContent();
 const { site } = content;
@@ -18,12 +19,15 @@ const { site } = content;
  * boleh menampilkannya, termasuk di baris unggulan maupun data katalog yang
  * disuntik ke klien.
  */
-const isLive = (v: any) => v && v.status !== "draft";
-const cars = (content.cars || []).filter(isLive);
-const motors = site.showMotor ? (content.motors || []).filter(isLive) : [];
-const spklu = content.spklu || [];
-const bengkel = content.bengkel || [];
-const berita = content.berita || [];
+const cars = (content.cars || []).filter(hanyaTayang());
+const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [];
+/* Direktori ikut disaring sejak versi ini. Sebelumnya SPKLU, bengkel, dan
+   berita langsung tayang begitu tombol Simpan ditekan — tidak ada cara
+   menyiapkan sepuluh entri lalu menayangkannya sekaligus, dan tidak ada cara
+   menahan sebuah berita sampai waktunya. */
+const spklu = (content.spklu || []).filter(hanyaTayang());
+const bengkel = (content.bengkel || []).filter(hanyaTayang());
+const berita = (content.berita || []).filter(hanyaTayang());
 
 /** Item bertanda `featured` naik ke atas — sisanya menjaga urutan aslinya. */
 const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));

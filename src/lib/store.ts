@@ -219,6 +219,11 @@ function normalizeCar(c: any, kind: "mobil" | "motor"): any {
     stale: !!c?.stale,
     featured: !!c?.featured,
     status,
+    /* Waktu tayang berlaku untuk kelima koleksi lewat `src/lib/tayang.js`.
+       Menyediakannya di sini saja tanpa kendaraan akan membuat satu aturan
+       berlaku setengah — dan setengah penjadwalan lebih membingungkan daripada
+       tidak ada penjadwalan. */
+    publishAt: str(c?.publishAt),
     tags: strArr(c?.tags),
     specs: specRows(c?.specs),
     colors: strArr(c?.colors),
@@ -246,6 +251,8 @@ function normalizeSpklu(v: any): any {
     mapUrl: str(v?.mapUrl),
     note: str(v?.note),
     featured: !!v?.featured,
+    status: str(v?.status) === "draft" ? "draft" : "published",
+    publishAt: str(v?.publishAt),
     updatedAt: str(v?.updatedAt),
     updatedBy: str(v?.updatedBy),
   };
@@ -266,6 +273,8 @@ function normalizeBengkel(v: any): any {
     mapUrl: str(v?.mapUrl),
     note: str(v?.note),
     featured: !!v?.featured,
+    status: str(v?.status) === "draft" ? "draft" : "published",
+    publishAt: str(v?.publishAt),
     updatedAt: str(v?.updatedAt),
     updatedBy: str(v?.updatedBy),
   };
@@ -281,6 +290,8 @@ function normalizeBerita(v: any): any {
     image: str(v?.image),
     excerpt: str(v?.excerpt),
     featured: !!v?.featured,
+    status: str(v?.status) === "draft" ? "draft" : "published",
+    publishAt: str(v?.publishAt),
     updatedAt: str(v?.updatedAt),
     updatedBy: str(v?.updatedBy),
   };

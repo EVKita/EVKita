@@ -15,6 +15,7 @@ import {
   teksRingkas,
 } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
+import { hanyaTayang } from "../../lib/tayang.js";
 
 /**
  * Kalkulator hemat: listrik vs bensin.
@@ -34,8 +35,7 @@ import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 const content = readContent();
 const site = content.site;
 
-const isLive = (v: any) => v && v.status !== "draft";
-const cars = (content.cars || []).filter(isLive);
+const cars = (content.cars || []).filter(hanyaTayang());
 
 /** Hanya mobil yang datanya cukup untuk dihitung yang boleh muncul di pilihan. */
 const pilihan = cars
