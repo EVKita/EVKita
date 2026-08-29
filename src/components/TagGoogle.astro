@@ -1,0 +1,48 @@
+---
+import { bacaIntegrasi } from "../lib/integrasi-simpan";
+import { SESSION_COOKIE } from "../lib/auth";
+
+/**
+ * Tag Google di `<head>` halaman publik: Analytics, AdSense, dan penanda
+ * kepemilikan Search Console.
+ *
+ * Hanya dipanggil dari `Base.astro` untuk halaman yang punya `site` dan bukan
+ * halaman panel — jadi panel admin, halaman masuk, dan wizard pemasangan tidak
+ * pernah ikut memuat skrip pihak ketiga.
+ *
+ * Seluruh nilai di sini sudah lewat `normalisasi()` di `integrasi.js`, yang
+ * menolak apa pun di luar pola id yang sah. Itu yang membuat penyisipan
+ * langsung ke dalam `<script>` di bawah aman — bukan karena nilainya berasal
+ * dari panel, melainkan karena bentuknya sudah dipastikan.
+ */
+const cfg = bacaIntegrasi();
+
+/*
+ * Orang yang sedang masuk ke panel tidak ikut dihitung.
+ *
+ * Pemilik situs adalah pengunjung paling rajin situsnya sendiri, dan tanpa ini
+ * laporan Google-nya sebagian besar berisi dirinya sendiri. Cukup keberadaan
+ * cookie sesi — memverifikasinya berarti membaca users.json di setiap
+ * permintaan halaman, dan yang dijawab pertanyaannya hanya "hitung atau tidak".
+ */
+const admin = !!Astro.cookies.get(SESSION_COOKIE)?.value;
+const pakaiGa = cfg.gaAktif && !!cfg.gaId && !(cfg.gaAbaikanAdmin && admin);
+const pakaiAdsense = cfg.adsenseAktif && !!cfg.adsenseId;
+const pakaiGsc = cfg.gscAktif && !!cfg.gscToken;
+
+const gaSrc = `https://www.googletagmanager.com/gtag/js?id=${cfg.gaId}`;
+const adsenseSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${cfg.adsenseId}`;
+const gaInit = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${cfg.gaId}');`;
+---
+{pakaiGsc && <meta name="google-site-verification" content={cfg.gscToken} />}
+
+{pakaiGa && (
+  <>
+    <script async src={gaSrc}></script>
+    <script is:inline set:html={gaInit}></script>
+  </>
+)}
+
+{pakaiAdsense && cfg.adsenseAuto && (
+  <script async src={adsenseSrc} crossorigin="anonymous"></script>
+)}

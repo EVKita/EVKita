@@ -21,6 +21,14 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
     tautan), baris kontak (email, telepon, WhatsApp, alamat, peta, jam buka,
     situs web), delapan ikon sosial, tautan bilah bawah (mis. Kebijakan
     Privasi), teks hak cipta, dan saklar tampil untuk tiap bloknya.
+  - **Panel Analitik**: lalu lintas situs yang dihitung server ini sendiri —
+    tampilan halaman, pengunjung harian, halaman terpopuler, sumber kunjungan,
+    perangkat, dan sebaran jam. Tanpa cookie, tanpa alamat IP yang disimpan,
+    dan tanpa memanggil layanan mana pun di luar server ini.
+  - **Halaman Integrasi** (`/admin/integrasi`): memasang Google Analytics,
+    Google AdSense (beserta `/ads.txt`), dan penanda kepemilikan Google Search
+    Console lewat panel — tanpa menyunting kode. Tag hanya dimuat di halaman
+    publik, tidak pernah di halaman panel.
   - **Menu Tampilan**: 12 preset siap pakai plus pengaturan rinci — warna &amp;
     gradien, pola latar, gambar latar, huruf isi &amp; judul, sudut membulat,
     bayangan, gaya kartu, header, tombol, hero, efek gerak, dan CSS kustom,
@@ -37,7 +45,9 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
 ├── data/
 │   ├── content.json         (data konten yang dikelola CMS)
 │   ├── users.json           (akun panel, kata sandi ter-hash scrypt)
-│   └── activity.json        (log aktivitas panel)
+│   ├── activity.json        (log aktivitas panel)
+│   ├── integrasi.json       (id Google Analytics / AdSense / Search Console)
+│   └── trafik/              (statistik kunjungan, satu berkas per bulan)
 └── src/
     ├── layouts/Base.astro
     ├── lib/auth.ts          (session bertanda tangan + identitas pengguna)
@@ -45,6 +55,8 @@ Situs referensi mobil listrik di Indonesia, dibangun dengan **Astro** (mode SSR,
     ├── lib/i18n/            (kamus id / en / zh + runtime terjemahan)
     ├── lib/store.ts         (baca/tulis content.json)
     ├── lib/theme.js         (preset &amp; setelan menu Tampilan → CSS)
+    ├── lib/trafik.js        (aturan hitung kunjungan: robot, perangkat, hari WIB)
+    ├── lib/integrasi.js     (pola id Google, potongan tag, isi ads.txt)
     ├── pages/
     │   ├── index.astro
     │   ├── admin/login.astro

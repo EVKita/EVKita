@@ -12,3 +12,5 @@ data/users.json
 data/activity.json
 data/backups/
 .claude/
+data/integrasi.json
+data/trafik/

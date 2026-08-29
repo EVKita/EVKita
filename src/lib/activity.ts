@@ -80,6 +80,14 @@ export type ActivityAction =
   | "ai.run"
   | "ai.apply"
   /**
+   * Integrasi Google diubah — dinyalakan, dimatikan, atau idnya diganti.
+   *
+   * `meta.layanan` berisi nama layanannya (Analytics, AdSense, Search
+   * Console), bukan id atau tokennya: yang perlu dijawab log ini adalah "sejak
+   * kapan iklan menyala di situs ini", bukan berapa nomornya.
+   */
+  | "integrasi.update"
+  /**
    * Perubahan konten, dirinci.
    *
    * `content.save` di atas tetap ada dan tidak boleh dihapus: berkas log yang
@@ -336,7 +344,7 @@ export const GOLONGAN_AKSI: Record<string, (aksi: string) => boolean> = {
   konten: (a) => a.startsWith("content."),
   akun: (a) => a.startsWith("user.") || a.startsWith("profile.") || a === "password.change" || a === "sessions.revoke",
   masuk: (a) => a === "login" || a === "login.blocked",
-  sistem: (a) => a === "backup.restore" || a === "update.start",
+  sistem: (a) => a === "backup.restore" || a === "update.start" || a === "integrasi.update",
   ai: (a) => a.startsWith("ai."),
 };
 

@@ -314,6 +314,65 @@ di SERVER, bukan di panel.
   ditandai basi lewat `perluGambar` dan digambar saat dibuka. Menambah tampilan
   baru berarti menambahnya ke daftar itu.
 
+### Analitik & Integrasi Google
+
+Dua halaman yang lahir bersamaan dan saling menunjuk. Yang satu menghitung
+sendiri, yang lain memasang alat ukur Google — dan keduanya sengaja tidak
+saling menggantikan.
+
+**Analitik** (`/admin#/analitik`) membaca pencatatan server ini sendiri.
+
+- **Aturan pencatatannya ada di `src/lib/trafik.js`, dan hanya di sana** —
+  mana yang robot, golongan perangkat, alamat halaman yang layak dihitung, dan
+  domain perujuk. Berkas itu murni (tanpa Node), jadi ujinya di
+  `tests/trafik.test.ts` menyentuh aturan yang sama persis dengan yang dipakai
+  server.
+- **Tidak ada satu baris log pun.** `src/lib/trafik-rekam.ts` cuma menambah
+  angka di memori dan menuliskannya paling cepat sepuluh detik sekali ke
+  `data/trafik/<bulan>.json`. Alamat IP tidak pernah menyentuh disk: ia dipakai
+  sekejap untuk sidik ber-garam HARIAN, dan sidik itu pun dibuang begitu
+  harinya berganti — yang tersisa hanya jumlahnya. Jangan menambahkan field
+  yang menyimpan IP, User-Agent, atau apa pun yang berbentuk "satu baris per
+  orang".
+- **Hari dan jam memakai WIB yang dipatok**, bukan zona waktu server (yang di
+  produksi UTC). Tanpa itu "hari ini" berganti pukul tujuh pagi dan grafik per
+  jam bergeser tujuh jam dari kenyataan.
+- **Kunjungan yang tidak dihitung**: robot (masuk ember `bot` sendiri),
+  pratinjau draf, dan siapa pun yang membawa cookie sesi panel. Saringannya di
+  `layakDicatat()` di `middleware.ts`; `rapikanPath()` yang membuang `/admin`,
+  `/api`, dan berkas.
+- Angka `pengunjung` adalah pengunjung HARIAN yang dijumlahkan, bukan orang
+  unik sepanjang rentang. Labelnya di panel menyebut itu; jangan mengubah
+  labelnya tanpa mengubah cara menghitungnya.
+
+**Integrasi** (`/admin/integrasi`) memasang tag Google.
+
+- **Halaman sendiri, bukan tampilan di dalam `/admin`** — sama alasannya dengan
+  halaman Pembaruan: isinya tidak menyentuh `content.json`, jadi tidak ada
+  gunanya memuat seluruh CMS untuk formulir berisi tiga id. Ia memakai
+  `admin-shell.js` dan menerima teks lewat `define:vars`, jadi namanya WAJIB
+  ada di `PANEL_FILES` di `tools/i18n-check.mjs`.
+- Pengaturannya tinggal di `data/integrasi.json`, bukan di `content.json`:
+  dibaca di setiap permintaan halaman publik dan di middleware, dan tidak punya
+  urusan dengan nomor revisi dokumen konten.
+- **Nilainya langsung menjadi bagian dari `<script>` di halaman publik.** Karena
+  itu `POLA` di `src/lib/integrasi.js` seluruhnya daftar-putih, dan nilai yang
+  tidak berbentuk id sah DITOLAK — bukan dibersihkan lalu dipakai.
+  `normalisasi()` memeriksa ulang saat MEMBACA berkas, karena berkas itu bisa
+  disunting tangan lewat SSH.
+- **CSP mengikuti integrasi yang menyala.** `hostCsp()` yang menentukan domain
+  mana yang dibuka, dan `cspUntuk()` di `middleware.ts` hanya melonggarkannya
+  untuk halaman publik. Menambah layanan baru berarti menambah domainnya di
+  situ juga — kalau tidak, tagnya "tersimpan" lalu diblokir peramban tanpa satu
+  pun pesan di panel.
+- Tag tidak pernah dimuat di halaman panel (`Base.astro` menyalakannya hanya
+  saat ada `site` tanpa `accentOnly`), dan Analytics juga dilewati untuk orang
+  yang sedang masuk ke panel. Karena itu tombol "Periksa pemasangan" memakai
+  `credentials: "omit"` — memeriksa sambil membawa cookie sesi berarti
+  memeriksa halaman versi admin, yang memang tidak punya tagnya.
+- `/ads.txt` dirakit saat diminta dan menjawab 404 saat AdSense mati: berkas
+  ads.txt kosong punya arti sendiri di mata perayap Google.
+
 ### Pengguna & peran
 
 - Akun panel disimpan di **`data/users.json`** (kata sandi ter-hash `scrypt`),

@@ -426,7 +426,15 @@ export function touchLogin(id: string): void {
  * Kemampuan yang dibatasi peran. Semua yang tidak disebut di sini (konten,
  * pengaturan situs, media) terbuka untuk ketiga peran.
  */
-export type Capability = "users" | "update" | "backups" | "activity" | "media.delete" | "ai" | "ai.run";
+export type Capability =
+  | "users"
+  | "update"
+  | "backups"
+  | "activity"
+  | "media.delete"
+  | "ai"
+  | "ai.run"
+  | "integrasi";
 
 /**
  * Peran mana yang boleh melakukan apa, ditulis lengkap.
@@ -477,6 +485,20 @@ const CAPABILITY_ROLES: Record<Capability, readonly Role[]> = {
    */
   ai: ["owner", "admin"],
   "ai.run": ["owner", "admin", "editor"],
+
+  /*
+   * Halaman Integrasi: kode Analytics, AdSense, dan Search Console.
+   *
+   * Ditutup untuk Editor karena isinya bukan konten melainkan kode pihak ketiga
+   * yang berjalan di SETIAP halaman publik, plus ads.txt yang menentukan siapa
+   * yang berhak menjual iklan atas nama situs ini. Keduanya keputusan pemilik
+   * situs, dan salah pasang di sana tidak terlihat di panel mana pun.
+   *
+   * Panel Analitik sengaja TIDAK punya kemampuan sendiri: ia cuma angka
+   * kunjungan, dan penyunting yang tahu halaman mana yang dibaca orang menulis
+   * hal yang lebih berguna. Yang ditutup adalah pengaturannya, bukan bacaannya.
+   */
+  integrasi: ["owner", "admin"],
 };
 
 export function can(user: { role: Role } | null, capability: Capability): boolean {

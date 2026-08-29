@@ -1,0 +1,408 @@
+---
+import Base from "../../layouts/Base.astro";
+import AdminSidebar from "../../components/AdminSidebar.astro";
+import "../../styles/admin.css";
+import { currentUser } from "../../lib/auth";
+import { can } from "../../lib/users";
+import { readContent } from "../../lib/store";
+import { bacaIntegrasi } from "../../lib/integrasi-simpan";
+import { isiAdsTxt } from "../../lib/integrasi.js";
+import { siteOrigin } from "../../lib/site-url";
+import { makeT, localeMeta } from "../../lib/i18n/index.js";
+
+/**
+ * Halaman Integrasi — Google Analytics, AdSense, dan Search Console.
+ *
+ * Sengaja HALAMAN SENDIRI, bukan satu tampilan lagi di dalam /admin, dan
+ * alasannya sama dengan halaman Pembaruan: isinya tidak menyentuh
+ * `content.json` sama sekali. Menaruhnya di dalam aplikasi satu-halaman berarti
+ * memuat seluruh CMS — 7.000 baris admin.js, seluruh katalog, mesin simpan
+ * otomatis — untuk sebuah formulir berisi tiga id. Halaman ini hanya membawa
+ * `admin-shell.js` (sidebar dan tombol keluar) dan skrip formulirnya sendiri.
+ *
+ * Ia juga yang menjadi pasangan panel Analitik: yang satu memasang alat ukur
+ * Google, yang lain menampilkan hitungan server ini sendiri.
+ */
+
+const me = currentUser(Astro.cookies);
+if (!me) {
+  return Astro.redirect("/admin/login");
+}
+// Kode pihak ketiga yang berjalan di setiap halaman publik, plus ads.txt yang
+// menentukan siapa yang boleh menjual iklan atas nama situs ini. Keduanya
+// keputusan pemilik situs — Editor tidak dibukakan di SERVER, bukan sekadar
+// disembunyikan tombolnya.
+if (!can(me, "integrasi")) {
+  return Astro.redirect("/admin");
+}
+
+const locale = me.locale;
+const t = makeT(locale);
+const lang = localeMeta(locale);
+
+const site = readContent().site || {};
+const cfg = bacaIntegrasi();
+const asal = siteOrigin(Astro.url);
+const contohAdsTxt = isiAdsTxt({ ...cfg, adsenseAktif: true, adsTxt: "" }).trim();
+
+/* Teks untuk skrip di bawah. Skrip itu berjalan di peramban dan tidak memuat
+   kamus, jadi terjemahannya dirakit di server lalu dikirim lewat define:vars —
+   pola yang sama dengan halaman Pembaruan. */
+const texts = {
+  saved: t("integrasi.saved"),
+  saving: t("integrasi.saving"),
+  ready: t("save.ready"),
+  copied: t("integrasi.copied"),
+  checking: t("integrasi.checking"),
+  checkFail: t("integrasi.checkFail"),
+  found: t("integrasi.found"),
+  missing: t("integrasi.missing"),
+  ga: t("integrasi.ga"),
+  adsense: t("integrasi.adsense"),
+  gsc: t("integrasi.gsc"),
+  galat: {
+    "err.integrasi.gaId": t("err.integrasi.gaId"),
+    "err.integrasi.adsenseId": t("err.integrasi.adsenseId"),
+    "err.integrasi.gscToken": t("err.integrasi.gscToken"),
+    "err.integrasi.gaKosong": t("err.integrasi.gaKosong"),
+    "err.integrasi.adsenseKosong": t("err.integrasi.adsenseKosong"),
+    "err.integrasi.gscKosong": t("err.integrasi.gscKosong"),
+    "err.integrasi.adsTxtPanjang": t("err.integrasi.adsTxtPanjang"),
+    "err.forbidden": t("err.forbidden"),
+    "err.badJson": t("err.badJson"),
+  },
+};
+
+const statusKelas = (aktif: boolean) => (aktif ? "integrasi-status is-on" : "integrasi-status");
+const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi.off"));
+---
+
+<Base title={`${t("integrasi.title")} — EVKita`} bodyClass="admin-ui" lang={lang.html} noindex site={site} accentOnly>
+  <div id="admin-app" class="admin-app">
+    <div id="sidebar-scrim" class="sidebar-scrim"></div>
+
+    <AdminSidebar mode="link" active="integrasi" locale={locale} role={me.role} />
+
+    <header id="admin-topbar" class="admin-topbar">
+      <button id="sidebar-toggle" class="btn btn-icon" type="button" aria-label={t("nav.collapse")}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+
+      <div class="topbar-heading">
+        <span class="topbar-heading-eyebrow">{t("topbar.adminPanel")}</span>
+        <strong>{t("integrasi.title")}</strong>
+      </div>
+
+      <div class="topbar-right">
+        <span id="integrasi-state" class="save-state">{t("save.ready")}</span>
+        <button id="themeToggle" class="btn btn-icon" type="button" aria-label={t("topbar.themeToggle")} title={t("topbar.themeToggle")}>
+          <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+          <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+        </button>
+        <button id="logout" class="btn btn-ghost btn-sm" type="button">{t("topbar.logout")}</button>
+      </div>
+    </header>
+
+    <main id="admin-main" class="admin-main">
+      <section class="view view-narrow">
+        <div class="view-head">
+          <div>
+            <h1 class="view-title">{t("integrasi.title")}</h1>
+            <p class="view-sub">{t("integrasi.sub")}</p>
+          </div>
+          <div class="view-head-actions">
+            <a class="btn btn-ghost btn-sm" href="/admin#/analitik">{t("integrasi.toAnalitik")}</a>
+          </div>
+        </div>
+
+        <form id="integrasi-form">
+          <!-- ===== Google Analytics ===== -->
+          <section class="panel form-section">
+            <div class="form-section-head integrasi-head">
+              <span class="integrasi-logo" aria-hidden="true">📊</span>
+              <div>
+                <h2>{t("integrasi.ga")}</h2>
+                <p>{t("integrasi.ga.desc")}</p>
+              </div>
+              <span class={statusKelas(cfg.gaAktif)} data-status="ga" data-on={t("integrasi.on")} data-off={t("integrasi.off")}>{statusTeks(cfg.gaAktif)}</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="gaAktif" checked={cfg.gaAktif} />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>{t("integrasi.ga.enable")}</span>
+                </label>
+              </div>
+              <div class="field full">
+                <label for="i-gaId">{t("integrasi.ga.id")}</label>
+                <input id="i-gaId" name="gaId" value={cfg.gaId} placeholder="G-XXXXXXXXXX" spellcheck="false" autocapitalize="none" autocomplete="off" />
+                <span class="hint">{t("integrasi.ga.idHint")}</span>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="gaAbaikanAdmin" checked={cfg.gaAbaikanAdmin} />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>{t("integrasi.ga.skipAdmin")}</span>
+                </label>
+                <span class="hint">{t("integrasi.ga.skipAdminHint")}</span>
+              </div>
+            </div>
+
+            <ol class="integrasi-langkah">
+              <li>{t("integrasi.ga.step1")}</li>
+              <li>{t("integrasi.ga.step2")}</li>
+              <li>{t("integrasi.ga.step3")}</li>
+            </ol>
+            <p class="hint">
+              <a href="https://analytics.google.com/" target="_blank" rel="noopener">{t("integrasi.ga.open")}</a>
+            </p>
+          </section>
+
+          <!-- ===== Google AdSense ===== -->
+          <section class="panel form-section">
+            <div class="form-section-head integrasi-head">
+              <span class="integrasi-logo" aria-hidden="true">💰</span>
+              <div>
+                <h2>{t("integrasi.adsense")}</h2>
+                <p>{t("integrasi.adsense.desc")}</p>
+              </div>
+              <span class={statusKelas(cfg.adsenseAktif)} data-status="adsense" data-on={t("integrasi.on")} data-off={t("integrasi.off")}>{statusTeks(cfg.adsenseAktif)}</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="adsenseAktif" checked={cfg.adsenseAktif} />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>{t("integrasi.adsense.enable")}</span>
+                </label>
+              </div>
+              <div class="field full">
+                <label for="i-adsenseId">{t("integrasi.adsense.id")}</label>
+                <input id="i-adsenseId" name="adsenseId" value={cfg.adsenseId} placeholder="ca-pub-0000000000000000" spellcheck="false" autocapitalize="none" autocomplete="off" />
+                <span class="hint">{t("integrasi.adsense.idHint")}</span>
+              </div>
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="adsenseAuto" checked={cfg.adsenseAuto} />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>{t("integrasi.adsense.auto")}</span>
+                </label>
+                <span class="hint">{t("integrasi.adsense.autoHint")}</span>
+              </div>
+              <div class="field full">
+                <label for="i-adsTxt">{t("integrasi.adsense.adsTxt")}</label>
+                <textarea id="i-adsTxt" name="adsTxt" rows="4" spellcheck="false" placeholder={contohAdsTxt}>{cfg.adsTxt}</textarea>
+                <span class="hint">{t("integrasi.adsense.adsTxtHint")}</span>
+              </div>
+              <div class="field full">
+                <label>{t("integrasi.adsense.adsTxtUrl")}</label>
+                <div class="salin-baris">
+                  <code class="salin-nilai" id="url-adstxt">{asal}/ads.txt</code>
+                  <button type="button" class="btn btn-outline btn-sm" data-salin="url-adstxt">{t("integrasi.copy")}</button>
+                </div>
+              </div>
+            </div>
+
+            <p class="hint">
+              <a href="https://www.google.com/adsense/" target="_blank" rel="noopener">{t("integrasi.adsense.open")}</a>
+            </p>
+          </section>
+
+          <!-- ===== Google Search Console ===== -->
+          <section class="panel form-section">
+            <div class="form-section-head integrasi-head">
+              <span class="integrasi-logo" aria-hidden="true">🔎</span>
+              <div>
+                <h2>{t("integrasi.gsc")}</h2>
+                <p>{t("integrasi.gsc.desc")}</p>
+              </div>
+              <span class={statusKelas(cfg.gscAktif)} data-status="gsc" data-on={t("integrasi.on")} data-off={t("integrasi.off")}>{statusTeks(cfg.gscAktif)}</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="field full">
+                <label class="switch-row">
+                  <input type="checkbox" name="gscAktif" checked={cfg.gscAktif} />
+                  <span class="switch" aria-hidden="true"></span>
+                  <span>{t("integrasi.gsc.enable")}</span>
+                </label>
+              </div>
+              <div class="field full">
+                <label for="i-gscToken">{t("integrasi.gsc.token")}</label>
+                <input id="i-gscToken" name="gscToken" value={cfg.gscToken} placeholder="xKm2_3Fq…" spellcheck="false" autocapitalize="none" autocomplete="off" />
+                <span class="hint">{t("integrasi.gsc.tokenHint")}</span>
+              </div>
+              <div class="field full">
+                <label>{t("integrasi.gsc.sitemap")}</label>
+                <div class="salin-baris">
+                  <code class="salin-nilai" id="url-sitemap">{asal}/sitemap.xml</code>
+                  <button type="button" class="btn btn-outline btn-sm" data-salin="url-sitemap">{t("integrasi.copy")}</button>
+                </div>
+                <span class="hint">{t("integrasi.gsc.sitemapHint")}</span>
+              </div>
+            </div>
+
+            <ol class="integrasi-langkah">
+              <li>{t("integrasi.gsc.step1")}</li>
+              <li>{t("integrasi.gsc.step2")}</li>
+              <li>{t("integrasi.gsc.step3")}</li>
+              <li>{t("integrasi.gsc.step4")}</li>
+            </ol>
+            <p class="hint">
+              <a href="https://search.google.com/search-console" target="_blank" rel="noopener">{t("integrasi.gsc.open")}</a>
+            </p>
+          </section>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" id="integrasi-uji">{t("integrasi.check")}</button>
+            <button type="submit" class="btn btn-primary" id="integrasi-save">{t("common.save")}</button>
+          </div>
+          <p class="integrasi-hasil" id="integrasi-hasil" hidden></p>
+        </form>
+
+        <section class="panel analitik-note">
+          <p>{t("integrasi.privasi")}</p>
+          <p>{t("integrasi.privasi2")}</p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="../../scripts/admin-shell.js"></script>
+
+  <script define:vars={{ texts }}>
+    /* Skrip halaman Integrasi.
+     *
+     * Berdiri sendiri: halaman ini tidak memuat admin.js, jadi tidak ada esc(),
+     * tidak ada toast(), dan tidak ada kamus. Teks datang dari `texts` yang
+     * sudah diterjemahkan di server, dan seluruh keluarannya dipasang lewat
+     * `textContent` — tidak ada satu pun HTML yang dirakit dari string di sini. */
+    (function () {
+      const form = document.getElementById("integrasi-form");
+      if (!form) return;
+
+      const state = document.getElementById("integrasi-state");
+      const hasil = document.getElementById("integrasi-hasil");
+      const tombolSimpan = document.getElementById("integrasi-save");
+
+      const nilaiForm = () => ({
+        gaAktif: form.elements.gaAktif.checked,
+        gaId: form.elements.gaId.value.trim(),
+        gaAbaikanAdmin: form.elements.gaAbaikanAdmin.checked,
+        adsenseAktif: form.elements.adsenseAktif.checked,
+        adsenseId: form.elements.adsenseId.value.trim(),
+        adsenseAuto: form.elements.adsenseAuto.checked,
+        adsTxt: form.elements.adsTxt.value,
+        gscAktif: form.elements.gscAktif.checked,
+        gscToken: form.elements.gscToken.value.trim(),
+      });
+
+      function tandaiStatus(cfg) {
+        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: cfg.gscAktif };
+        for (const [kunci, aktif] of Object.entries(peta)) {
+          const el = document.querySelector('[data-status="' + kunci + '"]');
+          if (!el) continue;
+          el.classList.toggle("is-on", !!aktif);
+          el.textContent = aktif ? el.getAttribute("data-on") : el.getAttribute("data-off");
+        }
+      }
+
+      function pesan(teks, kelas) {
+        hasil.hidden = false;
+        hasil.textContent = teks;
+        hasil.className = "integrasi-hasil" + (kelas ? " " + kelas : "");
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        tombolSimpan.disabled = true;
+        state.textContent = texts.saving;
+        try {
+          const res = await fetch("/api/integrasi", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(nilaiForm()),
+          });
+          if (res.status === 401) { location.href = "/admin/login"; return; }
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data || !data.ok) {
+            const kunci = data && data.errorKey;
+            pesan(texts.galat[kunci] || (data && data.error) || texts.galat["err.badJson"], "is-off");
+            state.textContent = texts.ready;
+            return;
+          }
+          /* Nilai yang ditampilkan diganti dengan nilai yang BENAR-BENAR
+             tersimpan, bukan yang barusan diketik: server membuang baris ads.txt
+             yang tidak sah dan mematikan saklar yang idnya kosong, dan formulir
+             yang tetap menampilkan ketikan aslinya akan berbohong soal itu. */
+          const cfg = data.integrasi;
+          form.elements.gaId.value = cfg.gaId;
+          form.elements.adsenseId.value = cfg.adsenseId;
+          form.elements.gscToken.value = cfg.gscToken;
+          form.elements.adsTxt.value = cfg.adsTxt;
+          form.elements.gaAktif.checked = cfg.gaAktif;
+          form.elements.adsenseAktif.checked = cfg.adsenseAktif;
+          form.elements.gscAktif.checked = cfg.gscAktif;
+          tandaiStatus(cfg);
+          state.textContent = texts.saved;
+          pesan(texts.saved, "is-ok");
+        } catch (err) {
+          pesan(texts.galat["err.badJson"], "is-off");
+          state.textContent = texts.ready;
+        } finally {
+          tombolSimpan.disabled = false;
+        }
+      });
+
+      document.addEventListener("click", async (e) => {
+        const salin = e.target.closest("[data-salin]");
+        if (salin) {
+          const sumber = document.getElementById(salin.getAttribute("data-salin"));
+          if (!sumber) return;
+          try {
+            await navigator.clipboard.writeText(sumber.textContent.trim());
+            const semula = salin.textContent;
+            salin.textContent = texts.copied;
+            setTimeout(() => { salin.textContent = semula; }, 1600);
+          } catch (err) {
+            /* Papan klip bisa ditolak peramban; alamatnya tetap terbaca di layar. */
+          }
+          return;
+        }
+
+        if (e.target.closest("#integrasi-uji")) {
+          pesan(texts.checking, "");
+          try {
+            /*
+             * `credentials: "omit"` bukan detail: halaman publik sengaja TIDAK
+             * memasang tag Analytics untuk orang yang sedang masuk ke panel.
+             * Memeriksa sambil membawa cookie sesi berarti memeriksa halaman
+             * versi admin — yang memang tidak punya tagnya — lalu melaporkan
+             * pemasangan yang benar sebagai gagal.
+             */
+            const res = await fetch("/", { credentials: "omit", cache: "no-store" });
+            const html = await res.text();
+            const cfg = nilaiForm();
+            const baris = [];
+            if (cfg.gaAktif) {
+              baris.push(texts.ga + ": " + (html.includes("gtag/js?id=" + cfg.gaId) ? texts.found : texts.missing));
+            }
+            if (cfg.adsenseAktif && cfg.adsenseAuto) {
+              baris.push(texts.adsense + ": " + (html.includes("client=" + cfg.adsenseId) ? texts.found : texts.missing));
+            }
+            if (cfg.gscAktif) {
+              baris.push(texts.gsc + ": " + (html.includes('name="google-site-verification"') ? texts.found : texts.missing));
+            }
+            const semua = baris.length > 0 && baris.every((b) => b.endsWith(texts.found));
+            pesan(baris.join(" · ") || texts.checkFail, semua ? "is-ok" : "is-off");
+          } catch (err) {
+            pesan(texts.checkFail, "is-off");
+          }
+        }
+      });
+    })();
+  </script>
+</Base>

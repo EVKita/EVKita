@@ -6536,3 +6536,283 @@ body:has(.modal-backdrop.open) .fab {
     max-width: 130px;
   }
 }
+
+/* =========================================================================
+   Analitik & Integrasi
+
+   Dua halaman yang lahir bersamaan dan saling menunjuk: yang satu menampilkan
+   angka kunjungan yang dicatat server ini sendiri, yang lain memasang tag
+   Google. Gaya keduanya menumpang komponen yang sudah ada (panel, stat-card,
+   bar-chart); yang di bawah cuma yang benar-benar baru.
+   ========================================================================= */
+
+/* --- Kartu angka dengan penanda naik/turun --- */
+.analitik-stats .stat-num {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stat-delta {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--adm-surface-2);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hijau dan merah dipakai apa adanya, TANPA membalik artinya untuk "bot":
+   naik-turun di sini selalu berarti naik-turun, dan kolom yang memakai warna
+   dengan aturan sendiri akan salah dibaca justru saat dilirik sekilas. */
+.stat-delta.is-up {
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  color: var(--ok);
+}
+
+.stat-delta.is-down {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
+/* --- Grafik harian --- */
+.tren svg {
+  display: block;
+  width: 100%;
+  height: 220px;
+  overflow: visible;
+}
+
+.tren-bar {
+  fill: var(--accent);
+  opacity: 0.75;
+  transition: opacity var(--adm-t);
+}
+
+.tren-bar:hover {
+  opacity: 1;
+}
+
+.tren-garis {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.55;
+  /* viewBox direntangkan lewat preserveAspectRatio="none", jadi tanpa baris
+     ini ketebalan garisnya ikut melar mengikuti lebar layar. */
+  vector-effect: non-scaling-stroke;
+}
+
+.tren-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.tren-label {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tren-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tren-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.tren-key::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--accent);
+  opacity: 0.75;
+}
+
+.tren-key-line::before {
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text);
+  opacity: 0.55;
+}
+
+.tren-max {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Sebaran per jam --- */
+.jam-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 130px;
+}
+
+.jam-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.jam-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent);
+  opacity: 0.7;
+  min-height: 2px;
+}
+
+.jam-col:hover .jam-bar {
+  opacity: 1;
+}
+
+.jam-label {
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.jam-chart + .hint {
+  margin-top: 24px;
+  display: block;
+}
+
+.analitik-note {
+  padding: 14px 16px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.analitik-note p {
+  margin: 0 0 6px;
+}
+
+.analitik-note p:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Halaman Integrasi --- */
+.integrasi-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.integrasi-logo {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--adm-surface-2);
+  font-size: 18px;
+}
+
+/* Penanda hidup/mati per layanan. Sengaja teks, bukan cuma titik warna:
+   "Aktif" yang terbaca mengalahkan lingkaran hijau yang harus ditebak. */
+.integrasi-status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.integrasi-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.5;
+}
+
+.integrasi-status.is-on {
+  border-color: color-mix(in srgb, var(--ok) 45%, transparent);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+  color: var(--ok);
+}
+
+.integrasi-status.is-on::before {
+  background: var(--ok);
+  opacity: 1;
+}
+
+/* Baris "salin alamat ini ke Google": kotak alamat + tombol salin. */
+.salin-baris {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.salin-nilai {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-surface-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  color: var(--text);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.integrasi-langkah {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.integrasi-langkah li + li {
+  margin-top: 4px;
+}
+
+.integrasi-hasil {
+  margin-top: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.integrasi-hasil.is-ok {
+  color: var(--ok);
+}
+
+.integrasi-hasil.is-off {
+  color: var(--danger);
+}

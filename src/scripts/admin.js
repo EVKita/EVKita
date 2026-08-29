@@ -77,7 +77,7 @@ let t = makeT(locale);
 
 /* "editor", "profile", dan "users" adalah halaman penuh tanpa butir sidebar
    sendiri di kelompok koleksi. */
-const VIEWS = ["dashboard", "cars", "motors", "spklu", "bengkel", "berita", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
+const VIEWS = ["dashboard", "analitik", "cars", "motors", "spklu", "bengkel", "berita", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
 
 /* Dua form yang isinya sama-sama field `site`: Pengaturan Situs dan Tampilan.
    Keduanya ditangani mesin yang sama supaya menambah field cukup satu baris
@@ -1359,6 +1359,7 @@ function setView(view, opts) {
   if (view === "users") loadUsers();
   if (view === "ai") loadAi();
   if (view === "activity") loadActivityPage();
+  if (view === "analitik") loadAnalitik();
   if (view === "media") loadMediaDisk();
   if (view !== "editor") window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -4247,13 +4248,14 @@ function perintahPalet() {
   const out = [];
   const admin = isAdmin();
 
-  for (const view of ["dashboard", ...COLLECTIONS, "tampilan", "site", "media", "profile"]) {
+  for (const view of ["dashboard", "analitik", ...COLLECTIONS, "tampilan", "site", "media", "profile"]) {
     out.push({ id: `buka:${view}`, grup: "palette.group.open", label: t(`nav.${view}`), jalan: () => setView(view) });
   }
   for (const view of ["ai", "backups", "users", "activity"]) {
     if (admin) out.push({ id: `buka:${view}`, grup: "palette.group.open", label: t(`nav.${view}`), jalan: () => setView(view) });
   }
   if (admin) out.push({ id: "buka:update", grup: "palette.group.open", label: t("nav.update"), jalan: () => { location.href = "/admin/update"; } });
+  if (admin) out.push({ id: "buka:integrasi", grup: "palette.group.open", label: t("nav.integrasi"), jalan: () => { location.href = "/admin/integrasi"; } });
 
   for (const col of COLLECTIONS) {
     out.push({ id: `tambah:${col}`, grup: "palette.group.add", label: t("palette.addTo", { col: colOne(col) }), jalan: () => openEditor(col, null) });
@@ -4559,6 +4561,18 @@ function bindEvents() {
     if (halAktivitas) {
       activityView.page = Number(halAktivitas.getAttribute("data-activity-page")) || 1;
       loadActivityPage();
+      return;
+    }
+
+    /* --- Analitik --- */
+    if (e.target.closest("#analitik-refresh")) { loadAnalitik(); return; }
+    const rentang = e.target.closest("[data-analitik-hari]");
+    if (rentang) {
+      analitikView.hari = Number(rentang.getAttribute("data-analitik-hari")) || 30;
+      // Memilih rentang berarti keluar dari mode "satu bulan penuh"; keduanya
+      // menjawab pertanyaan yang sama dan tidak bisa aktif berbarengan.
+      analitikView.bulan = "";
+      loadAnalitik();
       return;
     }
 
@@ -5007,6 +5021,13 @@ function bindEvents() {
       activityView[saringan] = el.value;
       activityView.page = 1; // Halaman 7 dari saringan lama hampir pasti tidak ada di saringan baru.
       loadActivityPage();
+      return;
+    }
+
+    /* --- Analitik --- */
+    if (el.getAttribute && el.getAttribute("data-analitik") === "bulan") {
+      analitikView.bulan = el.value;
+      loadAnalitik();
       return;
     }
 
@@ -5476,6 +5497,9 @@ function setLocale(code, opts) {
     if (activeView === "profile") renderProfile();
     if (activeView === "users") renderUsers();
     if (activeView === "ai") renderAi();
+    // Analitik digambar dari jawaban yang sudah ada di tangan, jadi ganti
+    // bahasa cukup menggambar ulang — tanpa menanyakan angkanya lagi.
+    if (activeView === "analitik") renderAnalitik();
   }
 
   if (o.save && me) {
@@ -5559,7 +5583,7 @@ function renderProfile() {
   if (!root) return;
   if (!me) { root.innerHTML = `<div class="skeleton"></div>`; return; }
 
-  const homeOptions = ["dashboard", ...COLLECTIONS, "tampilan", "site", "media"]
+  const homeOptions = ["dashboard", "analitik", ...COLLECTIONS, "tampilan", "site", "media"]
     .map((v) => `<option value="${esc(v)}"${me.homeView === v ? " selected" : ""}>${esc(t(`nav.${v}`))}</option>`)
     .join("");
 
@@ -7193,6 +7217,297 @@ function renderActivityView() {
     : "";
 
   list.innerHTML = activityRowsHtml(entries, { detail: true }) + halaman;
+}
+
+/* ---------------- Halaman Analitik ----------------
+ *
+ * Angkanya datang dari pencatatan sendiri di server ini (src/lib/trafik.js),
+ * bukan dari Google. Konsekuensinya ada dua, dan keduanya disengaja:
+ * laporannya tetap ada meski pembaca memblokir skrip pihak ketiga, dan tidak
+ * ada satu pun cookie yang ditanam ke peramban pembaca demi statistik.
+ *
+ * Yang TIDAK dijawab halaman ini: perilaku per orang, corong konversi, dan
+ * segala sesuatu yang butuh mengenali seseorang lintas hari. Google Analytics
+ * di halaman Integrasi yang menjawab itu — dan keduanya memang saling
+ * melengkapi, bukan saling menggantikan.
+ */
+
+const RENTANG_HARI = [7, 14, 30, 90];
+const analitikView = { hari: 30, bulan: "" };
+let analitikData = null;
+
+async function loadAnalitik() {
+  const root = $("analitik-root");
+  if (!root) return;
+  if (!analitikData) root.innerHTML = `<div class="skeleton"></div>`;
+
+  const q = analitikView.bulan
+    ? `bulan=${encodeURIComponent(analitikView.bulan)}`
+    : `hari=${analitikView.hari}`;
+
+  try {
+    const res = await fetch(`/api/trafik?${q}`);
+    if (res.status === 401) { location.href = "/admin/login"; return; }
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
+    analitikData = data;
+  } catch (err) {
+    analitikData = null;
+    root.innerHTML = emptyStateHtml(t("analitik.failTitle"), err && err.message ? err.message : t("err.forbidden"), "⚠️");
+    const bar = $("analitik-toolbar");
+    if (bar) bar.innerHTML = "";
+    return;
+  }
+  renderAnalitik();
+}
+
+const angka = (n) => i18nNumber(locale, Number(n) || 0);
+
+/** "29 Agu" — cukup untuk sumbu grafik, di mana tahun cuma memakan tempat. */
+function tanggalPendek(tgl) {
+  const d = new Date(`${tgl}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return tgl;
+  return d.toLocaleDateString(intlLocale(locale), { day: "numeric", month: "short", timeZone: "UTC" });
+}
+
+function deltaHtml(pct) {
+  if (pct === null || pct === undefined) return "";
+  const arah = pct > 0 ? "up" : pct < 0 ? "down" : "flat";
+  return `<span class="stat-delta is-${arah}">${esc((pct > 0 ? "+" : "") + pct)}%</span>`;
+}
+
+/**
+ * Grafik harian: batang untuk tampilan halaman, garis untuk pengunjung.
+ *
+ * Digambar sebagai SVG dengan `viewBox` tetap lalu direntangkan lewat CSS —
+ * tanpa pustaka grafik, dan tanpa perlu tahu lebar sesungguhnya saat merender.
+ * Angka tiap harinya ada di `<title>`, jadi menunjuk satu batang menjawab
+ * "berapa tepatnya hari itu?" tanpa satu baris penangan peristiwa pun.
+ */
+function trenHtml(hari) {
+  const W = 720;
+  const H = 210;
+  const ATAS = 12;
+  const BAWAH = 26;
+  const maxTampilan = Math.max(1, ...hari.map((d) => d.tampilan));
+  const lebar = W / Math.max(1, hari.length);
+  const y = (v) => ATAS + (H - ATAS - BAWAH) * (1 - v / maxTampilan);
+
+  const batang = hari
+    .map((d, i) => {
+      const w = Math.max(1.5, lebar * 0.62);
+      const x = i * lebar + (lebar - w) / 2;
+      const atas = y(d.tampilan);
+      const tinggi = Math.max(d.tampilan > 0 ? 1.5 : 0, H - BAWAH - atas);
+      const judul = t("analitik.tip", {
+        tanggal: tanggalPendek(d.tanggal),
+        tampilan: angka(d.tampilan),
+        pengunjung: angka(d.pengunjung),
+      });
+      return `<rect class="tren-bar" x="${x.toFixed(1)}" y="${(H - BAWAH - tinggi).toFixed(1)}" width="${w.toFixed(1)}" height="${tinggi.toFixed(1)}" rx="${Math.min(2.5, w / 2).toFixed(1)}"><title>${esc(judul)}</title></rect>`;
+    })
+    .join("");
+
+  const titik = hari.map((d, i) => `${(i * lebar + lebar / 2).toFixed(1)},${y(d.pengunjung).toFixed(1)}`).join(" ");
+  const garis = hari.length > 1 ? `<polyline class="tren-garis" points="${titik}" />` : "";
+
+  // Label sumbu: awal, tengah, akhir. Lebih dari itu bertumpuk di layar sempit.
+  const label = [0, Math.floor((hari.length - 1) / 2), hari.length - 1]
+    .filter((i, n, arr) => i >= 0 && arr.indexOf(i) === n && hari[i])
+    .map((i) => {
+      const x = i * lebar + lebar / 2;
+      const anchor = i === 0 ? "start" : i === hari.length - 1 ? "end" : "middle";
+      const geser = i === 0 ? 2 : i === hari.length - 1 ? -2 : 0;
+      return `<text class="tren-label" x="${(x + geser).toFixed(1)}" y="${H - 8}" text-anchor="${anchor}">${esc(tanggalPendek(hari[i].tanggal))}</text>`;
+    })
+    .join("");
+
+  return `<div class="tren">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(t("analitik.chartLabel"))}">
+      <line class="tren-grid" x1="0" y1="${y(maxTampilan).toFixed(1)}" x2="${W}" y2="${y(maxTampilan).toFixed(1)}" />
+      <line class="tren-grid" x1="0" y1="${y(maxTampilan / 2).toFixed(1)}" x2="${W}" y2="${y(maxTampilan / 2).toFixed(1)}" />
+      <line class="tren-grid" x1="0" y1="${H - BAWAH}" x2="${W}" y2="${H - BAWAH}" />
+      ${batang}
+      ${garis}
+      ${label}
+    </svg>
+    <div class="tren-legend">
+      <span class="tren-key tren-key-bar">${esc(t("analitik.views"))}</span>
+      <span class="tren-key tren-key-line">${esc(t("analitik.visitors"))}</span>
+      <span class="tren-max">${esc(t("analitik.peakScale", { n: angka(maxTampilan) }))}</span>
+    </div>
+  </div>`;
+}
+
+/** Batang mendatar untuk daftar teratas. Sama gayanya dengan grafik dasbor. */
+function analitikBarHtml(rows, opsi) {
+  const max = rows.reduce((m, r) => Math.max(m, r.n), 0) || 1;
+  return `<div class="bar-chart">${rows
+    .map((r) => {
+      const lebar = Math.max(2, Math.round((r.n / max) * 100));
+      const label = r.href
+        ? `<a class="bar-label" href="${esc(r.href)}" target="_blank" rel="noopener" title="${esc(r.judul || r.label)}">${esc(r.label)}</a>`
+        : `<div class="bar-label" title="${esc(r.judul || r.label)}">${esc(r.label)}</div>`;
+      return `<div class="bar-row">
+        ${label}
+        <div class="bar-track"><div class="bar-fill" style="width:${lebar}%"></div></div>
+        <div class="bar-value">${esc(angka(r.n))}${opsi && opsi.persen ? `<small>${esc(opsi.persen(r))}</small>` : ""}</div>
+      </div>`;
+    })
+    .join("")}</div>`;
+}
+
+/** Sebaran per jam, dalam WIB. Dipakai untuk memilih jam terbit tulisan. */
+function jamHtml(jam) {
+  const max = Math.max(1, ...jam);
+  return `<div class="jam-chart">${jam
+    .map((n, i) => {
+      const tinggi = Math.max(n > 0 ? 4 : 2, Math.round((n / max) * 100));
+      return `<div class="jam-col" title="${esc(t("analitik.hourTip", { jam: String(i).padStart(2, "0"), n: angka(n) }))}">
+        <div class="jam-bar" style="height:${tinggi}%"></div>
+        ${i % 6 === 0 ? `<span class="jam-label">${esc(String(i).padStart(2, "0"))}</span>` : ""}
+      </div>`;
+    })
+    .join("")}</div>`;
+}
+
+function renderAnalitik() {
+  const bar = $("analitik-toolbar");
+  const root = $("analitik-root");
+  if (!bar || !root || !analitikData) return;
+
+  const d = analitikData;
+  const s = d.sekarang;
+  const total = s.total;
+
+  const chips = (d.pilihanHari || RENTANG_HARI)
+    .map(
+      (n) =>
+        `<button type="button" class="chip${!analitikView.bulan && analitikView.hari === n ? " active" : ""}" data-analitik-hari="${n}">${esc(t("analitik.range", { n }))}</button>`
+    )
+    .join("");
+
+  const bulanOpsi = (d.bulanTersedia || [])
+    .map((m) => `<option value="${esc(m)}"${m === analitikView.bulan ? " selected" : ""}>${esc(m)}</option>`)
+    .join("");
+
+  bar.innerHTML = `<div class="toolbar">
+    <div class="toolbar-filters">
+      ${chips}
+      <select class="select-mini" data-analitik="bulan" aria-label="${esc(t("analitik.month"))}">
+        <option value="">${esc(t("analitik.byRange"))}</option>
+        ${bulanOpsi}
+      </select>
+    </div>
+    <div class="toolbar-actions">
+      <span class="row-meta">${esc(
+        s.hari.length
+          ? t("analitik.periode", {
+              dari: tanggalPendek(s.hari[0].tanggal),
+              sampai: tanggalPendek(s.hari[s.hari.length - 1].tanggal),
+            })
+          : t("analitik.periodeKosong")
+      )}</span>
+    </div>
+  </div>`;
+
+  const catatan = `<div class="panel analitik-note">
+    <p>${esc(t("analitik.note"))}</p>
+    <p>${esc(t("analitik.noteGa"))}${
+      isAdmin() ? ` <a href="/admin/integrasi">${esc(t("analitik.openIntegrasi"))}</a>` : ""
+    }</p>
+  </div>`;
+
+  if (!total.tampilan && !total.bot) {
+    root.innerHTML =
+      emptyStateHtml(t("analitik.emptyTitle"), t("analitik.emptyText"), "📈") + catatan;
+    return;
+  }
+
+  const beda = d.beda || {};
+  const kartu = [
+    [t("analitik.views"), angka(total.tampilan), deltaHtml(beda.tampilan)],
+    [t("analitik.visitors"), angka(total.pengunjung), deltaHtml(beda.pengunjung)],
+    [t("analitik.perVisitor"), angka(total.perPengunjung), ""],
+    [
+      t("analitik.peak"),
+      s.puncak ? angka(s.puncak.tampilan) : "—",
+      s.puncak ? `<span class="stat-delta is-flat">${esc(tanggalPendek(s.puncak.tanggal))}</span>` : "",
+    ],
+    [t("analitik.bots"), angka(total.bot), ""],
+  ];
+
+  const halaman = s.halaman.map((h) => ({
+    label: h.label,
+    n: h.n,
+    href: h.label.startsWith("/") ? h.label : "",
+  }));
+
+  const rujukan = s.rujukan.map((r) => ({
+    label: r.label || t("analitik.direct"),
+    n: r.n,
+    href: r.label ? `https://${r.label}` : "",
+  }));
+
+  const perangkat = s.perangkat.map((p) => ({ label: t(`analitik.device.${p.label}`), n: p.n }));
+
+  root.innerHTML = `
+    <div class="stat-grid analitik-stats">${kartu
+      .map(
+        ([label, nilai, tanda]) => `<div class="stat-card">
+          <div class="stat-num">${esc(nilai)}${tanda}</div>
+          <div class="stat-label">${esc(label)}</div>
+        </div>`
+      )
+      .join("")}</div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title">${esc(t("analitik.trend"))}</h2>
+      </div>
+      <div class="panel-body">${trenHtml(s.hari)}</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2 class="panel-title">${esc(t("analitik.topPages"))}</h2></div>
+        <div class="panel-body">${
+          halaman.length
+            ? analitikBarHtml(halaman, { tautan: true })
+            : emptyStateHtml(t("analitik.emptyTitle"), t("analitik.emptyText"), "📄")
+        }</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2 class="panel-title">${esc(t("analitik.sources"))}</h2></div>
+        <div class="panel-body">${
+          rujukan.length
+            ? analitikBarHtml(rujukan)
+            : emptyStateHtml(t("analitik.emptyTitle"), t("analitik.emptyText"), "🔗")
+        }</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2 class="panel-title">${esc(t("analitik.devices"))}</h2></div>
+        <div class="panel-body">${
+          perangkat.length
+            ? analitikBarHtml(perangkat)
+            : emptyStateHtml(t("analitik.emptyTitle"), t("analitik.emptyText"), "📱")
+        }</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">${esc(t("analitik.hours"))}</h2>
+        </div>
+        <div class="panel-body">
+          ${jamHtml(s.jam)}
+          <p class="hint">${esc(t("analitik.hoursHint"))}</p>
+        </div>
+      </div>
+    </div>
+
+    ${catatan}`;
 }
 
 /* ---------------- Penanda pekerjaan berjalan ---------------- */

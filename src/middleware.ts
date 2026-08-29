@@ -1,4 +1,8 @@
 import type { MiddlewareHandler } from "astro";
+import { bacaIntegrasi } from "./lib/integrasi-simpan";
+import { hostCsp } from "./lib/integrasi.js";
+import { catatKunjungan } from "./lib/trafik-rekam";
+import { SESSION_COOKIE } from "./lib/auth";
 
 /**
  * Header keamanan untuk seluruh jawaban.
@@ -21,7 +25,7 @@ import type { MiddlewareHandler } from "astro";
  * bisa disisipkan untuk membelokkan seluruh tautan relatif, formulir tidak bisa
  * mengirim ke domain lain, dan `<object>`/`<embed>` mati sepenuhnya.
  */
-const CSP = [
+const CSP_DASAR = [
   "default-src 'self'",
   // Google Fonts dipakai Base.astro; berkas fontnya datang dari gstatic.
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -51,7 +55,76 @@ const CSP = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-].join("; ");
+];
+
+/**
+ * CSP halaman publik, yang MENGIKUTI integrasi yang menyala.
+ *
+ * Google Analytics dan AdSense memuat skrip dari domain Google, dan CSP dasar
+ * di atas melarang skrip dari domain mana pun selain sendiri. Tanpa pelonggaran
+ * ini, memasang keduanya lewat halaman Integrasi akan "berhasil disimpan" lalu
+ * diam-diam diblokir peramban — kegagalan yang hanya terlihat di konsol
+ * pembaca, tidak pernah di panel.
+ *
+ * Yang dilonggarkan hanya domain milik fitur yang benar-benar dinyalakan
+ * (lihat `hostCsp()` di integrasi.js), dan hanya untuk halaman publik: panel,
+ * halaman masuk, dan wizard pemasangan tidak pernah memuat tag itu, jadi tidak
+ * ada alasan CSP-nya ikut longgar.
+ */
+function cspUntuk(pathname: string): string {
+  const panel = /^\/(admin|install|api)(\/|$)/.test(pathname);
+  if (panel) return CSP_DASAR.join("; ");
+
+  const extra = hostCsp(bacaIntegrasi());
+  if (!extra.script.length && !extra.frame.length && !extra.connect.length) {
+    return CSP_DASAR.join("; ");
+  }
+
+  const tambah = (baris: string, host: string[]) =>
+    host.length ? `${baris} ${host.join(" ")}` : baris;
+
+  return CSP_DASAR.map((baris) => {
+    if (baris.startsWith("script-src")) return tambah(baris, extra.script);
+    if (baris.startsWith("connect-src")) return tambah(baris, extra.connect);
+    // Iklan digambar di dalam iframe. Tanpa baris ini, `default-src 'self'`
+    // yang berlaku, dan setiap slot iklan tampil sebagai kotak kosong.
+    if (baris.startsWith("object-src") && extra.frame.length) {
+      return `frame-src ${extra.frame.join(" ")}; ${baris}`;
+    }
+    return baris;
+  }).join("; ");
+}
+
+/**
+ * Kunjungan yang layak masuk statistik.
+ *
+ * Empat saringan, semuanya di sini supaya `trafik-rekam.ts` tidak perlu tahu
+ * apa pun tentang bentuk permintaan HTTP:
+ *
+ *   - hanya GET yang berhasil dan benar-benar mengembalikan halaman HTML
+ *     (aset, API, dan 404 tidak ikut);
+ *   - bukan pratinjau draf — itu penyunting yang sedang memeriksa
+ *     pekerjaannya sendiri, bukan pembaca;
+ *   - bukan orang yang sedang masuk ke panel, dengan alasan yang sama;
+ *   - sisanya disaring `rapikanPath()`, yang membuang /admin, /api, dan
+ *     apa pun yang berupa berkas.
+ */
+function layakDicatat(context: Parameters<MiddlewareHandler>[0], response: Response): boolean {
+  if (context.request.method !== "GET") return false;
+  if (response.status >= 400) return false;
+  if (!(response.headers.get("Content-Type") || "").includes("text/html")) return false;
+  if (context.url.searchParams.has("pratinjau")) return false;
+  if (context.cookies.get(SESSION_COOKIE)?.value) return false;
+  return true;
+}
+
+function alamatKlien(context: Parameters<MiddlewareHandler>[0]): string {
+  try {
+    return context.clientAddress || "";
+  } catch {
+    return "";
+  }
+}
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
   const response = await next();
@@ -62,7 +135,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   // SVG lama dengan `sandbox`, dan CSP umum di atas justru MENGIZINKAN skrip
   // sebaris — menimpanya berarti membuka kembali celah yang baru saja ditutup.
   if (!h.has("Content-Security-Policy")) {
-    h.set("Content-Security-Policy", CSP);
+    h.set("Content-Security-Policy", cspUntuk(context.url.pathname));
   }
   h.set("X-Content-Type-Options", "nosniff");
   h.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -74,6 +147,34 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   // di peramban selama berbulan-bulan.
   if (context.url.protocol === "https:") {
     h.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+
+  /*
+   * Statistik kunjungan. Hanya menambah angka di memori — berkasnya ditulis
+   * paling cepat sepuluh detik sekali, di luar jalur permintaan ini.
+   *
+   * Alamat IP dipakai sekejap untuk menghitung pengunjung unik lalu hilang;
+   * yang tersimpan cuma sidik ber-garam harian, dan itu pun dibuang begitu
+   * harinya berganti. Lihat src/lib/trafik-rekam.ts.
+   */
+  if (layakDicatat(context, response)) {
+    const diteruskan = context.request.headers.get("x-forwarded-for") || "";
+    catatKunjungan({
+      pathname: context.url.pathname,
+      referrer: context.request.headers.get("referer"),
+      userAgent: context.request.headers.get("user-agent"),
+      /*
+       * Alamat yang diteruskan reverse proxy lebih dulu — sama seperti
+       * `clientKey()` di ratelimit.ts. Tanpa itu SETIAP pembaca datang dari
+       * 127.0.0.1 di mata aplikasi, dan seluruh situs terhitung satu pengunjung.
+       *
+       * `clientAddress` dibungkus try/catch karena Astro melemparkannya pada
+       * halaman yang dirender saat build; statistik tidak boleh menjatuhkan
+       * apa pun, apalagi build.
+       */
+      ip: diteruskan.split(",")[0]?.trim() || alamatKlien(context),
+      host: context.url.hostname,
+    });
   }
 
   return response;

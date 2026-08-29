@@ -13,6 +13,10 @@ import LogoMark from "./LogoMark.astro";
  *                 tiap item jadi tautan biasa ke alamat hash /admin, yang
  *                 tetap dikenali admin.js saat halaman itu terbuka.
  *
+ * Butir yang punya `href` selalu jadi tautan, di kedua mode: ia halaman
+ * tersendiri di luar aplikasi satu-halaman /admin (Integrasi, Pembaruan), jadi
+ * tidak ada tampilan yang bisa dibuka `setView()` untuknya.
+ *
  * Label diterjemahkan di server memakai kamus yang sama dengan admin.js, dan
  * tiap butir membawa `data-i18n` supaya ganti bahasa di sisi klien tidak perlu
  * memuat ulang halaman.
@@ -36,6 +40,10 @@ const NAV = [
       {
         view: "dashboard",
         icon: `<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>`,
+      },
+      {
+        view: "analitik",
+        icon: `<path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 4-5 3 3 5-6"/><circle cx="7" cy="15" r="1.1" fill="currentColor" stroke="none"/><circle cx="11" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="14" cy="13" r="1.1" fill="currentColor" stroke="none"/><circle cx="19" cy="7" r="1.1" fill="currentColor" stroke="none"/>`,
       },
     ],
   },
@@ -85,6 +93,12 @@ const NAV = [
         view: "ai",
         adminOnly: true,
         icon: `<path d="m10 3 1.7 4.6L16.3 9.3 11.7 11 10 15.6 8.3 11 3.7 9.3 8.3 7.6 10 3Z"/><path d="m17.5 13.5.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1Z"/>`,
+      },
+      {
+        view: "integrasi",
+        href: "/admin/integrasi",
+        adminOnly: true,
+        icon: `<path d="M9 7a5 5 0 0 0 0 10h2"/><path d="M15 7a5 5 0 0 1 0 10h-2"/><path d="M8.5 12h7"/>`,
       },
       {
         view: "backups",
@@ -142,7 +156,20 @@ const SVG_ATTRS = {
       <div class="nav-group">
         <div class="nav-group-label" data-i18n={group.key}>{t(group.key)}</div>
         {group.items.map((item) =>
-          isApp ? (
+          "href" in item && item.href ? (
+            <a
+              class:list={["nav-item", "nav-item-link", { active: active === item.view }]}
+              href={item.href}
+              aria-current={active === item.view ? "page" : undefined}
+              hidden={item.adminOnly && !isAdmin}
+              data-requires-admin={item.adminOnly ? "" : undefined}
+            >
+              <span class="nav-item-icon" aria-hidden="true">
+                <svg {...SVG_ATTRS} set:html={item.icon} />
+              </span>
+              <span class="nav-item-label" data-i18n={`nav.${item.view}`}>{t(`nav.${item.view}`)}</span>
+            </a>
+          ) : isApp ? (
             <button
               class:list={["nav-item", { active: active === item.view }]}
               data-view={item.view}

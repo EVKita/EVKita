@@ -130,6 +130,24 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
       </section>
 
       <!-- ===== Mobil ===== -->
+      <!-- ===== Analitik =====
+           Statistik kunjungan dari pencatatan sendiri di server ini. Seluruh
+           isinya digambar admin.js dari /api/trafik; yang ada di sini cuma
+           kerangkanya, sama seperti halaman Log Aktivitas. -->
+      <section class="view" data-view="analitik" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title" data-i18n="analitik.title">{t("analitik.title")}</h1>
+            <p class="view-sub" data-i18n="analitik.sub">{t("analitik.sub")}</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="analitik-refresh" class="btn btn-outline btn-sm" type="button" data-i18n="common.refresh">{t("common.refresh")}</button>
+          </div>
+        </div>
+        <div id="analitik-toolbar"></div>
+        <div id="analitik-root"></div>
+      </section>
+
       <section class="view" data-view="cars" hidden>
         <div class="view-head">
           <div>

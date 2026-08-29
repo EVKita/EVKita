@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import { canonicalUrl } from "../lib/site-url";
 import { themeStyle, themeBodyClass, themeExtraCss, themeFontHref, themeMode } from "../lib/theme.js";
+import TagGoogle from "../components/TagGoogle.astro";
 
 interface Props {
   title?: string;
@@ -63,6 +64,17 @@ const extraCss = themeSource && !accentOnly ? themeExtraCss(themeSource) : "";
 const fontHref = themeFontHref(themeSource || {});
 const mode = themeSource ? themeMode(themeSource) : "auto";
 const bodyClasses = [bodyClass, themeClass].filter(Boolean).join(" ");
+
+/*
+ * Tag Google (Analytics, AdSense, Search Console) hanya untuk halaman publik.
+ *
+ * Penandanya `site` tanpa `accentOnly`: halaman panel memakai layout ini juga,
+ * tapi ia hanya meminjam warna aksennya (`accentOnly`), dan wizard pemasangan
+ * tidak mengirim `site` sama sekali. Dengan begitu tidak ada satu pun halaman
+ * di balik login yang memuat skrip pihak ketiga — termasuk halaman masuk, yang
+ * justru paling tidak pantas mengirimkan alamatnya ke mana-mana.
+ */
+const tagPublik = !!site && !accentOnly;
 ---
 <!DOCTYPE html>
 <html lang={lang} data-theme-mode={mode}>
@@ -171,6 +183,7 @@ const bodyClasses = [bodyClass, themeClass].filter(Boolean).join(" ");
     <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href={fontHref} /></noscript>
     {extraCss ? <style is:inline set:html={extraCss}></style> : null}
+    {tagPublik && <TagGoogle />}
     <slot name="head" />
   </head>
   <body style={bodyStyle} class={bodyClasses}>

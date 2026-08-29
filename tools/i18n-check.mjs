@@ -79,6 +79,17 @@ const SAMA_SENGAJA = new Set([
   "zh:tampilan.customCss.ph",
   // "Total" memang kata yang sama di kedua bahasa.
   "en:ai.balance.total",
+  // Nama produk Google, ditulis sama di ketiga bahasa — menerjemahkannya
+  // justru membuat orang tidak menemukannya lagi di antarmuka Google.
+  "en:integrasi.ga",
+  "zh:integrasi.ga",
+  "en:integrasi.adsense",
+  "zh:integrasi.adsense",
+  "en:integrasi.gsc",
+  "zh:integrasi.gsc",
+  "en:analitik.device.tablet",
+  "en:analitik.periode",
+  "zh:analitik.periode",
 ]);
 
 /**
@@ -124,6 +135,8 @@ const DYNAMIC_PREFIXES = [
   "ai.step.",
   "ai.conf.",
   "ai.model.",
+  // Dirakit saat berjalan: t(`analitik.device.${jenis}`).
+  "analitik.device.",
 ];
 
 const RED = (s) => `\x1b[31m${s}\x1b[0m`;
@@ -256,6 +269,7 @@ const PANEL_FILES = [
   "src/pages/admin/index.astro",
   "src/pages/admin/login.astro",
   "src/pages/admin/update.astro",
+  "src/pages/admin/integrasi.astro",
 ];
 
 /**
