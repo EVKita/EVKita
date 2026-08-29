@@ -12,6 +12,7 @@ import {
   formatRelative,
 } from "../lib/i18n/index.js";
 import { safeUrl } from "../lib/url.js";
+import { konfirmasi } from "./konfirmasi.js";
 import { mediaEntry, MEDIA_LIMITS } from "../lib/media.js";
 import {
   MAX_MENU_COLS,
@@ -395,7 +396,6 @@ let activeView = "dashboard";
 let vehicleCtx = null; // { col, id, draft:{ image, gallery[] } }
 let dirCtx = null;     // { col, id, draft:{ [key]: url } }
 let mediaUploads = [];
-let confirmResolver = null;
 let editorTouched = false;
 const modalStack = [];
 
@@ -641,6 +641,7 @@ async function requestCloseModal(modal) {
       title: t("confirm.discardTitle"),
       text: t("confirm.discardText"),
       okText: t("confirm.discardOk"),
+      tone: "warning",
     });
     if (!ok) return;
   }
@@ -648,38 +649,24 @@ async function requestCloseModal(modal) {
   closeModal(modal);
 }
 
+/**
+ * Pembungkus tipis di atas `konfirmasi()`.
+ *
+ * Yang ditambahkan di sini hanya dua hal yang memang milik panel ini: teks
+ * bawaan yang sudah diterjemahkan, dan penerjemahan bendera `danger` lama
+ * menjadi nada. Dialognya sendiri tinggal di `konfirmasi.js`, yang tidak
+ * mengenal kamus sama sekali — halaman Pembaruan memakai dialog yang sama
+ * tanpa pernah memuat kamus itu.
+ */
 function confirmDialog(opts) {
-  const modal = $("confirm-modal");
-  const o = Object.assign({ title: t("common.confirm"), text: "", okText: t("common.delete"), danger: true }, opts || {});
-  if (!modal) return Promise.resolve(true);
-
-  const titleEl = $("confirm-title");
-  const textEl = $("confirm-text");
-  const okBtn = $("confirm-ok");
-  const cancelBtn = $("confirm-cancel");
-  if (titleEl) titleEl.textContent = o.title;
-  if (textEl) textEl.textContent = o.text;
-  if (okBtn) {
-    okBtn.textContent = o.okText;
-    okBtn.className = "btn " + (o.danger ? "btn-danger" : "btn-primary");
-  }
-  if (cancelBtn) {
-    // Tombol batal biasanya cukup berbunyi "Batal", tapi pada dialog tabrakan
-    // ia adalah sebuah PILIHAN ("Muat ulang"), bukan jalan keluar. Kuncinya
-    // ikut diperbarui supaya applyStaticI18n() tidak menimpanya kembali saat
-    // bahasa berganti.
-    cancelBtn.textContent = o.cancelText || t("common.cancel");
-    cancelBtn.setAttribute("data-i18n", o.cancelKey || "common.cancel");
-  }
-  openModal(modal);
-  if (okBtn) okBtn.focus();
-
-  return new Promise((resolve) => {
-    confirmResolver = (val) => {
-      confirmResolver = null;
-      closeModal(modal);
-      resolve(val);
-    };
+  const o = opts || {};
+  return konfirmasi({
+    title: o.title || t("common.confirm"),
+    text: o.text || "",
+    detail: o.detail || "",
+    okText: o.okText || t("common.delete"),
+    cancelText: o.cancelText || t("common.cancel"),
+    tone: o.tone || (o.danger === false ? "question" : "danger"),
   });
 }
 
@@ -1838,6 +1825,7 @@ async function deleteItem(col, id) {
   const ok = await confirmDialog({
     title: t("confirm.deleteTitle"),
     text: t("confirm.deleteText", { name: titleOf(col, item), col: colLabel(col) }),
+    detail: t("confirm.undoHint"),
     okText: t("common.delete"),
   });
   if (!ok) return;
@@ -1859,7 +1847,7 @@ async function bulkAction(col, action) {
   if (action === "clear") { state.sel.clear(); renderCollection(col); return; }
 
   if (action === "delete") {
-    const ok = await confirmDialog({ title: t("confirm.deleteBulkTitle"), text: t("confirm.deleteBulkText", { n: ids.length, col: colLabel(col) }), okText: t("common.deleteAll") });
+    const ok = await confirmDialog({ title: t("confirm.deleteBulkTitle"), text: t("confirm.deleteBulkText", { n: ids.length, col: colLabel(col) }), detail: t("confirm.undoHint"), okText: t("common.deleteAll") });
     if (!ok) return;
     const before = snapshotNow();
     content[col] = content[col].filter((x) => !state.sel.has(x.id));
@@ -2874,9 +2862,16 @@ function applyPreset(id) {
 }
 
 /** Mengembalikan SELURUH setelan tampilan ke bawaannya, termasuk CSS kustom. */
-function resetTampilan() {
+async function resetTampilan() {
   if (!content) return;
-  if (!confirm(t("tampilan.reset.confirm"))) return;
+  const ok = await confirmDialog({
+    title: t("tampilan.reset"),
+    text: t("tampilan.reset.confirm"),
+    detail: t("tampilan.reset.detail"),
+    okText: t("tampilan.reset"),
+    tone: "warning",
+  });
+  if (!ok) return;
   Object.assign(content.site, APPEARANCE_DEFAULTS, APPEARANCE_FLAGS);
   renderSiteForm({ force: true });
   commit({ render: false });
@@ -3274,8 +3269,9 @@ async function restoreBackup(name) {
   const ok = await confirmDialog({
     title: t("confirm.restoreTitle"),
     text: t("confirm.restoreText"),
+    detail: t("confirm.restoreDetail"),
     okText: t("common.restore"),
-    danger: false,
+    tone: "warning",
   });
   if (!ok) return;
   try {
@@ -3330,7 +3326,7 @@ async function importCollection(col, parsed) {
     title: t("confirm.importTitle"),
     text: t("confirm.importText", { n: rows.length, col: colLabel(col) }),
     okText: t("common.import"),
-    danger: false,
+    tone: "warning",
   });
   if (!ok) return;
   for (const row of rows) {
@@ -3611,10 +3607,6 @@ function bindEvents() {
     if (e.target.closest("#ai-key-remove")) { removeAiKey(); return; }
     if (e.target.closest("#ai-balance-refresh")) { loadAi({ segar: true }); return; }
 
-    /* --- Dialog konfirmasi --- */
-    if (e.target.closest("#confirm-ok")) { if (confirmResolver) confirmResolver(true); return; }
-    if (e.target.closest("#confirm-cancel")) { if (confirmResolver) confirmResolver(false); return; }
-
     /* --- Palette --- */
     if (e.target.closest("[data-palette-close]")) { closeModal(palette); return; }
 
@@ -3622,12 +3614,10 @@ function bindEvents() {
     const closeBtn = e.target.closest(".modal-close, [data-close-modal]");
     if (closeBtn) {
       const modal = closeBtn.closest(".modal-backdrop");
-      if (modal === $("confirm-modal") && confirmResolver) { confirmResolver(false); return; }
       requestCloseModal(modal);
       return;
     }
     if (e.target.classList && e.target.classList.contains("modal-backdrop")) {
-      if (e.target === $("confirm-modal")) { if (confirmResolver) confirmResolver(false); return; }
       requestCloseModal(e.target);
       return;
     }
@@ -3740,7 +3730,7 @@ function bindEvents() {
     if (e.target.closest("#backup-import")) {
       pickJson(async (parsed) => {
         if (!parsed || typeof parsed !== "object" || !parsed.site) { toast(t("toast.notABackup"), "error"); return; }
-        const ok = await confirmDialog({ title: t("confirm.replaceTitle"), text: t("confirm.replaceText"), okText: t("common.replace"), danger: false });
+        const ok = await confirmDialog({ title: t("confirm.replaceTitle"), text: t("confirm.replaceText"), okText: t("common.replace"), tone: "question" });
         if (!ok) return;
         content = parsed;
         commit();
@@ -4222,7 +4212,9 @@ function bindEvents() {
     }
 
     if (e.key === "Escape") {
-      if (confirmResolver) { confirmResolver(false); return; }
+      /* Dialog konfirmasi menangkap Escape lebih dulu di fase capture dan
+         menghentikan penyebarannya, jadi kalau baris ini tercapai berarti
+         tidak ada dialog yang terbuka. Lihat konfirmasi.js. */
       const top = modalStack[modalStack.length - 1];
       if (top) { requestCloseModal(top); return; }
       const app = $("admin-app");
@@ -4247,6 +4239,7 @@ function bindEvents() {
         title: t("confirm.leaveTitle"),
         text: t("confirm.leaveText"),
         okText: t("common.leave"),
+        tone: "warning",
       }).then((ok) => {
         if (!ok) { setHash(back); return; }
         editorTouched = false;

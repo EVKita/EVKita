@@ -1249,7 +1249,9 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
     </div>
   </div>
 
-  <!-- ===== Dialog konfirmasi ===== -->
+  <!-- Dialog konfirmasi tidak punya markup di sini: ia dibangun sendiri oleh
+       src/scripts/konfirmasi.js, supaya halaman Pembaruan bisa memakai dialog
+       yang sama tanpa menyalin markupnya. -->
   <!-- ===== Modal media =====
        Pratinjau besar satu gambar plus segala yang diketahui tentangnya:
        ukuran, tempat pemakaian, dan tiga field metadata. Panah kiri/kanan
@@ -1323,16 +1325,6 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
     </div>
   </div>
 
-  <div id="confirm-modal" class="modal-backdrop">
-    <div class="modal modal-sm">
-      <div class="modal-head"><h3 class="modal-title" id="confirm-title"></h3></div>
-      <div class="modal-body"><p id="confirm-text"></p></div>
-      <div class="modal-foot">
-        <button type="button" class="btn btn-ghost" id="confirm-cancel" data-i18n="common.cancel">{t("common.cancel")}</button>
-        <button type="button" class="btn btn-danger" id="confirm-ok"></button>
-      </div>
-    </div>
-  </div>
 
   <!-- Tombol tambah melayang: hanya tampil di layar sempit, isinya mengikuti halaman aktif. -->
   <button id="quick-add" class="fab" type="button" hidden>

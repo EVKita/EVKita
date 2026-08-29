@@ -7,6 +7,18 @@
  * dipakai bersama karena berkas itu ikut memuat seluruh CMS — halaman
  * pembaruan tidak butuh apa pun dari sana.
  */
+import { konfirmasi } from "./konfirmasi.js";
+
+/**
+ * Dialog konfirmasi dititipkan ke `window`, dan itu memang satu-satunya cara.
+ *
+ * Skrip halaman Pembaruan memakai `define:vars` untuk menerima teks yang sudah
+ * diterjemahkan di server. Astro menjadikan skrip semacam itu skrip INLINE,
+ * bukan modul yang dibundel — jadi `import` di dalamnya tidak berjalan. Berkas
+ * ini yang dibundel, jadi ia yang membawakan dialognya.
+ */
+window.evkitaKonfirmasi = konfirmasi;
+
 (function () {
   const app = document.getElementById("admin-app");
   if (!app) return;

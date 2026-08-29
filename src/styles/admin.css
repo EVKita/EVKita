@@ -6075,3 +6075,178 @@ body:has(.modal-backdrop.open) .fab {
   font-size: 11px;
   opacity: 0.72;
 }
+
+/* =========================================================================
+   Dialog konfirmasi
+   Lihat src/scripts/konfirmasi.js. Dipakai /admin DAN /admin/update, jadi
+   gayanya tidak boleh bergantung pada apa pun yang hanya ada di salah satunya.
+   ========================================================================= */
+
+.kdialog-backdrop {
+  position: fixed;
+  inset: 0;
+  /* Di atas seluruh modal (120) dan bilah melayang: dialog ini selalu muncul
+     DI ATAS sesuatu — "buang perubahan?" berdiri di atas editor yang terbuka. */
+  z-index: 220;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, #090b0f 58%, transparent);
+  backdrop-filter: blur(7px) saturate(1.1);
+  -webkit-backdrop-filter: blur(7px) saturate(1.1);
+  opacity: 0;
+  transition: opacity 170ms ease;
+}
+
+.kdialog-backdrop[hidden] {
+  display: none;
+}
+
+.kdialog-backdrop.is-open {
+  opacity: 1;
+}
+
+.kdialog {
+  width: min(460px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  box-shadow: var(--adm-shadow-lg);
+  padding: 24px 24px 18px;
+  opacity: 0;
+  /* Naik sedikit sambil membesar, bukan sekadar muncul. Pelengkungannya
+     berhenti tegas di ujung (cubic-bezier ala "keluar cepat, mendarat halus"),
+     yang membuat dialognya terasa sigap alih-alih mengambang. */
+  transform: translateY(12px) scale(0.965);
+  transition:
+    opacity 190ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 190ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kdialog-backdrop.is-open .kdialog {
+  opacity: 1;
+  transform: none;
+}
+
+/* Menutup lebih cepat daripada membuka: keputusannya sudah diambil, dan
+   menunggu animasi setelah menekan tombol terasa seperti aplikasi yang lambat. */
+.kdialog-backdrop.is-closing {
+  opacity: 0;
+  transition-duration: 130ms;
+}
+
+.kdialog-backdrop.is-closing .kdialog {
+  opacity: 0;
+  transform: translateY(4px) scale(0.985);
+  transition-duration: 130ms;
+}
+
+.kdialog-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.kdialog-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--danger) 13%, transparent);
+  color: var(--danger);
+}
+
+.kdialog-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.kdialog-icon[data-tone="warning"] {
+  background: color-mix(in srgb, var(--adm-warn) 16%, transparent);
+  color: var(--adm-warn);
+}
+
+.kdialog-icon[data-tone="info"],
+.kdialog-icon[data-tone="question"] {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.kdialog-icon[data-tone="success"] {
+  background: color-mix(in srgb, var(--adm-ok) 15%, transparent);
+  color: var(--adm-ok);
+}
+
+.kdialog-copy {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.kdialog-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.kdialog-text {
+  margin: 7px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.kdialog-detail {
+  margin: 9px 0 0;
+  padding: 8px 11px;
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-surface);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.kdialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.kdialog-actions .btn {
+  min-width: 96px;
+  justify-content: center;
+}
+
+/* Layar sempit: tombolnya jadi setumpuk penuh, dengan yang utama di ATAS.
+   Ibu jari berada di dekat tepi bawah, dan tombol hapus yang mendarat persis
+   di sana adalah cara termudah menghapus sesuatu tanpa sengaja. */
+@media (max-width: 460px) {
+  .kdialog {
+    padding: 20px 18px 16px;
+  }
+
+  .kdialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .kdialog-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kdialog-backdrop,
+  .kdialog {
+    transition-duration: 1ms;
+  }
+
+  .kdialog {
+    transform: none;
+  }
+}

@@ -77,7 +77,11 @@ const texts = {
   doneReauthNote: t("update.doneReauthNote"),
   cannotStart: t("update.cannotStart"),
   cannotReach: t("update.cannotReach"),
+  confirmTitle: t("update.confirmTitle"),
   confirmInstall: t("update.confirmInstall"),
+  confirmDetail: t("update.confirmDetail"),
+  confirmOk: t("update.confirmOk"),
+  cancel: t("common.cancel"),
   // Tanpa argumen, placeholder {version} dibiarkan utuh dan diisi di browser.
   done: t("update.done"),
 };
@@ -467,9 +471,26 @@ const texts = {
       };
 
       btn.addEventListener("click", async () => {
-        if (!confirm(texts.confirmInstall)) {
-          return;
-        }
+        /* Dialog dititipkan ke window oleh admin-shell.js — skrip ini memakai
+           define:vars, jadi ia inline dan tidak bisa mengimpor apa pun sendiri.
+
+           Kalau bundelnya gagal dimuat, kotak bawaan peramban yang dipakai.
+           Itu memang persis yang baru saja diganti, tapi pilihannya bukan
+           antara bagus dan jelek melainkan antara ditanya dengan kotak jelek
+           dan TIDAK DITANYA SAMA SEKALI — dan tombol yang diam saja ditekan
+           adalah kegagalan yang lebih buruk lagi. */
+        const lanjut =
+          typeof window.evkitaKonfirmasi === "function"
+            ? await window.evkitaKonfirmasi({
+                title: texts.confirmTitle,
+                text: texts.confirmInstall,
+                detail: texts.confirmDetail,
+                okText: texts.confirmOk,
+                cancelText: texts.cancel,
+                tone: "warning",
+              })
+            : confirm(texts.confirmTitle + "\n\n" + texts.confirmInstall);
+        if (!lanjut) return;
         box.classList.remove("is-done", "is-failed");
         if (relogin) relogin.hidden = true;
         settled = false;
