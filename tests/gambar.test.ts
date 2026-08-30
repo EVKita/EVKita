@@ -92,10 +92,11 @@ describe("gambar kendaraan", () => {
   });
 
   it("kendaraan tanpa gambar jatuh ke ilustrasi, bukan ke kotak rusak", () => {
-    // Satu kendaraan memang tidak punya gambar: Alessa Forte, yang belum punya
-    // berkasnya. Field kosong itu yang membuat `visualHTML()` memilih `carSVG()`
-    // — kalau URL matinya dibiarkan, yang tampil kotak rusak.
+    // Setelah seluruh model Alessa diberi fotonya sendiri, tidak ada lagi
+    // kendaraan yang gambarnya kosong. Daftar kosong inilah yang kita jaga:
+    // kalau ada yang kosong, `visualHTML()` jatuh ke `carSVG()` — dan uji ini
+    // mengingatkan bahwa foto itu belum diisi.
     const kosong = kendaraan.filter((v) => !v.image).map((v) => v.id);
-    assert.deepEqual(kosong, ["alessa-forte"]);
+    assert.deepEqual(kosong, []);
   });
 });
