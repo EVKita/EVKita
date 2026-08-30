@@ -57,6 +57,15 @@ const spkluList = byFeatured(spklu);
 const bengkelList = byFeatured(bengkel);
 const beritaList = byFeatured(berita);
 
+/**
+ * Bengkel dipisah menjadi dua kelompok supaya pembaca tidak mencampur servis
+ * motor dengan servis mobil. Entri bertipe "Mobil & Motor" tampil di keduanya.
+ */
+const bengkelGroups = [
+  { title: "Motor Listrik", items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
+  { title: "Mobil Listrik", items: bengkelList.filter((b: any) => b.type.includes("Mobil")) },
+].filter((g) => g.items.length);
+
 /** Baris meta kartu direktori: hanya yang terisi, supaya kartu tidak bolong. */
 function metaRows(pairs: [string, any][]) {
   return pairs.filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "");
@@ -379,35 +388,40 @@ const jsonLd = {
               {site.bengkelNote ? <p class="section-note">{site.bengkelNote}</p> : null}
             </div>
           </div>
-          <div class="dir-grid">
-            {bengkelList.map((b: any) => (
-              <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
-                <div class="dir-top">
-                  <span class="dir-badge">{b.type || "Bengkel"}</span>
-                  {b.featured ? <span class="badge badge-featured">Pilihan</span> : null}
-                </div>
-                <h3 class="dir-title">{b.name}</h3>
-                {b.brand ? <p class="dir-sub">{b.brand}</p> : null}
-                <ul class="dir-meta-list">
-                  {metaRows([
-                    ["Lokasi", b.area],
-                    ["Alamat", b.address],
-                    ["Telepon", b.phone],
-                    ["Jam", b.hours],
-                    ["Layanan", b.services],
-                  ]).map(([k, v]) => (
-                    <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
-                  ))}
-                </ul>
-                {b.note ? <p class="dir-note">{b.note}</p> : null}
-                <div class="dir-actions">
-                  {safeUrl(b.website) ? <a class="dir-link" href={safeUrl(b.website)} target="_blank" rel="noopener">Situs resmi →</a> : null}
-                  {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>Telepon</a> : null}
-                  {safeUrl(b.mapUrl) ? <a class="dir-link ghost" href={safeUrl(b.mapUrl)} target="_blank" rel="noopener">Buka peta</a> : null}
-                </div>
-              </article>
-            ))}
-          </div>
+          {bengkelGroups.map((g: any) => (
+            <div class="dir-group">
+              <h3 class="dir-group-title">{g.title}</h3>
+              <div class="dir-grid">
+                {g.items.map((b: any) => (
+                  <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
+                    <div class="dir-top">
+                      <span class="dir-badge">{b.type || "Bengkel"}</span>
+                      {b.featured ? <span class="badge badge-featured">Pilihan</span> : null}
+                    </div>
+                    <h3 class="dir-title">{b.name}</h3>
+                    {b.brand ? <p class="dir-sub">{b.brand}</p> : null}
+                    <ul class="dir-meta-list">
+                      {metaRows([
+                        ["Lokasi", b.area],
+                        ["Alamat", b.address],
+                        ["Telepon", b.phone],
+                        ["Jam", b.hours],
+                        ["Layanan", b.services],
+                      ]).map(([k, v]) => (
+                        <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
+                      ))}
+                    </ul>
+                    {b.note ? <p class="dir-note">{b.note}</p> : null}
+                    <div class="dir-actions">
+                      {safeUrl(b.website) ? <a class="dir-link" href={safeUrl(b.website)} target="_blank" rel="noopener">Situs resmi →</a> : null}
+                      {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>Telepon</a> : null}
+                      {safeUrl(b.mapUrl) ? <a class="dir-link ghost" href={safeUrl(b.mapUrl)} target="_blank" rel="noopener">Buka peta</a> : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     ) : null}

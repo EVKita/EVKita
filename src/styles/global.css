@@ -2068,6 +2068,33 @@ body.nav-open .nav-drawer-link {
   gap: 16px;
 }
 
+.dir-group {
+  margin-top: 26px;
+}
+
+.dir-group:first-child {
+  margin-top: 0;
+}
+
+.dir-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dir-group-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 .dir-card {
   position: relative;
   display: flex;
