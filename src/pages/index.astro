@@ -72,6 +72,22 @@ function metaRows(pairs: [string, any][]) {
 }
 
 /**
+ * Tautan lokasi SPKLU. `mapUrl` diisi dari panel; selama kosong, tautannya
+ * membuka pencarian Google Maps nama penyedia supaya tombol tidak pernah mati.
+ */
+function spkluMapUrl(s: any) {
+  return safeUrl(s.mapUrl) || `https://www.google.com/maps/search/${encodeURIComponent(`${s.name} SPKLU`)}`;
+}
+
+/** Ketersediaan SPKLU untuk mobil dan motor. Jenis kosong dianggap Mobil. */
+function spkluJenis(s: any) {
+  return {
+    mobil: !s.jenis || String(s.jenis).includes("Mobil"),
+    motor: String(s.jenis || "").includes("Motor"),
+  };
+}
+
+/**
  * Katalog yang dirender SERVER.
  *
  * Sebelum ini beranda mengirim `<div id="grid">` yang kosong dan menyerahkan
@@ -368,9 +384,13 @@ const jsonLd = {
                   ))}
                 </ul>
                 {s.note ? <p class="dir-note">{s.note}</p> : null}
+                <div class="spklu-avail">
+                  <span class="spklu-avail-label">Tersedia untuk</span>
+                  <span class={`avail ${spkluJenis(s).mobil ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).mobil ? "✓" : "✗"} Mobil</span>
+                  <span class={`avail ${spkluJenis(s).motor ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).motor ? "✓" : "✗"} Motor</span>
+                </div>
                 <div class="dir-actions">
-                  {safeUrl(s.website) ? <a class="dir-link" href={safeUrl(s.website)} target="_blank" rel="noopener">Situs resmi →</a> : null}
-                  {safeUrl(s.mapUrl) ? <a class="dir-link ghost" href={safeUrl(s.mapUrl)} target="_blank" rel="noopener">Buka peta</a> : null}
+                  <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">Lokasi SPKLU →</a>
                 </div>
               </article>
             ))}

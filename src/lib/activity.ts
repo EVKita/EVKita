@@ -88,6 +88,12 @@ export type ActivityAction =
    */
   | "integrasi.update"
   /**
+   * Pengaturan SMTP formulir kontak dipasang atau dihapus. Yang dicatat hanya
+   * SIAPA dan KAPAN — kata sandinya tidak pernah masuk ke sini.
+   */
+  | "kontak.smtpSet"
+  | "kontak.smtpRemoved"
+  /**
    * Perubahan konten, dirinci.
    *
    * `content.save` di atas tetap ada dan tidak boleh dihapus: berkas log yang
@@ -344,7 +350,7 @@ export const GOLONGAN_AKSI: Record<string, (aksi: string) => boolean> = {
   konten: (a) => a.startsWith("content."),
   akun: (a) => a.startsWith("user.") || a.startsWith("profile.") || a === "password.change" || a === "sessions.revoke",
   masuk: (a) => a === "login" || a === "login.blocked",
-  sistem: (a) => a === "backup.restore" || a === "update.start" || a === "integrasi.update",
+  sistem: (a) => a === "backup.restore" || a === "update.start" || a === "integrasi.update" || a.startsWith("kontak."),
   ai: (a) => a.startsWith("ai."),
 };
 

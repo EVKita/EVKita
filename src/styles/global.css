@@ -2211,6 +2211,43 @@ body.nav-open .nav-drawer-link {
   color: var(--accent-ink);
 }
 
+.spklu-avail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.spklu-avail-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.avail.is-ya {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.avail.is-tidak {
+  background: var(--bg-tint);
+  color: var(--text-muted);
+}
+
 /* ===== Berita ===== */
 .news-grid {
   display: grid;
@@ -2576,6 +2613,73 @@ body.nav-open .nav-drawer-link {
 .footer-contact a:hover {
   color: var(--accent-ink);
   text-decoration: none;
+}
+
+/* ----- Formulir kontak ----- */
+
+.footer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.footer-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.footer-form-field label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.72;
+}
+
+.footer-form input,
+.footer-form textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.footer-form input:focus,
+.footer-form textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.footer-form textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.footer-form .btn {
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.footer-form-status {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.footer-form-status.is-ok {
+  color: var(--accent-ink);
+}
+
+.footer-form-status.is-off {
+  color: var(--danger, #d64545);
 }
 
 /* ----- Sosial ----- */

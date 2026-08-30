@@ -434,7 +434,8 @@ export type Capability =
   | "media.delete"
   | "ai"
   | "ai.run"
-  | "integrasi";
+  | "integrasi"
+  | "kontak";
 
 /**
  * Peran mana yang boleh melakukan apa, ditulis lengkap.
@@ -499,6 +500,13 @@ const CAPABILITY_ROLES: Record<Capability, readonly Role[]> = {
    * hal yang lebih berguna. Yang ditutup adalah pengaturannya, bukan bacaannya.
    */
   integrasi: ["owner", "admin"],
+
+  /*
+   * Pengaturan SMTP untuk formulir kontak. Berisi kata sandi SMTP — rahasia
+   * yang menentukan dari alamat mana surat situs ini dikirim, jadi setara
+   * dengan `ai` (kunci API), bukan sesuatu yang boleh dipegang Editor.
+   */
+  kontak: ["owner", "admin"],
 };
 
 export function can(user: { role: Role } | null, capability: Capability): boolean {

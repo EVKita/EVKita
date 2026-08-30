@@ -13,6 +13,7 @@ import LogoMark from "./LogoMark.astro";
 import { SOCIAL_NETWORKS, CONTACT_ROWS } from "../lib/footer.js";
 import { readContent } from "../lib/store";
 import { tautanFooter } from "../lib/laman.js";
+import { smtpTerpasang } from "../lib/smtp";
 
 interface Props {
   site: Record<string, any>;
@@ -119,6 +120,13 @@ const copyright = site.footerCopyright
   : `© ${year} ${brand}${site.footerTitle ? ` — ${site.footerTitle}` : ""}.`;
 
 const hasSource = site.showFooterSource && (site.footerSourceText || site.footerNote);
+
+/**
+ * Formulir kontak mengirim lewat SMTP kalau sudah dipasang, dan jatuh ke
+ * `mailto:` (membuka aplikasi email pengunjung) kalau belum. `data-smtp`
+ * memberitahu skrip di bawah jalur mana yang dipakai.
+ */
+const kirimSmtp = smtpTerpasang();
 ---
 
 <footer class="site-footer" id="sumber">
@@ -193,6 +201,32 @@ const hasSource = site.showFooterSource && (site.footerSourceText || site.footer
                 </li>
               ))}
             </ul>
+            {site.contactEmail ? (
+              <form class="footer-form" id="footerKontak" data-smtp={kirimSmtp ? "1" : "0"} data-email={site.contactEmail}>
+                <div class="footer-form-field" aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
+                  <label for="fk-situs">Situs web</label>
+                  <input id="fk-situs" name="situs" type="text" tabindex="-1" autocomplete="off" />
+                </div>
+                <div class="footer-form-field">
+                  <label for="fk-nama">Nama</label>
+                  <input id="fk-nama" name="nama" type="text" autocomplete="name" required />
+                </div>
+                <div class="footer-form-field">
+                  <label for="fk-email">Email</label>
+                  <input id="fk-email" name="email" type="email" autocomplete="email" required />
+                </div>
+                <div class="footer-form-field">
+                  <label for="fk-subjek">Subjek</label>
+                  <input id="fk-subjek" name="subjek" type="text" required />
+                </div>
+                <div class="footer-form-field">
+                  <label for="fk-pesan">Pesan</label>
+                  <textarea id="fk-pesan" name="pesan" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Kirim</button>
+                <p class="footer-form-status" id="footerKontakStatus" role="status" hidden></p>
+              </form>
+            ) : null}
           </details>
         ) : null}
 
@@ -275,5 +309,51 @@ const hasSource = site.showFooterSource && (site.footerSourceText || site.footer
     };
     sync();
     narrow.addEventListener("change", sync);
+
+    const form = document.getElementById("footerKontak");
+    if (form) {
+      const status = document.getElementById("footerKontakStatus");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const d = new FormData(form);
+        const nama = String(d.get("nama") || "").trim();
+        const email = String(d.get("email") || "").trim();
+        const subjek = String(d.get("subjek") || "").trim();
+        const pesan = String(d.get("pesan") || "").trim();
+        const situs = String(d.get("situs") || "").trim();
+
+        const tandai = (teks, ok) => {
+          if (!status) return;
+          status.hidden = false;
+          status.textContent = teks;
+          status.className = "footer-form-status" + (ok ? " is-ok" : " is-off");
+        };
+
+        if (form.dataset.smtp === "1") {
+          try {
+            const res = await fetch("/api/kontak", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nama, email, subjek, pesan, situs }),
+            });
+            const data = await res.json().catch(() => null);
+            if (res.ok && data && data.ok) {
+              tandai("Terima kasih, pesanmu sudah terkirim.", true);
+              form.reset();
+            } else {
+              tandai((data && data.error) || "Pesan gagal dikirim. Coba lagi nanti.", false);
+            }
+          } catch (err) {
+            tandai("Pesan gagal dikirim. Coba lagi nanti.", false);
+          }
+          return;
+        }
+
+        const tujuan = form.dataset.email || "";
+        if (!tujuan) return;
+        const badan = `Halo,\n\n${pesan}\n\n— ${nama}\n${email}`;
+        window.location.href = `mailto:${tujuan}?subject=${encodeURIComponent(subjek)}&body=${encodeURIComponent(badan)}`;
+      });
+    }
   })();
 </script>

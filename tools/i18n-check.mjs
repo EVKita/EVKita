@@ -29,7 +29,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const I18N_DIR = path.join(ROOT, "src", "lib", "i18n");
@@ -90,6 +90,9 @@ const SAMA_SENGAJA = new Set([
   "en:analitik.device.tablet",
   "en:analitik.periode",
   "zh:analitik.periode",
+  // Istilah teknis yang kebetulan sama persis di kedua bahasa.
+  "en:kontak.host",
+  "en:kontak.port",
 ]);
 
 /**
@@ -144,7 +147,7 @@ const YELLOW = (s) => `\x1b[33m${s}\x1b[0m`;
 const GREEN = (s) => `\x1b[32m${s}\x1b[0m`;
 
 async function loadDict(locale) {
-  const mod = await import(path.join(I18N_DIR, `${locale}.js`));
+  const mod = await import(pathToFileURL(path.join(I18N_DIR, `${locale}.js`)).href);
   return mod.default;
 }
 
@@ -270,6 +273,7 @@ const PANEL_FILES = [
   "src/pages/admin/login.astro",
   "src/pages/admin/update.astro",
   "src/pages/admin/integrasi.astro",
+  "src/pages/admin/kontak.astro",
 ];
 
 /**

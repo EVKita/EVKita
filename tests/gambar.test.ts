@@ -92,10 +92,10 @@ describe("gambar kendaraan", () => {
   });
 
   it("kendaraan tanpa gambar jatuh ke ilustrasi, bukan ke kotak rusak", () => {
-    // Satu kendaraan memang tidak punya gambar: Mitsubishi L100 EV, yang URL
-    // lamanya sudah mati. Field kosong itu yang membuat `visualHTML()` memilih
-    // `carSVG()` — kalau URL matinya dibiarkan, yang tampil kotak rusak.
+    // Satu kendaraan memang tidak punya gambar: Alessa Forte, yang belum punya
+    // berkasnya. Field kosong itu yang membuat `visualHTML()` memilih `carSVG()`
+    // — kalau URL matinya dibiarkan, yang tampil kotak rusak.
     const kosong = kendaraan.filter((v) => !v.image).map((v) => v.id);
-    assert.deepEqual(kosong, ["mitsubishi-l100-ev"]);
+    assert.deepEqual(kosong, ["alessa-forte"]);
   });
 });

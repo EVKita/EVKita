@@ -241,6 +241,7 @@ function normalizeSpklu(v: any): any {
     id: str(v?.id),
     name: str(v?.name),
     operator: str(v?.operator),
+    jenis: str(v?.jenis),
     area: str(v?.area),
     address: str(v?.address),
     power: str(v?.power),

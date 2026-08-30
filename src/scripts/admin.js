@@ -181,6 +181,7 @@ function vehicleFields(col) {
    publik yang berbahasa Indonesia — jadi sengaja tidak diterjemahkan. */
 const DIR_SUGGESTIONS = {
   spkluOperator: ["PLN", "Starvo", "Utomo Charge+", "Charge+", "Voltron", "Casion"],
+  spkluJenis: ["Mobil", "Motor", "Mobil & Motor"],
   spkluConnector: ["CCS2", "CHAdeMO", "AC Type 2", "CCS2 + CHAdeMO", "GB/T"],
   spkluPower: ["7 kW", "11 kW", "22 kW", "25 kW", "50 kW", "60 kW", "120 kW", "200 kW"],
   hoursSpklu: ["24 jam", "06.00-22.00", "08.00-20.00", "Mengikuti jam mal"],
@@ -254,6 +255,7 @@ function dirGroups(col) {
         l: t("dir.spklu.sec.identitas"), d: t("dir.spklu.sec.identitas.d"), f: [
           { k: "name", l: t("field.spklu.name"), t: "text", req: true, full: true, ph: t("field.spklu.name.ph") },
           { k: "operator", l: t("field.spklu.operator"), t: "combo", src: "spkluOperator", ph: t("field.spklu.operator.ph") },
+          { k: "jenis", l: t("field.spklu.jenis"), t: "combo", src: "spkluJenis", ph: t("field.spklu.jenis.ph") },
           { k: "area", l: t("field.area"), t: "combo", src: "area", ph: t("field.area.ph"), hint: t("field.area.hint") },
         ],
       },
@@ -3012,6 +3014,7 @@ function fillDirCombos(col) {
   comboSources.area = merge("area");
   if (col === "spklu") {
     comboSources.spkluOperator = merge("operator", DIR_SUGGESTIONS.spkluOperator);
+    comboSources.spkluJenis = merge("jenis", DIR_SUGGESTIONS.spkluJenis);
     comboSources.spkluConnector = merge("connector", DIR_SUGGESTIONS.spkluConnector);
     comboSources.spkluPower = merge("power", DIR_SUGGESTIONS.spkluPower);
     comboSources.hours = merge("hours", DIR_SUGGESTIONS.hoursSpklu);
