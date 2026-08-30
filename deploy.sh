@@ -92,9 +92,23 @@ fi
 # gambar yang diunggah admin. Membuangnya dari payload berarti data/ tidak
 # perlu dicadangkan lalu dikembalikan — dua kali salin seluruh unggahan
 # (bisa ratusan MB) hilang dari setiap pembaruan.
+#
+# Pengecualian: `EVKITA_SYNC_CONTENT=1` di .env membuat content.json dari paket
+# rilis ikut MENIMPA content.json server. Ini untuk pemilik yang mengelola isi
+# situs lewat repo/Git, bukan lewat panel admin. Berkas data lain (users.json,
+# integrasi.json, uploads) tidak ikut tersalin karena memang tidak ada di paket.
+SYNC_CONTENT=0
+if [ -f "$APP_DIR/.env" ] && grep -qE '^EVKITA_SYNC_CONTENT=(1|true)' "$APP_DIR/.env" 2>/dev/null; then
+  SYNC_CONTENT=1
+fi
+
 FRESH_INSTALL=0
 if [ -f "$APP_DIR/data/content.json" ]; then
-  rm -rf "$TMP/extract/data"
+  if [ "$SYNC_CONTENT" = "1" ]; then
+    step "Menyinkronkan data/content.json dari paket rilis (EVKITA_SYNC_CONTENT=1)"
+  else
+    rm -rf "$TMP/extract/data"
+  fi
 else
   FRESH_INSTALL=1
 fi
