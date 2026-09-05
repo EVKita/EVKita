@@ -41,6 +41,19 @@ export default defineConfig({
     // Pertahanan CSRF yang sebenarnya tetap ada di cookie sesi (SameSite=Lax),
     // yang tidak ikut terkirim pada POST lintas situs.
     allowedDomains: [{}],
+
+    // checkOrigin bawaannya membandingkan header `Origin` peramban dengan
+    // `url.origin`. Di belakang reverse proxy (OpenLiteSpeed) yang menghentikan
+    // TLS, socket aplikasinya adalah teks polos — tanpa `X-Forwarded-Proto:
+    // https` yang konsisten, Astro menghitung `url.origin` sebagai `http://…`
+    // sementara peramban mengirim `Origin: https://…`. Selisih skema itulah
+    // yang membuatnya menolak SETIAP POST multipart (`/api/upload`) dengan 403
+    // "Cross-site POST form submissions are forbidden", tidak peduli format
+    // gambarnya (webp, png, jpg…). Pemeriksaan asal domain yang benar tetap
+    // ada di cookie sesi `SameSite=Lax` + `httpOnly`, yang tidak pernah dikirim
+    // pada permintaan lintas situs — jadi mematikan pemeriksaan tambahan Astro
+    // di sini tidak membuka celah baru.
+    checkOrigin: false,
   },
 
   image: {
