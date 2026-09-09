@@ -240,6 +240,39 @@ describe("linimasa riset", () => {
     assert.deepEqual(p.jejak, ["response.created", "response.completed"]);
   });
 
+  it("menyelamatkan catatan riset saat pencarian selesai tanpa output_text", () => {
+    const p = new PembacaRiset();
+    p.terima("response.output_item.added", { item: { id: "r1", type: "reasoning" } });
+    p.terima("response.reasoning_text.delta", {
+      item_id: "r1",
+      delta: "Harga BYD Seal Premium Rp639 juta dan baterainya 82,56 kWh.",
+    });
+    p.terima("response.reasoning_text.done", { item_id: "r1" });
+    p.terima("response.completed", { response: { usage: { output_tokens: 2000 } } });
+
+    // Bentuk ini sengaja masuk jalur perapian JSON, bukan dianggap tanpa hasil.
+    assert.equal(p.errorKey, "err.ai.jawabanTidakTerbaca");
+    assert.match(p.mentah, /Rp639 juta/);
+    assert.equal(p.usage.output_tokens, 2000);
+  });
+
+  it("mengambil catatan reasoning dari response lengkap bila deltanya tidak datang", () => {
+    const p = new PembacaRiset();
+    p.terima("response.completed", {
+      response: {
+        output: [
+          {
+            type: "reasoning",
+            content: [{ type: "reasoning_text", text: "Jarak tempuhnya 650 km NEDC." }],
+          },
+        ],
+      },
+    });
+
+    assert.equal(p.errorKey, "err.ai.jawabanTidakTerbaca");
+    assert.match(p.mentah, /650 km NEDC/);
+  });
+
   it("teks akhir yang datang sekaligus lewat .done ikut terbaca", () => {
     const p = new PembacaRiset();
     p.terima("response.output_item.added", { item: { id: "m1", type: "message" } });

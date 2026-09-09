@@ -191,10 +191,23 @@ export interface Langkah {
 const MAX_PIKIR = 400;
 /** Sepanjang apa teks pencarian dan alamat halaman yang ditampilkan. */
 const MAX_LANGKAH = 160;
+/**
+ * Catatan penalaran yang diselamatkan ketika DeepSeek berhenti sesudah putaran
+ * pencarian tanpa membuat item `message`. Ini bukan isi linimasa (yang tetap
+ * pendek), melainkan bahan untuk panggilan perapian JSON.
+ */
+const MAX_CATATAN_RISET = 120_000;
 
 function potong(v: unknown, batas: number): string {
   const s = String(v === null || v === undefined ? "" : v).replace(/\s+/g, " ").trim();
   return s.length > batas ? s.slice(0, batas - 1) + "…" : s;
+}
+
+function batasiCatatan(v: unknown): string {
+  const s = String(v === null || v === undefined ? "" : v).trim();
+  if (s.length <= MAX_CATATAN_RISET) return s;
+  // Temuan dan simpulan paling berguna biasanya berada di bagian akhir.
+  return s.slice(-MAX_CATATAN_RISET);
 }
 
 /**
@@ -222,7 +235,24 @@ export class PembacaRiset {
   jejak: string[] = [];
 
   private teksAkhir = "";
+  private catatanPerItem = new Map<string, string>();
   private urut = 0;
+
+  private simpanCatatan(id: string, teks: unknown, lengkap = false): void {
+    const key = id || "pikir";
+    const lama = this.catatanPerItem.get(key) || "";
+    const baru = String(teks || "");
+    // Event `.done` membawa teks penuh. Pakai ia hanya bila memang lebih utuh
+    // daripada rangkaian delta supaya isi yang sama tidak terduplikasi.
+    const isi = lengkap ? (baru.length > lama.length ? baru : lama) : lama + baru;
+    this.catatanPerItem.set(key, isi);
+  }
+
+  private catatanMentah(response?: any): string {
+    const dariEvent = [...this.catatanPerItem.values()].filter(Boolean).join("\n\n");
+    const dariResponse = teksPenalaran(response);
+    return batasiCatatan(dariResponse.length > dariEvent.length ? dariResponse : dariEvent);
+  }
 
   private cari(id: string): Langkah | undefined {
     return this.langkah.find((l) => l.id === id);
@@ -263,16 +293,21 @@ export class PembacaRiset {
       }
 
       case "response.reasoning_text.delta": {
-        const l = this.tambah(String(data?.item_id || "pikir"), "pikir", "");
+        const id = String(data?.item_id || "pikir");
+        const delta = String(data?.delta || "");
+        const l = this.tambah(id, "pikir", "");
         // Kutipan pemikiran hanya tampil sepotong. Yang menarik bagi pembaca
         // adalah apa yang sedang dipikirkan SEKARANG, bukan seluruh riwayatnya.
-        l.teks = potong(l.teks + String(data?.delta || ""), MAX_PIKIR);
+        l.teks = potong(l.teks + delta, MAX_PIKIR);
+        this.simpanCatatan(id, delta);
         break;
       }
 
       case "response.reasoning_text.done": {
-        const l = this.cari(String(data?.item_id || "pikir"));
+        const id = String(data?.item_id || "pikir");
+        const l = this.cari(id);
         if (l) l.status = "selesai";
+        this.simpanCatatan(id, data?.text, true);
         break;
       }
 
@@ -324,7 +359,14 @@ export class PembacaRiset {
         const teks = this.teksAkhir || teksPesan(data?.response);
         this.hasil = uraiJson(teks);
         if (!this.hasil) {
-          this.mentah = String(teks || "").trim();
+          /*
+           * DeepSeek kadang mencapai batas sepuluh putaran web_search lalu
+           * mengirim `response.completed` TANPA item message/output_text.
+           * Catatan reasoning-nya tetap memuat seluruh temuan. Selamatkan itu
+           * agar `rapikanJadiJson()` bisa menyelesaikan pekerjaan yang sudah
+           * dibayar, alih-alih menampilkan "tanpa jawaban".
+           */
+          this.mentah = String(teks || this.catatanMentah(data?.response) || "").trim();
           /*
            * Dua kegagalan yang sangat berbeda, dan dulu keduanya dilaporkan
            * dengan kalimat yang sama:
@@ -354,7 +396,7 @@ export class PembacaRiset {
          * panggilan perapian, yang menyusunnya jadi bentuk yang benar tanpa
          * mencari apa pun lagi.
          */
-        const potongan = this.teksAkhir || teksPesan(data?.response);
+        const potongan = this.teksAkhir || teksPesan(data?.response) || this.catatanMentah(data?.response);
         this.mentah = String(potongan || "").trim();
         this.errorKey =
           data?.response?.incomplete_details?.reason === "content_filter"
@@ -380,6 +422,18 @@ function teksPesan(response: any): string {
     .filter((c: any) => c?.type === "output_text")
     .map((c: any) => String(c?.text || ""))
     .join("");
+}
+
+/** Catatan penalaran penuh dari objek response, bila delta streaming hilang. */
+function teksPenalaran(response: any): string {
+  const output = Array.isArray(response?.output) ? response.output : [];
+  return output
+    .filter((o: any) => o?.type === "reasoning")
+    .flatMap((p: any) => (Array.isArray(p?.content) ? p.content : []))
+    .filter((c: any) => c?.type === "reasoning_text")
+    .map((c: any) => String(c?.text || ""))
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 /**

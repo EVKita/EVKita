@@ -1423,7 +1423,7 @@
 .combo-list {
   display: flex;
   flex-direction: column;
-  max-height: 262px;
+  max-height: min(262px, var(--combo-list-max, 262px));
   padding: 6px;
   overflow: hidden auto;
   scrollbar-width: thin;
@@ -5877,6 +5877,17 @@ body:has(.modal-backdrop.open) .fab {
   margin-top: 20px;
 }
 
+/* Daftar merek di wizard sengaja lebih ringkas daripada combobox editor.
+   Ia tetap cukup tinggi untuk dipindai, tetapi tidak mengambil alih dialog di
+   desktop dan tidak menutup field berikutnya pada layar ponsel. */
+.ai-wizard-fields .combo-list {
+  max-height: min(216px, 30dvh, var(--combo-list-max, 216px));
+}
+
+.ai-wizard-fields .combo-opt {
+  padding-block: 7px;
+}
+
 .ai-wizard-error {
   margin-top: 12px;
 }
@@ -6137,6 +6148,10 @@ body:has(.modal-backdrop.open) .fab {
 
   .ai-kind-picks {
     grid-template-columns: 1fr;
+  }
+
+  .ai-wizard-fields .combo-list {
+    max-height: min(184px, 25dvh, var(--combo-list-max, 184px));
   }
 
   .ai-health {

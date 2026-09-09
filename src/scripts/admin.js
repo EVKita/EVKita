@@ -1204,8 +1204,9 @@ function comboLabel(key) {
 function comboHtml(id, def, value) {
   const key = def.src || def.k;
   const ph = def.ph ? ` placeholder="${esc(def.ph)}"` : "";
+  const maxlength = def.maxlength ? ` maxlength="${esc(def.maxlength)}"` : "";
   return `<div class="combo" data-combo="${esc(key)}" data-combo-filter="0">
-    <input type="text" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph}
+    <input type="text" id="${esc(id)}" name="${esc(def.k)}" value="${esc(value)}"${ph}${maxlength}
       role="combobox" aria-expanded="false" aria-controls="${esc(id)}-pop" aria-autocomplete="list"
       autocomplete="off" spellcheck="false" data-combo-input />
     <button type="button" class="combo-caret" tabindex="-1" aria-hidden="true" data-combo-caret>
@@ -1292,17 +1293,28 @@ function renderCombo(box) {
  */
 function placeCombo(box) {
   const pop = box.querySelector("[data-combo-pop]");
+  const list = pop && pop.querySelector(".combo-list");
   if (!pop) return;
 
   box.classList.remove("is-up");
+  box.style.removeProperty("--combo-list-max");
   const scroller = box.closest(".modal-body");
   const bounds = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
   const r = box.getBoundingClientRect();
-  const need = pop.offsetHeight + 12;
+  const gap = 12;
+  const roomBelow = Math.max(0, bounds.bottom - r.bottom - gap);
+  const roomAbove = Math.max(0, r.top - bounds.top - gap);
 
-  // Hanya dibalik kalau ruang di atas benar-benar lebih lapang; membalik ke
-  // tempat yang sama sempitnya cuma memindahkan masalahnya.
-  if (r.bottom + need > bounds.bottom && r.top - need > bounds.top) box.classList.add("is-up");
+  // Kalau panel utuh tidak muat, pilih sisi yang lebih lapang. Tinggi daftar
+  // kemudian mengikuti ruang yang benar-benar tersedia; kaki panel tetap
+  // terlihat dan pilihan di dalamnya saja yang menggulir.
+  const up = roomBelow < pop.offsetHeight && roomAbove > roomBelow;
+  if (up) box.classList.add("is-up");
+  if (list) {
+    const chrome = Math.max(0, pop.offsetHeight - list.offsetHeight);
+    const room = up ? roomAbove : roomBelow;
+    box.style.setProperty("--combo-list-max", `${Math.max(112, Math.floor(room - chrome))}px`);
+  }
 }
 
 function setComboActive(box, opt, instant) {
@@ -5276,19 +5288,21 @@ function bindEvents() {
   document.addEventListener("input", (e) => {
     const el = e.target;
     if (el.closest && el.closest("#vehicle-form, #dir-form")) editorTouched = true;
+
+    /* Panel combobox hanya bereaksi pada ketikan sungguhan: memilih dari
+       daftar juga memicu event ini, dan panelnya harus tetap tertutup.
+       Dikerjakan sebelum state wizard supaya combobox Merek milik wizard AI
+       ikut tersaring, walau input wizard selesai ditangani lebih awal. */
+    if (e.isTrusted && el.matches && el.matches("[data-combo-input]")) {
+      openCombo(el.closest(".combo"), { filter: true });
+    }
+
     if (aiCtx?.wizard && ["ai-brand", "ai-name", "ai-year", "ai-wizard-hint"].includes(el.id)) {
       kumpulkanIdentitasAi();
       aiCtx.duplikat = null;
       aiCtx.abaikanDuplikat = false;
       aiCtx.identitasError = "";
       return;
-    }
-
-    /* Panel combobox hanya bereaksi pada ketikan sungguhan: memilih dari
-       daftar juga memicu event ini, dan panelnya harus tetap tertutup. */
-    if (e.isTrusted && el.matches && el.matches("[data-combo-input]")) {
-      openCombo(el.closest(".combo"), { filter: true });
-      /* sengaja tidak return: pratinjau editor ikut perlu diperbarui */
     }
 
     const search = el.closest && el.closest("[data-search]");
@@ -7120,6 +7134,13 @@ function aiWizardLangkah() {
 function aiIdentitasHtml() {
   const mobil = aiCtx.col === "cars";
   const merek = brandOptions(aiCtx.col);
+  comboSources.brand = merek;
+  const merekField = comboHtml("ai-brand", {
+    k: "brand",
+    src: "brand",
+    ph: mobil ? t("field.brand.phCar") : t("field.brand.phMotor"),
+    maxlength: 80,
+  }, aiCtx.brand);
   const duplikat = aiCtx.duplikat
     ? `<div class="ai-duplicate">
         <strong>${esc(t("ai.wizard.duplicateTitle"))}</strong>
@@ -7148,8 +7169,7 @@ function aiIdentitasHtml() {
     <div class="field-grid ai-wizard-fields">
       <div class="field">
         <label for="ai-brand">${esc(t("field.brand"))}</label>
-        <input id="ai-brand" type="text" list="ai-brand-list" maxlength="80" value="${esc(aiCtx.brand)}" placeholder="${esc(mobil ? t("field.brand.phCar") : t("field.brand.phMotor"))}" autocomplete="off" />
-        <datalist id="ai-brand-list">${merek.map((x) => `<option value="${esc(x)}"></option>`).join("")}</datalist>
+        ${merekField}
       </div>
       <div class="field">
         <label for="ai-name">${esc(t("field.name"))}</label>
