@@ -7,6 +7,7 @@ import "../../styles/admin.css";
 import { currentUser } from "../../lib/auth";
 import { makeT, localeMeta, LOCALES } from "../../lib/i18n/index.js";
 import { FONT_NAMES, CHOICES, THEME_PRESETS } from "../../lib/theme.js";
+import { readContent } from "../../lib/store";
 
 const me = currentUser(Astro.cookies);
 if (!me) {
@@ -24,11 +25,20 @@ const t = makeT(locale);
 const lang = localeMeta(locale);
 const isAdmin = me.role === "owner" || me.role === "admin";
 
+/*
+ * Warna aksen harus sudah benar pada render pertama. Sebelumnya /admin baru
+ * membaca `site` lewat JavaScript setelah halaman terbuka, dan warna itu baru
+ * diterapkan ketika render formulir Tampilan berjalan. Akibatnya Dasbor selalu
+ * mulai dari warna oranye bawaan global.css lalu mendadak berubah ketika menu
+ * Tampilan dibuka.
+ */
+const site = readContent().site || {};
+
 /** Bobot huruf judul yang ditawarkan. Angka, jadi tidak perlu diterjemahkan. */
 const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
 ---
 
-<Base title={`${t("topbar.adminPanel")} — EVKita`} bodyClass="admin-ui" lang={lang.html} noindex>
+<Base title={`${t("topbar.adminPanel")} — EVKita`} bodyClass="admin-ui" lang={lang.html} noindex site={site} accentOnly>
   <div id="admin-app" class="admin-app" class:list={[{ "density-compact": me.density === "compact" }]}>
     <!-- Lapisan gelap khusus mode drawer (≤900px); klik untuk menutup sidebar. -->
     <div id="sidebar-scrim" class="sidebar-scrim"></div>

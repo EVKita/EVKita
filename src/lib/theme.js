@@ -477,6 +477,23 @@ export function gradientCss(th) {
 }
 
 /**
+ * Token warna yang dipinjam panel admin dari menu Tampilan.
+ *
+ * Panel sengaja tidak menerima tipografi, radius, latar, atau gaya komponen
+ * situs publik. Memanggil `themeStyle()` dengan objek warna parsial tetap akan
+ * menghasilkan semua token itu dari fallback, sehingga kontrak `accentOnly`
+ * menjadi bohong. Jalur kecil ini membatasi perubahan panel tepat ke palet.
+ */
+export function themeAccentStyle(site) {
+  const th = resolveTheme(site);
+  return [
+    `--accent:${th.primary}`,
+    `--accent-2:${th.secondary}`,
+    `--accent-grad:linear-gradient(135deg, ${th.primary}, ${th.secondary})`,
+  ].join(";");
+}
+
+/**
  * Variabel yang dipasang sebagai atribut `style` di `<body>`.
  *
  * Sengaja inline, bukan lewat `<style>`: `global.css` mendeklarasikan token

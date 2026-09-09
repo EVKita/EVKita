@@ -53,6 +53,7 @@ import {
   APPEARANCE_FLAGS,
   findPreset,
   resolveTheme,
+  themeAccentStyle,
   themeStyle,
   themeBodyClass,
 } from "../lib/theme.js";
@@ -3567,11 +3568,11 @@ function applyThemePreview() {
   const site = content.site;
 
   // Panel ikut memakai warna aksen situs supaya tombol utamanya senada.
-  const p = site.themePrimary;
-  const s = site.themeSecondary;
-  if (p) document.body.style.setProperty("--accent", p);
-  if (s) document.body.style.setProperty("--accent-2", s);
-  if (p && s) document.body.style.setProperty("--accent-grad", `linear-gradient(135deg, ${p}, ${s})`);
+  for (const declaration of themeAccentStyle(site).split(";")) {
+    const batas = declaration.indexOf(":");
+    if (batas < 1) continue;
+    document.body.style.setProperty(declaration.slice(0, batas), declaration.slice(batas + 1));
+  }
 
   const box = $("tampilan-preview");
   if (!box) return;

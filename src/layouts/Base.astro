@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import { canonicalUrl } from "../lib/site-url";
-import { themeStyle, themeBodyClass, themeExtraCss, themeFontHref, themeMode } from "../lib/theme.js";
+import { themeAccentStyle, themeStyle, themeBodyClass, themeExtraCss, themeFontHref, themeMode } from "../lib/theme.js";
 import TagGoogle from "../components/TagGoogle.astro";
 
 interface Props {
@@ -56,13 +56,11 @@ const canonical = canonicalUrl(Astro.url);
  * identitas situs tetap terasa, tanpa ikut memakai pola latar, huruf judul,
  * atau gaya kartu yang dirancang untuk situs publik.
  */
-const themeSource = site ? (accentOnly ? { themePrimary: site.themePrimary, themeSecondary: site.themeSecondary } : site) : null;
-
-const bodyStyle = themeSource ? themeStyle(themeSource) : undefined;
-const themeClass = themeSource && !accentOnly ? themeBodyClass(themeSource) : "";
-const extraCss = themeSource && !accentOnly ? themeExtraCss(themeSource) : "";
-const fontHref = themeFontHref(themeSource || {});
-const mode = themeSource ? themeMode(themeSource) : "auto";
+const bodyStyle = site ? (accentOnly ? themeAccentStyle(site) : themeStyle(site)) : undefined;
+const themeClass = site && !accentOnly ? themeBodyClass(site) : "";
+const extraCss = site && !accentOnly ? themeExtraCss(site) : "";
+const fontHref = themeFontHref(site && !accentOnly ? site : {});
+const mode = site && !accentOnly ? themeMode(site) : "auto";
 const bodyClasses = [bodyClass, themeClass].filter(Boolean).join(" ");
 
 /*
