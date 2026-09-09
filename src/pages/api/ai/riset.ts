@@ -2,8 +2,10 @@ import type { APIRoute } from "astro";
 import { currentUser } from "../../../lib/auth";
 import { can } from "../../../lib/users";
 import { readContent } from "../../../lib/store";
+import { getEnv } from "../../../lib/env";
 import { logActivity } from "../../../lib/activity";
 import { json, apiError, unauthorized, forbidden } from "../../../lib/api";
+import { fetchBalance } from "../../../lib/deepseek";
 import {
   batalkanRiset,
   jobMilik,
@@ -40,7 +42,7 @@ function asMode(v: unknown): Mode {
   return (MODES as string[]).includes(s) ? (s as Mode) : "lengkap";
 }
 
-export const GET: APIRoute = ({ cookies, url }) => {
+export const GET: APIRoute = async ({ cookies, url }) => {
   const me = currentUser(cookies);
   if (!me) return unauthorized();
   if (!can(me, "ai.run")) return forbidden();
@@ -52,12 +54,32 @@ export const GET: APIRoute = ({ cookies, url }) => {
     // `terakhir` dipakai panel untuk menyambung ulang ke riset yang sedang
     // berjalan atau yang hasilnya belum sempat dilihat.
     const terakhir = jobTerakhir(me.id);
+    let kesehatan = null;
+    if (url.searchParams.get("uji") === "1") {
+      const key = getEnv("DEEPSEEK_API_KEY", "");
+      if (!key) {
+        kesehatan = { ok: false, tersedia: false, errorKey: "err.ai.belumAdaKunci" };
+      } else {
+        /*
+         * Pemeriksaan murah sebelum wizard menawarkan tombol Mulai. Endpoint
+         * saldo tidak memakai token; yang dikembalikan ke peran Editor hanya
+         * siap/tidak, bukan angka saldo ataupun bagian mana pun dari kunci.
+         */
+        const status = await fetchBalance(key);
+        kesehatan = {
+          ok: status.ok && status.available,
+          tersedia: status.available,
+          errorKey: status.ok && !status.available ? "err.ai.saldoHabis" : status.errorKey,
+        };
+      }
+    }
     return json({
       ok: true,
       siap: siapRiset(),
       modelBawaan: modelBawaan(),
       terakhir: terakhir ? jobPublik(terakhir) : null,
       kuota: { batas: KUOTA_HARIAN, terpakai: pemakaianHariIni(me.id) },
+      kesehatan,
     });
   }
 

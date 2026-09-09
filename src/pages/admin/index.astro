@@ -155,7 +155,8 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
             <p class="view-sub" data-i18n="view.cars.sub">{t("view.cars.sub")}</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-cars" class="btn btn-primary" type="button" data-add="cars" data-i18n="view.cars.add">{t("view.cars.add")}</button>
+            <button id="add-cars" class="btn btn-outline" type="button" data-add="cars" data-i18n="ai.wizard.manual">{t("ai.wizard.manual")}</button>
+            <button class="btn btn-primary btn-ai" type="button" data-ai-add="cars" data-i18n="ai.wizard.create">{t("ai.wizard.create")}</button>
           </div>
         </div>
         <div id="cars-toolbar"></div>
@@ -170,7 +171,8 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
             <p class="view-sub" data-i18n="view.motors.sub">{t("view.motors.sub")}</p>
           </div>
           <div class="view-head-actions">
-            <button id="add-motors" class="btn btn-primary" type="button" data-add="motors" data-i18n="view.motors.add">{t("view.motors.add")}</button>
+            <button id="add-motors" class="btn btn-outline" type="button" data-add="motors" data-i18n="ai.wizard.manual">{t("ai.wizard.manual")}</button>
+            <button class="btn btn-primary btn-ai" type="button" data-ai-add="motors" data-i18n="ai.wizard.create">{t("ai.wizard.create")}</button>
           </div>
         </div>
         <div id="motors-toolbar"></div>
@@ -1164,6 +1166,7 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
           </div>
           <p class="editor-sub" id="editor-sub"></p>
           <div class="editor-meter" id="vehicle-meter"></div>
+          <div class="ai-draft-note" id="ai-draft-note" hidden></div>
         </div>
 
         <div class="editor-layout">

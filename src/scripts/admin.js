@@ -31,6 +31,12 @@ import {
   MODEL_BAWAAN,
   MODEL_PILIHAN,
 } from "../lib/ai-biaya.js";
+import {
+  AI_WIZARD_STORAGE_KEY,
+  hintRisetWizard,
+  kendaraanSama,
+  normalisasiDrafWizard,
+} from "../lib/ai-wizard.js";
 import { tayang, terjadwal } from "../lib/tayang.js";
 import { slugLaman, slugBentrok, hrefLaman } from "../lib/laman.js";
 import { nilaiJanggal, konsumsiJanggal, cariKembar, basi, HARI_BASI } from "../lib/mutu.js";
@@ -2517,6 +2523,8 @@ function openVehicle(col, id) {
     draft: { image: item.image || "", gallery: (item.gallery || []).slice() },
   };
   editorTouched = false;
+  const aiDraftNote = $("ai-draft-note");
+  if (aiDraftNote) aiDraftNote.hidden = true;
 
   const eyebrow = $("editor-eyebrow");
   if (eyebrow) eyebrow.textContent = `${colLabel(col)} · ${id ? t("editor.eyebrow.edit") : t("editor.eyebrow.new")}`;
@@ -4874,10 +4882,12 @@ function bindEvents() {
     const chip = e.target.closest("#job-chip");
     if (chip) {
       const ref = chip.getAttribute("data-job") || "";
-      tandaiJobDilihat(chip.getAttribute("data-job-id") || "");
+      const jobId = chip.getAttribute("data-job-id") || "";
+      tandaiJobDilihat(jobId);
       chip.hidden = true;
       const { col, id } = parseRef(ref);
       if (col && id && findItem(col, id)) { openEditor(col, id); setTimeout(openAiModal, 300); }
+      else if (jobId) bukaJobWizard(jobId);
       return;
     }
 
@@ -4902,12 +4912,43 @@ function bindEvents() {
     if (pratinjauLink) { bukaPratinjau(e, pratinjauLink); return; }
 
     /* --- Riset AI --- */
+    const aiAdd = e.target.closest("[data-ai-add]");
+    if (aiAdd) { openAiWizard(aiAdd.getAttribute("data-ai-add")); return; }
     if (e.target.closest("#ai-open")) { openAiModal(); return; }
+    if (e.target.closest("#ai-identity-next")) { lanjutIdentitasAi(false); return; }
+    if (e.target.closest("#ai-continue-duplicate")) { lanjutIdentitasAi(true); return; }
+    if (e.target.closest("#ai-open-existing") && aiCtx?.duplikat) {
+      const { col, duplikat } = aiCtx;
+      aiCtx.applied = true;
+      closeAiModal();
+      openEditor(col, duplikat.id);
+      return;
+    }
+    if (e.target.closest("#ai-identity-back") && aiCtx?.wizard) { aiCtx.fase = "identitas"; renderAiModal(); return; }
+    if (e.target.closest("#ai-health-retry")) { periksaKesehatanAi(); return; }
+    if (e.target.closest("#ai-go-settings")) {
+      if (aiCtx) aiCtx.applied = true;
+      closeAiModal();
+      setView("ai");
+      return;
+    }
     if (e.target.closest("#ai-start")) { startAiRiset(); return; }
     if (e.target.closest("#ai-cancel")) { batalkanAiRiset(); return; }
-    if (e.target.closest("#ai-retry")) { aiCtx.fase = "setup"; aiCtx.job = null; renderAiModal(); return; }
+    if (e.target.closest("#ai-retry")) {
+      aiCtx.fase = "setup";
+      aiCtx.job = null;
+      aiCtx.jobId = null;
+      if (aiCtx.wizard) {
+        hapusDrafAi();
+        periksaKesehatanAi();
+      } else {
+        renderAiModal();
+      }
+      return;
+    }
     if (e.target.closest("#ai-apply")) { applyAiUsulan(); return; }
     if (e.target.closest("#ai-modal-close")) { closeAiModal(); return; }
+    if (e.target.closest("#ai-modal [data-close-modal]")) { closeAiModal(); return; }
     if (e.target.closest("#ai-pick-empty")) {
       aiCtx.pilih = new Set((aiCtx.job.hasil.usulan || []).filter((u) => u.sekarang === null).map((u) => u.key));
       renderAiModal();
@@ -5235,6 +5276,13 @@ function bindEvents() {
   document.addEventListener("input", (e) => {
     const el = e.target;
     if (el.closest && el.closest("#vehicle-form, #dir-form")) editorTouched = true;
+    if (aiCtx?.wizard && ["ai-brand", "ai-name", "ai-year", "ai-wizard-hint"].includes(el.id)) {
+      kumpulkanIdentitasAi();
+      aiCtx.duplikat = null;
+      aiCtx.abaikanDuplikat = false;
+      aiCtx.identitasError = "";
+      return;
+    }
 
     /* Panel combobox hanya bereaksi pada ketikan sungguhan: memilih dari
        daftar juga memicu event ini, dan panelnya harus tetap tertutup. */
@@ -5328,6 +5376,14 @@ function bindEvents() {
 
     /* --- Riset AI --- */
     if (el.name === "ai-default-model") { simpanModelBawaan(el.value); return; }
+    if (aiCtx?.wizard && el.name === "ai-kind") {
+      kumpulkanIdentitasAi();
+      aiCtx.col = el.value === "motors" ? "motors" : "cars";
+      aiCtx.duplikat = null;
+      aiCtx.abaikanDuplikat = false;
+      renderAiModal();
+      return;
+    }
     if (aiCtx && el.name === "ai-mode") { aiCtx.mode = el.value; renderAiModal(); return; }
     if (aiCtx && el.name === "ai-model") { aiCtx.model = el.value; renderAiModal(); return; }
     const aiPick = el.getAttribute && el.getAttribute("data-ai-pick");
@@ -5338,8 +5394,10 @@ function bindEvents() {
       // daftar akan memindahkan posisi guliran setiap kali satu kotak dicentang.
       const tombol = $("ai-apply");
       if (tombol) {
-        tombol.textContent = t("ai.terapkan", { n: aiCtx.pilih.size });
-        tombol.disabled = aiCtx.pilih.size === 0;
+        tombol.textContent = aiCtx.wizard
+          ? t("ai.wizard.apply", { n: aiCtx.pilih.size })
+          : t("ai.terapkan", { n: aiCtx.pilih.size });
+        tombol.disabled = aiCtx.pilih.size === 0 && !aiCtx.wizard;
       }
       const baris = el.closest(".ai-row");
       if (baris) baris.classList.toggle("picked", el.checked);
@@ -5805,6 +5863,11 @@ function setLocale(code, opts) {
     if (activeView === "profile") renderProfile();
     if (activeView === "users") renderUsers();
     if (activeView === "ai") renderAi();
+    if (aiCtx) renderAiModal();
+    const aiNote = $("ai-draft-note");
+    if (aiNote && !aiNote.hidden) {
+      aiNote.innerHTML = `<strong>${esc(t("ai.wizard.editorStep"))}</strong><span>${esc(t("ai.wizard.editorHint"))}</span>`;
+    }
     // Analitik digambar dari jawaban yang sudah ada di tangan, jadi ganti
     // bahasa cukup menggambar ulang — tanpa menanyakan angkanya lagi.
     if (activeView === "analitik") renderAnalitik();
@@ -6723,6 +6786,32 @@ const AI_POLL_MS = 900;
 let aiCtx = null;
 let aiTimer = null;
 
+function simpanDrafAi(jobId) {
+  if (!aiCtx || !vehicleCtx || vehicleCtx.id) return;
+  const form = $("vehicle-form");
+  const draf = normalisasiDrafWizard({
+    col: vehicleCtx.col,
+    brand: aiCtx.brand,
+    name: aiCtx.name,
+    year: aiCtx.year || (form?.elements.year && form.elements.year.value),
+    hint: aiCtx.hint,
+    jobId,
+  });
+  try { localStorage.setItem(AI_WIZARD_STORAGE_KEY, JSON.stringify(draf)); } catch { /* pelengkap */ }
+}
+
+function bacaDrafAi() {
+  try {
+    return normalisasiDrafWizard(JSON.parse(localStorage.getItem(AI_WIZARD_STORAGE_KEY) || "null"));
+  } catch {
+    return normalisasiDrafWizard(null);
+  }
+}
+
+function hapusDrafAi() {
+  try { localStorage.removeItem(AI_WIZARD_STORAGE_KEY); } catch { /* pelengkap */ }
+}
+
 /* Apakah kunci DeepSeek sudah terpasang, dan model bawaan mana yang dipakai.
    Dibaca sekali saat panel dimuat: tombol Riset tidak ditampilkan sama sekali
    kalau kuncinya belum ada — tombol yang selalu menjawab "belum ada kunci"
@@ -6776,6 +6865,8 @@ async function openAiModal() {
 
   aiCtx = {
     fase: "setup",
+    wizard: false,
+    col: vehicleCtx.col,
     brand,
     name,
     // Kendaraan baru belum punya field terisi, jadi "lengkapi yang kosong"
@@ -6787,6 +6878,8 @@ async function openAiModal() {
     job: null,
     kuota: null,
     pilih: new Set(),
+    kesehatan: "",
+    kesehatanErrorKey: "",
   };
 
   openModal(aiModal());
@@ -6800,6 +6893,156 @@ async function openAiModal() {
     sambungJobLama(data.terakhir);
     renderAiModal();
   } catch { /* kuota cuma pemanis; tanpa itu tombolnya tetap bisa ditekan */ }
+}
+
+/** Membuka jalur kendaraan baru tanpa memaksa pengguna melewati form panjang. */
+function openAiWizard(col) {
+  aiCtx = {
+    fase: "identitas",
+    wizard: true,
+    col: col === "motors" ? "motors" : "cars",
+    brand: "",
+    name: "",
+    year: null,
+    mode: "lengkap",
+    model: aiModelBawaan,
+    hint: "",
+    jobId: null,
+    job: null,
+    kuota: null,
+    pilih: new Set(),
+    kesehatan: "",
+    kesehatanErrorKey: "",
+    duplikat: null,
+    abaikanDuplikat: false,
+    applied: false,
+  };
+  openModal(aiModal());
+  renderAiModal();
+  setTimeout(() => $("ai-brand")?.focus(), 40);
+}
+
+function kumpulkanIdentitasAi() {
+  if (!aiCtx) return;
+  const brand = $("ai-brand");
+  const name = $("ai-name");
+  const year = $("ai-year");
+  const hint = $("ai-wizard-hint");
+  if (brand) aiCtx.brand = String(brand.value || "").trim();
+  if (name) aiCtx.name = String(name.value || "").trim();
+  if (year) aiCtx.year = Number(year.value) || null;
+  if (hint) aiCtx.hint = String(hint.value || "").trim();
+}
+
+function isiFormDariWizard() {
+  if (!aiCtx) return;
+  openVehicle(aiCtx.col, null);
+  const form = $("vehicle-form");
+  if (!form) return;
+  if (form.elements.brand) form.elements.brand.value = aiCtx.brand;
+  if (form.elements.name) form.elements.name.value = aiCtx.name;
+  if (form.elements.year) form.elements.year.value = aiCtx.year || "";
+  // Kendaraan buatan wizard selalu mulai sebagai draf. Menerbitkan tetap
+  // keputusan manusia setelah gambar dan naskah redaksi dilengkapi.
+  if (form.elements.status) form.elements.status.value = "draft";
+  editorTouched = true;
+  updateVehiclePreview();
+}
+
+function lanjutIdentitasAi(abaikanDuplikat) {
+  if (!aiCtx || !aiCtx.wizard) return;
+  kumpulkanIdentitasAi();
+  aiCtx.abaikanDuplikat = !!abaikanDuplikat;
+  aiCtx.duplikat = null;
+  aiCtx.identitasError = "";
+
+  if (!aiCtx.brand || !aiCtx.name) {
+    aiCtx.identitasError = "ai.perluMerekNama";
+    renderAiModal();
+    return;
+  }
+  const tahunDiisi = String($("ai-year")?.value || "").trim();
+  if (tahunDiisi && (!Number.isInteger(aiCtx.year) || aiCtx.year < 2008 || aiCtx.year > 2035)) {
+    aiCtx.identitasError = "ai.wizard.invalidYear";
+    renderAiModal();
+    return;
+  }
+
+  const sama = kendaraanSama(content?.[aiCtx.col] || [], aiCtx.brand, aiCtx.name);
+  if (sama && !aiCtx.abaikanDuplikat) {
+    aiCtx.duplikat = sama;
+    renderAiModal();
+    return;
+  }
+
+  isiFormDariWizard();
+  aiCtx.fase = "setup";
+  renderAiModal();
+  periksaKesehatanAi();
+}
+
+async function periksaKesehatanAi() {
+  if (!aiCtx || !aiCtx.wizard) return;
+  const ctx = aiCtx;
+  ctx.kesehatan = "memeriksa";
+  ctx.kesehatanErrorKey = "";
+  renderAiModal();
+  try {
+    const res = await fetch("/api/ai/riset?uji=1");
+    const data = await res.json();
+    if (aiCtx !== ctx) return;
+    if (!data?.ok || !data.kesehatan?.ok) {
+      ctx.kesehatan = "gagal";
+      ctx.kesehatanErrorKey = data?.kesehatan?.errorKey || data?.errorKey || "err.ai.tidakTerhubung";
+    } else {
+      ctx.kesehatan = "siap";
+      ctx.kuota = data.kuota || ctx.kuota;
+      if (data.modelBawaan) ctx.model = data.modelBawaan;
+    }
+  } catch {
+    if (aiCtx !== ctx) return;
+    ctx.kesehatan = "gagal";
+    ctx.kesehatanErrorKey = "err.ai.tidakTerhubung";
+  }
+  renderAiModal();
+}
+
+async function bukaJobWizard(jobId) {
+  const draf = bacaDrafAi();
+  if (!draf.jobId || draf.jobId !== jobId || !draf.brand || !draf.name) {
+    toast(t("ai.wizard.restoreMissing"), "error");
+    return;
+  }
+
+  aiCtx = {
+    fase: "setup",
+    wizard: true,
+    ...draf,
+    mode: "lengkap",
+    model: aiModelBawaan,
+    job: null,
+    kuota: null,
+    pilih: new Set(),
+    kesehatan: "siap",
+    kesehatanErrorKey: "",
+    duplikat: null,
+    abaikanDuplikat: true,
+    applied: false,
+  };
+  isiFormDariWizard();
+  openModal(aiModal());
+
+  try {
+    const res = await fetch(`/api/ai/riset?id=${encodeURIComponent(jobId)}`);
+    const data = await res.json();
+    if (!data?.ok || !data.job) throw new Error(apiMessage(data, "err.ai.jobHilang"));
+    sambungJobLama(data.job);
+    renderAiModal();
+  } catch (err) {
+    aiCtx.fase = "gagal";
+    aiCtx.job = { errorKey: "err.ai.jobHilang", detail: err.message, langkah: [] };
+    renderAiModal();
+  }
 }
 
 /**
@@ -6840,9 +7083,11 @@ function sambungJobLama(job) {
 }
 
 function closeAiModal() {
+  const kembali = aiCtx && aiCtx.wizard && !aiCtx.applied ? aiCtx.col : "";
   stopAiPoll();
   aiCtx = null;
   closeModal(aiModal());
+  if (kembali) setView(kembali);
 }
 
 /* ---------- Menggambar ---------- */
@@ -6850,6 +7095,98 @@ function closeAiModal() {
 function aiBiayaTeks(mode, model) {
   const { rupiah } = perkiraanBiaya(mode, model, new Date());
   return t("ai.perkiraanBiaya", { rp: formatRupiahKecil(rupiah) });
+}
+
+function aiWizardLangkah() {
+  const urutan = [
+    { fase: "identitas", label: t("ai.wizard.step.identitas") },
+    { fase: "setup", label: t("ai.wizard.step.setup") },
+    { fase: "jalan", label: t("ai.wizard.step.jalan") },
+    { fase: "hasil", label: t("ai.wizard.step.hasil") },
+    { fase: "lengkapi", label: t("ai.wizard.step.lengkapi") },
+  ];
+  let fase = aiCtx?.fase;
+  // Kegagalan sebelum job dibuat terjadi pada tahap pengaturan. Jika job
+  // sudah ada, kegagalannya bagian dari proses riset.
+  if (fase === "gagal") fase = aiCtx?.jobId ? "jalan" : "setup";
+  const kini = Math.max(0, urutan.findIndex((x) => x.fase === fase));
+  return `<ol class="ai-wizard-steps" aria-label="${esc(t("ai.wizard.progress"))}">
+    ${urutan.map((langkah, i) => `<li class="${i < kini ? "done" : i === kini ? "active" : ""}">
+      <span>${i + 1}</span><em>${esc(langkah.label)}</em>
+    </li>`).join("")}
+  </ol>`;
+}
+
+function aiIdentitasHtml() {
+  const mobil = aiCtx.col === "cars";
+  const merek = brandOptions(aiCtx.col);
+  const duplikat = aiCtx.duplikat
+    ? `<div class="ai-duplicate">
+        <strong>${esc(t("ai.wizard.duplicateTitle"))}</strong>
+        <p>${esc(t("ai.wizard.duplicateText", { name: titleOf(aiCtx.col, aiCtx.duplikat) }))}</p>
+        <div class="ai-duplicate-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="ai-open-existing">${esc(t("ai.wizard.openExisting"))}</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="ai-continue-duplicate">${esc(t("ai.wizard.continueAnyway"))}</button>
+        </div>
+      </div>`
+    : "";
+
+  return `<div class="ai-wizard-identity">
+    <div class="ai-group">
+      <h4>${esc(t("ai.wizard.kind"))}</h4>
+      <div class="ai-kind-picks">
+        <label class="ai-kind${mobil ? " active" : ""}">
+          <input type="radio" name="ai-kind" value="cars"${mobil ? " checked" : ""} />
+          <span aria-hidden="true">🚙</span><strong>${esc(t("col.cars.one"))}</strong>
+        </label>
+        <label class="ai-kind${!mobil ? " active" : ""}">
+          <input type="radio" name="ai-kind" value="motors"${!mobil ? " checked" : ""} />
+          <span aria-hidden="true">🛵</span><strong>${esc(t("col.motors.one"))}</strong>
+        </label>
+      </div>
+    </div>
+    <div class="field-grid ai-wizard-fields">
+      <div class="field">
+        <label for="ai-brand">${esc(t("field.brand"))}</label>
+        <input id="ai-brand" type="text" list="ai-brand-list" maxlength="80" value="${esc(aiCtx.brand)}" placeholder="${esc(mobil ? t("field.brand.phCar") : t("field.brand.phMotor"))}" autocomplete="off" />
+        <datalist id="ai-brand-list">${merek.map((x) => `<option value="${esc(x)}"></option>`).join("")}</datalist>
+      </div>
+      <div class="field">
+        <label for="ai-name">${esc(t("field.name"))}</label>
+        <input id="ai-name" type="text" maxlength="120" value="${esc(aiCtx.name)}" placeholder="${esc(mobil ? t("field.name.phCar") : t("field.name.phMotor"))}" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="ai-year">${esc(t("field.year"))}</label>
+        <input id="ai-year" type="number" min="2008" max="2035" value="${esc(aiCtx.year || "")}" placeholder="2026" />
+      </div>
+      <div class="field">
+        <label for="ai-wizard-hint">${esc(t("ai.wizard.variant"))}</label>
+        <input id="ai-wizard-hint" type="text" maxlength="300" value="${esc(aiCtx.hint)}" placeholder="${esc(t("ai.hint.ph"))}" />
+        <span class="hint">${esc(t("ai.wizard.variantHint"))}</span>
+      </div>
+    </div>
+    ${aiCtx.identitasError ? `<p class="error-text ai-wizard-error">${esc(
+      aiCtx.identitasError === "ai.wizard.invalidYear"
+        ? t("ai.wizard.invalidYear")
+        : t("ai.perluMerekNama"),
+    )}</p>` : ""}
+    ${duplikat}
+  </div>`;
+}
+
+function aiKesehatanHtml() {
+  if (!aiCtx.wizard) return "";
+  if (aiCtx.kesehatan === "memeriksa") {
+    return `<div class="ai-health checking"><span class="spinner"></span><span>${esc(t("ai.wizard.healthChecking"))}</span></div>`;
+  }
+  if (aiCtx.kesehatan === "siap") {
+    return `<div class="ai-health ready"><span aria-hidden="true">✓</span><span><strong>${esc(t("ai.wizard.healthReady"))}</strong><small>${esc(t("ai.wizard.healthReadyDesc"))}</small></span></div>`;
+  }
+  const pesan = aiCtx.kesehatanErrorKey ? t(aiCtx.kesehatanErrorKey) : t("err.ai.tidakTerhubung");
+  return `<div class="ai-health failed"><span aria-hidden="true">!</span><span><strong>${esc(t("ai.wizard.healthFailed"))}</strong><small>${esc(pesan)}</small></span>
+    <button type="button" class="btn btn-outline btn-sm" id="ai-health-retry">${esc(t("common.retry"))}</button>
+    ${isAdmin() ? `<button type="button" class="btn btn-ghost btn-sm" id="ai-go-settings">${esc(t("ai.wizard.settings"))}</button>` : ""}
+  </div>`;
 }
 
 function renderAiModal() {
@@ -6860,34 +7197,43 @@ function renderAiModal() {
   const foot = $("ai-modal-foot");
   if (!judul || !body || !foot) return;
 
-  judul.textContent = t("ai.research");
-  sub.textContent = `${aiCtx.brand} ${aiCtx.name}`.trim();
+  judul.textContent = aiCtx.wizard ? t("ai.wizard.title") : t("ai.research");
+  sub.textContent = aiCtx.fase === "identitas" ? t("ai.wizard.sub") : `${aiCtx.brand} ${aiCtx.name}`.trim();
+  const langkah = aiCtx.wizard ? aiWizardLangkah() : "";
+
+  if (aiCtx.fase === "identitas") {
+    body.innerHTML = langkah + aiIdentitasHtml();
+    foot.innerHTML = `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.cancel"))}</button>
+      <button type="button" class="btn btn-primary" id="ai-identity-next">${esc(t("common.next"))}</button>`;
+    return;
+  }
 
   if (aiCtx.fase === "setup") {
-    body.innerHTML = aiSetupHtml();
-    foot.innerHTML = `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.cancel"))}</button>
-      <button type="button" class="btn btn-primary" id="ai-start">${esc(t("ai.start"))}</button>`;
+    body.innerHTML = langkah + aiSetupHtml();
+    const mulaiMati = aiCtx.wizard && aiCtx.kesehatan !== "siap";
+    foot.innerHTML = `${aiCtx.wizard ? `<button type="button" class="btn btn-ghost" id="ai-identity-back">${esc(t("common.back"))}</button>` : `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.cancel"))}</button>`}
+      <button type="button" class="btn btn-primary" id="ai-start"${mulaiMati ? " disabled" : ""}>${esc(t("ai.start"))}</button>`;
     return;
   }
 
   if (aiCtx.fase === "jalan") {
-    body.innerHTML = aiProgresHtml();
+    body.innerHTML = langkah + aiProgresHtml();
     foot.innerHTML = `<p class="modal-foot-hint">${esc(t("ai.jalanHint"))}</p>
       <button type="button" class="btn btn-outline" id="ai-cancel">${esc(t("ai.batalkan"))}</button>`;
     return;
   }
 
   if (aiCtx.fase === "gagal") {
-    body.innerHTML = aiGagalHtml();
+    body.innerHTML = langkah + aiGagalHtml();
     foot.innerHTML = `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.close"))}</button>
       <button type="button" class="btn btn-primary" id="ai-retry">${esc(t("ai.cobaLagi"))}</button>`;
     return;
   }
 
-  body.innerHTML = aiHasilHtml();
+  body.innerHTML = langkah + aiHasilHtml();
   const jumlah = aiCtx.pilih.size;
   foot.innerHTML = `<button type="button" class="btn btn-ghost" data-close-modal>${esc(t("common.close"))}</button>
-    <button type="button" class="btn btn-primary" id="ai-apply"${jumlah ? "" : " disabled"}>${esc(t("ai.terapkan", { n: jumlah }))}</button>`;
+    <button type="button" class="btn btn-primary" id="ai-apply"${jumlah || aiCtx.wizard ? "" : " disabled"}>${esc(aiCtx.wizard ? t("ai.wizard.apply", { n: jumlah }) : t("ai.terapkan", { n: jumlah }))}</button>`;
 }
 
 function aiSetupHtml() {
@@ -6916,20 +7262,21 @@ function aiSetupHtml() {
     : "";
 
   return `<div class="ai-setup">
-    <div class="ai-group">
+    ${aiKesehatanHtml()}
+    ${aiCtx.wizard ? `<p class="ai-wizard-summary">${esc(t("ai.wizard.researchSummary", { name: `${aiCtx.brand} ${aiCtx.name}`.trim() }))}</p>` : `<div class="ai-group">
       <h4>${esc(t("ai.modeTitle"))}</h4>
       <div class="ai-picks">${modes}</div>
-    </div>
+    </div>`}
     <div class="ai-group">
       <h4>${esc(t("ai.modelTitle"))}</h4>
       <div class="ai-picks">${models}</div>
       <p class="hint">${esc(jamSibuk(new Date()) ? t("ai.tarifSibuk") : t("ai.tarifSepi"))}</p>
     </div>
-    <div class="field full">
+    ${aiCtx.wizard ? "" : `<div class="field full">
       <label for="ai-hint">${esc(t("ai.hint"))}</label>
       <input type="text" id="ai-hint" value="${esc(aiCtx.hint)}" placeholder="${esc(t("ai.hint.ph"))}" />
       <span class="hint">${esc(t("ai.hint.desc"))}</span>
-    </div>
+    </div>`}
     ${kuota}
   </div>`;
 }
@@ -7027,7 +7374,7 @@ function aiHasilHtml() {
     return `<div class="ai-kosong">${emptyStateHtml(t("ai.kosongTitle"), t("ai.kosongText"), "🔍")}</div>`;
   }
 
-  const baris = hasil.usulan
+  const barisUntuk = (daftar) => daftar
     .map((u) => {
       const dipilih = aiCtx.pilih.has(u.key);
       // Alamat sumber sudah lewat safeUrl di server. Ia tetap dipasang dengan
@@ -7048,6 +7395,28 @@ function aiHasilHtml() {
       </label>`;
     })
     .join("");
+
+  const kelompok = [
+    { key: "identity", fields: ["bodyType", "year"] },
+    { key: "battery", fields: ["rangeKm", "rangeStandard", "batteryKwh"] },
+    { key: "performance", fields: ["powerHp", "torqueNm", "topSpeedKph", "accelSec", "seats", "driveType"] },
+    { key: "charging", fields: ["chargeDcKw", "chargeAcKw", "chargeTime"] },
+    { key: "market", fields: ["warranty", "price", "priceText", "variantNames", "colors"] },
+  ];
+  const sudah = new Set();
+  const grup = kelompok.map((g) => {
+    const isi = hasil.usulan.filter((u) => g.fields.includes(u.key));
+    isi.forEach((u) => sudah.add(u.key));
+    if (!isi.length) return "";
+    const label = g.key === "identity" ? t("ai.wizard.group.identity")
+      : g.key === "battery" ? t("ai.wizard.group.battery")
+      : g.key === "performance" ? t("ai.wizard.group.performance")
+      : g.key === "charging" ? t("ai.wizard.group.charging")
+      : t("ai.wizard.group.market");
+    return `<section class="ai-result-group"><h4>${esc(label)}</h4><div class="ai-rows">${barisUntuk(isi)}</div></section>`;
+  }).join("");
+  const sisa = hasil.usulan.filter((u) => !sudah.has(u.key));
+  const baris = grup + (sisa.length ? `<div class="ai-rows">${barisUntuk(sisa)}</div>` : "");
 
   const peringatan = hasil.peringatan.length
     ? `<div class="ai-warn">
@@ -7070,7 +7439,7 @@ function aiHasilHtml() {
       <button type="button" class="btn btn-outline btn-sm" id="ai-pick-empty">${esc(t("ai.pilihKosong"))}</button>
       <button type="button" class="btn btn-outline btn-sm" id="ai-pick-none">${esc(t("ai.bersihkan"))}</button>
     </div>
-    <div class="ai-rows">${baris}</div>
+    <div class="ai-result-groups">${baris}</div>
     ${peringatan}
     ${duaLangkah}
     ${biaya}
@@ -7106,6 +7475,7 @@ function aiLabelField(key) {
 
 async function startAiRiset() {
   if (!aiCtx || !vehicleCtx) return;
+  if (aiCtx.wizard && aiCtx.kesehatan !== "siap") return;
 
   const hintInput = $("ai-hint");
   if (hintInput) aiCtx.hint = String(hintInput.value || "").trim();
@@ -7125,7 +7495,7 @@ async function startAiRiset() {
         name: aiCtx.name,
         mode: aiCtx.mode,
         model: aiCtx.model,
-        hint: aiCtx.hint,
+        hint: aiCtx.wizard ? hintRisetWizard(aiCtx) : aiCtx.hint,
       }),
     });
     const data = await res.json();
@@ -7134,6 +7504,7 @@ async function startAiRiset() {
     aiCtx.jobId = data.job.id;
     aiCtx.job = data.job;
     aiCtx.kuota = data.kuota;
+    simpanDrafAi(data.job.id);
     renderAiModal();
 
     stopAiPoll();
@@ -7193,6 +7564,9 @@ async function pollAiRiset() {
     // Dibatalkan sendiri oleh penyunting: itu bukan kegagalan, dan mereka sudah
     // tahu alasannya.
     if (data.job.status === "batal") {
+      if (aiCtx.wizard) hapusDrafAi();
+      aiCtx.jobId = null;
+      aiCtx.job = null;
       aiCtx.fase = "setup";
       renderAiModal();
       toast(t("ai.dibatalkan"), "info");
@@ -7228,6 +7602,9 @@ async function batalkanAiRiset() {
   try {
     await fetch(`/api/ai/riset?id=${encodeURIComponent(aiCtx.jobId)}`, { method: "DELETE" });
   } catch { /* kalau gagal, batas waktu di server yang menghentikannya */ }
+  if (aiCtx.wizard) hapusDrafAi();
+  aiCtx.jobId = null;
+  aiCtx.job = null;
   aiCtx.fase = "setup";
   renderAiModal();
   toast(t("ai.dibatalkan"), "info");
@@ -7248,8 +7625,9 @@ function applyAiUsulan() {
   const form = $("vehicle-form");
   if (!form) return;
 
+  const wizard = !!aiCtx.wizard;
   const dipakai = (aiCtx.job.hasil.usulan || []).filter((u) => aiCtx.pilih.has(u.key));
-  if (!dipakai.length) return;
+  if (!dipakai.length && !wizard) return;
 
   for (const u of dipakai) {
     if (u.key === "variantNames") { setRepeater("variantNames", u.nilai, "text"); continue; }
@@ -7274,10 +7652,27 @@ function applyAiUsulan() {
   updateVehiclePreview();
 
   const label = dipakai.map((u) => aiLabelField(u.key)).join(", ");
+  if (!vehicleCtx.id) hapusDrafAi();
+  if (wizard) {
+    aiCtx.applied = true;
+  }
   closeAiModal();
+  if (wizard) {
+    const note = $("ai-draft-note");
+    if (note) {
+      note.hidden = false;
+      note.innerHTML = `<strong>${esc(t("ai.wizard.editorStep"))}</strong><span>${esc(t("ai.wizard.editorHint"))}</span>`;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
   // Sengaja BUKAN saveNow(): usulan yang diterapkan baru mengisi formulir.
   // Penyunting yang memutuskan kapan ia tersimpan.
-  toast(t("ai.diterapkan", { n: dipakai.length, daftar: label }), "success");
+  toast(
+    wizard
+      ? t("ai.wizard.applied", { n: dipakai.length, daftar: label })
+      : t("ai.diterapkan", { n: dipakai.length, daftar: label }),
+    "success",
+  );
 }
 
 /* ------------------------------------------------------------------ *
@@ -7870,6 +8265,8 @@ async function syncJobChip() {
     if (!res.ok) { chip.hidden = true; return; }
     const data = await res.json();
     const job = data && data.terakhir;
+    const drafAi = bacaDrafAi();
+    const jobBaruBisaDibuka = !!job && !job.vehicleId && drafAi.jobId === job.id;
 
     if (job && job.status === "jalan") {
       chip.hidden = false;
@@ -7885,11 +8282,11 @@ async function syncJobChip() {
     /* Riset yang SUDAH SELESAI tapi hasilnya belum pernah dibuka juga
        ditampilkan: hasil yang tidak pernah dilihat sama saja dengan riset yang
        tidak pernah dijalankan, dan tokennya sudah terlanjur dibayar. */
-    if (job && job.status === "selesai" && job.hasil && job.vehicleId && !jobDilihat(job.id)) {
+    if (job && job.status === "selesai" && job.hasil && (job.vehicleId || jobBaruBisaDibuka) && !jobDilihat(job.id)) {
       chip.hidden = false;
       chip.className = "job-chip is-done";
       chip.textContent = t("job.ready", { name: job.judul || "" });
-      chip.setAttribute("data-job", `${job.col || "cars"}:${job.vehicleId}`);
+      chip.setAttribute("data-job", `${job.col || "cars"}:${job.vehicleId || ""}`);
       chip.setAttribute("data-job-id", job.id);
       jadwalJobChip(60000);
       return;

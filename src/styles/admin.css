@@ -5765,6 +5765,222 @@ body:has(.modal-backdrop.open) .fab {
   max-width: 760px;
 }
 
+/* --- Wizard kendaraan baru --- */
+
+.ai-wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+}
+
+.ai-wizard-steps li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text-muted);
+}
+
+.ai-wizard-steps li::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 13px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+}
+
+.ai-wizard-steps li:first-child::before {
+  display: none;
+}
+
+.ai-wizard-steps li.done::before,
+.ai-wizard-steps li.active::before {
+  background: var(--accent-ink, var(--accent));
+}
+
+.ai-wizard-steps span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.ai-wizard-steps li.done span,
+.ai-wizard-steps li.active span {
+  border-color: var(--accent-ink, var(--accent));
+  background: var(--accent-ink, var(--accent));
+  color: white;
+}
+
+.ai-wizard-steps em {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-wizard-steps li.active em {
+  color: var(--text);
+}
+
+.ai-kind-picks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ai-kind {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 72px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r);
+  cursor: pointer;
+  background: var(--adm-surface-2);
+}
+
+.ai-kind.active {
+  border-color: var(--accent-ink, var(--accent));
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent-ink, var(--accent));
+}
+
+.ai-kind input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ai-kind > span {
+  font-size: 26px;
+}
+
+.ai-wizard-fields {
+  margin-top: 20px;
+}
+
+.ai-wizard-error {
+  margin-top: 12px;
+}
+
+.ai-duplicate,
+.ai-health {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--adm-warn) 35%, var(--border));
+  border-radius: var(--adm-r);
+  background: color-mix(in srgb, var(--adm-warn) 9%, var(--bg));
+}
+
+.ai-duplicate p {
+  margin: 5px 0 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-duplicate-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-health {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0 0 20px;
+}
+
+.ai-health > span:first-child {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+.ai-health > span:nth-child(2) {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+
+.ai-health small {
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.ai-health.ready {
+  border-color: color-mix(in srgb, var(--adm-ok) 35%, var(--border));
+  background: color-mix(in srgb, var(--adm-ok) 8%, var(--bg));
+}
+
+.ai-health.ready > span:first-child {
+  background: var(--adm-ok);
+  color: white;
+}
+
+.ai-health.failed > span:first-child {
+  background: var(--adm-warn);
+  color: white;
+}
+
+.ai-health.checking > span:first-child {
+  width: 20px;
+  height: 20px;
+}
+
+.ai-wizard-summary {
+  margin: 0 0 20px;
+  padding: 13px 14px;
+  border-radius: var(--adm-r-sm);
+  background: var(--adm-surface-2);
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.ai-draft-note {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0 22px 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--adm-r-sm);
+  background: var(--accent-soft);
+  font-size: 12.5px;
+}
+
+.ai-draft-note span {
+  color: var(--text-muted);
+}
+
+.ai-draft-note[hidden] {
+  display: none;
+}
+
 /* --- Kartu pilihan (mode riset, model AI) --- */
 
 .ai-group + .ai-group,
@@ -5910,6 +6126,35 @@ body:has(.modal-backdrop.open) .fab {
   font-variant-numeric: tabular-nums;
 }
 
+@media (max-width: 640px) {
+  .ai-wizard-steps {
+    margin-bottom: 18px;
+  }
+
+  .ai-wizard-steps em {
+    font-size: 9.5px;
+  }
+
+  .ai-kind-picks {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-health {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ai-health .btn {
+    flex: 1 1 auto;
+  }
+
+  .ai-draft-note {
+    display: grid;
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+}
+
 /* --- Baris usulan --- */
 
 .ai-ringkasan {
@@ -5924,6 +6169,20 @@ body:has(.modal-backdrop.open) .fab {
   gap: 8px;
   margin-bottom: 10px;
   flex-wrap: wrap;
+}
+
+.ai-result-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.ai-result-group h4 {
+  margin: 0 0 7px;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .ai-rows {
