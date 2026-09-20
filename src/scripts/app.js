@@ -451,6 +451,19 @@ function switchMode(mode, keepFilters) {
   if (!keepFilters) {
     state.brand = "all";
     state.body = "all";
+    /*
+     * Kata kunci ikut dibersihkan saat berpindah Mobil/Motor.
+     *
+     * Merek dan model kedua sisi berbeda — "Alessa" hanya ada di motor, "BYD"
+     * hanya di mobil — jadi pencarian yang terbawa dari sisi lain hampir selalu
+     * menghasilkan nol. Katalog yang kosong terbaca sebagai "situsnya rusak",
+     * bukan sebagai "kata kuncinya tidak cocok", dan itulah yang terjadi:
+     * mengetik "Alessa" di tab Motor lalu membuka tab Mobil menampilkan
+     * "0 dari 27 mobil listrik".
+     */
+    state.search = "";
+    const kotakCari = $("search");
+    if (kotakCari) kotakCari.value = "";
   }
 
   document.querySelectorAll(".mode-btn").forEach((b) => {
