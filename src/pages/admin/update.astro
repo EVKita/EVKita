@@ -54,6 +54,11 @@ const canAutoUpdate = fs.existsSync(path.resolve(process.cwd(), "deploy.sh"));
    tidak perlu menyunting `.env` lewat SSH setiap kali. */
 const syncContent = /^(1|true)$/i.test(getEnv("EVKITA_SYNC_CONTENT", "").trim());
 
+/* Tombol "Terapkan konten" muncul saat sinkron konten menyala walau versinya
+   sudah terbaru: tanpa itu, saklar hanya berpengaruh pada rilis BERIKUTNYA, dan
+   pemilik yang baru menyalakannya tidak punya cara menerapkannya sekarang. */
+const bisaTerapkan = canAutoUpdate && (updateAvailable || syncContent);
+
 const zipOf = (r: (typeof releases)[number]) => r.assets.find((a) => a.name.endsWith(".zip"));
 const mb = (bytes: number) => `${(bytes / 1048576).toFixed(1)} MB`;
 const tanggal = (iso: string) =>
@@ -94,6 +99,10 @@ const texts = {
   syncOff: t("update.syncOff"),
   syncSaved: t("update.syncSaved"),
   syncFailed: t("update.syncFailed"),
+  applyTitle: t("update.applyConfirmTitle"),
+  applyText: t("update.applyConfirmText"),
+  applyDetail: t("update.applyConfirmDetail"),
+  applyOk: t("update.applyConfirmOk"),
 };
 ---
 
@@ -169,15 +178,15 @@ const texts = {
             </div>
 
             <div class="upd-cta">
-              {updateAvailable && canAutoUpdate && (
-                <button class="btn btn-primary" id="btn-update" type="button">
-                  {t("update.installButton", { version: latest.tag_name })}
+              {bisaTerapkan && (
+                <button class="btn btn-primary" id="btn-update" type="button" data-apply={updateAvailable ? undefined : "1"}>
+                  {updateAvailable ? t("update.installButton", { version: latest.tag_name }) : t("update.applyContent")}
                 </button>
             )}
               {updateAvailable && !canAutoUpdate && (
                 <span class="upd-meta">{t("update.noDeployScript")}</span>
             )}
-              {!updateAvailable && <span class="upd-meta">{t("update.nothingToInstall")}</span>}
+              {!bisaTerapkan && <span class="upd-meta">{t("update.nothingToInstall")}</span>}
               <a class="btn btn-ghost" href={latest.html_url} target="_blank" rel="noopener">{t("update.viewOnGithub")}</a>
             </div>
 
@@ -187,7 +196,11 @@ const texts = {
                 <div class="upd-prog-heading">
                   <strong id="progress-title">{t("update.installing")}</strong>
                   <span class="upd-prog-route">
-                    v{currentVersion} <span class="upd-prog-arrow" aria-hidden="true">→</span> {latest.tag_name}
+                    {updateAvailable ? (
+                      <>v{currentVersion} <span class="upd-prog-arrow" aria-hidden="true">→</span> {latest.tag_name}</>
+                    ) : (
+                      <>{latest.tag_name}</>
+                    )}
                   </span>
                 </div>
                 <div class="upd-prog-pct"><span id="prog-pct">0</span><small>%</small></div>
@@ -540,17 +553,21 @@ const texts = {
            antara bagus dan jelek melainkan antara ditanya dengan kotak jelek
            dan TIDAK DITANYA SAMA SEKALI — dan tombol yang diam saja ditekan
            adalah kegagalan yang lebih buruk lagi. */
+        const applyMode = btn.hasAttribute("data-apply");
+        const judul = applyMode ? texts.applyTitle : texts.confirmTitle;
+        const pesan = applyMode ? texts.applyText : texts.confirmInstall;
+        const rinci = applyMode ? texts.applyDetail : texts.confirmDetail;
         const lanjut =
           typeof window.evkitaKonfirmasi === "function"
             ? await window.evkitaKonfirmasi({
-                title: texts.confirmTitle,
-                text: texts.confirmInstall,
-                detail: texts.confirmDetail,
-                okText: texts.confirmOk,
+                title: judul,
+                text: pesan,
+                detail: rinci,
+                okText: applyMode ? texts.applyOk : texts.confirmOk,
                 cancelText: texts.cancel,
                 tone: "warning",
               })
-            : confirm(texts.confirmTitle + "\n\n" + texts.confirmInstall);
+            : confirm(judul + "\n\n" + pesan);
         if (!lanjut) return;
         box.classList.remove("is-done", "is-failed");
         if (relogin) relogin.hidden = true;
