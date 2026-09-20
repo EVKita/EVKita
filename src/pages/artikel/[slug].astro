@@ -1,0 +1,267 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { markdownToHtml } from "../../lib/markdown";
+import { hanyaTayang } from "../../lib/tayang.js";
+import { verifyPreviewToken } from "../../lib/pratinjau";
+import {
+  artikelTayang,
+  bacaMenit,
+  hrefArtikel,
+  ringkasArtikel,
+  sumberTampil,
+  tanggalArtikel,
+  tanggalIso,
+} from "../../lib/artikel.js";
+import { slugLaman } from "../../lib/laman.js";
+import { safeUrl } from "../../lib/url.js";
+import { canonicalUrl, absoluteUrl } from "../../lib/site-url";
+
+/**
+ * Satu artikel orisinal.
+ *
+ * Tiga hal yang membedakannya dari halaman statis `[slug].astro`:
+ *
+ *   1. **Sumbernya ditampilkan.** `sumberTampil()` menyaring alamatnya lewat
+ *      `safeUrl()` saat render, lalu daftarnya muncul sebagai bagian penutup
+ *      artikel. Inilah yang membuat klaim di dalamnya bisa diperiksa, dan itu
+ *      yang membedakan tulisan ini dari rangkuman yang tidak bisa ditelusuri.
+ *   2. **JSON-LD `Article`**, bukan `WebPage`. Penulis, tanggal terbit, dan
+ *      tanggal perubahan ikut — tanpa itu mesin pencari memperlakukannya
+ *      sebagai halaman biasa yang tidak punya penulis.
+ *   3. **Pratinjau bertanda tangan** untuk artikel draf, pola yang sama dengan
+ *      kendaraan dan halaman statis.
+ */
+const content = readContent();
+const site = content.site;
+const brand = site.brandText || "EVKita";
+const brandFull = `${brand}${site.brandSuffix || ""}`;
+
+const slug = slugLaman(Astro.params.slug || "");
+const semua = content.artikel || [];
+
+let artikel = slug ? semua.filter(hanyaTayang()).find((a: any) => a.slug === slug) || null : null;
+
+/**
+ * Jalur pratinjau: token menandatangani `id`, sementara alamatnya memakai
+ * `slug` — mengganti alamat tidak boleh mematikan tautan yang sudah dikirim.
+ */
+let pratinjau = false;
+if (!artikel && slug) {
+  const draf = semua.find((a: any) => a.slug === slug);
+  if (draf && verifyPreviewToken(Astro.url.searchParams.get("pratinjau"), "artikel", draf.id)) {
+    artikel = draf;
+    pratinjau = true;
+  }
+}
+
+if (!artikel) Astro.response.status = 404;
+
+const judul = artikel ? artikel.title : "";
+const isiHtml = artikel ? markdownToHtml(artikel.body) : "";
+const deskripsi = artikel ? ringkasArtikel(artikel) : "";
+const sumber = artikel ? sumberTampil(artikel.sources) : [];
+
+const pageTitle = artikel
+  ? artikel.seoTitle || `${judul} — ${brandFull}`
+  : `Artikel tidak ditemukan — ${brandFull}`;
+
+const ogImage = artikel && artikel.image ? absoluteUrl(Astro.url, artikel.image) : site.seoOgImage;
+
+/** Daftar isi, hanya untuk artikel yang benar-benar panjang. */
+const bagian = [...isiHtml.matchAll(/<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g)].map((m) => ({
+  id: m[1],
+  label: m[2].replace(/<[^>]+>/g, ""),
+}));
+const daftarIsi = bagian.length >= 3 ? bagian : [];
+
+/** Artikel lain: satu topik dulu, lalu sisanya yang terbaru. */
+const lainnya = artikel
+  ? [
+      ...artikelTayang(semua).filter((a: any) => a.id !== artikel.id && a.category && a.category === artikel.category),
+      ...artikelTayang(semua).filter((a: any) => a.id !== artikel.id && (!artikel.category || a.category !== artikel.category)),
+    ].slice(0, 4)
+  : [];
+
+const tanggalTeks = (iso: string) =>
+  new Date(`${iso}T00:00:00+07:00`).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+const terbit = artikel ? tanggalArtikel(artikel) : "";
+const diperbarui = artikel && artikel.updatedAt ? new Date(artikel.updatedAt) : null;
+const diperbaruiTeks =
+  diperbarui && !Number.isNaN(diperbarui.getTime())
+    ? diperbarui.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    : "";
+
+const kataKunci = artikel
+  ? [artikel.keywords, artikel.category, ...(artikel.tags || [])].filter(Boolean).join(", ")
+  : site.seoKeywords;
+
+const jsonLd =
+  artikel && !pratinjau && !artikel.noindex
+    ? {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Article",
+            "@id": canonicalUrl(Astro.url),
+            mainEntityOfPage: canonicalUrl(Astro.url),
+            headline: judul,
+            description: deskripsi,
+            inLanguage: "id-ID",
+            ...(terbit ? { datePublished: tanggalIso(artikel) } : {}),
+            ...(artikel.updatedAt ? { dateModified: artikel.updatedAt } : {}),
+            author: {
+              "@type": artikel.author ? "Person" : "Organization",
+              name: artikel.author || brandFull,
+            },
+            publisher: { "@type": "Organization", name: brandFull, url: `${Astro.url.origin}/` },
+            ...(ogImage ? { image: [ogImage] } : {}),
+            ...(artikel.category ? { articleSection: artikel.category } : {}),
+            ...(artikel.tags && artikel.tags.length ? { keywords: artikel.tags.join(", ") } : {}),
+          },
+          {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Beranda", item: `${Astro.url.origin}/` },
+              { "@type": "ListItem", position: 2, name: "Artikel", item: `${Astro.url.origin}/artikel` },
+              { "@type": "ListItem", position: 3, name: judul, item: canonicalUrl(Astro.url) },
+            ],
+          },
+        ],
+      }
+    : null;
+---
+
+<Base
+  title={pageTitle}
+  description={deskripsi}
+  keywords={kataKunci}
+  ogImage={ogImage}
+  ogType="article"
+  site={site}
+  noindex={!artikel || pratinjau || !!artikel.noindex}
+>
+  {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="artikel" />
+
+  {!artikel ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>Artikel tidak ditemukan</h1>
+      <p class="notfound-text">
+        Alamat ini mungkin sudah berubah atau artikelnya belum diterbitkan.
+      </p>
+      <a class="btn btn-primary" href="/artikel">Lihat semua artikel</a>
+    </main>
+  ) : (
+    <main class="container laman" id="konten">
+      <nav class="breadcrumb" aria-label="Remah roti">
+        <a href="/">Beranda</a>
+        <span aria-hidden="true">/</span>
+        <a href="/artikel">Artikel</a>
+        <span aria-hidden="true">/</span>
+        <span class="breadcrumb-current">{judul}</span>
+      </nav>
+
+      <article class="laman-artikel">
+        <header class="laman-head">
+          {artikel.category ? <p class="artikel-kategori-atas">{artikel.category}</p> : null}
+          <h1>{judul}</h1>
+          {deskripsi ? <p class="laman-lead">{deskripsi}</p> : null}
+          <p class="artikel-meta">
+            {artikel.author ? <span class="artikel-penulis">{artikel.author}</span> : null}
+            {terbit ? <time datetime={terbit}>{tanggalTeks(terbit)}</time> : null}
+            <span>{bacaMenit(artikel)} menit baca</span>
+          </p>
+          {diperbaruiTeks && diperbaruiTeks !== (terbit ? tanggalTeks(terbit) : "") ? (
+            <p class="laman-stamp">
+              Terakhir diperbarui <time datetime={artikel.updatedAt}>{diperbaruiTeks}</time>
+            </p>
+          ) : null}
+        </header>
+
+        {artikel.image ? (
+          <figure class="artikel-gambar">
+            <img src={safeUrl(artikel.image)} alt={judul} loading="eager" decoding="async" />
+          </figure>
+        ) : null}
+
+        {daftarIsi.length ? (
+          <nav class="laman-toc" aria-label="Daftar isi artikel">
+            <h2>Di artikel ini</h2>
+            <ol>
+              {daftarIsi.map((b) => (
+                <li><a href={`#${b.id}`}>{b.label}</a></li>
+              ))}
+            </ol>
+          </nav>
+        ) : null}
+
+        <div class="laman-isi" set:html={isiHtml} />
+
+        {sumber.length ? (
+          <section class="artikel-sumber" aria-label="Sumber">
+            <h2>Sumber</h2>
+            <p class="artikel-sumber-note">
+              Angka dan fakta di artikel ini dikutip dari halaman berikut. Membuka
+              tautannya adalah cara tercepat memeriksa apakah datanya masih berlaku.
+            </p>
+            <ol>
+              {sumber.map((s: any) => (
+                <li>
+                  <a href={s.url} target="_blank" rel="noopener">{s.label}</a>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
+        {artikel.tags && artikel.tags.length ? (
+          <div class="tag-row artikel-tags">
+            {artikel.tags.map((tag: string) => (
+              <span class="tag-pill">{tag}</span>
+            ))}
+          </div>
+        ) : null}
+      </article>
+
+      {lainnya.length ? (
+        <section class="laman-lain">
+          <h2>Artikel lainnya</h2>
+          <div class="artikel-lain-grid">
+            {lainnya.map((a: any) => (
+              <a class="artikel-lain" href={hrefArtikel(a)}>
+                <span class="artikel-kategori">{a.category || "Artikel"}</span>
+                <span class="artikel-lain-judul">{a.title}</span>
+                <span class="artikel-tanggal">{tanggalArtikel(a) ? tanggalTeks(tanggalArtikel(a)) : ""}</span>
+              </a>
+            ))}
+          </div>
+          <p class="katalog-lead artikel-lain-link"><a href="/artikel">Lihat semua artikel →</a></p>
+        </section>
+      ) : null}
+    </main>
+  )}
+
+  <SiteFooter site={site} base="/" />
+
+  {/* Bilah pratinjau menempel di tepi BAWAH dan karena itu harus jadi elemen
+      terakhir — alasan lengkapnya ada di VehicleDetail.astro. */}
+  {pratinjau ? (
+    <div class="preview-bar" role="status">
+      <span class="preview-bar-tag">Pratinjau</span>
+      <p class="preview-bar-text">
+        Artikel ini <strong>belum tayang</strong>. Tautan pratinjau ini kedaluwarsa dalam dua jam.
+      </p>
+      <a class="preview-bar-link" href="/admin">Buka panel</a>
+    </div>
+  ) : null}
+</Base>

@@ -128,17 +128,18 @@ describe("bandingkanKonten", () => {
     assert.deepEqual(hasil[0].fields, ["abc123.webp"]);
   });
 
-  it("membaca kelima koleksi, bukan hanya kendaraan", () => {
+  it("membaca seluruh koleksi, bukan hanya kendaraan", () => {
     const hasil = bandingkanKonten(
       dok(),
       dok({
         spklu: [{ id: "spklu-1", name: "SPKLU Senayan" }],
         bengkel: [{ id: "b-1", name: "Bengkel EV" }],
         berita: [{ id: "n-1", title: "Berita baru" }],
+        artikel: [{ id: "a-1", title: "Artikel baru" }],
       })
     );
-    assert.deepEqual(hasil.map((h) => h.col).sort(), ["bengkel", "berita", "spklu"]);
-    assert.deepEqual(hasil.map((h) => h.title).sort(), ["Bengkel EV", "Berita baru", "SPKLU Senayan"]);
+    assert.deepEqual(hasil.map((h) => h.col).sort(), ["artikel", "bengkel", "berita", "spklu"]);
+    assert.deepEqual(hasil.map((h) => h.title).sort(), ["Artikel baru", "Bengkel EV", "Berita baru", "SPKLU Senayan"]);
   });
 
   it("dokumen kosong atau rusak tidak membuatnya meledak", () => {

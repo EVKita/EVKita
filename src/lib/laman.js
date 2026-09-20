@@ -65,6 +65,7 @@ export const SLUG_TERPAKAI = [
   "motor",
   "bandingkan",
   "kalkulator",
+  "artikel",
   "gambar",
   "sitemap",
   "robots",

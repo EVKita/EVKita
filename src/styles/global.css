@@ -4403,6 +4403,241 @@ a.pager-arrow:hover {
 }
 
 
+/* ===== Artikel orisinal =====
+
+   Kartu artikel muncul di dua tempat — indeks `/artikel` dan seksi di beranda —
+   jadi gayanya ditulis sekali di sini. Bentuknya sengaja mengikuti kartu berita
+   (satu kolom, gambar di atas) karena keduanya sama-sama daftar bacaan; yang
+   membedakan hanya lencana topik dan baris kaki yang menyebut tanggal terbit
+   dan waktu baca. */
+
+.artikel-tahun {
+  margin-top: clamp(26px, 4vw, 42px);
+}
+
+.artikel-tahun > h2 {
+  font-size: clamp(15px, 2vw, 18px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.artikel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+
+.artikel-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  overflow: hidden;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+
+.artikel-card:hover {
+  text-decoration: none;
+  transform: translateY(-3px);
+  border-color: var(--accent-ink);
+  box-shadow: var(--shadow);
+}
+
+.artikel-thumb {
+  aspect-ratio: 16 / 9;
+  background: var(--bg-tint);
+  overflow: hidden;
+}
+
+.artikel-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s var(--ease);
+}
+
+.artikel-card:hover .artikel-thumb img {
+  transform: scale(1.05);
+}
+
+.artikel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  flex: 1;
+}
+
+.artikel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.artikel-kategori {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+.artikel-judul {
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.artikel-ringkas {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artikel-kaki {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.artikel-tanggal,
+.artikel-baca {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ----- Halaman satu artikel ----- */
+
+.artikel-kategori-atas {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  margin-bottom: 8px;
+}
+
+.artikel-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.artikel-penulis {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.artikel-gambar {
+  margin-bottom: clamp(20px, 3vw, 30px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.artikel-gambar img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Kotak sumber. Sengaja tampil sebagai bagian penutup yang tenang, bukan
+   catatan kaki kecil: inilah yang membedakan artikel ini dari rangkuman yang
+   tidak bisa ditelusuri, dan pembaca berhak menemukannya tanpa mencari. */
+.artikel-sumber {
+  margin-top: clamp(28px, 4vw, 44px);
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-ink);
+  border-radius: var(--radius);
+  background: var(--bg-tint);
+}
+
+.artikel-sumber h2 {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.artikel-sumber-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.artikel-sumber ol {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.artikel-sumber a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+.artikel-tags {
+  margin-top: clamp(20px, 3vw, 30px);
+}
+
+/* Tautan artikel lain di kaki halaman. */
+.artikel-lain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.artikel-lain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.artikel-lain:hover {
+  text-decoration: none;
+  border-color: var(--accent-ink);
+  transform: translateY(-2px);
+}
+
+.artikel-lain-judul {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.artikel-lain-link {
+  margin-top: 14px;
+}
+
+
 /* =========================================================================
    MENU TAMPILAN
    -------------------------------------------------------------------------

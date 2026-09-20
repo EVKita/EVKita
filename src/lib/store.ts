@@ -5,6 +5,7 @@ import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfi
 import { APPEARANCE_DEFAULTS, APPEARANCE_FLAGS } from "./theme.js";
 import { MAX_LEGAL_LINKS, normalizeLinks, normalizeMenus } from "./footer.js";
 import { lamanBawaan, normalizeLaman, slugLaman } from "./laman.js";
+import { normalizeArtikel } from "./artikel.js";
 import { normalizeMediaMap } from "./media.js";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
@@ -320,18 +321,21 @@ function ensureIds(list: any[], prefix: string, key: string): any[] {
 }
 
 /**
- * Melengkapi dan membuat unik slug halaman.
+ * Melengkapi dan membuat unik slug halaman dan artikel.
  *
- * Slug adalah ALAMAT halaman, jadi dua halaman berslug sama berarti satu di
- * antaranya tidak akan pernah terbuka. Yang belakangan diberi akhiran angka —
+ * Slug adalah ALAMAT, jadi dua entri berslug sama berarti satu di antaranya
+ * tidak akan pernah terbuka. Yang belakangan diberi akhiran angka —
  * sama seperti `ensureIds()` melakukannya untuk id — bukan ditolak: dokumen
  * ini juga bisa disunting tangan lewat SSH, dan penyimpan yang menolak isi
  * yang sudah telanjur ada tidak menyelamatkan siapa pun.
+ *
+ * `awalan` dipakai untuk slug cadangan ketika judul, slug, dan id semuanya
+ * kosong — artikel memakai `artikel-1`, bukan `halaman-1`.
  */
-function ensureSlugs(list: any[]): any[] {
+function ensureSlugs(list: any[], awalan = "halaman"): any[] {
   const used = new Set<string>();
   return list.map((item, i) => {
-    let slug = slugLaman(item.slug) || slugLaman(item.title) || slugLaman(item.id) || `halaman-${i + 1}`;
+    let slug = slugLaman(item.slug) || slugLaman(item.title) || slugLaman(item.id) || `${awalan}-${i + 1}`;
     let unique = slug;
     let n = 2;
     while (used.has(unique)) unique = `${slug}-${n++}`;
@@ -409,6 +413,17 @@ function normalize(content: any): any {
         "halaman",
         "title"
       )
+    ),
+
+    /*
+     * Artikel orisinal (`/artikel/<slug>`). Berbeda dari halaman statis, tidak
+     * ada templat bawaan: artikel lahir dari tulisan yang memang ditulis
+     * seseorang, bukan dari kerangka yang disemai sistem. Lihat
+     * src/lib/artikel.js.
+     */
+    artikel: ensureSlugs(
+      ensureIds(asList(content?.artikel).map(normalizeArtikel), "artikel", "title"),
+      "artikel"
     ),
 
     /*

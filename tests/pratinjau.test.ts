@@ -108,13 +108,19 @@ describe("alamat pratinjau", () => {
     assert.equal(pratinjau.verifyPreviewToken(token, "cars", "byd-atto-3"), true);
   });
 
-  it("hanya cars, motors, dan halaman yang dikenali sebagai koleksi pratinjau", () => {
+  it("cars, motors, halaman, dan artikel dikenali sebagai koleksi pratinjau", () => {
     assert.equal(pratinjau.isPreviewCollection("cars"), true);
     assert.equal(pratinjau.isPreviewCollection("motors"), true);
     assert.equal(pratinjau.isPreviewCollection("halaman"), true);
+    assert.equal(pratinjau.isPreviewCollection("artikel"), true);
     for (const nilai of ["spklu", "bengkel", "berita", "site", "", null]) {
       assert.equal(pratinjau.isPreviewCollection(nilai), false);
     }
+  });
+
+  it("artikel memakai slug di alamatnya, seperti halaman", () => {
+    const alamat = pratinjau.previewPath("artikel", "art-1", "panduan-charging") as string;
+    assert.ok(alamat.startsWith("/artikel/panduan-charging?pratinjau="));
   });
 
   /* Halaman statis dialamati lewat slug, sementara tokennya menandatangani id:

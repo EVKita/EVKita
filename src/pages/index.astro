@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import ArtikelCard from "../components/ArtikelCard.astro";
 import { readContent } from "../lib/store";
 import { carSVG, defaultColor } from "../lib/cars-ui.js";
 import { safeUrl } from "../lib/url.js";
@@ -12,6 +13,7 @@ import { altMapFor, mediaAlt } from "../lib/media.js";
 import { hanyaTayang } from "../lib/tayang.js";
 import { menuBawaan } from "../lib/footer.js";
 import { tautanFooter } from "../lib/laman.js";
+import { artikelTayang } from "../lib/artikel.js";
 
 const content = readContent();
 const { site } = content;
@@ -30,6 +32,13 @@ const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [
 const spklu = (content.spklu || []).filter(hanyaTayang());
 const bengkel = (content.bengkel || []).filter(hanyaTayang());
 const berita = (content.berita || []).filter(hanyaTayang());
+
+/**
+ * Artikel orisinal yang tayang. Enam yang terbaru saja di beranda — seksi ini
+ * yang membuat tulisan baru terhubung dari halaman paling banyak dikunjungi,
+ * dan sisanya menunggu di /artikel.
+ */
+const artikelList = artikelTayang(content.artikel).slice(0, 6);
 
 /** Item bertanda `featured` naik ke atas — sisanya menjaga urutan aslinya. */
 const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
@@ -507,6 +516,23 @@ const jsonLd = {
                 </div>
               </a>
             ))}
+          </div>
+        </div>
+      </section>
+    ) : null}
+
+    {artikelList.length ? (
+      <section class="section artikel-section" id="artikel">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Artikel & Panduan</h2>
+              <p class="section-note">Tulisan orisinal, sumbernya dicantumkan</p>
+            </div>
+            <a class="section-link" href="/artikel">Semua artikel →</a>
+          </div>
+          <div class="artikel-grid">
+            {artikelList.map((a: any) => <ArtikelCard artikel={a} />)}
           </div>
         </div>
       </section>

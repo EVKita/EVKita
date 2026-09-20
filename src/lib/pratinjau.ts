@@ -41,12 +41,13 @@ export const PREVIEW_PATHS = {
   motors: "/motor/",
   /* Halaman statis tinggal di akar situs — lihat src/lib/laman.js. */
   halaman: "/",
+  artikel: "/artikel/",
 } as const;
 
 export type PreviewCollection = keyof typeof PREVIEW_PATHS;
 
 export function isPreviewCollection(v: unknown): v is PreviewCollection {
-  return v === "cars" || v === "motors" || v === "halaman";
+  return v === "cars" || v === "motors" || v === "halaman" || v === "artikel";
 }
 
 /**

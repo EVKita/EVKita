@@ -252,6 +252,25 @@ const HEADING_WEIGHTS = ["400", "500", "600", "700", "800", "900"];
         <div id="halaman-list" class="item-list"></div>
       </section>
 
+      <!-- ===== Artikel =====
+           Tulisan orisinal di /artikel/<slug>. Memakai kerangka daftar yang
+           sama dengan direktori; formulirnya digambar `dirGroups("artikel")`
+           di admin.js. Daftar sumber di dalamnya adalah repeater — bentuk
+           baris yang sama dengan spesifikasi kendaraan. -->
+      <section class="view" data-view="artikel" hidden>
+        <div class="view-head">
+          <div>
+            <h1 class="view-title" data-i18n="view.artikel.title">{t("view.artikel.title")}</h1>
+            <p class="view-sub" data-i18n="view.artikel.sub">{t("view.artikel.sub")}</p>
+          </div>
+          <div class="view-head-actions">
+            <button id="add-artikel" class="btn btn-primary" type="button" data-add="artikel" data-i18n="view.artikel.add">{t("view.artikel.add")}</button>
+          </div>
+        </div>
+        <div id="artikel-toolbar"></div>
+        <div id="artikel-list" class="item-list"></div>
+      </section>
+
       <!-- ===== Pengaturan Situs ===== -->
       <section class="view" data-view="site" hidden>
         <div class="view-head">

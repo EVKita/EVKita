@@ -7,6 +7,7 @@ import { groupByField } from "../lib/taxonomy.js";
 import { vehicleHref } from "../lib/card-html.js";
 import { hanyaTayang } from "../lib/tayang.js";
 import { hrefLaman } from "../lib/laman.js";
+import { hrefArtikel } from "../lib/artikel.js";
 
 /**
  * Peta situs yang dirakit saat diminta, bukan saat build.
@@ -42,6 +43,21 @@ export const GET: APIRoute = ({ url }) => {
     const href = hrefLaman(laman);
     if (!href) continue;
     entries.push({ loc: `${origin}${href}`, lastmod: laman.updatedAt || undefined, priority: "0.5" });
+  }
+
+  /*
+   * Artikel orisinal.
+   *
+   * Prioritasnya lebih tinggi daripada halaman statis karena inilah isi yang
+   * menjawab pertanyaan orang — dan yang diperbarui paling sering. Indeksnya
+   * ikut diumumkan sekali; tiap artikel punya alamatnya sendiri di bawahnya.
+   */
+  entries.push({ loc: `${origin}/artikel`, priority: "0.8" });
+  for (const artikel of (content.artikel || []).filter(hanyaTayang())) {
+    if (artikel.noindex) continue;
+    const href = hrefArtikel(artikel);
+    if (!href) continue;
+    entries.push({ loc: `${origin}${href}`, lastmod: artikel.updatedAt || undefined, priority: "0.7" });
   }
 
   const liveCars = (content.cars || []).filter(hanyaTayang());

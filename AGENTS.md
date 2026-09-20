@@ -237,6 +237,30 @@ penanda `{brand}`/`{tahun}`, dan templat bawaan.
   semua halamannya tidak akan menemukannya tumbuh kembali. Isinya templat, bukan
   nasihat hukum, dan panel mengatakan itu di subjudul halamannya.
 
+### Artikel orisinal (`content.artikel`)
+
+Tulisan yang ditulis dan diterbitkan di situs ini, beralamat
+**`/artikel/<slug>`**. Semua aturannya bermuara ke **`src/lib/artikel.js`** —
+normalisasi, slug, daftar sumber, waktu baca, dan tanggal terbit.
+
+- **Bedanya dengan `berita`:** `berita` adalah kurasi judul + tautan milik
+  penerbit lain; `artikel` adalah isi situs sendiri. Umpan RSS
+  (`/artikel/rss.xml`) hanya memuat artikel, tidak pernah berita.
+- **`sources` bukan pelengkap, melainkan alasan koleksi ini ada.** Tiap
+  artikel membawa daftar `{ label, url }` yang ditampilkan di kaki tulisannya,
+  dan panel menandai artikel tanpa satu pun sumber. Penyaring skema
+  (`safeUrl`) dipasang saat RENDER lewat `sumberTampil()`, bukan saat simpan —
+  aturan yang sama dengan tautan footer.
+- **Alamatnya di bawah `/artikel/`**, jadi slug-nya tidak pernah bertabrakan
+  dengan rute akar. `"artikel"` tetap ditambahkan ke `SLUG_TERPAKAI` supaya
+  halaman statis tidak bisa merebut alamat indeksnya.
+- **Artikel baru lahir sebagai draf.** `date` (tanggal terbit yang tampil) dan
+  `publishAt` (jadwal tayang) adalah dua hal yang berbeda.
+- **`aiAssisted`** hanya lencana transparansi di panel — tidak pernah menjadi
+  sinyal SEO, dan tidak pernah ditampilkan di situs publik.
+- Draf bisa dipratinjau lewat `/api/pratinjau` seperti kendaraan dan halaman;
+  tokennya menandatangani `id`, alamatnya memakai `slug`.
+
 ### Fitur AI (DeepSeek)
 
 Rancangan lengkapnya ada di **`RENCANA-AI-DEEPSEEK.md`**. Yang sudah berjalan

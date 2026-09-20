@@ -1,0 +1,48 @@
+---
+import { bacaMenit, hrefArtikel, ringkasArtikel, tanggalArtikel } from "../lib/artikel.js";
+import { safeUrl } from "../lib/url.js";
+
+/**
+ * Satu kartu artikel.
+ *
+ * Dipakai indeks `/artikel` DAN seksi artikel di beranda. Dua tempat yang
+ * menggambar kartu yang sama dengan tangan masing-masing pasti akan berbeda
+ * dalam hitungan bulan — dan yang paling sering tertinggal adalah tanggal
+ * terbitnya, karena itu bagian yang paling gampang dilupakan.
+ */
+interface Props {
+  artikel: Record<string, any>;
+}
+
+const { artikel } = Astro.props;
+
+const tanggal = tanggalArtikel(artikel);
+const tanggalTeks = tanggal
+  ? new Date(`${tanggal}T00:00:00+07:00`).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  : "";
+const gambar = safeUrl(artikel.image);
+---
+
+<a class="artikel-card" href={hrefArtikel(artikel)}>
+  {gambar ? (
+    <div class="artikel-thumb">
+      <img src={gambar} alt="" loading="lazy" decoding="async" />
+    </div>
+  ) : null}
+  <div class="artikel-body">
+    <div class="artikel-top">
+      {artikel.category ? <span class="artikel-kategori">{artikel.category}</span> : <span></span>}
+      {artikel.featured ? <span class="badge badge-featured">Sorotan</span> : null}
+    </div>
+    <h3 class="artikel-judul">{artikel.title}</h3>
+    <p class="artikel-ringkas">{ringkasArtikel(artikel)}</p>
+    <div class="artikel-kaki">
+      <span class="artikel-tanggal">{tanggalTeks}</span>
+      <span class="artikel-baca">{bacaMenit(artikel)} menit baca</span>
+    </div>
+  </div>
+</a>

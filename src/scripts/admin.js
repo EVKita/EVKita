@@ -39,6 +39,7 @@ import {
 } from "../lib/ai-wizard.js";
 import { tayang, terjadwal } from "../lib/tayang.js";
 import { slugLaman, slugBentrok, hrefLaman } from "../lib/laman.js";
+import { KATEGORI_ARTIKEL, hrefArtikel, tanggalArtikel } from "../lib/artikel.js";
 import { nilaiJanggal, konsumsiJanggal, cariKembar, basi, HARI_BASI } from "../lib/mutu.js";
 import {
   CAR_BODY_TYPES,
@@ -85,18 +86,19 @@ let t = makeT(locale);
 
 /* "editor", "profile", dan "users" adalah halaman penuh tanpa butir sidebar
    sendiri di kelompok koleksi. */
-const VIEWS = ["dashboard", "analitik", "cars", "motors", "spklu", "bengkel", "berita", "halaman", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
+const VIEWS = ["dashboard", "analitik", "cars", "motors", "spklu", "bengkel", "berita", "halaman", "artikel", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
 
 /* Dua form yang isinya sama-sama field `site`: Pengaturan Situs dan Tampilan.
    Keduanya ditangani mesin yang sama supaya menambah field cukup satu baris
    markup, tanpa penangan baru. */
 const SITE_FORMS = ["site-form", "tampilan-form"];
-const COLLECTIONS = ["cars", "motors", "spklu", "bengkel", "berita", "halaman"];
+const COLLECTIONS = ["cars", "motors", "spklu", "bengkel", "berita", "halaman", "artikel"];
 const VEHICLE_COLS = ["cars", "motors"];
 /* Koleksi yang disunting lewat modal berformulir, bukan halaman editor penuh.
-   "halaman" ikut di sini: bentuk datanya datar seperti direktori, jadi seluruh
-   mesin daftar, saringan, aksi massal, dan modalnya dipakai apa adanya. */
-const DIR_COLS = ["spklu", "bengkel", "berita", "halaman"];
+   "halaman" dan "artikel" ikut di sini: bentuk datanya datar seperti direktori,
+   jadi seluruh mesin daftar, saringan, aksi massal, dan modalnya dipakai apa
+   adanya. */
+const DIR_COLS = ["spklu", "bengkel", "berita", "halaman", "artikel"];
 
 const colLabel = (col) => t(`col.${col}`);
 const colOne = (col) => t(`col.${col}.one`);
@@ -251,6 +253,50 @@ function dirGroups(col) {
         l: t("dir.halaman.sec.penayangan"), d: t("dir.halaman.sec.penayangan.d"), f: [
           { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
           { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
+        ],
+      },
+    ];
+  }
+
+  if (col === "artikel") {
+    return [
+      {
+        l: t("dir.artikel.sec.konten"), d: t("dir.artikel.sec.konten.d"), f: [
+          { k: "title", l: t("field.artikel.title"), t: "text", req: true, full: true, ph: t("field.artikel.title.ph") },
+          { k: "slug", l: t("field.artikel.slug"), t: "text", req: true, full: true, ph: t("field.artikel.slug.ph"), hint: t("field.artikel.slug.hint") },
+          /* Ringkasan di ATAS naskah: ia yang dibaca orang di daftar dan di
+             hasil pencarian, dan menuliskannya lebih dulu memaksa penulisnya
+             memutuskan "artikel ini tentang apa" sebelum menulis. */
+          { k: "excerpt", l: t("field.artikel.excerpt"), t: "textarea", full: true, rows: 3, ph: t("field.artikel.excerpt.ph"), hint: t("field.artikel.excerpt.hint") },
+          { k: "body", l: t("field.artikel.body"), t: "textarea", full: true, rows: 22, mono: true, ph: t("field.artikel.body.ph"), hint: t("field.artikel.body.hint") },
+        ],
+      },
+      {
+        l: t("dir.artikel.sec.penulis"), d: t("dir.artikel.sec.penulis.d"), f: [
+          { k: "author", l: t("field.artikel.author"), t: "combo", src: "artikelAuthor", ph: t("field.artikel.author.ph"), hint: t("field.artikel.author.hint") },
+          { k: "category", l: t("field.artikel.category"), t: "combo", src: "artikelKategori", ph: t("field.artikel.category.ph") },
+          { k: "tags", l: t("field.tags"), t: "tags", hint: t("field.artikel.tags.hint") },
+          /* Sumber adalah repeater, bukan field teks: satu artikel biasanya
+             mengutip beberapa halaman, dan tiap baris butuh nama + alamatnya
+             sendiri. Bentuk barisnya sama dengan baris spesifikasi di editor
+             kendaraan — kontrol yang sudah dikenal, bukan kontrol baru. */
+          { k: "sources", l: t("field.artikel.sources"), t: "repeater", kind: "src", full: true, hint: t("field.artikel.sources.hint") },
+        ],
+      },
+      {
+        l: t("dir.artikel.sec.media"), d: t("dir.artikel.sec.media.d"), f: [
+          { k: "image", l: t("field.artikel.image"), t: "image", full: true, hint: t("field.artikel.image.hint") },
+          { k: "seoTitle", l: t("field.artikel.seoTitle"), t: "text", full: true, ph: t("field.artikel.seoTitle.ph"), hint: t("field.artikel.seoTitle.hint") },
+          { k: "keywords", l: t("field.artikel.keywords"), t: "text", full: true, ph: t("field.artikel.keywords.ph") },
+          { k: "noindex", l: t("field.artikel.noindex"), t: "switch", full: true, hint: t("field.artikel.noindex.hint") },
+        ],
+      },
+      {
+        l: t("dir.artikel.sec.penayangan"), d: t("dir.artikel.sec.penayangan.d"), f: [
+          { k: "date", l: t("field.artikel.date"), t: "date", hint: t("field.artikel.date.hint") },
+          { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
+          { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
+          { k: "featured", l: t("field.artikel.featured"), t: "switch", full: true, hint: t("field.artikel.featured.hint") },
         ],
       },
     ];
@@ -444,6 +490,13 @@ function filtersFor(col) {
   if (col === "halaman") {
     return [dirStatusFilter(), footerFilter()];
   }
+  if (col === "artikel") {
+    return [
+      { id: "category", label: t("filter.allCategories"), options: (it) => uniqVals(it, "category"), match: (i, v) => i.category === v },
+      dirStatusFilter(),
+      featuredFilter(),
+    ];
+  }
   return [];
 }
 
@@ -477,6 +530,7 @@ function sortsFor(col) {
   }
   if (col === "berita") return [...common, ["date-desc", t("sort.dateDesc")], ["date-asc", t("sort.dateAsc")]];
   if (col === "halaman") return [...common, ["updated", t("sort.updated")]];
+  if (col === "artikel") return [...common, ["date-desc", t("sort.dateDesc")], ["date-asc", t("sort.dateAsc")], ["updated", t("sort.updated")]];
   return common;
 }
 
@@ -627,7 +681,7 @@ function isVehicle(col) {
 
 function titleOf(col, item) {
   if (!item) return "";
-  if (col === "berita" || col === "halaman") return item.title || t("common.noTitle");
+  if (col === "berita" || col === "halaman" || col === "artikel") return item.title || t("common.noTitle");
   if (isVehicle(col)) return `${item.brand || ""} ${item.name || ""}`.trim() || t("common.noName");
   return item.name || t("common.noName");
 }
@@ -650,6 +704,17 @@ function metaOf(col, item) {
         ? t("meta.footerMenu")
         : t("meta.footerLegal");
     return [hrefLaman(item), t("meta.words", { n: jumlahKata(item.body) }), letak].filter(Boolean).join(" · ");
+  }
+  if (col === "artikel") {
+    const tgl = tanggalArtikel(item);
+    const bagian = [
+      tgl ? formatDate(`${tgl}T00:00:00+07:00`) : "",
+      item.author,
+      t("meta.words", { n: jumlahKata(item.body) }),
+    ];
+    const jumlahSumber = Array.isArray(item.sources) ? item.sources.length : 0;
+    if (jumlahSumber) bagian.push(t("meta.sources", { n: jumlahSumber }));
+    return bagian.filter(Boolean).join(" · ") || t("meta.noDetail");
   }
   return "";
 }
@@ -1105,6 +1170,14 @@ function fieldHtml(def, value, prefix) {
     </div>`;
   }
 
+  /* Repeater: barisnya dibaca langsung dari DOM saat simpan, sama seperti
+     baris spesifikasi di editor kendaraan. */
+  if (def.t === "repeater") {
+    return `<div class="${cls}" data-field="${esc(def.k)}">
+      ${label}${repeaterHtml(def.k, Array.isArray(value) ? value : [], def.kind)}${hint}
+    </div>`;
+  }
+
   let control = "";
   if (def.t === "textarea") {
     // `mono`: naskah Markdown dibaca jauh lebih mudah dengan lebar huruf tetap
@@ -1159,8 +1232,16 @@ function lokalKeIso(v) {
   return Number.isNaN(d.getTime()) ? "" : d.toISOString();
 }
 
+/** Tanggal hari ini menurut jam setempat, dalam bentuk `YYYY-MM-DD`. */
+function tanggalLokalHariIni() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 function readField(form, def) {
   const el = form.elements[def.k];
+  if (def.t === "repeater") return readRepeater(form, def.k);
   if (!el) return def.t === "tags" ? [] : def.t === "switch" ? false : "";
   if (def.t === "switch") return !!el.checked;
   if (def.t === "datetime") return lokalKeIso(el.value);
@@ -1196,6 +1277,8 @@ const COMBO_LABEL = {
   hours: "combo.label.hours",
   bengkelType: "combo.label.workshopKind",
   beritaSource: "combo.label.source",
+  artikelAuthor: "combo.label.author",
+  artikelKategori: "combo.label.category",
 };
 
 function comboLabel(key) {
@@ -1446,7 +1529,7 @@ function imagePreviewHtml(url, extraAttr) {
 /* Repeater: barisnya dibaca langsung dari DOM saat simpan, jadi tidak perlu state ganda. */
 function repeaterHtml(name, rows, kind) {
   const body = (rows || []).map((r, i) => repeaterRowHtml(name, r, kind, i)).join("");
-  const addLabel = kind === "kv" ? t("editor.addSpecRow") : kind === "color" ? t("editor.addColor") : t("editor.addVariant");
+  const addLabel = kind === "kv" ? t("editor.addSpecRow") : kind === "src" ? t("editor.addSourceRow") : kind === "color" ? t("editor.addColor") : t("editor.addVariant");
   return `<div class="repeater" data-rep="${esc(name)}" data-kind="${esc(kind)}">
     <div data-rep-body>${body}</div>
     <button type="button" class="btn btn-outline btn-sm repeater-add" data-rep-add="${esc(name)}">+ ${esc(addLabel)}</button>
@@ -1458,6 +1541,14 @@ function repeaterRowHtml(name, row, kind, index) {
     <button type="button" class="btn btn-ghost btn-icon btn-sm" data-rep-move="1" title="${esc(t("common.moveDown"))}">&darr;</button>`;
   const del = `<button type="button" class="btn btn-ghost btn-icon btn-sm" data-rep-del title="${esc(t("common.removeRow"))}">&times;</button>`;
 
+  if (kind === "src") {
+    const r = row || { label: "", url: "" };
+    return `<div class="repeater-row repeater-row-src">
+      <input type="text" data-rk="label" value="${esc(r.label)}" placeholder="${esc(t("field.artikel.sources.label.ph"))}" />
+      <input type="url" data-rk="url" value="${esc(r.url)}" placeholder="${esc(t("field.artikel.sources.url.ph"))}" spellcheck="false" />
+      ${move}${del}
+    </div>`;
+  }
   if (kind === "kv") {
     const r = row || { label: "", value: "" };
     return `<div class="repeater-row">
@@ -1494,6 +1585,15 @@ function readRepeater(root, name) {
   if (!rep) return [];
   const kind = rep.getAttribute("data-kind");
   const rows = Array.from(rep.querySelectorAll(".repeater-row"));
+  if (kind === "src") {
+    return rows
+      .map((r) => ({
+        label: (r.querySelector('[data-rk="label"]') || {}).value || "",
+        url: (r.querySelector('[data-rk="url"]') || {}).value || "",
+      }))
+      .map((r) => ({ label: r.label.trim(), url: r.url.trim() }))
+      .filter((r) => r.label || r.url);
+  }
   if (kind === "kv") {
     return rows
       .map((r) => ({
@@ -1993,14 +2093,24 @@ function rowHtml(col, it, dragEnabled) {
   if (isVehicle(col) && (it.stale || basi(it))) badges.push(`<span class="badge badge-warn">${esc(t("badge.stale"))}</span>`);
   if (isVehicle(col) && adaNilaiJanggal(it)) badges.push(`<span class="badge badge-warn">${esc(t("badge.odd"))}</span>`);
   if (isVehicle(col) && !it.image) badges.push(`<span class="badge badge-muted">${esc(t("badge.noImage"))}</span>`);
+  /* Artikel tanpa satu pun sumber ditandai — bukan dilarang, tapi harus
+     terlihat. Sumber adalah janji yang membedakan koleksi ini dari rangkuman
+     mesin, dan yang tidak kelihatan adalah yang paling sering terlupa. */
+  if (col === "artikel" && !(Array.isArray(it.sources) && it.sources.length)) {
+    badges.push(`<span class="badge badge-warn">${esc(t("badge.noSources"))}</span>`);
+  }
+  if (col === "artikel" && it.aiAssisted) {
+    badges.push(`<span class="badge badge-muted">${esc(t("badge.aiAssisted"))}</span>`);
+  }
 
   /* Lewat /api/pratinjau, bukan langsung ke /mobil/<id>. Dua sebabnya: motor
      ikut kebagian tombol ini (dulu hanya mobil, karena hanya mobil yang punya
      halaman), dan barisnya yang berstatus draf tetap bisa dibuka — justru
      baris itu yang paling sering perlu dilihat. */
-  /* Halaman statis ikut kebagian tombol ini: ia juga punya alamat sendiri, dan
-     yang berstatus draf juga cuma bisa dilihat lewat tautan bertanda tangan. */
-  const view = isVehicle(col) || col === "halaman"
+  /* Halaman statis dan artikel ikut kebagian tombol ini: keduanya punya alamat
+     sendiri, dan yang berstatus draf juga cuma bisa dilihat lewat tautan
+     bertanda tangan. */
+  const view = isVehicle(col) || col === "halaman" || col === "artikel"
     ? `<a class="btn btn-ghost btn-sm" href="${esc(previewHref(col, it.id))}" target="_blank" rel="noopener">${esc(t("common.view"))}</a>`
     : "";
   // Skema disaring lebih dulu: field ini teks bebas, dan esc() tidak menolak
@@ -2127,7 +2237,9 @@ function blankItem(col) {
     };
   }
   const item = { id: "" };
-  for (const def of dirFields(col)) item[def.k] = def.t === "switch" ? false : def.t === "number" ? null : "";
+  for (const def of dirFields(col)) {
+    item[def.k] = def.t === "switch" ? false : def.t === "number" ? null : def.t === "repeater" ? [] : "";
+  }
   /* Halaman baru tampil di footer secara bawaan — itulah gunanya membuatnya.
      Saklar yang mati secara bawaan berarti setiap halaman baru harus
      dinyalakan dua kali, dan yang lupa dinyalakan tidak terlihat di mana pun. */
@@ -2135,16 +2247,34 @@ function blankItem(col) {
     item.showInFooter = true;
     item.footerSlot = "legal";
   }
+  /* Artikel baru lahir sebagai DRAF. Berbeda dari direktori, menulis artikel
+     adalah pekerjaan yang selesai dalam beberapa hari; menayangkannya
+     setengah jadi karena satu tombol Simpan adalah kegagalan yang lebih mahal
+     daripada satu klik "Terbitkan" yang disengaja. Tanggal terbitnya diisi
+     hari ini karena hampir selalu benar. */
+  if (col === "artikel") {
+    item.status = "draft";
+    item.date = tanggalLokalHariIni();
+  }
   return item;
 }
 
-/** Slug halaman yang belum dipakai halaman lain. `kecuali` = id yang boleh bentrok dengan dirinya sendiri. */
-function slugUnik(dasar, kecuali) {
-  const awal = slugLaman(dasar) || "halaman";
+/**
+ * Slug yang belum dipakai entri lain di koleksi yang sama. `kecuali` = id yang
+ * boleh bentrok dengan dirinya sendiri.
+ *
+ * Halaman statis masih memeriksa `slugBentrok()`: alamatnya ada di akar situs,
+ * jadi slug yang sama dengan rute lain tidak akan pernah terbuka. Artikel
+ * tidak — alamatnya selalu di bawah `/artikel/`, dan di sana tidak ada rute
+ * yang bisa ditabraknya.
+ */
+function slugUnik(col, dasar, kecuali) {
+  const awal = slugLaman(dasar) || col;
   let slug = awal;
   let n = 2;
-  const dipakai = (v) => (content.halaman || []).some((x) => x.id !== kecuali && x.slug === v);
-  while (dipakai(slug) || slugBentrok(slug)) slug = `${awal}-${n++}`;
+  const dipakai = (v) => (content[col] || []).some((x) => x.id !== kecuali && x.slug === v);
+  const bentrok = col === "halaman" ? slugBentrok : () => false;
+  while (dipakai(slug) || bentrok(slug)) slug = `${awal}-${n++}`;
   return slug;
 }
 
@@ -2152,15 +2282,15 @@ function duplicateItem(col, id) {
   const src = findItem(col, id);
   if (!src) return;
   const copy = JSON.parse(JSON.stringify(src));
-  const nameKey = col === "berita" || col === "halaman" ? "title" : "name";
+  const nameKey = col === "berita" || col === "halaman" || col === "artikel" ? "title" : "name";
   copy[nameKey] = String(copy[nameKey] || "") + t("common.copySuffix");
   copy.id = uniqueId(col, slugify(isVehicle(col) ? `${copy.brand} ${copy.name}` : copy[nameKey]) || col);
   if (isVehicle(col)) copy.status = "draft";
-  /* Alamat halaman tidak boleh kembar: yang belakangan tidak akan pernah
-     terbuka. Salinannya juga lahir sebagai draf — dua halaman kebijakan yang
-     sama-sama tayang bukan sesuatu yang pernah dimaksudkan siapa pun. */
-  if (col === "halaman") {
-    copy.slug = slugUnik(copy.slug || copy.title, copy.id);
+  /* Alamat halaman dan artikel tidak boleh kembar: yang belakangan tidak akan
+     pernah terbuka. Salinannya juga lahir sebagai draf — dua halaman kebijakan
+     yang sama-sama tayang bukan sesuatu yang pernah dimaksudkan siapa pun. */
+  if (col === "halaman" || col === "artikel") {
+    copy.slug = slugUnik(col, copy.slug || copy.title, copy.id);
     copy.status = "draft";
   }
   const idx = (content[col] || []).findIndex((x) => x.id === id);
@@ -2252,6 +2382,7 @@ const BULK_FIELDS = {
   bengkel: ["type", "brand", "area", "hours", "status", "publishAt", "featured"],
   berita: ["source", "status", "publishAt", "featured"],
   halaman: ["showInFooter", "footerSlot", "status", "publishAt"],
+  artikel: ["category", "author", "status", "publishAt", "featured"],
 };
 
 let bulkCtx = null; // { col, ids, key }
@@ -3051,6 +3182,9 @@ function fillDirCombos(col) {
     comboSources.bengkelType = merge("type", DIR_SUGGESTIONS.bengkelType);
     comboSources.bengkelBrand = merge("brand");
     comboSources.hours = merge("hours", DIR_SUGGESTIONS.hoursBengkel);
+  } else if (col === "artikel") {
+    comboSources.artikelAuthor = merge("author");
+    comboSources.artikelKategori = merge("category", KATEGORI_ARTIKEL);
   } else {
     comboSources.beritaSource = merge("source");
   }
@@ -3150,7 +3284,7 @@ function updateDirMeter() {
  * halamannya tersimpan.
  */
 function syncSlugLaman(el) {
-  if (!dirCtx || dirCtx.col !== "halaman" || !el || !el.name) return;
+  if (!dirCtx || (dirCtx.col !== "halaman" && dirCtx.col !== "artikel") || !el || !el.name) return;
   if (el.name === "slug") { dirCtx.slugTouched = true; return; }
   if (el.name !== "title" || dirCtx.slugTouched) return;
   const form = $("dir-form");
@@ -3164,7 +3298,7 @@ function syncSlugLaman(el) {
  * diketik langsung dibuang, dan kata kedua tidak akan pernah bisa diketik.
  */
 function rapikanSlug(el) {
-  if (!dirCtx || dirCtx.col !== "halaman" || !el || el.name !== "slug") return;
+  if (!dirCtx || (dirCtx.col !== "halaman" && dirCtx.col !== "artikel") || !el || el.name !== "slug") return;
   const bersih = slugLaman(el.value);
   if (el.value !== bersih) el.value = bersih;
 }
@@ -3179,7 +3313,7 @@ function checkDirDuplicate() {
   const form = $("dir-form");
   if (!form || !dirCtx) return;
 
-  const key = dirCtx.col === "berita" || dirCtx.col === "halaman" ? "title" : "name";
+  const key = dirCtx.col === "berita" || dirCtx.col === "halaman" || dirCtx.col === "artikel" ? "title" : "name";
   const field = form.querySelector(`.field[data-field="${CSS.escape(key)}"]`);
   const input = form.elements[key];
   if (!field || !input) return;
@@ -3212,7 +3346,8 @@ function saveDir(opts) {
   const data = {};
   for (const def of defs) data[def.k] = def.t === "image" ? dirCtx.draft[def.k] || "" : readField(form, def);
 
-  const nameKey = col === "berita" || col === "halaman" ? "title" : "name";
+  const pakaiJudul = col === "berita" || col === "halaman" || col === "artikel";
+  const nameKey = pakaiJudul ? "title" : "name";
   const gagal = (key, pesan) => {
     markError(form, key, pesan);
     const bad = form.querySelector(".field.has-error input, .field.has-error textarea");
@@ -3221,29 +3356,29 @@ function saveDir(opts) {
   };
 
   if (!data[nameKey]) {
-    gagal(nameKey, col === "berita" || col === "halaman" ? t("valid.titleRequired") : t("valid.dirNameRequired"));
+    gagal(nameKey, pakaiJudul ? t("valid.titleRequired") : t("valid.dirNameRequired"));
     return;
   }
 
   /*
-   * Alamat halaman diperiksa di sini, bukan diam-diam dibetulkan saat
-   * menyimpan. Slug adalah ALAMAT: alamat yang bentrok berarti satu halaman
-   * tidak akan pernah terbuka, dan alamat yang diam-diam diganti membuat
-   * tautan yang baru saja disalin orang berhenti bekerja. Keduanya kegagalan
-   * yang tidak terlihat sampai ada yang mengeluh.
+   * Alamat halaman dan artikel diperiksa di sini, bukan diam-diam dibetulkan
+   * saat menyimpan. Slug adalah ALAMAT: alamat yang bentrok berarti satu
+   * halaman tidak akan pernah terbuka, dan alamat yang diam-diam diganti
+   * membuat tautan yang baru saja disalin orang berhenti bekerja. Keduanya
+   * kegagalan yang tidak terlihat sampai ada yang mengeluh.
    */
-  if (col === "halaman") {
+  if (col === "halaman" || col === "artikel") {
     const slug = slugLaman(data.slug || data.title);
     if (!slug) {
-      gagal("slug", t("valid.slugRequired"));
+      gagal("slug", t(col === "artikel" ? "valid.artikelSlugRequired" : "valid.slugRequired"));
       return;
     }
-    if (slugBentrok(slug)) {
+    if (col === "halaman" && slugBentrok(slug)) {
       gagal("slug", t("valid.slugReserved"));
       return;
     }
-    if ((content.halaman || []).some((x) => x.id !== id && x.slug === slug)) {
-      gagal("slug", t("valid.slugTaken"));
+    if ((content[col] || []).some((x) => x.id !== id && x.slug === slug)) {
+      gagal("slug", t(col === "artikel" ? "valid.artikelSlugTaken" : "valid.slugTaken"));
       return;
     }
     data.slug = slug;
@@ -4266,7 +4401,8 @@ async function importCollection(col, parsed) {
   if (!ok) return;
   for (const row of rows) {
     const item = Object.assign(blankItem(col), row);
-    item.id = uniqueId(col, slugify(isVehicle(col) ? `${item.brand} ${item.name}` : item[col === "berita" ? "title" : "name"]) || col);
+    const nameKey = col === "berita" || col === "halaman" || col === "artikel" ? "title" : "name";
+    item.id = uniqueId(col, slugify(isVehicle(col) ? `${item.brand} ${item.name}` : item[nameKey]) || col);
     content[col].push(item);
   }
   commit();
@@ -4286,9 +4422,12 @@ let imporCtx = null; // { col, header[], rows[][], peta[] }
 
 /** Field yang boleh diisi dari CSV — sama dengan yang ada di formulirnya. */
 function imporDefs(col) {
+  /* Repeater tidak ikut: isinya baris bertingkat (sumber artikel), dan kolom
+     CSV yang pipih tidak bisa mewakilinya tanpa konvensi yang hanya diketahui
+     orang yang menulis konvensinya. */
   return isVehicle(col)
     ? [...vehicleFields(col).dasar, ...vehicleFields(col).spesifikasi].filter((d) => d.t !== "image" && d.t !== "switch")
-    : dirFields(col).filter((d) => d.t !== "image" && d.t !== "switch");
+    : dirFields(col).filter((d) => d.t !== "image" && d.t !== "switch" && d.t !== "repeater");
 }
 
 function openImporCsv(col) {
@@ -5301,16 +5440,28 @@ function bindEvents() {
       const body = rep.querySelector("[data-rep-body]");
       const kind = rep.getAttribute("data-kind");
       const count = body.querySelectorAll(".repeater-row").length;
-      body.insertAdjacentHTML("beforeend", repeaterRowHtml(rep.getAttribute("data-rep"), kind === "kv" ? { label: "", value: "" } : "", kind, count));
+      const kosong = kind === "kv" ? { label: "", value: "" } : kind === "src" ? { label: "", url: "" } : "";
+      body.insertAdjacentHTML("beforeend", repeaterRowHtml(rep.getAttribute("data-rep"), kosong, kind, count));
       const last = body.lastElementChild;
       const input = last && last.querySelector("input:not([type=color])");
       if (input) input.focus();
       updateVehicleMeter();
+      /* Repeater yang sama dipakai modal direktori (baris sumber artikel).
+         Meteran kendaraan tidak berlaku di sana, jadi meteran modalnya yang
+         diperbarui — kalau tidak, "terisi 12 dari 14" berhenti bertambah
+         begitu satu baris sumber ditambahkan. */
+      if (repAdd.closest("#dir-form")) updateDirMeter();
       return;
     }
 
     const repDel = e.target.closest("[data-rep-del]");
-    if (repDel) { repDel.closest(".repeater-row").remove(); updateVehicleMeter(); return; }
+    if (repDel) {
+      const dirForm = repDel.closest("#dir-form");
+      repDel.closest(".repeater-row").remove();
+      updateVehicleMeter();
+      if (dirForm) updateDirMeter();
+      return;
+    }
 
     const repMove = e.target.closest("[data-rep-move]");
     if (repMove) {

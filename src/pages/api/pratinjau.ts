@@ -30,8 +30,9 @@ export const GET: APIRoute = ({ url, cookies, redirect }) => {
   const item = (content[col] || []).find((x: any) => x.id === id);
   if (!item) return apiError("err.previewBadTarget", 404);
 
-  /* Halaman statis dialamati lewat slug-nya; sisanya lewat id. */
-  const path = previewPath(col, id, col === "halaman" ? String(item.slug || "") : id);
+  /* Halaman statis dan artikel dialamati lewat slug-nya; sisanya lewat id. */
+  const pakaiSlug = col === "halaman" || col === "artikel";
+  const path = previewPath(col, id, pakaiSlug ? String(item.slug || "") : id);
   if (!path) return apiError("err.previewNoSecret", 500);
 
   return redirect(path, 302);

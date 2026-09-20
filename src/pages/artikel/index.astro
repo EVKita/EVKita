@@ -1,0 +1,130 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import ArtikelCard from "../../components/ArtikelCard.astro";
+import { readContent } from "../../lib/store";
+import { artikelTayang, tanggalArtikel } from "../../lib/artikel.js";
+import { siteOrigin, canonicalUrl, absoluteUrl } from "../../lib/site-url";
+
+/**
+ * Indeks artikel orisinal.
+ *
+ * Seluruh artikel tayang ditampilkan di SATU halaman, dikelompokkan per tahun.
+ * Sengaja tanpa paginasi: daftar ini isinya judul dan dua baris ringkasan —
+ * lima puluh kartu bukan beban, dan setiap artikel mendapat satu tautan
+ * langsung dari halaman yang paling sering dirayapi. Paginasi akan menyembunyikan
+ * tulisan lama di balik satu klik tambahan tanpa memberi apa pun sebagai
+ * gantinya.
+ *
+ * Urutannya terbaru lebih dulu, dengan tahun sebagai pemisah supaya daftar
+ * yang panjang tetap bisa dipindai.
+ */
+const content = readContent();
+const site = content.site;
+const brand = site.brandText || "EVKita";
+const brandFull = `${brand}${site.brandSuffix || ""}`;
+
+const daftar = artikelTayang(content.artikel);
+
+/** Kelompok per tahun terbit, tahun terbaru lebih dulu. */
+const kelompok: { tahun: string; items: any[] }[] = [];
+for (const a of daftar) {
+  const tahun = (tanggalArtikel(a) || "").slice(0, 4) || "Tanpa tanggal";
+  const terakhir = kelompok[kelompok.length - 1];
+  if (terakhir && terakhir.tahun === tahun) terakhir.items.push(a);
+  else kelompok.push({ tahun, items: [a] });
+}
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+const pageTitle = `Artikel & Panduan Kendaraan Listrik — ${brandFull}`;
+const metaDesc = daftar.length
+  ? `${daftar.length} artikel orisinal tentang kendaraan listrik di Indonesia: panduan, perbandingan, dan ulasan yang sumbernya dicantumkan.`
+  : `Artikel dan panduan kendaraan listrik di Indonesia dari ${brand}.`;
+
+const jsonLd = daftar.length
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "CollectionPage",
+          "@id": canonical,
+          url: canonical,
+          name: pageTitle,
+          description: metaDesc,
+          inLanguage: "id-ID",
+          isPartOf: { "@type": "WebSite", name: brandFull, url: `${origin}/` },
+        },
+        {
+          "@type": "ItemList",
+          name: `Artikel ${brand}`,
+          numberOfItems: daftar.length,
+          itemListElement: daftar.slice(0, 30).map((a: any, i: number) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: a.title,
+            url: absoluteUrl(Astro.url, hrefArtikel(a)),
+          })),
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: "Artikel", item: canonical },
+          ],
+        },
+      ],
+    }
+  : null;
+---
+
+<Base
+  title={pageTitle}
+  description={metaDesc}
+  keywords={site.seoKeywords}
+  ogImage={site.seoOgImage}
+  site={site}
+>
+  <link slot="head" rel="alternate" type="application/rss+xml" title={`Artikel ${brandFull}`} href="/artikel/rss.xml" />
+  {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="artikel" />
+
+  <main class="container katalog" id="konten">
+    <nav class="breadcrumb" aria-label="Remah roti">
+      <a href="/">Beranda</a>
+      <span aria-hidden="true">/</span>
+      <span class="breadcrumb-current">Artikel</span>
+    </nav>
+
+    <header class="katalog-head">
+      <h1>Artikel & panduan kendaraan listrik</h1>
+      <p class="katalog-lead">
+        Tulisan orisinal dari tim {brand}. Setiap artikel yang mengutip angka atau
+        harga mencantumkan sumbernya di bagian akhir, supaya bisa kamu periksa
+        sendiri.
+      </p>
+    </header>
+
+    {daftar.length ? (
+      kelompok.map((g) => (
+        <section class="artikel-tahun">
+          <h2>{g.tahun}</h2>
+          <div class="artikel-grid">
+            {g.items.map((a: any) => <ArtikelCard artikel={a} />)}
+          </div>
+        </section>
+      ))
+    ) : (
+      <div class="empty">
+        <p class="empty-title">Belum ada artikel yang tayang</p>
+        <p>Artikel pertama sedang disiapkan. Sementara itu, katalog kendaraan bisa dibuka dari beranda.</p>
+        <a class="btn btn-primary btn-sm" href="/">Kembali ke beranda</a>
+      </div>
+    )}
+  </main>
+
+  <SiteFooter site={site} base="/" />
+</Base>
