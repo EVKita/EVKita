@@ -48,6 +48,12 @@ const previous = releases.slice(1, 4); // tiga versi sebelumnya
 const updateAvailable = !!latest && compareVersions(latest.tag_name, currentVersion) > 0;
 const canAutoUpdate = fs.existsSync(path.resolve(process.cwd(), "deploy.sh"));
 
+/* Sinkron konten: `deploy.sh` menerapkan `content.json` dari rilis hanya kalau
+   `.env` server memuat `EVKITA_SYNC_CONTENT=1`. Saklar di halaman ini yang
+   menyalakannya — supaya pemilik yang mengelola isi situs dari salinan lokal
+   tidak perlu menyunting `.env` lewat SSH setiap kali. */
+const syncContent = /^(1|true)$/i.test(getEnv("EVKITA_SYNC_CONTENT", "").trim());
+
 const zipOf = (r: (typeof releases)[number]) => r.assets.find((a) => a.name.endsWith(".zip"));
 const mb = (bytes: number) => `${(bytes / 1048576).toFixed(1)} MB`;
 const tanggal = (iso: string) =>
@@ -84,6 +90,10 @@ const texts = {
   cancel: t("common.cancel"),
   // Tanpa argumen, placeholder {version} dibiarkan utuh dan diisi di browser.
   done: t("update.done"),
+  syncOn: t("update.syncOn"),
+  syncOff: t("update.syncOff"),
+  syncSaved: t("update.syncSaved"),
+  syncFailed: t("update.syncFailed"),
 };
 ---
 
@@ -223,6 +233,23 @@ const texts = {
           </section>
         )}
 
+        {canAutoUpdate && (
+          <section class="panel upd-sync">
+            <div class="upd-sync-head">
+              <div>
+                <h3 class="upd-sync-title">{t("update.syncTitle")}</h3>
+                <p class="upd-sync-desc">{t("update.syncDesc")}</p>
+              </div>
+              <label class="switch-row">
+                <input type="checkbox" id="sync-content" checked={syncContent} />
+                <span class="switch" aria-hidden="true"></span>
+                <span id="sync-content-state">{syncContent ? t("update.syncOn") : t("update.syncOff")}</span>
+              </label>
+            </div>
+            <p class="upd-sync-warn">{t("update.syncWarn")}</p>
+          </section>
+        )}
+
         {!error && previous.length > 0 && (
           <section class="upd-history">
             <h2>{t("update.previousVersions")}</h2>
@@ -263,6 +290,40 @@ const texts = {
     const pct = document.getElementById("prog-pct");
     const time = document.getElementById("prog-time");
     const stepList = document.getElementById("prog-steps");
+
+    /* Saklar sinkron konten. Diletakkan DI LUAR blok pembaruan di bawah supaya
+       tetap bekerja walau tidak ada rilis baru untuk dipasang. */
+    const syncBox = document.getElementById("sync-content");
+    if (syncBox) {
+      const label = (on) => (on ? texts.syncOn : texts.syncOff);
+      syncBox.addEventListener("change", async () => {
+        const state = document.getElementById("sync-content-state");
+        const aktif = syncBox.checked;
+        const kembali = () => { if (state) state.textContent = label(syncBox.checked); };
+        syncBox.disabled = true;
+        try {
+          const res = await fetch("/api/update", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ syncContent: aktif }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) throw new Error();
+          if (state) {
+            state.textContent = texts.syncSaved;
+            setTimeout(kembali, 2500);
+          }
+        } catch {
+          syncBox.checked = !aktif;
+          if (state) {
+            state.textContent = texts.syncFailed;
+            setTimeout(kembali, 3500);
+          }
+        } finally {
+          syncBox.disabled = false;
+        }
+      });
+    }
 
     if (btn && box) {
       // Tahapan deploy.sh. `match` dicocokkan ke isi log: tahap yang cocok

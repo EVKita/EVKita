@@ -4599,9 +4599,53 @@ body:has(.modal-backdrop.open) .fab {
   border-color: var(--danger) !important;
 }
 
+/* Panel sinkron konten dari rilis. Saklarnya menjelaskan kenapa konten yang
+   disunting di lokal tidak muncul di produksi: bawaannya deploy.sh MEMPERTAHANKAN
+   content.json server, dan hanya rilis yang menimpanya kalau saklar ini nyala. */
+.upd-sync {
+  margin-top: 20px;
+  padding: 18px 20px;
+}
+
+.upd-sync-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.upd-sync-title {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.upd-sync-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 62ch;
+}
+
+.upd-sync-warn {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--danger);
+}
+
+.upd-sync .switch-row {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   .upd-hero {
     padding: 18px;
+  }
+  .upd-sync-head {
+    flex-direction: column;
   }
   .upd-progress {
     padding: 14px;

@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { currentUser } from "../../lib/auth";
 import { can } from "../../lib/users";
 import { logActivity } from "../../lib/activity";
-import { getEnv } from "../../lib/env";
+import { getEnv, writeEnvFile } from "../../lib/env";
 
 /**
  * Berkas status pembaruan sengaja disimpan di `.update/` di root aplikasi,
@@ -40,6 +40,19 @@ function installedVersion(): string {
   } catch {
     return "dev";
   }
+}
+
+/**
+ * Apakah rilis menimpa `data/content.json` server?
+ *
+ * `deploy.sh` membaca `EVKITA_SYNC_CONTENT` dari `.env` di server. Bawaannya
+ * MATI: direktori `data/` milik server, jadi konten yang disunting lewat panel
+ * produksi tidak hilang setiap pembaruan. Menyalakannya membuat setiap rilis
+ * menerapkan `content.json` dari repo — untuk pemilik yang mengelola isi situs
+ * dari salinan lokal, bukan dari panel produksi.
+ */
+function syncContentAktif(): boolean {
+  return /^(1|true)$/i.test(getEnv("EVKITA_SYNC_CONTENT", "").trim());
 }
 
 function readStatus(): Record<string, any> | null {
@@ -150,7 +163,7 @@ export const GET: APIRoute = ({ cookies }) => {
   const me = currentUser(cookies);
   if (!me) return json({ ok: false, errorKey: "err.unauthorized", error: "Unauthorized" }, 401);
   if (!can(me, "update")) return json({ ok: false, errorKey: "err.forbidden", error: "Forbidden" }, 403);
-  return json({ ok: true, ...currentState(), log: readLogTail() });
+  return json({ ok: true, ...currentState(), syncContent: syncContentAktif(), log: readLogTail() });
 };
 
 export const POST: APIRoute = ({ cookies }) => {
@@ -220,4 +233,34 @@ export const POST: APIRoute = ({ cookies }) => {
   child.unref();
 
   return json({ ok: true, state: "running" });
+};
+
+/**
+ * Menyalakan atau mematikan sinkron konten dari rilis.
+ *
+ * Hanya menyetel `EVKITA_SYNC_CONTENT` di `.env`; pembaruan BERIKUTNYA yang
+ * menjalankan `deploy.sh` dengan pengaturan itu. Sengaja tidak langsung
+ * menjalankan deploy: menyalakan saklar yang tiba-tiba mengganti seluruh isi
+ * situs bukan hal yang boleh terjadi tanpa satu klik kedua yang disengaja.
+ */
+export const PUT: APIRoute = async ({ cookies, request }) => {
+  const me = currentUser(cookies);
+  if (!me) return json({ ok: false, errorKey: "err.unauthorized", error: "Unauthorized" }, 401);
+  if (!can(me, "update")) return json({ ok: false, errorKey: "err.forbidden", error: "Forbidden" }, 403);
+
+  let body: any = {};
+  try {
+    body = await request.json();
+  } catch {
+    /* badan kosong atau bukan JSON */
+  }
+  if (typeof body?.syncContent !== "boolean") {
+    return json({ ok: false, errorKey: "err.update.syncBad", error: "Nilai tidak sah." }, 400);
+  }
+
+  const aktif = body.syncContent;
+  writeEnvFile({ EVKITA_SYNC_CONTENT: aktif ? "1" : null });
+  logActivity(me, aktif ? "update.syncOn" : "update.syncOff");
+
+  return json({ ok: true, syncContent: aktif });
 };

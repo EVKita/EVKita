@@ -56,6 +56,15 @@ export type ActivityAction =
   | "profile.update"
   | "password.change"
   | "update.start"
+  /**
+   * Sinkron konten dari rilis dinyalakan atau dimatikan.
+   *
+   * Dua aksi terpisah, bukan satu aksi dengan `meta.nyala`: nilai di `meta`
+   * disisipkan ke kalimat terjemahan apa adanya, jadi "true" akan muncul dalam
+   * Bahasa Inggris di panel berbahasa Indonesia.
+   */
+  | "update.syncOn"
+  | "update.syncOff"
   | "sessions.revoke"
   /** Dua faktor dipasang, dimatikan, atau kode cadangannya diganti. */
   | "2fa.on"
@@ -350,7 +359,7 @@ export const GOLONGAN_AKSI: Record<string, (aksi: string) => boolean> = {
   konten: (a) => a.startsWith("content."),
   akun: (a) => a.startsWith("user.") || a.startsWith("profile.") || a === "password.change" || a === "sessions.revoke",
   masuk: (a) => a === "login" || a === "login.blocked",
-  sistem: (a) => a === "backup.restore" || a === "update.start" || a === "integrasi.update" || a.startsWith("kontak."),
+  sistem: (a) => a === "backup.restore" || a === "update.start" || a.startsWith("update.sync") || a === "integrasi.update" || a.startsWith("kontak."),
   ai: (a) => a.startsWith("ai."),
 };
 
