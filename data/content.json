@@ -1947,8 +1947,8 @@
       "variantNames": [
         "Standar"
       ],
-      "price": null,
-      "priceText": "Harga belum tersedia",
+      "price": 20700000,
+      "priceText": "20,7jt",
       "stale": false,
       "featured": false,
       "status": "published",
@@ -1989,8 +1989,8 @@
       "variantNames": [
         "Standar"
       ],
-      "price": null,
-      "priceText": "Harga belum tersedia",
+      "price": 20900000,
+      "priceText": "20,9jt",
       "stale": false,
       "featured": false,
       "status": "published",
@@ -2031,8 +2031,8 @@
       "variantNames": [
         "Standar"
       ],
-      "price": null,
-      "priceText": "Harga belum tersedia",
+      "price": 18000000,
+      "priceText": "18jt",
       "stale": false,
       "featured": false,
       "status": "published",
@@ -2073,8 +2073,8 @@
       "variantNames": [
         "Standar"
       ],
-      "price": null,
-      "priceText": "Harga belum tersedia",
+      "price": 19000000,
+      "priceText": "19jt",
       "stale": false,
       "featured": false,
       "status": "published",
@@ -2115,8 +2115,8 @@
       "variantNames": [
         "Standar"
       ],
-      "price": null,
-      "priceText": "Harga belum tersedia",
+      "price": 23700000,
+      "priceText": "23,7jt",
       "stale": false,
       "featured": false,
       "status": "published",
@@ -2158,7 +2158,7 @@
         "Standar"
       ],
       "price": null,
-      "priceText": "Harga belum tersedia",
+      "priceText": "Harga akan segera tersedia",
       "stale": false,
       "featured": false,
       "status": "published",
@@ -2199,8 +2199,8 @@
       "variantNames": [
         "Standar"
       ],
-      "price": null,
-      "priceText": "Harga belum tersedia",
+      "price": 25700000,
+      "priceText": "25,7jt",
       "stale": false,
       "featured": false,
       "status": "published",
