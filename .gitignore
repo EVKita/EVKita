@@ -14,3 +14,5 @@ data/backups/
 .claude/
 data/integrasi.json
 data/trafik/
+data/berita-jadwal.json
+data/peluncuran.json

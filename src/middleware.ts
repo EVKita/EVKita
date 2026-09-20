@@ -2,6 +2,8 @@ import type { MiddlewareHandler } from "astro";
 import { bacaIntegrasi } from "./lib/integrasi-simpan";
 import { hostCsp } from "./lib/integrasi.js";
 import { catatKunjungan } from "./lib/trafik-rekam";
+import { jadwalkanBerita } from "./lib/berita-harian";
+import { jadwalkanPeluncuran } from "./lib/peluncuran-rekam";
 import { SESSION_COOKIE } from "./lib/auth";
 
 /**
@@ -176,6 +178,15 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
       host: context.url.hostname,
     });
   }
+
+  /*
+   * Berita harian dan pemantau model viral. Dipanggil tanpa `await` — keduanya
+   * berjalan di latar belakang, sekali sehari, dan tidak boleh memperlambat
+   * satu pun permintaan pembaca. Lihat src/lib/berita-harian.ts dan
+   * src/lib/peluncuran-rekam.ts.
+   */
+  jadwalkanBerita();
+  jadwalkanPeluncuran();
 
   return response;
 };

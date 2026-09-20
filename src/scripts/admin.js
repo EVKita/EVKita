@@ -5049,6 +5049,15 @@ function bindEvents() {
     }
 
     /* --- Aksi item --- */
+    const aksi = e.target.closest("[data-aksi]");
+    if (aksi) {
+      if (aksi.getAttribute("data-aksi") === "berita-refresh") {
+        aksi.disabled = true;
+        void perbaruiBeritaPanel().finally(() => { aksi.disabled = false; });
+      }
+      return;
+    }
+
     const add = e.target.closest("[data-add]");
     if (add) { const col = add.getAttribute("data-add"); openEditor(col, null); return; }
 
@@ -7714,6 +7723,7 @@ const QUICK_ACTIONS = [
   { key: "dash.quick.addCar", add: "cars", icon: "M5 17h14M4 17v-4.2a2 2 0 0 1 .2-.9l2-4A2 2 0 0 1 8 6.8h8a2 2 0 0 1 1.8 1.1l2 4a2 2 0 0 1 .2.9V17M4 13h16" },
   { key: "dash.quick.addMotor", add: "motors", icon: "M8 17h6l3-6h-4l-2-3H8M14 8h3" },
   { key: "dash.quick.addBerita", add: "berita", icon: "M4 5h12a1 1 0 0 1 1 1v12a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5ZM7 9h6M7 13h6" },
+  { key: "dash.quick.refreshBerita", aksi: "berita-refresh", icon: "M4 12a8 8 0 0 1 13.7-5.7M20 12a8 8 0 0 1-13.7 5.7M20 4v4h-4M4 20v-4h4" },
   { key: "dash.quick.site", view: "site", icon: "M10.3 4.3a1.7 1.7 0 0 1 3.4 0l.1.6 1.6.9.6-.2a1.7 1.7 0 0 1 1.9 2.6l-.4.5.6 1.7.6.3a1.7 1.7 0 0 1 0 3l-.6.3-.6 1.7.4.5a1.7 1.7 0 0 1-1.9 2.6l-.6-.2-1.6.9-.1.6a1.7 1.7 0 0 1-3.4 0l-.1-.6-1.6-.9-.6.2a1.7 1.7 0 0 1-1.9-2.6l.4-.5-.6-1.7-.6-.3a1.7 1.7 0 0 1 0-3l.6-.3.6-1.7-.4-.5a1.7 1.7 0 0 1 1.9-2.6l.6.2 1.6-.9ZM12 9.4a2.6 2.6 0 1 0 0 5.2 2.6 2.6 0 0 0 0-5.2Z" },
 ];
 
@@ -7737,7 +7747,7 @@ function renderDashHello() {
   const pct = total ? Math.round((done / total) * 100) : 100;
 
   const actions = QUICK_ACTIONS.map(
-    (a) => `<button type="button" class="quick-action"${a.add ? ` data-add="${esc(a.add)}"` : ` data-goto="${esc(a.view)}"`}>
+    (a) => `<button type="button" class="quick-action"${a.add ? ` data-add="${esc(a.add)}"` : a.aksi ? ` data-aksi="${esc(a.aksi)}"` : ` data-goto="${esc(a.view)}"`}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${a.icon}"/></svg>
       <span>${esc(t(a.key))}</span>
     </button>`
@@ -7772,6 +7782,46 @@ function renderDashHello() {
       </a>
     </div>
   </section>`;
+}
+
+/**
+ * Menarik berita terbaru dari RSS penerbit, lalu memuat ulang dokumen konten.
+ *
+ * Memuat ulang itu wajib, bukan kemewahan: setelah server menambah berita,
+ * `content` di panel ini sudah basi, dan penyimpanan berikutnya akan ditolak
+ * server (409) karena revisinya tidak cocok. Memuat ulang di sini membuat
+ * panel kembali sejalan sebelum penyunting sempat menyentuh apa pun.
+ */
+async function perbaruiBeritaPanel() {
+  try {
+    const res = await fetch("/api/berita", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) { toast(t("toast.beritaGagal"), "error"); return; }
+    if (data.ditambah > 0) {
+      toast(t("toast.beritaTarik", { n: data.ditambah }), "success");
+      await muatUlangKonten();
+    } else {
+      toast(t("toast.beritaKosong"), "info");
+    }
+  } catch {
+    toast(t("toast.beritaGagal"), "error");
+  }
+}
+
+async function muatUlangKonten() {
+  try {
+    const res = await fetch("/api/content");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && data.ok) {
+      content = data.content;
+      resetHistory();
+      setSaveState("saved");
+      renderAll();
+    }
+  } catch {
+    /* Gagal memuat ulang tidak fatal; panel tetap memakai dokumen lamanya. */
+  }
 }
 
 async function loadActivity() {
