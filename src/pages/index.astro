@@ -265,6 +265,19 @@ const jsonLd = {
       </section>
     ) : null}
 
+    {jelajahi.length ? (
+      <section class="section jelajahi-section" id="jelajahi">
+        <div class="container">
+          <div class="jelajahi-card">
+            <h2 class="section-title">{site.footerMenuTitle || "Jelajahi"}</h2>
+            <nav class="tag-row" aria-label={site.footerMenuTitle || "Jelajahi"}>
+              {jelajahi.map((l: any) => <a class="tag-pill" href={l.href}>{l.label}</a>)}
+            </nav>
+          </div>
+        </div>
+      </section>
+    ) : null}
+
     <section class="section catalog" id="daftar">
       <div class="container">
         <div class="section-head">
@@ -368,19 +381,6 @@ const jsonLd = {
         ) : null}
       </div>
     </section>
-
-    {jelajahi.length ? (
-      <section class="section jelajahi-section" id="jelajahi">
-        <div class="container">
-          <div class="jelajahi-card">
-            <h2 class="section-title">{site.footerMenuTitle || "Jelajahi"}</h2>
-            <nav class="tag-row" aria-label={site.footerMenuTitle || "Jelajahi"}>
-              {jelajahi.map((l: any) => <a class="tag-pill" href={l.href}>{l.label}</a>)}
-            </nav>
-          </div>
-        </div>
-      </section>
-    ) : null}
 
     {site.showSpklu && spkluList.length ? (
       <section class="section dir-section" id="spklu">
