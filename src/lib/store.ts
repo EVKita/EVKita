@@ -231,6 +231,8 @@ function normalizeCar(c: any, kind: "mobil" | "motor"): any {
     image: str(c?.image),
     gallery: strArr(c?.gallery),
     video: str(c?.video),
+    // Halaman resmi model: dipakai tombol "Ambil media" di editor, tidak tampil di situs.
+    sumberUrl: str(c?.sumberUrl),
     updatedAt: str(c?.updatedAt),
     updatedBy: str(c?.updatedBy),
   };

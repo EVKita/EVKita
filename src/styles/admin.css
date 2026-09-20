@@ -2961,6 +2961,22 @@ html.modal-open {
   background: var(--accent-soft);
 }
 
+/* Baris "Halaman Resmi Model" + tombol Ambil Media di editor kendaraan. */
+.ambil-media-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ambil-media-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ambil-media-row .btn {
+  white-space: nowrap;
+}
+
 .dropzone.dragover {
   border-color: var(--accent-ink, var(--accent));
   background: var(--accent-soft);

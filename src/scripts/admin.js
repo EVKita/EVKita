@@ -2719,6 +2719,14 @@ function renderVehicleSections(item) {
       <div class="gallery-list" data-gallery>${galleryHtml(vehicleCtx.draft.gallery)}</div>
       <div class="hint">${esc(t("editor.gallery.hint"))}</div>
     </div>
+    <div class="field full">
+      <label for="v-sumberUrl">${esc(t("field.sumberUrl"))}</label>
+      <div class="ambil-media-row">
+        <input type="url" id="v-sumberUrl" name="sumberUrl" value="${esc(item.sumberUrl || "")}" placeholder="https://" />
+        <button type="button" class="btn btn-outline btn-sm" data-ambil-media>${esc(t("editor.ambilMedia"))}</button>
+      </div>
+      <div class="hint">${esc(t("field.sumberUrl.hint"))}</div>
+    </div>
     ${fieldHtml({ k: "video", l: t("field.videoUrl"), t: "url", full: true, ph: "https://youtube.com/watch?v=…" }, item.video, "v")}
   </div>`);
 
@@ -4469,6 +4477,70 @@ async function handleUploadUrls(dz, urls) {
   await handleUpload(dz, files);
 }
 
+/**
+ * Mengambil gambar/video dari halaman resmi model.
+ *
+ * Penyunting menempelkan alamat halaman (mis. halaman BYD Atto 3), server
+ * membaca halamannya dan mengembalikan daftar gambar + video. Gambar teratas
+ * dipakai sebagai gambar utama bila belum ada, sisanya masuk galeri, dan video
+ * pertama mengisi kolom video bila masih kosong.
+ *
+ * Unduhannya lewat `handleUploadUrls()` — jalur yang sama dengan menempel
+ * alamat gambar biasa, jadi hasilnya tetap berkas AVIF/WebP milik situs ini,
+ * bukan tautan ke domain orang.
+ */
+async function ambilMediaResmi(btn) {
+  const form = btn.closest("#vehicle-form") || document;
+  const input = form.querySelector('input[name="sumberUrl"]');
+  const url = (input ? input.value : "").trim();
+  if (!url) { toast(t("toast.mediaNoUrl"), "info"); return; }
+
+  btn.disabled = true;
+  const semula = btn.textContent;
+  btn.textContent = t("editor.ambilMedia.loading");
+  try {
+    const res = await fetch("/api/media-halaman", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    if (res.status === 401) { location.href = "/admin/login"; return; }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) { toast(apiMessage(data, "toast.mediaFailed"), "error"); return; }
+
+    const gambar = Array.isArray(data.gambar) ? data.gambar : [];
+    const video = Array.isArray(data.video) ? data.video : [];
+    if (!gambar.length && !video.length) { toast(t("toast.mediaEmpty"), "info"); return; }
+
+    if (gambar.length) {
+      const mainDz = document.querySelector('.dropzone[data-vzone="image"]');
+      const galDz = document.querySelector('.dropzone[data-vzone="gallery"]');
+      let mulai = 0;
+      if (!vehicleCtx.draft.image && mainDz) {
+        await handleUploadUrls(mainDz, [gambar[0]]);
+        mulai = 1;
+      }
+      const sisa = gambar.slice(mulai, mulai + 6);
+      if (sisa.length && galDz) await handleUploadUrls(galDz, sisa);
+    }
+
+    if (video.length) {
+      const vi = document.querySelector('#vehicle-form input[name="video"]');
+      if (vi && !vi.value.trim()) {
+        vi.value = video[0];
+        vehicleCtx.draft.video = video[0];
+      }
+    }
+
+    toast(t("toast.mediaDone", { n: gambar.length + video.length }), "success");
+  } catch {
+    toast(t("toast.mediaFailed"), "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = semula;
+  }
+}
+
 async function handleUpload(dz, files) {
   if (!files.length) return;
   const prev = dz.innerHTML;
@@ -5057,6 +5129,9 @@ function bindEvents() {
       }
       return;
     }
+
+    const ambil = e.target.closest("[data-ambil-media]");
+    if (ambil) { void ambilMediaResmi(ambil); return; }
 
     const add = e.target.closest("[data-add]");
     if (add) { const col = add.getAttribute("data-add"); openEditor(col, null); return; }
