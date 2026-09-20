@@ -1,4 +1,5 @@
 import { rupiah } from "./card-html.js";
+import { hargaWajar } from "./vehicle-spec.js";
 
 /**
  * Pengelompokan katalog menurut merek dan tipe bodi.
@@ -76,7 +77,10 @@ export function findGroup(groups, slug) {
  */
 export function summarize(items) {
   const list = Array.isArray(items) ? items : [];
-  const harga = list.map((v) => v.price).filter((n) => n !== null && n !== undefined);
+  /* Harga di luar batas wajar dibuang dari RENTANG, bukan dari daftarnya:
+     satu salah ketik tidak boleh membuat seluruh halaman merek berbunyi
+     "Rp 0 jt". Entri itu sendiri tetap tampil dengan harga apa adanya. */
+  const harga = list.map((v) => v.price).filter(hargaWajar);
   const jarak = list.map((v) => v.rangeKm).filter((n) => n !== null && n !== undefined);
 
   return {

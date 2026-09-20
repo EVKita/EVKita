@@ -2,6 +2,7 @@
 
 import { esc, rupiah, cardHTML as buildCard, visualHTML as buildVisual } from "../lib/card-html.js";
 import { MAX_COMPARE, compareTableHTML, compareSlug } from "../lib/compare-html.js";
+import { hargaWajar } from "../lib/vehicle-spec.js";
 
 let EV_CARS = [];
 let MOTORS = [];
@@ -254,7 +255,9 @@ function renderHeroStats() {
   if (!el) return;
   const all = [...EV_CARS, ...MOTORS];
   const brandCount = new Set(all.map((c) => c.brand)).size;
-  const priced = all.filter((c) => c.price !== null && c.price !== undefined);
+  /* Harga di luar batas wajar diabaikan saat menghitung yang terendah — satu
+     harga salah ketik tidak boleh membuat statistik berbunyi "Rp 0 jt". */
+  const priced = all.filter((c) => hargaWajar(c.price));
   const minPrice = priced.length ? Math.min(...priced.map((c) => c.price)) : null;
   const ranged = all.filter((c) => c.rangeKm);
   const maxRange = ranged.length ? Math.max(...ranged.map((c) => c.rangeKm)) : 0;

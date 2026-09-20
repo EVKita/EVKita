@@ -156,6 +156,16 @@ describe("summarize", () => {
     assert.equal(s.hargaLengkap, false);
   });
 
+  it("harga salah ketik tidak merusak rentang harga", () => {
+    // "18" yang dimaksud 18 juta. Sebelum ada penyaring ini, satu entri
+    // seperti itu membuat rentang halaman merek berbunyi "Rp 0 jt" padahal
+    // seluruh entri lainnya benar.
+    const s = summarize([mobil("a"), mobil("b", { price: 18 })]);
+    assert.equal(s.hargaMin, 500_000_000);
+    assert.equal(s.hargaMaks, 500_000_000);
+    assert.equal(s.hargaLengkap, false);
+  });
+
   it("tidak meledak pada daftar kosong", () => {
     const s = summarize([]);
     assert.equal(s.total, 0);

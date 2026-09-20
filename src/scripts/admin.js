@@ -46,6 +46,7 @@ import {
   MOTOR_BODY_TYPES,
   RANGE_STANDARDS,
   DRIVE_TYPES,
+  hargaWajar,
 } from "../lib/vehicle-spec.js";
 import {
   THEME_PRESETS,
@@ -1744,7 +1745,7 @@ function renderDashStats() {
   const el = $("dash-stats");
   if (!el) return;
   const veh = allVehicles();
-  const prices = veh.map((v) => v.price).filter((p) => p != null);
+  const prices = veh.map((v) => v.price).filter(hargaWajar);
   const ranges = veh.map((v) => v.rangeKm).filter((r) => r != null);
   const brands = new Set(veh.map((v) => (v.brand || "").trim()).filter(Boolean));
   const variants = veh.reduce((n, v) => n + (v.variantNames ? v.variantNames.length : 0), 0);

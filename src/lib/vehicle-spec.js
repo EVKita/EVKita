@@ -82,6 +82,31 @@ export const RESEARCHABLE = [
 export const RESEARCHABLE_BY_KEY = new Map(RESEARCHABLE.map((f) => [f.key, f]));
 
 /**
+ * Batas harga yang masuk akal, diambil dari definisi field `price` di atas —
+ * bukan ditulis ulang di sini.
+ */
+export const HARGA_MIN = RESEARCHABLE_BY_KEY.get("price").min;
+export const HARGA_MAKS = RESEARCHABLE_BY_KEY.get("price").max;
+
+/**
+ * Apakah angka ini harga yang masuk akal untuk DITAMPILKAN?
+ *
+ * Dipakai penyaring tampilan — daftar katalog, kalimat pembuka halaman
+ * kelompok, dan statistik beranda — bukan validasi simpan. Alasannya: satu
+ * entri dengan harga salah ketik (mis. `18` yang dimaksud 18 juta) tidak boleh
+ * menyeret SELURUH situs. Sebelum ada penyaring ini, satu harga `18` membuat
+ * "Harga terendah" di beranda berbunyi "Rp 0 jt" dan rentang harga di halaman
+ * merek jadi ngawur, padahal entri lainnya benar semua.
+ *
+ * Nilai yang ditolak tetap tersimpan apa adanya dan tetap ditandai "nilai
+ * janggal" di panel — yang hilang hanya dampaknya pada tampilan.
+ */
+export function hargaWajar(n) {
+  const v = typeof n === "string" ? Number(n) : n;
+  return typeof v === "number" && Number.isFinite(v) && v >= HARGA_MIN && v <= HARGA_MAKS;
+}
+
+/**
  * Field yang TIDAK PERNAH boleh diusulkan AI, beserta alasannya.
  *
  * Daftar ini bukan hiasan dokumentasi: `tests/ai-skema.test.ts` memakainya
