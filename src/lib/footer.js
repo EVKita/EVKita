@@ -154,3 +154,33 @@ export function normalizeMenus(value) {
     .map((c) => ({ title: text(c && c.title), links: normalizeLinks(c && c.links, MAX_MENU_LINKS) }))
     .filter((c) => c.title || c.links.length);
 }
+
+/**
+ * Tautan "menu bawaan": halaman yang selalu ada, ditambah seksi beranda yang
+ * sedang aktif, ditambah halaman statis yang letaknya "Kolom menu".
+ *
+ * Blok ini dulu digambar di dalam footer. Sekarang ia menjadi seksi **Jelajahi
+ * di beranda**, tepat di bawah katalog — satu tempat, bukan dua, sehingga tidak
+ * ada tautan kembar. Karena `index.astro` yang memakainya, susunannya
+ * ditentukan di sini dan bukan di dalam komponen, supaya berkas ini tetap jadi
+ * satu-satunya sumber bentuk menu.
+ *
+ * @param {Record<string, any>} site Field `site`.
+ * @param {{ label: string; href: string }[]} lamanMenu Hasil `tautanFooter().menu`.
+ * @param {string} base Awalan tautan anchor ("" di beranda, "/" di subhalaman).
+ */
+export function menuBawaan(site, lamanMenu = [], base = "") {
+  return [
+    { label: "Beranda", href: base || "/" },
+    { label: "Katalog", href: "/katalog" },
+    { label: "Merek", href: "/merek" },
+    { label: "Tipe bodi", href: "/tipe" },
+    { label: "Kalkulator hemat", href: "/kalkulator/hemat-listrik-vs-bensin" },
+    { label: "Biaya pengisian", href: "/kalkulator/biaya-pengisian" },
+    site.showSpklu ? { label: "SPKLU", href: `${base}#spklu` } : null,
+    site.showBengkel ? { label: "Bengkel", href: `${base}#bengkel` } : null,
+    site.showBerita ? { label: "Berita", href: `${base}#berita` } : null,
+    site.showAbout ? { label: "Tentang", href: `${base}#tentang` } : null,
+    ...(Array.isArray(lamanMenu) ? lamanMenu : []),
+  ].filter(Boolean);
+}

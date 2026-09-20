@@ -2366,6 +2366,23 @@ body.nav-open .nav-drawer-link {
   max-width: 78ch;
 }
 
+/* ===== Jelajahi (beranda) =====
+   Pindahan kolom menu bawaan dari footer: satu kartu berisi tautan ke seluruh
+   bagian situs, diletakkan tepat di bawah katalog. Bentuknya mengikuti
+   `.about-card` supaya kedua kartu di beranda tidak terlihat berasal dari
+   halaman yang berbeda. */
+.jelajahi-card {
+  padding: clamp(24px, 4vw, 40px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(140deg, var(--accent-soft), transparent 55%), var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.jelajahi-card .section-title {
+  margin-bottom: 18px;
+}
+
 /* =========================================================================
    Footer
    -------------------------------------------------------------------------

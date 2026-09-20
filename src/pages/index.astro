@@ -10,6 +10,8 @@ import { PER_PAGE } from "../lib/pagination.js";
 import { siteOrigin } from "../lib/site-url";
 import { altMapFor, mediaAlt } from "../lib/media.js";
 import { hanyaTayang } from "../lib/tayang.js";
+import { menuBawaan } from "../lib/footer.js";
+import { tautanFooter } from "../lib/laman.js";
 
 const content = readContent();
 const { site } = content;
@@ -56,6 +58,13 @@ const seoDesc = site.seoDescription || heroSub;
 const spkluList = byFeatured(spklu);
 const bengkelList = byFeatured(bengkel);
 const beritaList = byFeatured(berita);
+
+/**
+ * Tautan "Jelajahi" — dulu kolom menu di dalam footer, kini seksi sendiri di
+ * beranda tepat di bawah katalog. Susunannya dari `menuBawaan()` di
+ * src/lib/footer.js, halaman statisnya dari `tautanFooter()`.
+ */
+const jelajahi = site.showFooterMenu ? menuBawaan(site, tautanFooter(content.halaman).menu) : [];
 
 /**
  * Bengkel dipisah menjadi dua kelompok supaya pembaca tidak mencampur servis
@@ -348,6 +357,19 @@ const jsonLd = {
         ) : null}
       </div>
     </section>
+
+    {jelajahi.length ? (
+      <section class="section jelajahi-section" id="jelajahi">
+        <div class="container">
+          <div class="jelajahi-card">
+            <h2 class="section-title">{site.footerMenuTitle || "Jelajahi"}</h2>
+            <nav class="tag-row" aria-label={site.footerMenuTitle || "Jelajahi"}>
+              {jelajahi.map((l: any) => <a class="tag-pill" href={l.href}>{l.label}</a>)}
+            </nav>
+          </div>
+        </div>
+      </section>
+    ) : null}
 
     {site.showSpklu && spkluList.length ? (
       <section class="section dir-section" id="spklu">

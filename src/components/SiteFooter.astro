@@ -19,7 +19,7 @@ interface Props {
   base?: string;
 }
 
-const { site, base = "" } = Astro.props;
+const { site } = Astro.props;
 
 /**
  * Tautan halaman statis (Tentang, Kebijakan Privasi, …).
@@ -53,24 +53,6 @@ const ICON_ATTRS = {
   "stroke-linecap": "round",
   "aria-hidden": "true",
 } as const;
-
-/** Menu bawaan: halaman yang selalu ada, ditambah seksi beranda yang sedang aktif. */
-const defaultLinks = site.showFooterMenu
-  ? ([
-      { label: "Beranda", href: base || "/" },
-      { label: "Katalog", href: "/katalog" },
-      { label: "Merek", href: "/merek" },
-      { label: "Tipe bodi", href: "/tipe" },
-      { label: "Kalkulator hemat", href: "/kalkulator/hemat-listrik-vs-bensin" },
-      { label: "Biaya pengisian", href: "/kalkulator/biaya-pengisian" },
-      site.showSpklu ? { label: "SPKLU", href: `${base}#spklu` } : null,
-      site.showBengkel ? { label: "Bengkel", href: `${base}#bengkel` } : null,
-      site.showBerita ? { label: "Berita", href: `${base}#berita` } : null,
-      site.showAbout ? { label: "Tentang", href: `${base}#tentang` } : null,
-      // Halaman statis yang letaknya dipilih "Kolom menu" ikut di sini.
-      ...lamanFooter.menu,
-    ].filter(Boolean) as { label: string; href: string }[])
-  : [];
 
 /** Kolom menu buatan pemilik situs. Tautan tanpa alamat yang sah tidak ikut tampil. */
 const customMenus = (Array.isArray(site.footerMenus) ? site.footerMenus : [])
@@ -151,15 +133,6 @@ const hasSource = site.showFooterSource && (site.footerSourceText || site.footer
       </div>
 
       <nav class="footer-nav" aria-label="Tautan footer">
-        {defaultLinks.length ? (
-          <details class="footer-col" open>
-            <summary><h4>{site.footerMenuTitle || "Jelajahi"}</h4></summary>
-            <ul class="footer-links">
-              {defaultLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
-            </ul>
-          </details>
-        ) : null}
-
         {customMenus.map((col: any) => (
           <details class="footer-col" open>
             <summary><h4>{col.title}</h4></summary>
