@@ -6,6 +6,7 @@ import ArtikelCard from "../../components/ArtikelCard.astro";
 import { readContent } from "../../lib/store";
 import { artikelTayang, tanggalArtikel } from "../../lib/artikel.js";
 import { siteOrigin, canonicalUrl, absoluteUrl } from "../../lib/site-url";
+import { makePubT } from "../../lib/i18n/pub.js";
 
 /**
  * Indeks artikel orisinal.
@@ -25,12 +26,14 @@ const site = content.site;
 const brand = site.brandText || "EVKita";
 const brandFull = `${brand}${site.brandSuffix || ""}`;
 
+const t = makePubT(Astro.locals?.pubLang);
+
 const daftar = artikelTayang(content.artikel);
 
 /** Kelompok per tahun terbit, tahun terbaru lebih dulu. */
 const kelompok: { tahun: string; items: any[] }[] = [];
 for (const a of daftar) {
-  const tahun = (tanggalArtikel(a) || "").slice(0, 4) || "Tanpa tanggal";
+  const tahun = (tanggalArtikel(a) || "").slice(0, 4) || t("pub.artikel.tanpaTanggal");
   const terakhir = kelompok[kelompok.length - 1];
   if (terakhir && terakhir.tahun === tahun) terakhir.items.push(a);
   else kelompok.push({ tahun, items: [a] });
@@ -93,18 +96,16 @@ const jsonLd = daftar.length
   <SiteHeader site={site} base="/" active="artikel" />
 
   <main class="container katalog" id="konten">
-    <nav class="breadcrumb" aria-label="Remah roti">
-      <a href="/">Beranda</a>
+    <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+      <a href="/">{t("pub.nav.beranda")}</a>
       <span aria-hidden="true">/</span>
-      <span class="breadcrumb-current">Artikel</span>
+      <span class="breadcrumb-current">{t("pub.nav.artikel")}</span>
     </nav>
 
     <header class="katalog-head">
-      <h1>Artikel & panduan kendaraan listrik</h1>
+      <h1>{t("pub.artikel.title")}</h1>
       <p class="katalog-lead">
-        Tulisan orisinal dari tim {brand}. Setiap artikel yang mengutip angka atau
-        harga mencantumkan sumbernya di bagian akhir, supaya bisa kamu periksa
-        sendiri.
+        {t("pub.artikel.lead", { brand })}
       </p>
     </header>
 
@@ -119,9 +120,9 @@ const jsonLd = daftar.length
       ))
     ) : (
       <div class="empty">
-        <p class="empty-title">Belum ada artikel yang tayang</p>
-        <p>Artikel pertama sedang disiapkan. Sementara itu, katalog kendaraan bisa dibuka dari beranda.</p>
-        <a class="btn btn-primary btn-sm" href="/">Kembali ke beranda</a>
+        <p class="empty-title">{t("pub.artikel.empty")}</p>
+        <p>{t("pub.artikel.emptyText")}</p>
+        <a class="btn btn-primary btn-sm" href="/">{t("pub.artikel.back")}</a>
       </div>
     )}
   </main>

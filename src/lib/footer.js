@@ -179,7 +179,7 @@ export function menuBawaan(site, lamanMenu = [], base = "") {
     { label: "Biaya pengisian", href: "/kalkulator/biaya-pengisian" },
     site.showSpklu ? { label: "SPKLU", href: `${base}#spklu` } : null,
     site.showBengkel ? { label: "Bengkel", href: `${base}#bengkel` } : null,
-    site.showBerita ? { label: "Berita", href: `${base}#berita` } : null,
+    site.showBerita ? { label: "Berita & Komunitas", href: `${base}#berita` } : null,
     site.showAbout ? { label: "Tentang", href: `${base}#tentang` } : null,
     ...(Array.isArray(lamanMenu) ? lamanMenu : []),
   ].filter(Boolean);

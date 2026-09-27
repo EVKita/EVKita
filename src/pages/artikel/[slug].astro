@@ -18,6 +18,7 @@ import {
 import { slugLaman } from "../../lib/laman.js";
 import { safeUrl } from "../../lib/url.js";
 import { canonicalUrl, absoluteUrl } from "../../lib/site-url";
+import { makePubT } from "../../lib/i18n/pub.js";
 
 /**
  * Satu artikel orisinal.
@@ -38,6 +39,9 @@ const content = readContent();
 const site = content.site;
 const brand = site.brandText || "EVKita";
 const brandFull = `${brand}${site.brandSuffix || ""}`;
+
+const t = makePubT(Astro.locals?.pubLang);
+const localeTanggal = Astro.locals?.pubLang === "en" ? "en-US" : "id-ID";
 
 const slug = slugLaman(Astro.params.slug || "");
 const semua = content.artikel || [];
@@ -86,7 +90,7 @@ const lainnya = artikel
   : [];
 
 const tanggalTeks = (iso: string) =>
-  new Date(`${iso}T00:00:00+07:00`).toLocaleDateString("id-ID", {
+  new Date(`${iso}T00:00:00+07:00`).toLocaleDateString(localeTanggal, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -96,7 +100,7 @@ const terbit = artikel ? tanggalArtikel(artikel) : "";
 const diperbarui = artikel && artikel.updatedAt ? new Date(artikel.updatedAt) : null;
 const diperbaruiTeks =
   diperbarui && !Number.isNaN(diperbarui.getTime())
-    ? diperbarui.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    ? diperbarui.toLocaleDateString(localeTanggal, { day: "numeric", month: "long", year: "numeric" })
     : "";
 
 const kataKunci = artikel
@@ -155,18 +159,18 @@ const jsonLd =
   {!artikel ? (
     <main class="container notfound" id="konten">
       <p class="notfound-code">404</p>
-      <h1>Artikel tidak ditemukan</h1>
+      <h1>{t("pub.artikel.notFound")}</h1>
       <p class="notfound-text">
-        Alamat ini mungkin sudah berubah atau artikelnya belum diterbitkan.
+        {t("pub.artikel.notFoundText")}
       </p>
-      <a class="btn btn-primary" href="/artikel">Lihat semua artikel</a>
+      <a class="btn btn-primary" href="/artikel">{t("pub.artikel.lihatSemua")}</a>
     </main>
   ) : (
     <main class="container laman" id="konten">
-      <nav class="breadcrumb" aria-label="Remah roti">
-        <a href="/">Beranda</a>
+      <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+        <a href="/">{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
-        <a href="/artikel">Artikel</a>
+        <a href="/artikel">{t("pub.nav.artikel")}</a>
         <span aria-hidden="true">/</span>
         <span class="breadcrumb-current">{judul}</span>
       </nav>
@@ -179,11 +183,11 @@ const jsonLd =
           <p class="artikel-meta">
             {artikel.author ? <span class="artikel-penulis">{artikel.author}</span> : null}
             {terbit ? <time datetime={terbit}>{tanggalTeks(terbit)}</time> : null}
-            <span>{bacaMenit(artikel)} menit baca</span>
+            <span>{t("pub.artikel.menitBaca", { n: bacaMenit(artikel) })}</span>
           </p>
           {diperbaruiTeks && diperbaruiTeks !== (terbit ? tanggalTeks(terbit) : "") ? (
             <p class="laman-stamp">
-              Terakhir diperbarui <time datetime={artikel.updatedAt}>{diperbaruiTeks}</time>
+              {t("pub.artikel.diperbarui")} <time datetime={artikel.updatedAt}>{diperbaruiTeks}</time>
             </p>
           ) : null}
         </header>
@@ -195,8 +199,8 @@ const jsonLd =
         ) : null}
 
         {daftarIsi.length ? (
-          <nav class="laman-toc" aria-label="Daftar isi artikel">
-            <h2>Di artikel ini</h2>
+          <nav class="laman-toc" aria-label={t("pub.artikel.daftarIsi")}>
+            <h2>{t("pub.artikel.diArtikel")}</h2>
             <ol>
               {daftarIsi.map((b) => (
                 <li><a href={`#${b.id}`}>{b.label}</a></li>
@@ -208,11 +212,10 @@ const jsonLd =
         <div class="laman-isi" set:html={isiHtml} />
 
         {sumber.length ? (
-          <section class="artikel-sumber" aria-label="Sumber">
-            <h2>Sumber</h2>
+          <section class="artikel-sumber" aria-label={t("pub.artikel.sumber")}>
+            <h2>{t("pub.artikel.sumber")}</h2>
             <p class="artikel-sumber-note">
-              Angka dan fakta di artikel ini dikutip dari halaman berikut. Membuka
-              tautannya adalah cara tercepat memeriksa apakah datanya masih berlaku.
+              {t("pub.artikel.sumberNote")}
             </p>
             <ol>
               {sumber.map((s: any) => (
@@ -235,17 +238,17 @@ const jsonLd =
 
       {lainnya.length ? (
         <section class="laman-lain">
-          <h2>Artikel lainnya</h2>
+          <h2>{t("pub.artikel.lainnya")}</h2>
           <div class="artikel-lain-grid">
             {lainnya.map((a: any) => (
               <a class="artikel-lain" href={hrefArtikel(a)}>
-                <span class="artikel-kategori">{a.category || "Artikel"}</span>
+                <span class="artikel-kategori">{a.category || t("pub.artikel.kategori")}</span>
                 <span class="artikel-lain-judul">{a.title}</span>
                 <span class="artikel-tanggal">{tanggalArtikel(a) ? tanggalTeks(tanggalArtikel(a)) : ""}</span>
               </a>
             ))}
           </div>
-          <p class="katalog-lead artikel-lain-link"><a href="/artikel">Lihat semua artikel →</a></p>
+          <p class="katalog-lead artikel-lain-link"><a href="/artikel">{t("pub.artikel.lihatSemua")} →</a></p>
         </section>
       ) : null}
     </main>
@@ -257,11 +260,11 @@ const jsonLd =
       terakhir — alasan lengkapnya ada di VehicleDetail.astro. */}
   {pratinjau ? (
     <div class="preview-bar" role="status">
-      <span class="preview-bar-tag">Pratinjau</span>
+      <span class="preview-bar-tag">{t("pub.detail.pratinjau")}</span>
       <p class="preview-bar-text">
-        Artikel ini <strong>belum tayang</strong>. Tautan pratinjau ini kedaluwarsa dalam dua jam.
+        {t("pub.detail.pratinjauText")}
       </p>
-      <a class="preview-bar-link" href="/admin">Buka panel</a>
+      <a class="preview-bar-link" href="/admin">{t("pub.detail.bukaPanel")}</a>
     </div>
   ) : null}
 </Base>

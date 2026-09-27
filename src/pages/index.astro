@@ -14,9 +14,12 @@ import { hanyaTayang } from "../lib/tayang.js";
 import { menuBawaan } from "../lib/footer.js";
 import { tautanFooter } from "../lib/laman.js";
 import { artikelTayang } from "../lib/artikel.js";
+import { makePubT } from "../lib/i18n/pub.js";
 
 const content = readContent();
 const { site } = content;
+
+const t = makePubT(Astro.locals?.pubLang);
 
 /**
  * Kendaraan berstatus draft hanya untuk penyunting — halaman publik tidak
@@ -32,6 +35,7 @@ const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [
 const spklu = (content.spklu || []).filter(hanyaTayang());
 const bengkel = (content.bengkel || []).filter(hanyaTayang());
 const berita = (content.berita || []).filter(hanyaTayang());
+const komunitas = (content.komunitas || []).filter(hanyaTayang());
 
 /**
  * Artikel orisinal yang tayang. Enam yang terbaru saja di beranda — seksi ini
@@ -67,6 +71,7 @@ const seoDesc = site.seoDescription || heroSub;
 const spkluList = byFeatured(spklu);
 const bengkelList = byFeatured(bengkel);
 const beritaList = byFeatured(berita);
+const komunitasList = byFeatured(komunitas);
 
 /**
  * Tautan "Jelajahi" — dulu kolom menu di dalam footer, kini seksi sendiri di
@@ -135,7 +140,7 @@ const canonical = `${siteOrigin(Astro.url)}/`;
 /* Sama dengan isi satu halaman /katalog — dua tempat, satu angka. */
 const SSR_CARDS = PER_PAGE;
 const initialCards = defaultSort(cars).slice(0, SSR_CARDS);
-const initialGrid = initialCards.map((c: any) => cardHTML(c, { linkable: true, media: content.media })).join("");
+const initialGrid = initialCards.map((c: any) => cardHTML(c, { linkable: true, media: content.media, t })).join("");
 
 /**
  * Data katalog yang disuntik ke klien dipangkas ke field yang benar-benar
@@ -241,10 +246,10 @@ const jsonLd = {
         <div class="container">
           <div class="section-head">
             <div>
-              <h2 class="section-title">Unggulan</h2>
-              <p class="section-note">Pilihan redaksi dari katalog</p>
+              <h2 class="section-title">{t("pub.feat")}</h2>
+              <p class="section-note">{t("pub.feat.note")}</p>
             </div>
-            <a class="section-link" href="#daftar">Lihat semua →</a>
+            <a class="section-link" href="#daftar">{t("pub.feat.seeAll")} →</a>
           </div>
           <div class="feature-rail">
             {featured.map((f: any) => (
@@ -253,9 +258,9 @@ const jsonLd = {
                   {f.image ? (
                     <img src={safeUrl(f.image)} alt={mediaAlt(content.media, f.image, `${f.brand} ${f.name}`)} loading="lazy" decoding="async" />
                   ) : (
-                    <div class="feature-svg" set:html={carSVG(f, defaultColor(f))} />
+                    <div class="feature-svg" set:html={carSVG(f, defaultColor(f), t)} />
                   )}
-                  <span class="feature-badge">Unggulan</span>
+                  <span class="feature-badge">{t("pub.feat")}</span>
                 </div>
                 <div class="feature-body">
                   <span class="feature-brand">{f.brand}</span>
@@ -296,8 +301,8 @@ const jsonLd = {
           </div>
           {site.showMotor ? (
             <div class="mode-toggle" id="modeToggle" role="tablist" aria-label="Jenis kendaraan">
-              <button type="button" class="mode-btn active" data-mode="mobil" role="tab" aria-selected="true">Mobil</button>
-              <button type="button" class="mode-btn" data-mode="motor" role="tab" aria-selected="false">Motor</button>
+              <button type="button" class="mode-btn active" data-mode="mobil" role="tab" aria-selected="true">{t("pub.mobil")}</button>
+              <button type="button" class="mode-btn" data-mode="motor" role="tab" aria-selected="false">{t("pub.motor")}</button>
             </div>
           ) : null}
         </div>
@@ -310,7 +315,7 @@ const jsonLd = {
               <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                 <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm8 16-4-4" />
               </svg>
-              <input type="search" id="search" placeholder="Cari merek, model, atau tag…" autocomplete="off" aria-label="Cari kendaraan" />
+              <input type="search" id="search" placeholder={t("pub.search.ph")} autocomplete="off" aria-label={t("pub.search.ph")} />
             </div>
 
             <div class="view-switch" id="viewSwitch" role="group" aria-label="Tampilan daftar">
@@ -325,44 +330,44 @@ const jsonLd = {
 
           <div class="filter-row" id="filterRow">
             <label class="select-field">
-              <span>Merek</span>
+              <span>{t("pub.filter.brand")}</span>
               <select id="filterBrand"></select>
             </label>
 
             <label class="select-field">
-              <span>Tipe Bodi</span>
+              <span>{t("pub.filter.body")}</span>
               <select id="filterBody"></select>
             </label>
 
             <label class="select-field">
-              <span>Rentang Harga</span>
+              <span>{t("pub.filter.price")}</span>
               <select id="filterPrice"></select>
             </label>
 
             <label class="select-field">
-              <span>Jarak Tempuh</span>
+              <span>{t("pub.filter.range")}</span>
               <select id="filterRange"></select>
             </label>
 
             <label class="select-field">
-              <span>Baterai</span>
+              <span>{t("pub.filter.battery")}</span>
               <select id="filterBattery"></select>
             </label>
 
             <label class="select-field">
-              <span>Urutkan</span>
+              <span>{t("pub.filter.sort")}</span>
               <select id="sortBy">
-                <option value="brand">Merek (A–Z)</option>
-                <option value="priceAsc">Harga terendah</option>
-                <option value="priceDesc">Harga tertinggi</option>
-                <option value="rangeDesc" selected>Jarak terjauh</option>
-                <option value="batteryDesc">Baterai terbesar</option>
-                <option value="powerDesc">Tenaga terbesar</option>
-                <option value="newest">Terbaru diperbarui</option>
+                <option value="brand">{t("pub.sort.brand")}</option>
+                <option value="priceAsc">{t("pub.sort.priceAsc")}</option>
+                <option value="priceDesc">{t("pub.sort.priceDesc")}</option>
+                <option value="rangeDesc" selected>{t("pub.sort.rangeDesc")}</option>
+                <option value="batteryDesc">{t("pub.sort.batteryDesc")}</option>
+                <option value="powerDesc">{t("pub.sort.powerDesc")}</option>
+                <option value="newest">{t("pub.sort.newest")}</option>
               </select>
             </label>
 
-            <button id="resetFilters" class="btn-reset" type="button">Reset</button>
+            <button id="resetFilters" class="btn-reset" type="button">{t("pub.filter.reset")}</button>
           </div>
         </div>
 
@@ -373,9 +378,9 @@ const jsonLd = {
 
         <div class="grid" id="grid" set:html={initialGrid}></div>
         <div class="empty" id="empty" hidden>
-          <p class="empty-title">Tidak ada model yang cocok</p>
-          <p>Coba longgarkan filter atau ubah kata kunci pencarian.</p>
-          <button id="emptyReset" class="btn btn-outline btn-sm" type="button">Reset semua filter</button>
+          <p class="empty-title">{t("pub.empty.title")}</p>
+          <p>{t("pub.empty.text")}</p>
+          <button id="emptyReset" class="btn btn-outline btn-sm" type="button">{t("pub.empty.reset")}</button>
         </div>
 
         {/* Tanpa JavaScript, katalog di atas berhenti di kartu ke-12 dan
@@ -385,7 +390,7 @@ const jsonLd = {
             memuat semuanya, dan "halaman 1 dari 3" di bawahnya akan berbohong. */}
         {cars.length > SSR_CARDS ? (
           <p class="catalog-all">
-            <a class="btn btn-outline" href="/katalog">Buka katalog lengkap →</a>
+            <a class="btn btn-outline" href="/katalog">{t("pub.catalog.all")} →</a>
           </p>
         ) : null}
       </div>
@@ -487,36 +492,64 @@ const jsonLd = {
       </section>
     ) : null}
 
-    {site.showBerita && beritaList.length ? (
+    {site.showBerita && (beritaList.length || komunitasList.length) ? (
       <section class="section news-section" id="berita">
         <div class="container">
           <div class="section-head">
             <div>
-              <h2 class="section-title">{site.beritaTitle || "Berita Terkini"}</h2>
-              {site.beritaNote ? <p class="section-note">{site.beritaNote}</p> : null}
+              <h2 class="section-title">{t("pub.berita")}</h2>
             </div>
           </div>
-          <div class="news-grid">
-            {beritaList.map((n: any) => (
-              <a class={`news-card${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
-                {n.image ? (
-                  <div class="news-thumb"><img src={safeUrl(n.image)} alt="" loading="lazy" /></div>
-                ) : null}
-                <div class="news-body">
-                  <div class="news-top">
-                    {n.source ? <span class="news-source">{n.source}</span> : null}
-                    {n.featured ? <span class="badge badge-featured">Sorotan</span> : null}
-                  </div>
-                  <h3 class="news-title">{n.title}</h3>
-                  {n.excerpt ? <p class="news-excerpt">{n.excerpt}</p> : null}
-                  <div class="news-foot">
-                    {n.date ? <span class="news-date">{n.date}</span> : <span></span>}
-                    <span class="dir-link">Baca →</span>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
+
+          {beritaList.length ? (
+            <div class="news-sub">
+              <h3 class="news-sub-title">{site.beritaTitle || t("pub.beritaTerkini")}</h3>
+              {site.beritaNote ? <p class="section-note">{site.beritaNote}</p> : null}
+              <div class="news-grid">
+                {beritaList.map((n: any) => (
+                  <a class={`news-card${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
+                    {n.image ? (
+                      <div class="news-thumb"><img src={safeUrl(n.image)} alt="" loading="lazy" /></div>
+                    ) : null}
+                    <div class="news-body">
+                      <div class="news-top">
+                        {n.source ? <span class="news-source">{n.source}</span> : null}
+                        {n.featured ? <span class="badge badge-featured">{t("pub.sorotan")}</span> : null}
+                      </div>
+                      <h3 class="news-title">{n.title}</h3>
+                      {n.excerpt ? <p class="news-excerpt">{n.excerpt}</p> : null}
+                      <div class="news-foot">
+                        {n.date ? <span class="news-date">{n.date}</span> : <span></span>}
+                        <span class="dir-link">{t("pub.read")} →</span>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {komunitasList.length ? (
+            <div class="news-sub">
+              <h3 class="news-sub-title">{t("pub.komunitas")}</h3>
+              <div class="dir-grid">
+                {komunitasList.map((k: any) => (
+                  <article class={`dir-card${k.featured ? " is-featured" : ""}`}>
+                    <div class="dir-top">
+                      <span class="dir-badge">{t("pub.komunitas")}</span>
+                      {k.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+                    </div>
+                    <h3 class="dir-title">{k.name}</h3>
+                    {k.source ? <p class="dir-sub">{k.source}</p> : null}
+                    {k.note ? <p class="dir-note">{k.note}</p> : null}
+                    <div class="dir-actions">
+                      <a class="dir-link" href={safeUrl(k.url)} target="_blank" rel="noopener">{t("pub.visit")} →</a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
     ) : null}
@@ -526,10 +559,10 @@ const jsonLd = {
         <div class="container">
           <div class="section-head">
             <div>
-              <h2 class="section-title">Artikel & Panduan</h2>
-              <p class="section-note">Tulisan orisinal, sumbernya dicantumkan</p>
+              <h2 class="section-title">{t("pub.artikel")}</h2>
+              <p class="section-note">{t("pub.artikel.note")}</p>
             </div>
-            <a class="section-link" href="/artikel">Semua artikel →</a>
+            <a class="section-link" href="/artikel">{t("pub.artikel.all")} →</a>
           </div>
           <div class="artikel-grid">
             {artikelList.map((a: any) => <ArtikelCard artikel={a} />)}

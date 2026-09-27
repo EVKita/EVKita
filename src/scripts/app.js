@@ -3,6 +3,18 @@
 import { esc, rupiah, cardHTML as buildCard, visualHTML as buildVisual } from "../lib/card-html.js";
 import { MAX_COMPARE, compareTableHTML, compareSlug } from "../lib/compare-html.js";
 import { hargaWajar } from "../lib/vehicle-spec.js";
+import { makePubT, normalizePubLocale } from "../lib/i18n/pub.js";
+
+/* Bahasa situs publik dibaca dari cookie yang ditulis LanguageToggle. */
+function readPubLang() {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)evkita_pub_lang=([^;]+)/);
+    return normalizePubLocale(m ? m[1] : "");
+  } catch {
+    return "id";
+  }
+}
+const t = makePubT(readPubLang());
 
 let EV_CARS = [];
 let MOTORS = [];
@@ -16,27 +28,27 @@ let dataset = [];
  */
 
 const PRICE_BUCKETS = [
-  { id: "all", label: "Semua harga" },
-  { id: "under300", label: "Di bawah 300 juta", test: (p) => p !== null && p < 300000000 },
-  { id: "under500", label: "Di bawah 500 juta", test: (p) => p !== null && p < 500000000 },
-  { id: "500-800", label: "500 – 800 juta", test: (p) => p !== null && p >= 500000000 && p < 800000000 },
-  { id: "over800", label: "Di atas 800 juta", test: (p) => p !== null && p >= 800000000 },
+  { id: "all", labelKey: "pub.filter.semuaHarga" },
+  { id: "under300", labelKey: "pub.filter.under300", test: (p) => p !== null && p < 300000000 },
+  { id: "under500", labelKey: "pub.filter.under500", test: (p) => p !== null && p < 500000000 },
+  { id: "500-800", labelKey: "pub.filter.rentang500", test: (p) => p !== null && p >= 500000000 && p < 800000000 },
+  { id: "over800", labelKey: "pub.filter.over800", test: (p) => p !== null && p >= 800000000 },
 ];
 
 const RANGE_BUCKETS = [
-  { id: "all", label: "Semua jarak" },
-  { id: "r0", label: "Di bawah 200 km", test: (v) => v !== null && v < 200 },
-  { id: "r200", label: "200 – 350 km", test: (v) => v !== null && v >= 200 && v < 350 },
-  { id: "r350", label: "350 – 500 km", test: (v) => v !== null && v >= 350 && v < 500 },
-  { id: "r500", label: "500 km ke atas", test: (v) => v !== null && v >= 500 },
+  { id: "all", labelKey: "pub.filter.semuaJarak" },
+  { id: "r0", labelKey: "pub.filter.under200", test: (v) => v !== null && v < 200 },
+  { id: "r200", labelKey: "pub.filter.rentang200", test: (v) => v !== null && v >= 200 && v < 350 },
+  { id: "r350", labelKey: "pub.filter.rentang350", test: (v) => v !== null && v >= 350 && v < 500 },
+  { id: "r500", labelKey: "pub.filter.over500", test: (v) => v !== null && v >= 500 },
 ];
 
 const BATTERY_BUCKETS = [
-  { id: "all", label: "Semua kapasitas" },
-  { id: "b0", label: "Di bawah 40 kWh", test: (v) => v !== null && v < 40 },
-  { id: "b40", label: "40 – 60 kWh", test: (v) => v !== null && v >= 40 && v < 60 },
-  { id: "b60", label: "60 – 80 kWh", test: (v) => v !== null && v >= 60 && v < 80 },
-  { id: "b80", label: "80 kWh ke atas", test: (v) => v !== null && v >= 80 },
+  { id: "all", labelKey: "pub.filter.semuaKapasitas" },
+  { id: "b0", labelKey: "pub.filter.under40", test: (v) => v !== null && v < 40 },
+  { id: "b40", labelKey: "pub.filter.rentang40", test: (v) => v !== null && v >= 40 && v < 60 },
+  { id: "b60", labelKey: "pub.filter.rentang60", test: (v) => v !== null && v >= 60 && v < 80 },
+  { id: "b80", labelKey: "pub.filter.over80", test: (v) => v !== null && v >= 80 },
 ];
 
 const SORTERS = {
@@ -138,17 +150,13 @@ function toMediaMap(lite) {
 
 function cardHTML(c) {
   return buildCard(c, {
-    // Dulu hanya mobil yang boleh ditautkan: motor belum punya halaman detail,
-    // jadi kartunya sengaja mati. Sejak /motor/<slug> ada, keduanya bisa —
-    // dan `vehicleHref()` yang tahu ke mana masing-masing pergi.
     linkable: true,
     compare: state.compare,
     color: uiState.color,
     variant: uiState.variant,
     animate: animateCards,
-    // Teks alternatif dari Admin → Media, disuntikkan beranda. Tanpa ini kartu
-    // yang digambar ulang di browser akan kehilangan alt yang sudah ditulis.
     media: window.__EV_MEDIA_ALT__ ? toMediaMap(window.__EV_MEDIA_ALT__) : {},
+    t,
   });
 }
 
@@ -161,7 +169,9 @@ function uniqSorted(arr) {
 
 function fillSelect(el, options, selected) {
   if (!el) return;
-  el.innerHTML = options.map((o) => `<option value="${esc(o.id)}">${esc(o.label)}</option>`).join("");
+  el.innerHTML = options
+    .map((o) => `<option value="${esc(o.id)}">${esc(o.labelKey ? t(o.labelKey) : o.label)}</option>`)
+    .join("");
   el.value = options.some((o) => o.id === selected) ? selected : options[0].id;
 }
 
@@ -171,14 +181,14 @@ function populateFilters() {
 
   fillSelect(
     $("filterBrand"),
-    [{ id: "all", label: "Semua merek" }, ...brands.map((b) => ({ id: b, label: b }))],
+    [{ id: "all", labelKey: "pub.filter.semuaMerek" }, ...brands.map((b) => ({ id: b, label: b }))],
     state.brand
   );
   state.brand = $("filterBrand").value;
 
   fillSelect(
     $("filterBody"),
-    [{ id: "all", label: "Semua tipe" }, ...bodies.map((b) => ({ id: b, label: b }))],
+    [{ id: "all", labelKey: "pub.filter.semuaTipe" }, ...bodies.map((b) => ({ id: b, label: b }))],
     state.body
   );
   state.body = $("filterBody").value;
@@ -204,7 +214,7 @@ function renderBodyChips(bodies) {
   const counts = {};
   for (const c of dataset) counts[c.bodyType] = (counts[c.bodyType] || 0) + 1;
   wrap.innerHTML =
-    `<button type="button" class="chip${state.body === "all" ? " active" : ""}" data-chip="all">Semua <span class="chip-count">${dataset.length}</span></button>` +
+    `<button type="button" class="chip${state.body === "all" ? " active" : ""}" data-chip="all">${t("pub.filter.semua")} <span class="chip-count">${dataset.length}</span></button>` +
     bodies
       .map(
         (b) =>
@@ -243,7 +253,10 @@ function activeFilterChips() {
   if (state.search.trim()) chips.push({ key: "search", label: `“${state.search.trim()}”` });
   if (state.brand !== "all") chips.push({ key: "brand", label: state.brand });
   if (state.body !== "all") chips.push({ key: "body", label: state.body });
-  const named = (list, id) => (list.find((x) => x.id === id) || {}).label;
+  const named = (list, id) => {
+    const item = list.find((x) => x.id === id) || {};
+    return item.labelKey ? t(item.labelKey) : item.label;
+  };
   if (state.price !== "all") chips.push({ key: "price", label: named(PRICE_BUCKETS, state.price) });
   if (state.range !== "all") chips.push({ key: "range", label: named(RANGE_BUCKETS, state.range) });
   if (state.battery !== "all") chips.push({ key: "battery", label: named(BATTERY_BUCKETS, state.battery) });
@@ -263,10 +276,10 @@ function renderHeroStats() {
   const maxRange = ranged.length ? Math.max(...ranged.map((c) => c.rangeKm)) : 0;
 
   const pills = [
-    [all.length, "Model terdata"],
-    [brandCount, "Merek"],
-    [minPrice !== null ? rupiah(minPrice) : "—", "Harga terendah"],
-    [maxRange ? maxRange + " km" : "—", "Jarak terjauh"],
+    [all.length, t("pub.stat.models")],
+    [brandCount, t("pub.stat.brands")],
+    [minPrice !== null ? rupiah(minPrice) : "—", t("pub.stat.minPrice")],
+    [maxRange ? maxRange + " km" : "—", t("pub.stat.maxRange")],
   ];
   el.innerHTML = pills
     .map(([n, l]) => `<div class="stat-pill"><span class="num">${esc(n)}</span><span class="label">${esc(l)}</span></div>`)
@@ -279,13 +292,13 @@ function render() {
   grid.className = "grid" + (state.view === "list" ? " as-list" : "");
   grid.innerHTML = list.map(cardHTML).join("");
 
-  const noun = state.mode === "motor" ? "motor" : "mobil";
+  const noun = state.mode === "motor" ? t("pub.tax.motor") : t("pub.tax.mobil");
   const count = $("resultCount");
   if (count) {
     count.innerHTML =
       list.length === dataset.length
-        ? `Menampilkan <b>${dataset.length}</b> ${esc(noun)} listrik`
-        : `Menampilkan <b>${list.length}</b> dari <b>${dataset.length}</b> ${esc(noun)} listrik`;
+        ? t("pub.result.all", { n: dataset.length, noun })
+        : t("pub.result.filtered", { n: list.length, total: dataset.length, noun });
   }
 
   const af = $("activeFilters");
@@ -345,11 +358,11 @@ function updateCompareUI() {
   const wrap = $("compareItems");
   if (wrap) {
     wrap.innerHTML =
-      `<span class="compare-label">Bandingkan <b>${items.length}</b>/${MAX_COMPARE}</span>` +
+      `<span class="compare-label">${t("pub.card.compare")} <b>${items.length}</b>/${MAX_COMPARE}</span>` +
       items
         .map(
           (c) =>
-            `<span class="compare-chip">${esc(c.brand)} ${esc(c.name)}<button type="button" data-compare-remove="${esc(c.id)}" aria-label="Hapus ${esc(c.name)} dari perbandingan">✕</button></span>`
+            `<span class="compare-chip">${esc(c.brand)} ${esc(c.name)}<button type="button" data-compare-remove="${esc(c.id)}" aria-label="${esc(t("pub.compare.remove", { name: c.name }))}">✕</button></span>`
         )
         .join("");
   }
@@ -364,13 +377,13 @@ function renderCompareTable() {
   if (!body) return;
   const items = compareItems();
   if (items.length < 2) {
-    body.innerHTML = '<p class="compare-hint">Pilih minimal dua kendaraan untuk dibandingkan.</p>';
+    body.innerHTML = `<p class="compare-hint">${esc(t("pub.compare.hint"))}</p>`;
     const link = $("compareLink");
     if (link) link.hidden = true;
     return;
   }
 
-  body.innerHTML = compareTableHTML(items);
+  body.innerHTML = compareTableHTML(items, { t });
   updateCompareLink(items);
 }
 
@@ -610,6 +623,7 @@ function bindEvents() {
         linkable: true,
         color: uiState.color,
         variant: uiState.variant,
+        t,
       });
     }
   });

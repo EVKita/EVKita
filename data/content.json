@@ -3731,5 +3731,34 @@
       "updatedBy": ""
     }
   ],
-  "media": {}
+  "media": {},
+  "komunitas": [
+    {
+      "id": "gesits",
+      "name": "GESITS",
+      "source": "PT WIKA Industri Manufaktur",
+      "url": "https://gesits.id/",
+      "note": "Motor listrik buatan Indonesia beserta komunitas penggunanya.",
+      "featured": true,
+      "status": "published"
+    },
+    {
+      "id": "pln-ev",
+      "name": "PLN — Ekosistem Kendaraan Listrik",
+      "source": "PT PLN (Persero)",
+      "url": "https://www.pln.co.id/",
+      "note": "Jaringan SPKLU dan program kendaraan listrik PLN.",
+      "featured": false,
+      "status": "published"
+    },
+    {
+      "id": "esdm-ev",
+      "name": "Kementerian ESDM",
+      "source": "Kementerian ESDM RI",
+      "url": "https://www.esdm.go.id/",
+      "note": "Kebijakan dan insentif kendaraan listrik di Indonesia.",
+      "featured": false,
+      "status": "published"
+    }
+  ]
 }

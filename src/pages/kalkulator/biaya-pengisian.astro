@@ -20,6 +20,7 @@ import {
 import { rupiahPenuh, rupiahHalus } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
+import { makePubT } from "../../lib/i18n/pub.js";
 
 /**
  * Kalkulator waktu & biaya sekali mengisi daya.
@@ -39,6 +40,8 @@ import { hanyaTayang } from "../../lib/tayang.js";
 
 const content = readContent();
 const site = content.site;
+
+const t = makePubT(Astro.locals?.pubLang);
 
 const cars = (content.cars || []).filter(hanyaTayang());
 const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [];
@@ -166,14 +169,14 @@ const ringkas = teksRingkasPengisian(hasil);
   <SiteHeader site={site} base="/" active="" />
 
   <main class="container kalk" id="konten">
-    <nav class="breadcrumb" aria-label="Remah roti">
-      <a href="/">Beranda</a>
+    <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+      <a href="/">{t("pub.nav.beranda")}</a>
       <span aria-hidden="true">/</span>
-      <span class="breadcrumb-current">Kalkulator biaya pengisian</span>
+      <span class="breadcrumb-current">{t("pub.kalk.titleBiaya")}</span>
     </nav>
 
     <header class="kalk-head">
-      <h1>Sekali isi: berapa lama, dan habis berapa?</h1>
+      <h1>{t("pub.kalk.h1Biaya")}</h1>
       <p class="kalk-lead">
         Pilih kendaraannya, tentukan mau diisi dari berapa persen ke berapa persen, lalu sebutkan
         daya stasiun dan tarifnya. Hasilnya berubah seketika, dan tautannya bisa dibagikan lengkap
@@ -184,38 +187,38 @@ const ringkas = teksRingkasPengisian(hasil);
     <form class="kalk-form" id="pengisianForm" method="get" autocomplete="off">
       <div class="kalk-grid">
         <div class="kalk-field kalk-field-wide">
-          <label for="f-kendaraan">Kendaraan</label>
+          <label for="f-kendaraan">{t("pub.kalk.kendaraan")}</label>
           <select id="f-kendaraan" name="kendaraan">
             {pilihanMobil.length ? (
-              <optgroup label="Mobil listrik">
+              <optgroup label={t("pub.tax.titleMobil")}>
                 {pilihanMobil.map((c: any) => (
                   <option value={c.id} selected={c.id === form.kendaraan}>{c.brand} {c.name}</option>
                 ))}
               </optgroup>
             ) : null}
             {pilihanMotor.length ? (
-              <optgroup label="Motor listrik">
+              <optgroup label={t("pub.tax.titleMotor")}>
                 {pilihanMotor.map((c: any) => (
                   <option value={c.id} selected={c.id === form.kendaraan}>{c.brand} {c.name}</option>
                 ))}
               </optgroup>
             ) : null}
           </select>
-          <p class="kalk-hint">Memilih kendaraan mengisi kapasitas baterainya. Angkanya tetap bisa diubah.</p>
+          <p class="kalk-hint">{t("pub.kalk.pilihHint")}</p>
         </div>
 
         <div class="kalk-field">
-          <label for="f-baterai">Kapasitas baterai <span class="kalk-unit">kWh</span></label>
+          <label for="f-baterai">{t("pub.kalk.kapasitas")} <span class="kalk-unit">kWh</span></label>
           <input id="f-baterai" name="baterai" type="number" min="0.1" step="0.1" value={form.batteryKwh} />
         </div>
 
         <div class="kalk-field">
-          <label for="f-awal">Mulai dari <span class="kalk-unit">% baterai</span></label>
+          <label for="f-awal">{t("pub.kalk.mulai")} <span class="kalk-unit">%</span></label>
           <input id="f-awal" name="awal" type="number" min="0" max="100" step="1" value={form.socAwal} />
         </div>
 
         <div class="kalk-field">
-          <label for="f-akhir">Sampai <span class="kalk-unit">% baterai</span></label>
+          <label for="f-akhir">{t("pub.kalk.sampai")} <span class="kalk-unit">%</span></label>
           <input id="f-akhir" name="akhir" type="number" min="0" max="100" step="1" value={form.socAkhir} />
           <p class="kalk-hint">
             Bawaannya berhenti di {BATAS_TAPER}% karena di situlah pengisian DC mulai menukik —
@@ -224,7 +227,7 @@ const ringkas = teksRingkasPengisian(hasil);
         </div>
 
         <div class="kalk-field">
-          <label for="f-daya">Daya pengisian <span class="kalk-unit">kW</span></label>
+          <label for="f-daya">{t("pub.kalk.daya")} <span class="kalk-unit">kW</span></label>
           <input id="f-daya" name="daya" type="number" min="0.1" step="0.1" value={form.dayaKw} />
           <div class="kalk-presets">
             {DAYA_PRESETS.map((p) => (
@@ -236,7 +239,7 @@ const ringkas = teksRingkasPengisian(hasil);
         </div>
 
         <div class="kalk-field">
-          <label for="f-tarif">Tarif listrik <span class="kalk-unit">Rp / kWh</span></label>
+          <label for="f-tarif">{t("pub.kalk.tarif")} <span class="kalk-unit">Rp / kWh</span></label>
           <input id="f-tarif" name="tarif" type="number" min="1" step="0.01" value={form.tarif} />
           <div class="kalk-presets">
             {TARIF_PRESETS.map((p) => (
@@ -251,7 +254,7 @@ const ringkas = teksRingkasPengisian(hasil);
       {/* Tanpa JavaScript, tombol ini mengirim formulir sebagai GET dan server
           merender hasilnya — halaman ini tetap berfungsi utuh. */}
       <noscript>
-        <button type="submit" class="btn btn-primary">Hitung</button>
+        <button type="submit" class="btn btn-primary">{t("pub.kalk.hitung")}</button>
       </noscript>
     </form>
 
@@ -260,24 +263,24 @@ const ringkas = teksRingkasPengisian(hasil);
 
       <div class="kalk-cards">
         <div class="kalk-card kalk-card-accent">
-          <span class="kalk-card-label">Lama mengisi</span>
+          <span class="kalk-card-label">{t("pub.kalk.lama")}</span>
           <strong class="kalk-card-value" id="p-durasi">{teks.durasi}</strong>
-          <span class="kalk-card-sub">rentang, bukan satu angka</span>
+          <span class="kalk-card-sub">{t("pub.kalk.rentang")}</span>
         </div>
         <div class="kalk-card">
-          <span class="kalk-card-label">Biaya sekali isi</span>
+          <span class="kalk-card-label">{t("pub.kalk.biaya")}</span>
           <strong class="kalk-card-value" id="p-biaya">{teks.biaya}</strong>
-          <span class="kalk-card-sub"><span id="p-per-kwh">{teks.perKwh}</span> per kWh yang benar-benar masuk</span>
+          <span class="kalk-card-sub"><span id="p-per-kwh">{teks.perKwh}</span> {t("pub.kalk.perKwh")}</span>
         </div>
         <div class="kalk-card">
-          <span class="kalk-card-label">Masuk ke baterai</span>
+          <span class="kalk-card-label">{t("pub.kalk.masuk")}</span>
           <strong class="kalk-card-value" id="p-energi">{teks.energiMasuk}</strong>
-          <span class="kalk-card-sub">dibayar <span id="p-ditagih">{teks.energiDitagih}</span></span>
+          <span class="kalk-card-sub">{t("pub.kalk.dibayar")} <span id="p-ditagih">{teks.energiDitagih}</span></span>
         </div>
         <div class="kalk-card">
-          <span class="kalk-card-label">Setara jarak tempuh</span>
+          <span class="kalk-card-label">{t("pub.kalk.setara")}</span>
           <strong class="kalk-card-value" id="p-km">{teks.km}</strong>
-          <span class="kalk-card-sub">menurut klaim pabrik</span>
+          <span class="kalk-card-sub">{t("pub.kalk.klaim")}</span>
         </div>
       </div>
 
@@ -289,13 +292,13 @@ const ringkas = teksRingkasPengisian(hasil);
 
       {terpilih ? (
         <p class="kalk-detail-link">
-          <a href={vehicleHref(terpilih)}>Lihat spesifikasi lengkap {terpilih.brand} {terpilih.name} →</a>
+          <a href={vehicleHref(terpilih)}>{t("pub.kalk.lihatSpesifikasi")} {terpilih.brand} {terpilih.name} →</a>
         </p>
       ) : null}
     </section>
 
     <section class="kalk-section">
-      <h2>Yang tidak dihitung di sini</h2>
+      <h2>{t("pub.kalk.tidakDihitung")}</h2>
       <ul class="kalk-notes">
         <li>
           Lama pengisian selalu berupa rentang, dan itu disengaja. Daya papan nama stasiun jarang
@@ -320,11 +323,11 @@ const ringkas = teksRingkasPengisian(hasil);
     </section>
 
     <section class="kalk-section">
-      <h2>Lanjutkan</h2>
+      <h2>{t("pub.kalk.lanjut")}</h2>
       <div class="tag-row">
-        <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">Kalkulator hemat listrik vs bensin</a>
-        {site.showSpklu ? <a class="tag-pill" href="/#spklu">Daftar SPKLU</a> : null}
-        <a class="tag-pill" href="/katalog">Katalog lengkap</a>
+        <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">{t("pub.kalk.kalkulatorHemat")}</a>
+        {site.showSpklu ? <a class="tag-pill" href="/#spklu">{t("pub.kalk.daftarSpklu")}</a> : null}
+        <a class="tag-pill" href="/katalog">{t("pub.koleksi.katalogLengkap")}</a>
       </div>
     </section>
   </main>

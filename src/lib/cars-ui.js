@@ -4,20 +4,23 @@
  * client-side oleh `scripts/app.js`, jadi berkas ini wajib JS murni tanpa
  * ketergantungan DOM maupun Node.
  */
+import { makePubT } from "./i18n/pub.js";
+
+const tId = makePubT("id");
 
 export const CAR_COLORS = [
-  { name: "Putih", hex: "#f2f4f7" },
-  { name: "Silver", hex: "#c3cad4" },
-  { name: "Abu-abu", hex: "#7a8697" },
-  { name: "Hitam", hex: "#181c22" },
-  { name: "Merah", hex: "#d64541" },
-  { name: "Biru", hex: "#2f6bff" },
-  { name: "Teal", hex: "#2a9d8f" },
-  { name: "Hijau", hex: "#3aa655" },
-  { name: "Kuning", hex: "#f0b429" },
-  { name: "Oranye", hex: "#ee8b28" },
-  { name: "Cokelat", hex: "#8a5a33" },
-  { name: "Ungu", hex: "#8e6bd6" },
+  { key: "pub.color.putih", name: "Putih", hex: "#f2f4f7" },
+  { key: "pub.color.silver", name: "Silver", hex: "#c3cad4" },
+  { key: "pub.color.abu", name: "Abu-abu", hex: "#7a8697" },
+  { key: "pub.color.hitam", name: "Hitam", hex: "#181c22" },
+  { key: "pub.color.merah", name: "Merah", hex: "#d64541" },
+  { key: "pub.color.biru", name: "Biru", hex: "#2f6bff" },
+  { key: "pub.color.teal", name: "Teal", hex: "#2a9d8f" },
+  { key: "pub.color.hijau", name: "Hijau", hex: "#3aa655" },
+  { key: "pub.color.kuning", name: "Kuning", hex: "#f0b429" },
+  { key: "pub.color.oranye", name: "Oranye", hex: "#ee8b28" },
+  { key: "pub.color.cokelat", name: "Cokelat", hex: "#8a5a33" },
+  { key: "pub.color.ungu", name: "Ungu", hex: "#8e6bd6" },
 ];
 
 /**
@@ -196,11 +199,12 @@ function defs(id, color) {
   </defs>`;
 }
 
-export function scooterSVG(c, color) {
+export function scooterSVG(c, color, t) {
+  const tt = t || tId;
   const col = safeColor(color, defaultColor(c || {}));
   const id = gradId(c, "m");
   const stroke = shade(col, -38);
-  const label = esc(((c && c.brand) || "") + " " + ((c && c.name) || "")).trim() || "Kendaraan listrik";
+  const label = esc(((c && c.brand) || "") + " " + ((c && c.name) || "")).trim() || tt("pub.ev");
   const sporty = MOTO_SHAPES[/sport|trail|kopling/i.test(String((c && c.bodyType) || "")) ? "sport" : "skuter"];
 
   return `<svg viewBox="0 0 400 150" role="img" aria-label="${label}" preserveAspectRatio="xMidYMid meet">
@@ -221,15 +225,16 @@ export function scooterSVG(c, color) {
   </svg>`;
 }
 
-export function carSVG(c, color) {
+export function carSVG(c, color, t) {
+  const tt = t || tId;
   const type = String((c && c.bodyType) || "");
-  if (!CAR_BODIES[type] && MOTO_TYPES.test(type)) return scooterSVG(c, color);
+  if (!CAR_BODIES[type] && MOTO_TYPES.test(type)) return scooterSVG(c, color, tt);
 
   const b = CAR_BODIES[type] || CAR_BODIES.Crossover;
   const col = safeColor(color, defaultColor(c || {}));
   const id = gradId(c, "c");
   const stroke = shade(col, -38);
-  const label = esc(((c && c.brand) || "") + " " + ((c && c.name) || "")).trim() || "Kendaraan listrik";
+  const label = esc(((c && c.brand) || "") + " " + ((c && c.name) || "")).trim() || tt("pub.ev");
   const [wx1, wx2] = b.wheels || [106, 294];
 
   return `<svg viewBox="0 0 400 150" role="img" aria-label="${label}" preserveAspectRatio="xMidYMid meet">

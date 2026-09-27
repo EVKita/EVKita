@@ -248,6 +248,9 @@ for (const locale of ["en", "zh"]) {
 const files = SCAN_DIRS.flatMap((d) => (fs.existsSync(d) ? walk(d) : []));
 const used = collectUsedKeys(files);
 for (const [key, where] of used) {
+  // Kunci `pub.*` milik kamus situs publik (src/lib/i18n/pub.js), bukan kamus
+  // panel admin — sengaja tidak diperiksa di sini.
+  if (key.startsWith("pub.")) continue;
   if (!idSet.has(key)) {
     errors.push(`Kunci "${key}" dipakai di ${[...where].join(", ")} tapi tidak ada di id.js`);
   }

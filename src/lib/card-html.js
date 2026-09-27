@@ -1,6 +1,9 @@
 import { paletteFor, defaultColor, carSVG } from "./cars-ui.js";
 import { safeUrl as allowedUrl } from "./url.js";
 import { mediaAlt } from "./media.js";
+import { makePubT } from "./i18n/pub.js";
+
+const tId = makePubT("id");
 
 /**
  * Markup kartu kendaraan — satu sumber untuk server dan browser.
@@ -76,13 +79,15 @@ function withDefaults(opts) {
     /* Peta `alamat gambar → teks alternatif` dari Admin → Media. Kosong berarti
        kartu memakai cadangannya sendiri, "Merek Model". */
     media: {},
+    t: tId,
     ...(opts || {}),
   };
 }
 
 export function visualHTML(c, opts) {
   const o = withDefaults(opts);
-  const names = c.variantNames && c.variantNames.length ? c.variantNames : ["Standard"];
+  const t = o.t;
+  const names = c.variantNames && c.variantNames.length ? c.variantNames : [t("pub.card.standard")];
   let vi = o.variant[c.id] || 0;
   if (vi >= names.length) vi = 0;
   const chips = names
@@ -90,7 +95,7 @@ export function visualHTML(c, opts) {
     .join("");
   const variantRow =
     names.length > 1 || (c.variantNames && c.variantNames.length)
-      ? `<div class="variant-row"><span class="mini-label">Varian</span><div class="chips">${chips}</div></div>`
+      ? `<div class="variant-row"><span class="mini-label">${esc(t("pub.card.variant"))}</span><div class="chips">${chips}</div></div>`
       : "";
   const href = safeUrl(vehicleHref(c));
   const openLink = o.linkable ? `<a class="card-media-link" href="${href}" aria-label="${esc(c.brand + " " + c.name)}">` : "";
@@ -130,23 +135,24 @@ export function visualHTML(c, opts) {
   const swatches = palette
     .map(
       (col) =>
-        `<button type="button" class="swatch${col.hex === color ? " active" : ""}" data-color="${esc(col.hex)}" title="${esc(col.name)}" aria-label="Warna ${esc(col.name)}" style="--sw:${esc(col.hex)}"></button>`
+        `<button type="button" class="swatch${col.hex === color ? " active" : ""}" data-color="${esc(col.hex)}" title="${esc(col.key ? t(col.key) : col.name)}" aria-label="${esc(t("pub.card.colorAria", { color: col.key ? t(col.key) : col.name }))}" style="--sw:${esc(col.hex)}"></button>`
     )
     .join("");
   return `<div class="car-visual">
-    ${openLink}<div class="car-svg">${carSVG(c, color)}</div>${closeLink}
-    <div class="color-row"><span class="mini-label">Warna</span><div class="swatches">${swatches}</div></div>
+    ${openLink}<div class="car-svg">${carSVG(c, color, t)}</div>${closeLink}
+    <div class="color-row"><span class="mini-label">${esc(t("pub.card.color"))}</span><div class="swatches">${swatches}</div></div>
     ${variantRow}
   </div>`;
 }
 
 /** Spesifikasi tambahan hanya dirender kalau terisi — kartu tidak boleh penuh "—". */
-export function extraSpecs(c) {
+export function extraSpecs(c, t) {
+  const tt = t || tId;
   const rows = [];
-  if (c.accelSec != null) rows.push(["0–100 km/j", c.accelSec + " dtk"]);
-  if (c.topSpeedKph != null) rows.push(["Kecepatan puncak", c.topSpeedKph + " km/j"]);
-  if (c.seats != null) rows.push(["Kursi", c.seats]);
-  if (c.chargeDcKw != null) rows.push(["Isi cepat DC", c.chargeDcKw + " kW"]);
+  if (c.accelSec != null) rows.push([tt("pub.cmp.accel"), c.accelSec + " " + tt("pub.unit.dtk")]);
+  if (c.topSpeedKph != null) rows.push([tt("pub.card.topSpeed"), c.topSpeedKph + " " + tt("pub.unit.kmj")]);
+  if (c.seats != null) rows.push([tt("pub.card.seats"), c.seats]);
+  if (c.chargeDcKw != null) rows.push([tt("pub.card.dcFast"), c.chargeDcKw + " kW"]);
   if (!rows.length) return "";
   return `<div class="card-extra">${rows
     .map(([k, v]) => `<span class="pill-spec"><b>${esc(v)}</b> ${esc(k)}</span>`)
@@ -155,6 +161,7 @@ export function extraSpecs(c) {
 
 export function cardHTML(c, opts) {
   const o = withDefaults(opts);
+  const t = o.t;
 
   const range = c.rangeKm
     ? `<span class="spec-value">${esc(c.rangeKm)} km</span>${c.rangeStandard ? `<span class="spec-note">${esc(c.rangeStandard)}</span>` : ""}`
@@ -162,20 +169,20 @@ export function cardHTML(c, opts) {
 
   const price = priceLabel(c)
     ? `<span class="card-price">${esc(priceLabel(c))}</span>`
-    : '<span class="card-price na">Harga belum tersedia</span>';
+    : `<span class="card-price na">${esc(t("pub.card.priceNa"))}</span>`;
 
   const badges = [];
-  if (c.featured) badges.push('<span class="badge badge-featured">Unggulan</span>');
-  if (c.stale) badges.push('<span class="badge badge-stale">Data lama</span>');
+  if (c.featured) badges.push(`<span class="badge badge-featured">${esc(t("pub.card.featured"))}</span>`);
+  if (c.stale) badges.push(`<span class="badge badge-stale">${esc(t("pub.card.stale"))}</span>`);
   if (c.year) badges.push(`<span class="badge badge-muted">${esc(c.year)}</span>`);
 
   const detailLink = o.linkable
-    ? `<a href="${safeUrl(vehicleHref(c))}" class="card-detail">Lihat detail <span aria-hidden="true">→</span></a>`
+    ? `<a href="${safeUrl(vehicleHref(c))}" class="card-detail">${esc(t("pub.card.detail"))} <span aria-hidden="true">→</span></a>`
     : "";
 
   const picked = o.compare.includes(c.id);
   const compareBtn = `<button type="button" class="compare-toggle${picked ? " active" : ""}" data-compare="${esc(c.id)}" aria-pressed="${picked}">
-      <span class="compare-tick" aria-hidden="true">${picked ? "✓" : "+"}</span> Bandingkan
+      <span class="compare-tick" aria-hidden="true">${picked ? "✓" : "+"}</span> ${esc(t("pub.card.compare"))}
     </button>`;
 
   const tags = (c.tags || [])
@@ -195,16 +202,16 @@ export function cardHTML(c, opts) {
       ${c.tagline ? `<p class="card-tagline">${esc(c.tagline)}</p>` : ""}
       ${visualHTML(c, o)}
       <div class="card-specs">
-        <div class="spec"><span class="spec-label">Jarak tempuh</span>${range}</div>
-        <div class="spec"><span class="spec-label">Baterai</span><span class="spec-value">${c.batteryKwh != null ? esc(c.batteryKwh) + " kWh" : "—"}</span></div>
-        <div class="spec"><span class="spec-label">Tenaga</span><span class="spec-value">${c.powerHp != null ? esc(c.powerHp) + " hp" : "—"}</span></div>
-        <div class="spec"><span class="spec-label">Varian</span><span class="spec-value">${esc(c.variants || (c.variantNames || []).length || 1)}</span></div>
+        <div class="spec"><span class="spec-label">${esc(t("pub.card.range"))}</span>${range}</div>
+        <div class="spec"><span class="spec-label">${esc(t("pub.card.battery"))}</span><span class="spec-value">${c.batteryKwh != null ? esc(c.batteryKwh) + " kWh" : "—"}</span></div>
+        <div class="spec"><span class="spec-label">${esc(t("pub.card.power"))}</span><span class="spec-value">${c.powerHp != null ? esc(c.powerHp) + " hp" : "—"}</span></div>
+        <div class="spec"><span class="spec-label">${esc(t("pub.card.variants"))}</span><span class="spec-value">${esc(c.variants || (c.variantNames || []).length || 1)}</span></div>
       </div>
-      ${extraSpecs(c)}
+      ${extraSpecs(c, t)}
       ${tags ? `<div class="tag-row-mini">${tags}</div>` : ""}
       <div class="card-footer">
         <div class="card-price-wrap">
-          <span class="card-price-label">Mulai dari</span>
+          <span class="card-price-label">${esc(t("pub.card.from"))}</span>
           ${price}
         </div>
         <div class="card-badges">${badges.join("")}</div>

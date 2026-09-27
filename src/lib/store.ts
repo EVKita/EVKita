@@ -285,6 +285,21 @@ function normalizeBengkel(v: any): any {
   };
 }
 
+function normalizeKomunitas(v: any): any {
+  return {
+    id: str(v?.id),
+    name: str(v?.name),
+    source: str(v?.source),
+    url: str(v?.url),
+    note: str(v?.note),
+    featured: !!v?.featured,
+    status: str(v?.status) === "draft" ? "draft" : "published",
+    publishAt: str(v?.publishAt),
+    updatedAt: str(v?.updatedAt),
+    updatedBy: str(v?.updatedBy),
+  };
+}
+
 function normalizeBerita(v: any): any {
   return {
     id: str(v?.id),
@@ -397,6 +412,7 @@ function normalize(content: any): any {
     spklu: ensureIds(asList(content?.spklu).map(normalizeSpklu), "spklu", "name"),
     bengkel: ensureIds(asList(content?.bengkel).map(normalizeBengkel), "bengkel", "name"),
     berita: ensureIds(asList(content?.berita).map(normalizeBerita), "berita", "title"),
+    komunitas: ensureIds(asList(content?.komunitas).map(normalizeKomunitas), "komunitas", "name"),
 
     /*
      * Halaman statis (Tentang, Kebijakan Privasi, Disclaimer, …).

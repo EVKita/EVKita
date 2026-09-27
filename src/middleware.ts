@@ -4,7 +4,9 @@ import { hostCsp } from "./lib/integrasi.js";
 import { catatKunjungan } from "./lib/trafik-rekam";
 import { jadwalkanBerita } from "./lib/berita-harian";
 import { jadwalkanPeluncuran } from "./lib/peluncuran-rekam";
+import { jadwalkanPembaruan } from "./lib/pembaruan-kendaraan";
 import { SESSION_COOKIE } from "./lib/auth";
+import { normalizePubLocale, PUB_COOKIE } from "./lib/i18n/pub.js";
 
 /**
  * Header keamanan untuk seluruh jawaban.
@@ -129,6 +131,10 @@ function alamatKlien(context: Parameters<MiddlewareHandler>[0]): string {
 }
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
+  // Bahasa situs publik, dari cookie pilihan pembaca. Dipakai halaman dan
+  // komponen lewat `Astro.locals.pubLang` tanpa harus diteruskan sebagai prop.
+  context.locals.pubLang = normalizePubLocale(context.cookies.get(PUB_COOKIE)?.value);
+
   const response = await next();
 
   const h = response.headers;
@@ -187,6 +193,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
    */
   jadwalkanBerita();
   jadwalkanPeluncuran();
+  jadwalkanPembaruan();
 
   return response;
 };

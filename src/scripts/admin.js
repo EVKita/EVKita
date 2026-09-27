@@ -87,19 +87,19 @@ let t = makeT(locale);
 
 /* "editor", "profile", dan "users" adalah halaman penuh tanpa butir sidebar
    sendiri di kelompok koleksi. */
-const VIEWS = ["dashboard", "analitik", "cars", "motors", "spklu", "bengkel", "berita", "halaman", "artikel", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
+const VIEWS = ["dashboard", "analitik", "cars", "motors", "spklu", "bengkel", "berita", "komunitas", "halaman", "artikel", "tampilan", "site", "media", "ai", "backups", "editor", "profile", "users", "activity"];
 
 /* Dua form yang isinya sama-sama field `site`: Pengaturan Situs dan Tampilan.
    Keduanya ditangani mesin yang sama supaya menambah field cukup satu baris
    markup, tanpa penangan baru. */
 const SITE_FORMS = ["site-form", "tampilan-form"];
-const COLLECTIONS = ["cars", "motors", "spklu", "bengkel", "berita", "halaman", "artikel"];
+const COLLECTIONS = ["cars", "motors", "spklu", "bengkel", "berita", "komunitas", "halaman", "artikel"];
 const VEHICLE_COLS = ["cars", "motors"];
 /* Koleksi yang disunting lewat modal berformulir, bukan halaman editor penuh.
    "halaman" dan "artikel" ikut di sini: bentuk datanya datar seperti direktori,
    jadi seluruh mesin daftar, saringan, aksi massal, dan modalnya dipakai apa
    adanya. */
-const DIR_COLS = ["spklu", "bengkel", "berita", "halaman", "artikel"];
+const DIR_COLS = ["spklu", "bengkel", "berita", "komunitas", "halaman", "artikel"];
 
 const colLabel = (col) => t(`col.${col}`);
 const colOne = (col) => t(`col.${col}.one`);
@@ -366,6 +366,26 @@ function dirGroups(col) {
       {
         l: t("dir.sec.lainnya"), d: t("dir.sec.lainnya.d"), f: [
           { k: "website", l: t("field.website"), t: "url", full: true, ph: "https://" },
+          { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2, ph: t("field.note.ph") },
+          { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
+          { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
+          { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
+        ],
+      },
+    ];
+  }
+
+  if (col === "komunitas") {
+    return [
+      {
+        l: t("dir.komunitas.sec.identitas"), d: t("dir.komunitas.sec.identitas.d"), f: [
+          { k: "name", l: t("field.komunitas.name"), t: "text", req: true, full: true, ph: t("field.komunitas.name.ph") },
+          { k: "source", l: t("field.komunitas.source"), t: "text", ph: t("field.komunitas.source.ph") },
+          { k: "url", l: t("field.komunitas.url"), t: "url", full: true, ph: "https://", hint: t("field.komunitas.url.hint") },
+        ],
+      },
+      {
+        l: t("dir.sec.lainnya"), d: t("dir.sec.lainnya.d"), f: [
           { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2, ph: t("field.note.ph") },
           { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
           { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
@@ -698,6 +718,7 @@ function metaOf(col, item) {
   if (col === "spklu") return [item.operator, item.area, item.power, item.count ? t("meta.units", { n: item.count }) : ""].filter(Boolean).join(" · ") || t("meta.noDetail");
   if (col === "bengkel") return [item.type, item.brand, item.area].filter(Boolean).join(" · ") || t("meta.noDetail");
   if (col === "berita") return [item.source, formatDate(item.date)].filter(Boolean).join(" · ") || t("meta.noDetail");
+  if (col === "komunitas") return [item.source].filter(Boolean).join(" · ") || t("meta.noDetail");
   if (col === "halaman") {
     const letak = !item.showInFooter
       ? t("meta.footerOff")
@@ -1760,6 +1781,7 @@ function renderDashStats() {
     [t("dash.stat.spklu"), (content.spklu || []).length, "spklu"],
     [t("dash.stat.bengkel"), (content.bengkel || []).length, "bengkel"],
     [t("dash.stat.berita"), (content.berita || []).length, "berita"],
+    [t("dash.stat.komunitas"), (content.komunitas || []).length, "komunitas"],
     [t("dash.stat.brands"), brands.size, ""],
     [t("dash.stat.variants"), variants, ""],
     [t("dash.stat.drafts"), drafts, ""],
@@ -2116,7 +2138,7 @@ function rowHtml(col, it, dragEnabled) {
     : "";
   // Skema disaring lebih dulu: field ini teks bebas, dan esc() tidak menolak
   // `javascript:`. Tautan yang ditolak tidak dirender sama sekali.
-  const itemUrl = col === "berita" ? safeUrl(it.url) : "";
+  const itemUrl = col === "berita" || col === "komunitas" ? safeUrl(it.url) : "";
   const itemMap = col === "spklu" || col === "bengkel" ? safeUrl(it.mapUrl) : "";
   const link = itemUrl ? `<a class="btn btn-ghost btn-sm" href="${esc(itemUrl)}" target="_blank" rel="noopener">${esc(t("common.open"))}</a>` : "";
   const map = itemMap ? `<a class="btn btn-ghost btn-sm" href="${esc(itemMap)}" target="_blank" rel="noopener">${esc(t("common.map"))}</a>` : "";
@@ -2382,6 +2404,7 @@ const BULK_FIELDS = {
   spklu: ["operator", "area", "power", "connector", "hours", "status", "publishAt", "featured"],
   bengkel: ["type", "brand", "area", "hours", "status", "publishAt", "featured"],
   berita: ["source", "status", "publishAt", "featured"],
+  komunitas: ["source", "status", "publishAt", "featured"],
   halaman: ["showInFooter", "footerSlot", "status", "publishAt"],
   artikel: ["category", "author", "status", "publishAt", "featured"],
 };
@@ -6779,6 +6802,9 @@ async function deleteUserById(id) {
 let aiState = null;
 /* Formulir kunci sedang dibuka meski kunci lama masih terpasang ("Ganti kunci"). */
 let aiEditing = false;
+/* Auto-update katalog: pengaturan + status putaran terakhir, dari /api/pembaruan. */
+let pembaruan = null;
+let pembaruanTimer = null;
 
 async function loadAi(opts) {
   const root = $("ai-root");
@@ -6797,6 +6823,7 @@ async function loadAi(opts) {
     return;
   }
   renderAi();
+  loadPembaruan();
 }
 
 /* Empat karakter terakhir saja yang nyata; sisanya titik. Panjang titiknya
@@ -6926,12 +6953,15 @@ function renderAi() {
           </div>`}
     </section>
     ${terpasang ? aiModelHtml() : ""}
-    ${terpasang ? aiBalanceHtml() : ""}`;
+    ${terpasang ? aiBalanceHtml() : ""}
+    <section class="panel form-section" id="pembaruan-root"></section>`;
 
   if (showForm) {
     const input = $("ai-key");
     if (input && aiEditing) setTimeout(() => input.focus(), 40);
   }
+
+  renderPembaruan();
 }
 
 async function saveAiKey(form) {
@@ -7013,6 +7043,178 @@ async function removeAiKey() {
   } catch (err) {
     toast(err.message, "error");
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * 25b2. Auto-update katalog
+ *
+ * Pengaturan dan kendali riset harian otomatis. Bagian ini menggambar sendiri
+ * ke `#pembaruan-root` yang disediakan `renderAi()`, dan memakai `/api/pembaruan`
+ * — bukan `/api/ai/pengaturan` — karena nilainya bukan kunci API melainkan
+ * pengaturan terpisah yang tersimpan di `data/pembaruan-kendaraan.json`.
+ * ------------------------------------------------------------------ */
+
+async function loadPembaruan() {
+  try {
+    const res = await fetch("/api/pembaruan");
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    pembaruan = data;
+  } catch {
+    pembaruan = null;
+  }
+  renderPembaruan();
+}
+
+async function simpanPembaruan(parsial) {
+  try {
+    const res = await fetch("/api/pembaruan", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsial),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    pembaruan = data;
+    renderPembaruan();
+    toast(t("pembaruan.saved"), "success");
+  } catch (err) {
+    toast(err.message, "error");
+    loadPembaruan();
+  }
+}
+
+async function jalankanPembaruanSekarang() {
+  try {
+    const res = await fetch("/api/pembaruan", { method: "POST" });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    toast(t("pembaruan.running"), "success");
+    pembaruan = { ...(pembaruan || {}), jalan: true };
+    renderPembaruan();
+    mulaiPollPembaruan();
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+/** Menanyakan kabar ke server selama putaran masih berjalan. */
+function mulaiPollPembaruan() {
+  if (pembaruanTimer) return;
+  pembaruanTimer = setInterval(async () => {
+    const masihJalan = pembaruan && pembaruan.jalan;
+    if (!masihJalan) {
+      clearInterval(pembaruanTimer);
+      pembaruanTimer = null;
+      return;
+    }
+    try {
+      const res = await fetch("/api/pembaruan");
+      const data = await res.json();
+      if (data && data.ok) {
+        pembaruan = data;
+        renderPembaruan();
+      }
+    } catch {
+      /* gangguan jaringan — coba lagi di giliran berikutnya */
+    }
+  }, 4000);
+}
+
+function renderPembaruan() {
+  const root = $("pembaruan-root");
+  if (!root) return;
+
+  if (!pembaruan) {
+    root.innerHTML = `<div class="skeleton"></div>`;
+    return;
+  }
+
+  const p = pembaruan.pengaturan;
+  const terakhir = pembaruan.terakhir || {};
+  const siap = !!pembaruan.siap;
+
+  const statusHtml = pembaruan.jalan
+    ? `<p class="ai-note ai-note-info">${esc(t("pembaruan.running"))}</p>`
+    : terakhir.tanggal
+      ? `<p class="hint">${esc(
+          t("pembaruan.lastSummary", {
+            diproses: terakhir.diproses || 0,
+            diubah: terakhir.diubah || 0,
+            gagal: terakhir.gagal || 0,
+            biaya: formatRupiahKecil(terakhir.biayaRupiah || 0),
+          })
+        )}</p>`
+      : `<p class="hint">${esc(t("pembaruan.lastEmpty"))}</p>`;
+
+  root.innerHTML = `
+    <div class="form-section-head">
+      <h2>${esc(t("pembaruan.title"))}</h2>
+      <p>${esc(t("pembaruan.desc"))}</p>
+    </div>
+
+    <div class="field-grid">
+      <div class="field">
+        <label class="switch-row">
+          <input type="checkbox" id="pembaruan-aktif"${p.aktif ? " checked" : ""} />
+          <span class="switch" aria-hidden="true"></span>
+          <span>${esc(t("pembaruan.aktif"))}</span>
+        </label>
+        <div class="hint">${esc(t("pembaruan.aktif.hint"))}</div>
+      </div>
+      <div class="field">
+        <label class="switch-row">
+          <input type="checkbox" id="pembaruan-basi"${p.hanyaBasi ? " checked" : ""} />
+          <span class="switch" aria-hidden="true"></span>
+          <span>${esc(t("pembaruan.basi"))}</span>
+        </label>
+        <div class="hint">${esc(t("pembaruan.basi.hint"))}</div>
+      </div>
+      <div class="field">
+        <label for="pembaruan-batas">${esc(t("pembaruan.batas"))}</label>
+        <input type="number" min="1" max="50" step="1" id="pembaruan-batas" value="${esc(p.batasHarian)}" />
+        <div class="hint">${esc(t("pembaruan.batas.hint"))}</div>
+      </div>
+      <div class="field">
+        <label for="pembaruan-jam">${esc(t("pembaruan.jam"))}</label>
+        <input type="number" min="0" max="23" step="1" id="pembaruan-jam" value="${esc(p.mulaiJam)}" />
+        <div class="hint">${esc(t("pembaruan.jam.hint"))}</div>
+      </div>
+      <div class="field">
+        <label for="pembaruan-yakin">${esc(t("pembaruan.yakin"))}</label>
+        <select id="pembaruan-yakin">${["tinggi", "sedang", "rendah"]
+          .map(
+            (k) => `<option value="${k}"${p.keyakinanMin === k ? " selected" : ""}>${esc(t(`ai.conf.${k}`))}</option>`
+          )
+          .join("")}</select>
+        <div class="hint">${esc(t("pembaruan.yakin.hint"))}</div>
+      </div>
+    </div>
+
+    <div class="ai-pembaruan-status">
+      <h3>${esc(t("pembaruan.lastTitle"))}</h3>
+      ${statusHtml}
+      <p class="hint">${esc(t("pembaruan.kandidat", { n: pembaruan.kandidat || 0 }))}</p>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" id="pembaruan-jalan"${siap ? "" : " disabled"}>${esc(t("pembaruan.jalan"))}</button>
+      ${siap ? "" : `<p class="hint">${esc(t("pembaruan.tanpaKunci"))}</p>`}
+    </div>`;
+
+  const bind = (id, fn) => {
+    const el = $(id);
+    if (el) el.addEventListener("change", fn);
+  };
+  bind("pembaruan-aktif", (e) => simpanPembaruan({ aktif: !!e.target.checked }));
+  bind("pembaruan-basi", (e) => simpanPembaruan({ hanyaBasi: !!e.target.checked }));
+  bind("pembaruan-batas", (e) => simpanPembaruan({ batasHarian: e.target.value }));
+  bind("pembaruan-jam", (e) => simpanPembaruan({ mulaiJam: e.target.value }));
+  bind("pembaruan-yakin", (e) => simpanPembaruan({ keyakinanMin: e.target.value }));
+  const btn = $("pembaruan-jalan");
+  if (btn) btn.addEventListener("click", jalankanPembaruanSekarang);
+
+  if (pembaruan.jalan) mulaiPollPembaruan();
 }
 
 /* ------------------------------------------------------------------ *

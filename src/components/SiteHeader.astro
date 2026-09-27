@@ -1,7 +1,9 @@
 ---
 import ThemeToggle from "./ThemeToggle.astro";
+import LanguageToggle from "./LanguageToggle.astro";
 import LogoMark from "./LogoMark.astro";
 import { safeUrl } from "../lib/url.js";
+import { makePubT } from "../lib/i18n/pub.js";
 
 /**
  * Header dipakai beranda dan halaman detail. `base` diisi "/" dari halaman
@@ -16,6 +18,8 @@ interface Props {
 
 const { site, base = "", active = "" } = Astro.props;
 
+const t = makePubT(Astro.locals?.pubLang);
+
 const brand = site.brandText || "EVKita";
 const suffix = site.brandSuffix || "";
 /**
@@ -29,14 +33,13 @@ const useInitials = typed !== "" && typed.toUpperCase() !== "EV";
 const mark = typed.slice(0, 3);
 
 const links = [
-  { id: "beranda", label: "Beranda", href: base || "/", mode: "", note: "Ringkasan katalog" },
-  { id: "mobil", label: "Mobil Listrik", href: `${base}#daftar`, mode: "mobil", note: "Spesifikasi & harga" },
-  site.showMotor ? { id: "motor", label: "Motor Listrik", href: `${base}#daftar`, mode: "motor", note: "Roda dua listrik" } : null,
-  site.showSpklu ? { id: "spklu", label: "SPKLU", href: `${base}#spklu`, mode: "", note: "Lokasi pengisian" } : null,
-  site.showBengkel ? { id: "bengkel", label: "Bengkel", href: `${base}#bengkel`, mode: "", note: "Servis & perawatan" } : null,
-  site.showBerita ? { id: "berita", label: "Berita", href: `${base}#berita`, mode: "", note: "Kabar terbaru" } : null,
-  { id: "artikel", label: "Artikel", href: `${base}/artikel`, mode: "", note: "Panduan & ulasan" },
-  site.showAbout ? { id: "tentang", label: "Tentang", href: `${base}#tentang`, mode: "", note: "Tentang situs ini" } : null,
+  { id: "beranda", label: t("pub.nav.beranda"), href: base || "/", mode: "", note: t("pub.nav.beranda.note") },
+  { id: "mobil", label: t("pub.nav.mobil"), href: `${base}#daftar`, mode: "mobil", note: t("pub.nav.mobil.note") },
+  site.showSpklu ? { id: "spklu", label: t("pub.nav.spklu"), href: `${base}#spklu`, mode: "", note: t("pub.nav.spklu.note") } : null,
+  site.showBengkel ? { id: "bengkel", label: t("pub.nav.bengkel"), href: `${base}#bengkel`, mode: "", note: t("pub.nav.bengkel.note") } : null,
+  site.showBerita ? { id: "berita", label: t("pub.nav.berita"), href: `${base}#berita`, mode: "", note: t("pub.nav.berita.note") } : null,
+  { id: "artikel", label: t("pub.nav.artikel"), href: `${base}/artikel`, mode: "", note: t("pub.nav.artikel.note") },
+  site.showAbout ? { id: "tentang", label: t("pub.nav.tentang"), href: `${base}#tentang`, mode: "", note: t("pub.nav.tentang.note") } : null,
 ].filter(Boolean) as { id: string; label: string; href: string; mode: string; note: string }[];
 
 /**
@@ -55,7 +58,7 @@ const ICONS: Record<string, string> = {
 };
 ---
 
-<a class="skip-link" href="#konten">Langsung ke konten</a>
+<a class="skip-link" href="#konten">{t("pub.skip")}</a>
 
 <header class="masthead" id="masthead">
   <div class="container masthead-inner">
@@ -70,7 +73,7 @@ const ICONS: Record<string, string> = {
       <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
     </a>
 
-    <nav class="main-nav" aria-label="Navigasi utama">
+    <nav class="main-nav" aria-label={t("pub.nav.main")}>
       {links.map((l) => (
         <a
           href={l.href}
@@ -81,6 +84,7 @@ const ICONS: Record<string, string> = {
     </nav>
 
     <div class="masthead-actions">
+      <span class="header-theme"><LanguageToggle /></span>
       <span class="header-theme"><ThemeToggle /></span>
 
       <button
@@ -89,7 +93,7 @@ const ICONS: Record<string, string> = {
         type="button"
         aria-expanded="false"
         aria-controls="navDrawer"
-        aria-label="Buka menu navigasi"
+        aria-label={t("pub.nav.open")}
       >
         <span class="nav-toggle-bars" aria-hidden="true">
           <span class="nav-toggle-bar"></span>
@@ -110,7 +114,7 @@ const ICONS: Record<string, string> = {
 -->
 <div class="nav-backdrop" id="navBackdrop"></div>
 
-<aside class="nav-drawer" id="navDrawer" aria-label="Menu navigasi" aria-hidden="true">
+<aside class="nav-drawer" id="navDrawer" aria-label={t("pub.nav.menu")} aria-hidden="true">
   <div class="nav-drawer-head">
     <span class="nav-drawer-brand">
       {site.logoImage ? (
@@ -122,7 +126,7 @@ const ICONS: Record<string, string> = {
       )}
       <span class="logo-text">{brand}{suffix ? <em>{suffix}</em> : null}</span>
     </span>
-    <button class="nav-close" id="navClose" type="button" aria-label="Tutup menu navigasi">
+    <button class="nav-close" id="navClose" type="button" aria-label={t("pub.nav.close")}>
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
         <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m6 6 12 12M18 6 6 18" />
       </svg>
@@ -156,6 +160,7 @@ const ICONS: Record<string, string> = {
   </nav>
 
   <div class="nav-drawer-foot">
+    <LanguageToggle />
     <ThemeToggle />
   </div>
 </aside>

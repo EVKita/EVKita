@@ -45,7 +45,7 @@ const {
   ogImage = "",
   ogType = "website",
   bodyClass = "",
-  lang = "id",
+  lang = Astro.locals?.pubLang || "id",
   noindex = false,
 } = Astro.props;
 
@@ -160,7 +160,7 @@ const tagPublik = !!site && !accentOnly;
     {keywords ? <meta name="keywords" content={keywords} /> : null}
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:locale" content="id_ID" />
+    <meta property="og:locale" content={lang === "en" ? "en_US" : "id_ID"} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}

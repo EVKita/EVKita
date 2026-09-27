@@ -1,0 +1,44 @@
+---
+/**
+ * Pemilih bahasa situs publik: Indonesia ↔ Inggris.
+ *
+ * Bentuknya meniru tombol tema di sebelahnya (pill yang sama), tapi isinya
+ * sepasang kode bahasa "IND/ENG". Kode yang sedang aktif ditandai; mengeklik
+ * yang tidak aktif menulis cookie lalu memuat ulang halaman, supaya server
+ * merender ulang seluruh teks dalam bahasa yang baru (SEO tetap utuh).
+ */
+import { normalizePubLocale, PUB_COOKIE } from "../lib/i18n/pub.js";
+
+const current = normalizePubLocale(Astro.locals?.pubLang);
+const label = current === "id" ? "Bahasa: Indonesia" : "Language: English";
+---
+<button
+  id="langToggle"
+  class="lang-toggle"
+  type="button"
+  aria-label={label}
+  title={label}
+  data-current={current}
+>
+  <span class="lg-opt" data-lang="id" data-on={current === "id" ? "1" : undefined}>IND</span>
+  <span class="lg-sep" aria-hidden="true">/</span>
+  <span class="lg-opt" data-lang="en" data-on={current === "en" ? "1" : undefined}>ENG</span>
+</button>
+
+<script>
+  (function () {
+    var btn = document.getElementById("langToggle");
+    if (!btn) return;
+    var COOKIE = "evkita_pub_lang";
+    btn.addEventListener("click", function (e) {
+      var target = e.target;
+      var opt = target && target.closest ? target.closest("[data-lang]") : null;
+      if (!opt) return;
+      var next = opt.getAttribute("data-lang") === "en" ? "en" : "id";
+      var now = btn.getAttribute("data-current");
+      if (next === now) return;
+      document.cookie = COOKIE + "=" + next + "; path=/; max-age=31536000; SameSite=Lax";
+      location.reload();
+    });
+  })();
+</script>

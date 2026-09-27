@@ -1,5 +1,8 @@
 import { esc, safeUrl, priceLabel, vehicleHref } from "./card-html.js";
 import { defaultColor, carSVG } from "./cars-ui.js";
+import { makePubT } from "./i18n/pub.js";
+
+const tId = makePubT("id");
 
 /**
  * Tabel perbandingan spesifikasi — satu sumber untuk server dan browser.
@@ -24,22 +27,22 @@ export const MAX_COMPARE = 3;
  * kalau tak satu pun kendaraan punya nilainya, supaya tabel tidak berlubang.
  */
 export const COMPARE_ROWS = [
-  { key: "price", label: "Harga", text: (c) => priceLabel(c), num: (c) => c.price, best: "min" },
-  { key: "rangeKm", label: "Jarak tempuh", text: (c) => (c.rangeKm != null ? c.rangeKm + " km" : ""), num: (c) => c.rangeKm, best: "max" },
-  { key: "rangeStandard", label: "Standar uji", text: (c) => c.rangeStandard || "" },
-  { key: "batteryKwh", label: "Baterai", text: (c) => (c.batteryKwh != null ? c.batteryKwh + " kWh" : ""), num: (c) => c.batteryKwh, best: "max" },
-  { key: "powerHp", label: "Tenaga", text: (c) => (c.powerHp != null ? c.powerHp + " hp" : ""), num: (c) => c.powerHp, best: "max" },
-  { key: "torqueNm", label: "Torsi", text: (c) => (c.torqueNm != null ? c.torqueNm + " Nm" : ""), num: (c) => c.torqueNm, best: "max" },
-  { key: "accelSec", label: "0–100 km/j", text: (c) => (c.accelSec != null ? c.accelSec + " dtk" : ""), num: (c) => c.accelSec, best: "min" },
-  { key: "topSpeedKph", label: "Kecepatan puncak", text: (c) => (c.topSpeedKph != null ? c.topSpeedKph + " km/j" : ""), num: (c) => c.topSpeedKph, best: "max" },
-  { key: "chargeDcKw", label: "Isi cepat DC", text: (c) => (c.chargeDcKw != null ? c.chargeDcKw + " kW" : ""), num: (c) => c.chargeDcKw, best: "max" },
-  { key: "chargeAcKw", label: "Isi AC", text: (c) => (c.chargeAcKw != null ? c.chargeAcKw + " kW" : ""), num: (c) => c.chargeAcKw, best: "max" },
-  { key: "chargeTime", label: "Waktu isi", text: (c) => c.chargeTime || "" },
-  { key: "driveType", label: "Penggerak", text: (c) => c.driveType || "" },
-  { key: "seats", label: "Kursi", text: (c) => (c.seats != null ? c.seats + " kursi" : "") },
-  { key: "year", label: "Tahun", text: (c) => (c.year != null ? String(c.year) : "") },
-  { key: "warranty", label: "Garansi", text: (c) => c.warranty || "" },
-  { key: "variantNames", label: "Varian", text: (c) => (c.variantNames || []).join(", ") },
+  { key: "price", labelKey: "pub.cmp.harga", text: (c) => priceLabel(c), num: (c) => c.price, best: "min" },
+  { key: "rangeKm", labelKey: "pub.cmp.range", text: (c) => (c.rangeKm != null ? c.rangeKm + " km" : ""), num: (c) => c.rangeKm, best: "max" },
+  { key: "rangeStandard", labelKey: "pub.cmp.standard", text: (c) => c.rangeStandard || "" },
+  { key: "batteryKwh", labelKey: "pub.cmp.battery", text: (c) => (c.batteryKwh != null ? c.batteryKwh + " kWh" : ""), num: (c) => c.batteryKwh, best: "max" },
+  { key: "powerHp", labelKey: "pub.cmp.power", text: (c) => (c.powerHp != null ? c.powerHp + " hp" : ""), num: (c) => c.powerHp, best: "max" },
+  { key: "torqueNm", labelKey: "pub.cmp.torque", text: (c) => (c.torqueNm != null ? c.torqueNm + " Nm" : ""), num: (c) => c.torqueNm, best: "max" },
+  { key: "accelSec", labelKey: "pub.cmp.accel", text: (c, t) => (c.accelSec != null ? c.accelSec + " " + (t ? t("pub.unit.dtk") : "dtk") : ""), num: (c) => c.accelSec, best: "min" },
+  { key: "topSpeedKph", labelKey: "pub.cmp.topSpeed", text: (c, t) => (c.topSpeedKph != null ? c.topSpeedKph + " " + (t ? t("pub.unit.kmj") : "km/j") : ""), num: (c) => c.topSpeedKph, best: "max" },
+  { key: "chargeDcKw", labelKey: "pub.cmp.dc", text: (c) => (c.chargeDcKw != null ? c.chargeDcKw + " kW" : ""), num: (c) => c.chargeDcKw, best: "max" },
+  { key: "chargeAcKw", labelKey: "pub.cmp.ac", text: (c) => (c.chargeAcKw != null ? c.chargeAcKw + " kW" : ""), num: (c) => c.chargeAcKw, best: "max" },
+  { key: "chargeTime", labelKey: "pub.cmp.time", text: (c) => c.chargeTime || "" },
+  { key: "driveType", labelKey: "pub.cmp.drive", text: (c) => c.driveType || "" },
+  { key: "seats", labelKey: "pub.cmp.seats", text: (c, t) => (c.seats != null ? c.seats + " " + (t ? t("pub.unit.kursi") : "kursi") : "") },
+  { key: "year", labelKey: "pub.cmp.year", text: (c) => (c.year != null ? String(c.year) : "") },
+  { key: "warranty", labelKey: "pub.cmp.warranty", text: (c) => c.warranty || "" },
+  { key: "variantNames", labelKey: "pub.cmp.variants", text: (c) => (c.variantNames || []).join(", ") },
 ];
 
 /**
@@ -69,12 +72,12 @@ export function bestIndex(row, items) {
  * dimaksud lebih mahal atau lebih murah.
  */
 const VERDICT_KEYS = [
-  { key: "rangeKm", phrase: "jarak tempuhnya lebih jauh" },
-  { key: "price", phrase: "harganya lebih murah" },
-  { key: "batteryKwh", phrase: "baterainya lebih besar" },
-  { key: "powerHp", phrase: "tenaganya lebih besar" },
-  { key: "accelSec", phrase: "akselerasinya lebih cepat" },
-  { key: "chargeDcKw", phrase: "pengisian DC-nya lebih cepat" },
+  { key: "rangeKm", phraseKey: "pub.cmp.phrase.range" },
+  { key: "price", phraseKey: "pub.cmp.phrase.price" },
+  { key: "batteryKwh", phraseKey: "pub.cmp.phrase.battery" },
+  { key: "powerHp", phraseKey: "pub.cmp.phrase.power" },
+  { key: "accelSec", phraseKey: "pub.cmp.phrase.accel" },
+  { key: "chargeDcKw", phraseKey: "pub.cmp.phrase.dc" },
 ];
 
 /**
@@ -85,21 +88,23 @@ const VERDICT_KEYS = [
  * @param {any[]} items
  * @returns {{ key: string, label: string, winner: any, value: string }[]}
  */
-export function compareVerdicts(items) {
-  return VERDICT_KEYS.map(({ key, phrase }) => {
+export function compareVerdicts(items, t) {
+  const tt = t || tId;
+  return VERDICT_KEYS.map(({ key, phraseKey }) => {
     const row = COMPARE_ROWS.find((r) => r.key === key);
     if (!row) return null;
     const i = bestIndex(row, items);
     if (i < 0) return null;
-    return { key, label: row.label, phrase, winner: items[i], value: row.text(items[i]) };
+    return { key, label: tt(row.labelKey), phrase: tt(phraseKey), winner: items[i], value: row.text(items[i], tt) };
   }).filter(Boolean);
 }
 
 /** "A", "A dan B", "A, B, dan C" — koma seri seperti lazimnya Bahasa Indonesia. */
-export function joinPhrase(parts) {
+export function joinPhrase(parts, t) {
+  const tt = t || tId;
   if (parts.length <= 1) return parts[0] || "";
-  if (parts.length === 2) return `${parts[0]} dan ${parts[1]}`;
-  return `${parts.slice(0, -1).join(", ")}, dan ${parts[parts.length - 1]}`;
+  if (parts.length === 2) return `${parts[0]} ${tt("pub.dan")} ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, ${tt("pub.dan")} ${parts[parts.length - 1]}`;
 }
 
 /**
@@ -114,7 +119,8 @@ export function joinPhrase(parts) {
  * @param {number} [perWinner] keunggulan terbanyak yang disebut per kendaraan
  * @returns {string} tanpa titik di akhir; pemanggil yang menutup kalimatnya
  */
-export function verdictSentence(verdicts, perWinner = 2) {
+export function verdictSentence(verdicts, perWinner = 2, t) {
+  const tt = t || tId;
   const order = [];
   const byWinner = new Map();
   for (const v of verdicts) {
@@ -131,7 +137,7 @@ export function verdictSentence(verdicts, perWinner = 2) {
         .get(winner.id)
         .slice(0, perWinner)
         .map((v) => `${v.phrase}${v.value ? ` (${v.value})` : ""}`);
-      return `${winner.brand} ${winner.name} ${joinPhrase(parts)}`;
+      return `${winner.brand} ${winner.name} ${joinPhrase(parts, tt)}`;
     })
     .join("; ");
 }
@@ -151,6 +157,7 @@ function headVisual(c) {
  */
 export function compareTableHTML(items, opts) {
   const linkHead = !!(opts && opts.linkHead);
+  const t = (opts && opts.t) || tId;
 
   const head = items
     .map((c) => {
@@ -165,17 +172,17 @@ export function compareTableHTML(items, opts) {
     .join("");
 
   const rows = COMPARE_ROWS.map((row) => {
-    const texts = items.map((c) => row.text(c));
+    const texts = items.map((c) => row.text(c, t));
     if (!texts.some((t) => t)) return "";
     const winner = bestIndex(row, items);
     const cells = texts
       .map((t, i) => `<td class="${i === winner ? "is-best" : ""}">${t ? esc(t) : "—"}</td>`)
       .join("");
-    return `<tr><th scope="row">${esc(row.label)}</th>${cells}</tr>`;
+    return `<tr><th scope="row">${esc(t(row.labelKey))}</th>${cells}</tr>`;
   }).join("");
 
   return `<div class="compare-scroll"><table class="compare-table">
-    <thead><tr><th scope="col"><span class="sr-only">Spesifikasi</span></th>${head}</tr></thead>
+    <thead><tr><th scope="col"><span class="sr-only">${esc(t("pub.cmp.specs"))}</span></th>${head}</tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
 }

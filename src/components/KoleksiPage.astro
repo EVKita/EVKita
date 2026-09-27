@@ -12,6 +12,7 @@ import {
   koleksiDescription,
 } from "../lib/taxonomy.js";
 import { siteOrigin, canonicalUrl, absoluteUrl } from "../lib/site-url";
+import { makePubT } from "../lib/i18n/pub.js";
 
 /**
  * Halaman kelompok katalog — dipakai `/merek/*` DAN `/tipe/*`.
@@ -43,13 +44,15 @@ interface Props {
 
 const { site, jenis, pool, mode, group = null, media = {} } = Astro.props;
 
+const t = makePubT(Astro.locals?.pubLang);
+
 const isMerek = jenis === "merek";
 const field = isMerek ? "brand" : "bodyType";
 const lawan = isMerek ? "tipe" : "merek";
 
 const basis = `/${jenis}`;
-const judulIndeks = isMerek ? "Merek kendaraan listrik" : "Tipe bodi kendaraan listrik";
-const judulLawan = isMerek ? "Tipe bodi" : "Merek";
+const judulIndeks = isMerek ? t("pub.koleksi.merek") : t("pub.koleksi.tipe");
+const judulLawan = isMerek ? t("pub.koleksi.tipeLawan") : t("pub.koleksi.merekLawan");
 
 const groups = groupByField(pool, field);
 const items = group ? defaultSort(group.items) : [];
@@ -67,38 +70,40 @@ const silang = group ? groupByField(group.items, isMerek ? "bodyType" : "brand")
 /** Kelompok lain, tanpa yang sedang dibuka. Dibatasi supaya tidak jadi dinding. */
 const tetangga = group ? groups.filter((g) => g.slug !== group.slug).slice(0, 12) : [];
 
-const gridHtml = items.map((c: any) => cardHTML(c, { linkable: true, media })).join("");
+const gridHtml = items.map((c: any) => cardHTML(c, { linkable: true, media, t })).join("");
 
 const brand = site.brandText || "EVKita";
 const origin = siteOrigin(Astro.url);
 const canonical = canonicalUrl(Astro.url);
 
+const jenisKata = isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe");
+
 const h1 =
   mode === "kelompok" && group
-    ? koleksiTitle(jenis, group.label, s)
+    ? koleksiTitle(jenis, group.label, s, t)
     : mode === "indeks"
       ? judulIndeks
-      : "Halaman tidak ditemukan";
+      : t("pub.koleksi.notFound");
 
 const lead =
   mode === "kelompok" && group
-    ? koleksiLead(jenis, group.label, group.items)
+    ? koleksiLead(jenis, group.label, group.items, t)
     : mode === "indeks"
-      ? `${countPhrase(s)} yang dijual di Indonesia, dikelompokkan ke dalam ${groups.length} ${jenis === "merek" ? "merek" : "tipe bodi"}.`
+      ? t("pub.koleksi.indeksLead", { count: countPhrase(s, t), n: groups.length, jenis: jenisKata })
       : "";
 
 const pageTitle =
   mode === "kelompok" && group
-    ? `${h1} — Harga & Spesifikasi | ${brand}`
+    ? `${h1} — ${t("pub.koleksi.hargaSpesifikasi")} | ${brand}`
     : mode === "indeks"
-      ? `${judulIndeks} di Indonesia — ${brand}`
-      : `Halaman tidak ditemukan — ${brand}`;
+      ? `${judulIndeks} ${t("pub.koleksi.diIndonesia")} — ${brand}`
+      : `${t("pub.koleksi.notFound")} — ${brand}`;
 
 const metaDesc =
   mode === "kelompok" && group
-    ? koleksiDescription(jenis, group.label, group.items)
+    ? koleksiDescription(jenis, group.label, group.items, t)
     : mode === "indeks"
-      ? `Seluruh ${jenis === "merek" ? "merek" : "tipe bodi"} kendaraan listrik yang dijual di Indonesia, lengkap dengan jumlah model dan rentang harganya.`
+      ? t("pub.koleksi.metaIndeks", { jenis: jenisKata })
       : "Halaman yang kamu cari tidak tersedia.";
 
 const jsonLd =
@@ -148,7 +153,7 @@ const jsonLd =
 /** Ringkasan satu baris untuk tiap kartu kelompok di halaman indeks. */
 const ringkasan = (g: { items: any[] }) => {
   const r = summarize(g.items);
-  const bagian = [countPhrase(r)];
+  const bagian = [countPhrase(r, t)];
   if (r.hargaMin !== null) {
     bagian.push(r.hargaMin === r.hargaMaks ? rupiah(r.hargaMin) : `${rupiah(r.hargaMin)}–${rupiah(r.hargaMaks)}`);
   }
@@ -165,17 +170,16 @@ const ringkasan = (g: { items: any[] }) => {
   {mode === "hilang" ? (
     <main class="container notfound" id="konten">
       <p class="notfound-code">404</p>
-      <h1>{isMerek ? "Merek itu tidak ada di katalog" : "Tipe bodi itu tidak ada di katalog"}</h1>
+      <h1>{isMerek ? t("pub.koleksi.notFoundMerekTitle") : t("pub.koleksi.notFoundTipeTitle")}</h1>
       <p class="notfound-text">
-        Alamat ini menyebut {isMerek ? "merek" : "tipe bodi"} yang tidak dipakai satu kendaraan pun.
-        Daftar lengkapnya ada di halaman berikut.
+        {isMerek ? t("pub.koleksi.notFoundMerekText") : t("pub.koleksi.notFoundTipeText")}
       </p>
-      <a class="btn btn-primary" href={basis}>Lihat semua {isMerek ? "merek" : "tipe bodi"}</a>
+      <a class="btn btn-primary" href={basis}>{t("pub.koleksi.lihatSemua", { jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })}</a>
     </main>
   ) : (
     <main class="container katalog" id="konten">
-      <nav class="breadcrumb" aria-label="Remah roti">
-        <a href="/">Beranda</a>
+      <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+        <a href="/">{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         {mode === "indeks" ? (
           <span class="breadcrumb-current">{judulIndeks}</span>
@@ -208,7 +212,7 @@ const ringkasan = (g: { items: any[] }) => {
 
           {silang.length ? (
             <section class="koleksi-section">
-              <h2>{judulLawan} di halaman ini</h2>
+              <h2>{t("pub.koleksi.diHalaman", { judul: judulLawan })}</h2>
               <div class="tag-row">
                 {silang.map((g) => (
                   <a class="tag-pill" href={`/${lawan}/${g.slug}`}>{g.label} ({g.items.length})</a>
@@ -219,24 +223,24 @@ const ringkasan = (g: { items: any[] }) => {
 
           {tetangga.length ? (
             <section class="koleksi-section">
-              <h2>{isMerek ? "Merek lain" : "Tipe bodi lain"}</h2>
+              <h2>{isMerek ? t("pub.koleksi.merekLain") : t("pub.koleksi.tipeLain")}</h2>
               <div class="tag-row">
                 {tetangga.map((g) => (
                   <a class="tag-pill" href={`${basis}/${g.slug}`}>{g.label} ({g.items.length})</a>
                 ))}
               </div>
               {groups.length - 1 > tetangga.length ? (
-                <p class="katalog-lead"><a href={basis}>Lihat seluruh {groups.length} {isMerek ? "merek" : "tipe bodi"} →</a></p>
+                <p class="katalog-lead"><a href={basis}>{t("pub.koleksi.lihatSeluruh", { n: groups.length, jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })} →</a></p>
               ) : null}
             </section>
           ) : null}
 
           <section class="koleksi-section">
-            <h2>Lanjutkan menjelajah</h2>
+            <h2>{t("pub.koleksi.lanjut")}</h2>
             <div class="tag-row">
-              <a class="tag-pill" href="/katalog">Katalog lengkap</a>
-              <a class="tag-pill" href={basis}>Semua {isMerek ? "merek" : "tipe bodi"}</a>
-              <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">Kalkulator hemat</a>
+              <a class="tag-pill" href="/katalog">{t("pub.koleksi.katalogLengkap")}</a>
+              <a class="tag-pill" href={basis}>{t("pub.koleksi.semua", { jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })}</a>
+              <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">{t("pub.koleksi.kalkulator")}</a>
             </div>
           </section>
         </>

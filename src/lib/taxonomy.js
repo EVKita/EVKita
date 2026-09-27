@@ -1,5 +1,8 @@
 import { rupiah } from "./card-html.js";
 import { hargaWajar } from "./vehicle-spec.js";
+import { makePubT } from "./i18n/pub.js";
+
+const tId = makePubT("id");
 
 /**
  * Pengelompokan katalog menurut merek dan tipe bodi.
@@ -99,18 +102,20 @@ export function summarize(items) {
 }
 
 /** "7 mobil listrik", "3 mobil listrik dan 2 motor listrik", "12 motor listrik". */
-export function countPhrase(s) {
+export function countPhrase(s, t) {
+  const tt = t || tId;
   const bagian = [];
-  if (s.mobil) bagian.push(`${s.mobil} mobil listrik`);
-  if (s.motor) bagian.push(`${s.motor} motor listrik`);
-  if (!bagian.length) return "0 kendaraan listrik";
-  return bagian.join(" dan ");
+  if (s.mobil) bagian.push(`${s.mobil} ${tt("pub.tax.mobil")}`);
+  if (s.motor) bagian.push(`${s.motor} ${tt("pub.tax.motor")}`);
+  if (!bagian.length) return `0 ${tt("pub.tax.kendaraan")}`;
+  return bagian.join(` ${tt("pub.dan")} `);
 }
 
 /** Kata benda untuk judul: "Mobil listrik", "Motor listrik", "Kendaraan listrik". */
-export function kindNoun(s) {
-  if (s.mobil && s.motor) return "Kendaraan listrik";
-  return s.motor ? "Motor listrik" : "Mobil listrik";
+export function kindNoun(s, t) {
+  const tt = t || tId;
+  if (s.mobil && s.motor) return tt("pub.tax.titleKendaraan");
+  return s.motor ? tt("pub.tax.titleMotor") : tt("pub.tax.titleMobil");
 }
 
 /**
@@ -120,8 +125,10 @@ export function kindNoun(s) {
  * terbaca seperti nama model, sementara "Mobil listrik tipe Crossover" jelas
  * menyebut golongan.
  */
-export function koleksiTitle(jenis, label, s) {
-  return jenis === "tipe" ? `${kindNoun(s)} tipe ${label}` : `${kindNoun(s)} ${label}`;
+export function koleksiTitle(jenis, label, s, t) {
+  const tt = t || tId;
+  const noun = kindNoun(s, tt);
+  return jenis === "tipe" ? tt("pub.tax.titleTipe", { noun, label }) : tt("pub.tax.titleMerek", { noun, label });
 }
 
 /**
@@ -137,52 +144,55 @@ export function koleksiTitle(jenis, label, s) {
  * @param {any[]} items
  * @returns {string} satu kalimat lengkap dengan titiknya
  */
-export function koleksiLead(jenis, label, items) {
+export function koleksiLead(jenis, label, items, t) {
+  const tt = t || tId;
   const s = summarize(items);
   if (!s.total) return "";
 
+  const count = countPhrase(s, tt);
   const pokok =
     jenis === "tipe"
-      ? `${countPhrase(s)} bertipe ${label} yang dijual di Indonesia`
-      : `${countPhrase(s)} ${label} yang dijual di Indonesia`;
+      ? tt("pub.tax.pokokTipe", { count, label })
+      : tt("pub.tax.pokokMerek", { count, label });
 
   const klausa = [];
 
   // Di halaman tipe bodi, "dari 6 merek" adalah informasi; di halaman merek ia
   // hanya mengulang judulnya sendiri.
-  if (jenis === "tipe" && s.merek > 1) klausa.push(`dari ${s.merek} merek`);
-  if (jenis === "merek" && s.tipe > 1) klausa.push(`dalam ${s.tipe} tipe bodi`);
+  if (jenis === "tipe" && s.merek > 1) klausa.push(tt("pub.tax.dariMerek", { n: s.merek }));
+  if (jenis === "merek" && s.tipe > 1) klausa.push(tt("pub.tax.dalamTipe", { n: s.tipe }));
 
   if (s.hargaMin !== null) {
-    const awalan = s.hargaLengkap ? "harganya" : "harga yang tercatat";
-    klausa.push(
+    const nilai =
       s.hargaMin === s.hargaMaks
-        ? `${awalan} ${rupiah(s.hargaMin)}`
-        : `${awalan} ${rupiah(s.hargaMin)} sampai ${rupiah(s.hargaMaks)}`
-    );
+        ? rupiah(s.hargaMin)
+        : `${rupiah(s.hargaMin)} ${tt("pub.tax.sampai")} ${rupiah(s.hargaMaks)}`;
+    klausa.push(tt(s.hargaLengkap ? "pub.tax.harganya" : "pub.tax.hargaTercatat", { nilai }));
   }
 
   if (s.jarakMin !== null) {
-    const awalan = s.jarakLengkap ? "jarak tempuhnya" : "jarak tempuh yang tercatat";
-    klausa.push(
+    const nilai =
       s.jarakMin === s.jarakMaks
-        ? `${awalan} ${s.jarakMin} km`
-        : `${awalan} ${s.jarakMin}–${s.jarakMaks} km`
-    );
+        ? `${s.jarakMin} km`
+        : `${s.jarakMin}–${s.jarakMaks} km`;
+    klausa.push(tt(s.jarakLengkap ? "pub.tax.jaraknya" : "pub.tax.jarakTercatat", { nilai }));
   }
 
   return klausa.length ? `${pokok}, ${klausa.join(", ")}.` : `${pokok}.`;
 }
 
 /** Deskripsi meta — sengaja berbeda dari kalimat pembuka, bukan salinannya. */
-export function koleksiDescription(jenis, label, items) {
+export function koleksiDescription(jenis, label, items, t) {
+  const tt = t || tId;
   const s = summarize(items);
-  const apa = jenis === "tipe" ? `bertipe ${label}` : `dari ${label}`;
+  const count = countPhrase(s, tt);
+  const apa =
+    jenis === "tipe" ? tt("pub.tax.bertipe", { label }) : tt("pub.tax.dari", { label });
   const harga =
     s.hargaMin !== null && s.hargaMin !== s.hargaMaks
-      ? ` Harga ${rupiah(s.hargaMin)}–${rupiah(s.hargaMaks)}.`
+      ? tt("pub.tax.harga", { nilai: `${rupiah(s.hargaMin)}–${rupiah(s.hargaMaks)}` })
       : s.hargaMin !== null
-        ? ` Harga ${rupiah(s.hargaMin)}.`
+        ? tt("pub.tax.harga", { nilai: rupiah(s.hargaMin) })
         : "";
-  return `Daftar ${countPhrase(s)} ${apa} yang dijual di Indonesia, lengkap dengan jarak tempuh, kapasitas baterai, tenaga, dan harganya.${harga}`;
+  return tt("pub.tax.daftar", { count, apa }) + harga;
 }

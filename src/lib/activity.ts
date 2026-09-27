@@ -88,6 +88,11 @@ export type ActivityAction =
   /** Riset AI dijalankan, dan usulannya diterapkan ke formulir. */
   | "ai.run"
   | "ai.apply"
+  /** Auto-update katalog menyelesaikan satu putaran riset harian. */
+  | "ai.autoUpdate"
+  /** Auto-update katalog dijalankan paksa, atau pengaturannya diubah. */
+  | "ai.autoUpdateRun"
+  | "ai.autoUpdateConfig"
   /**
    * Integrasi Google diubah — dinyalakan, dimatikan, atau idnya diganti.
    *

@@ -11,6 +11,7 @@ import { consumptionKwhPer100 } from "../lib/hemat.js";
 import { taxoSlug } from "../lib/taxonomy.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
 import { mediaAlt } from "../lib/media.js";
+import { makePubT } from "../lib/i18n/pub.js";
 
 /**
  * Halaman detail satu kendaraan — dipakai `/mobil/<slug>` DAN `/motor/<slug>`.
@@ -42,9 +43,11 @@ interface Props {
 
 const { site, vehicle: car, pool, kind, media: mediaMeta = {}, pratinjau = false } = Astro.props;
 
+const t = makePubT(Astro.locals?.pubLang);
+
 const isMotor = kind === "motor";
-const noun = isMotor ? "motor listrik" : "mobil listrik";
-const nounCap = isMotor ? "Motor" : "Mobil";
+const noun = isMotor ? t("pub.tax.motor") : t("pub.tax.mobil");
+const nounCap = isMotor ? t("pub.detail.motorCap") : t("pub.detail.mobilCap");
 
 /**
  * Remah roti tingkat kedua. Mobil punya katalog berhalaman sendiri; motor
@@ -52,8 +55,8 @@ const nounCap = isMotor ? "Motor" : "Mobil";
  * memang menampilkan seluruh motor, bukan janji halaman yang tidak ada.
  */
 const induk = isMotor
-  ? { label: "Motor Listrik", href: "/?mode=motor#daftar" }
-  : { label: "Katalog", href: "/katalog" };
+  ? { label: t("pub.tax.titleMotor"), href: "/?mode=motor#daftar" }
+  : { label: t("pub.katalog"), href: "/katalog" };
 
 const lower = (s: any) => String(s || "").toLowerCase();
 const fmt = (v: any, unit: string) => (v !== null && v !== undefined && v !== "" ? `${v} ${unit}`.trim() : "");
@@ -124,35 +127,35 @@ const compareLinks = car
 /** Baris spesifikasi baku; yang kosong dibuang sebelum dirender. */
 const specRows = car
   ? [
-      ["Merek", car.brand],
-      ["Model", car.name],
-      ["Tipe bodi", car.bodyType],
-      ["Tahun", car.year],
-      ["Jarak tempuh", fmtRange ? `${fmtRange}${car.rangeStandard ? ` (${car.rangeStandard})` : ""}` : ""],
-      ["Kapasitas baterai", fmtBattery],
-      ["Tenaga", fmtPower],
-      ["Torsi", fmt(car.torqueNm, "Nm")],
-      ["Akselerasi 0–100 km/j", fmt(car.accelSec, "detik")],
-      ["Kecepatan puncak", fmt(car.topSpeedKph, "km/j")],
-      ["Penggerak", car.driveType],
-      ["Jumlah kursi", car.seats != null ? `${car.seats} kursi` : ""],
-      ["Pengisian cepat DC", fmt(car.chargeDcKw, "kW")],
-      ["Pengisian AC", fmt(car.chargeAcKw, "kW")],
-      ["Waktu pengisian", car.chargeTime],
-      ["Garansi", car.warranty],
-      ["Harga", priceText],
+      [t("pub.detail.brand"), car.brand],
+      [t("pub.detail.model"), car.name],
+      [t("pub.detail.bodyType"), car.bodyType],
+      [t("pub.detail.year"), car.year],
+      [t("pub.detail.range"), fmtRange ? `${fmtRange}${car.rangeStandard ? ` (${car.rangeStandard})` : ""}` : ""],
+      [t("pub.detail.battery"), fmtBattery],
+      [t("pub.detail.power"), fmtPower],
+      [t("pub.detail.torque"), fmt(car.torqueNm, "Nm")],
+      [t("pub.detail.accel"), fmt(car.accelSec, "detik")],
+      [t("pub.detail.topSpeed"), fmt(car.topSpeedKph, "km/j")],
+      [t("pub.detail.drive"), car.driveType],
+      [t("pub.detail.seats"), car.seats != null ? `${car.seats} kursi` : ""],
+      [t("pub.detail.dc"), fmt(car.chargeDcKw, "kW")],
+      [t("pub.detail.ac"), fmt(car.chargeAcKw, "kW")],
+      [t("pub.detail.chargeTime"), car.chargeTime],
+      [t("pub.detail.warranty"), car.warranty],
+      [t("pub.detail.harga"), priceText],
       ...(car.specs || []).map((s: any) => [s.label, s.value]),
     ].filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "")
   : [];
 
 const stats = car
   ? [
-      [fmtRange || "—", "Jarak tempuh"],
-      [fmtBattery || "—", "Baterai"],
-      [fmtPower || "—", "Tenaga"],
+      [fmtRange || "—", t("pub.detail.range")],
+      [fmtBattery || "—", t("pub.card.battery")],
+      [fmtPower || "—", t("pub.card.power")],
       [
         car.accelSec != null ? `${car.accelSec} dtk` : car.variants ? String(car.variants) : "—",
-        car.accelSec != null ? "0–100 km/j" : "Varian",
+        car.accelSec != null ? t("pub.cmp.accel") : t("pub.detail.variant"),
       ],
     ]
   : [];
@@ -283,16 +286,16 @@ const pageTitle = car
   {!car ? (
     <main class="container notfound" id="konten">
       <p class="notfound-code">404</p>
-      <h1>{nounCap} tidak ditemukan</h1>
+      <h1>{t("pub.detail.notFound", { noun: nounCap })}</h1>
       <p class="notfound-text">
-        Halaman ini mungkin sudah dihapus atau belum dipublikasikan. Coba cari lagi lewat katalog.
+        {t("pub.detail.notFoundText")}
       </p>
-      <a class="btn btn-primary" href={induk.href}>Buka katalog</a>
+      <a class="btn btn-primary" href={induk.href}>{t("pub.detail.bukaKatalog")}</a>
     </main>
   ) : (
     <main class="container detail" id="konten">
-      <nav class="breadcrumb" aria-label="Remah roti">
-        <a href="/">Beranda</a>
+      <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+        <a href="/">{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         <a href={induk.href}>{induk.label}</a>
         {merekHref ? (
@@ -316,7 +319,7 @@ const pageTitle = car
               <video class="detail-video" src={safeUrl(car.video)} poster={media[0] || undefined} controls muted loop playsinline preload="none"></video>
             </div>
           ) : media.length ? (
-            <button type="button" class="detail-main detail-main-btn" id="detailMainBtn" aria-label="Perbesar gambar">
+            <button type="button" class="detail-main detail-main-btn" id="detailMainBtn" aria-label={t("pub.detail.perbesar")}>
               <img id="detail-main-img" src={media[0]} alt={mediaAlt(mediaMeta, media[0], `${car.brand} ${car.name}`)} fetchpriority="high" decoding="async" />
               <span class="zoom-hint" aria-hidden="true">⤢</span>
             </button>
@@ -333,7 +336,7 @@ const pageTitle = car
                   data-src={src}
                   data-alt={mediaAlt(mediaMeta, src, `${car.brand} ${car.name}`)}
                   data-index={i}
-                  aria-label={`Foto ${i + 1}`}
+                  aria-label={t("pub.detail.foto", { n: i + 1 })}
                 >
                   <img src={src} alt="" loading="lazy" decoding="async" />
                 </button>
@@ -349,14 +352,14 @@ const pageTitle = car
             ) : (
               <div class="detail-brand">{car.brand}</div>
             )}
-            {car.featured ? <span class="badge badge-featured">Unggulan</span> : null}
+            {car.featured ? <span class="badge badge-featured">{t("pub.card.featured")}</span> : null}
           </div>
           <h1>{car.name}</h1>
           {car.tagline ? <p class="detail-tagline">{car.tagline}</p> : null}
 
           <div class="detail-price">
-            {priceText ? <span>{priceText}</span> : <span class="na">Harga belum tersedia</span>}
-            {priceText ? <span class="detail-price-note">mulai dari</span> : null}
+            {priceText ? <span>{priceText}</span> : <span class="na">{t("pub.card.priceNa")}</span>}
+            {priceText ? <span class="detail-price-note">{t("pub.detail.mulaiDari")}</span> : null}
           </div>
 
           <div class="detail-stats">
@@ -373,22 +376,22 @@ const pageTitle = car
             )}
             {car.year ? <span class="badge badge-muted">{car.year}</span> : null}
             {car.driveType ? <span class="badge badge-muted">{car.driveType}</span> : null}
-            {car.stale ? <span class="badge badge-stale">Data lama</span> : null}
+            {car.stale ? <span class="badge badge-stale">{t("pub.card.stale")}</span> : null}
           </div>
 
           <div class="share-row">
             <button type="button" class="btn btn-outline btn-sm" id="shareBtn" data-title={`${car.brand} ${car.name}`}>
-              Bagikan
+              {t("pub.detail.share")}
             </button>
-            <button type="button" class="btn btn-ghost btn-sm" id="copyBtn">Salin tautan</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="copyBtn">{t("pub.detail.copy")}</button>
             {bisaDihitung ? (
               <a class="btn btn-ghost btn-sm" href={`/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}`}>
-                Hitung penghematan
+                {t("pub.detail.hitungHemat")}
               </a>
             ) : null}
             {bisaHitungPengisian ? (
               <a class="btn btn-ghost btn-sm" href={`/kalkulator/biaya-pengisian?kendaraan=${car.id}`}>
-                Hitung biaya pengisian
+                {t("pub.detail.hitungIsi")}
               </a>
             ) : null}
             <span class="share-status" id="shareStatus" role="status" aria-live="polite"></span>
@@ -398,14 +401,14 @@ const pageTitle = car
 
       {description ? (
         <section class="detail-section">
-          <h2>Deskripsi</h2>
+          <h2>{t("pub.detail.description")}</h2>
           <p class="detail-text">{description}</p>
         </section>
       ) : null}
 
       {highlights.length ? (
         <section class="detail-section">
-          <h2>Keunggulan</h2>
+          <h2>{t("pub.detail.highlights")}</h2>
           <div class="highlights">
             {highlights.map((h: string) => (
               <div class="highlight"><span class="dot" aria-hidden="true">◆</span>{h}</div>
@@ -416,7 +419,7 @@ const pageTitle = car
 
       {specRows.length ? (
         <section class="detail-section">
-          <h2>Spesifikasi</h2>
+          <h2>{t("pub.detail.specs")}</h2>
           <div class="spec-table">
             {specRows.map(([k, v]) => (
               <div class="spec-row"><span class="k">{k}</span><span class="v">{v}</span></div>
@@ -427,7 +430,7 @@ const pageTitle = car
 
       {car.variantNames && car.variantNames.length ? (
         <section class="detail-section">
-          <h2>Varian</h2>
+          <h2>{t("pub.detail.variant")}</h2>
           <div class="variant-list">
             {car.variantNames.map((v: string) => <span class="variant-pill">{v}</span>)}
           </div>
@@ -436,7 +439,7 @@ const pageTitle = car
 
       {car.tags && car.tags.length ? (
         <section class="detail-section">
-          <h2>Tag</h2>
+          <h2>{t("pub.detail.tags")}</h2>
           <div class="tag-row">
             {car.tags.map((t: string) => (
               <a class="tag-pill" href={`/?q=${encodeURIComponent(t)}#daftar`}>#{t}</a>
@@ -447,7 +450,7 @@ const pageTitle = car
 
       {compareLinks.length ? (
         <section class="detail-section">
-          <h2>Bandingkan</h2>
+          <h2>{t("pub.detail.compare")}</h2>
           <div class="tag-row">
             {compareLinks.map((c) => (
               <a class="tag-pill" href={`/bandingkan/${c.slug}`}>{c.label}</a>
@@ -458,17 +461,17 @@ const pageTitle = car
 
       {merekHref || tipeHref ? (
         <section class="detail-section">
-          <h2>Jelajahi</h2>
+          <h2>{t("pub.detail.jelajahi")}</h2>
           <div class="tag-row">
-            {merekHref ? <a class="tag-pill" href={merekHref}>Semua {noun} {car.brand}</a> : null}
-            {tipeHref ? <a class="tag-pill" href={tipeHref}>Semua {noun} tipe {car.bodyType}</a> : null}
+            {merekHref ? <a class="tag-pill" href={merekHref}>{t("pub.detail.semua", { noun, label: car.brand })}</a> : null}
+            {tipeHref ? <a class="tag-pill" href={tipeHref}>{t("pub.detail.semuaTipe", { noun, label: car.bodyType })}</a> : null}
           </div>
         </section>
       ) : null}
 
       {related.length ? (
         <section class="detail-section">
-          <h2>{nounCap} terkait</h2>
+          <h2>{t("pub.detail.related", { noun: nounCap })}</h2>
           <div class="related-grid">
             {related.map((r: any) => (
               <a class="related-card" href={vehicleHref(r)}>
@@ -494,10 +497,10 @@ const pageTitle = car
 
   {car && media.length ? (
     <div class="lightbox" id="lightbox" hidden>
-      <button type="button" class="lightbox-close" data-lb-close aria-label="Tutup">✕</button>
-      <button type="button" class="lightbox-nav prev" data-lb-prev aria-label="Sebelumnya">‹</button>
+      <button type="button" class="lightbox-close" data-lb-close aria-label={t("pub.lb.close")}>✕</button>
+      <button type="button" class="lightbox-nav prev" data-lb-prev aria-label={t("pub.lb.prev")}>‹</button>
       <img class="lightbox-img" id="lightboxImg" src="" alt="" />
-      <button type="button" class="lightbox-nav next" data-lb-next aria-label="Berikutnya">›</button>
+      <button type="button" class="lightbox-nav next" data-lb-next aria-label={t("pub.lb.next")}>›</button>
       <div class="lightbox-count" id="lightboxCount"></div>
     </div>
   ) : null}
@@ -513,15 +516,15 @@ const pageTitle = car
       lebar layar. */}
   {pratinjau ? (
     <div class="preview-bar" role="status">
-      <span class="preview-bar-tag">Pratinjau</span>
+      <span class="preview-bar-tag">{t("pub.detail.pratinjau")}</span>
       <p class="preview-bar-text">
-        Halaman ini <strong>belum tayang</strong>. Tautan pratinjau ini kedaluwarsa dalam dua jam.
+        {t("pub.detail.pratinjauText")}
       </p>
-      <a class="preview-bar-link" href="/admin">Buka panel</a>
+      <a class="preview-bar-link" href="/admin">{t("pub.detail.bukaPanel")}</a>
     </div>
   ) : null}
 
-  <script>
+  <script define:vars={{ copied: t("pub.detail.copied"), copyFail: t("pub.detail.copyFail") }}>
     // Galeri + lightbox sederhana. Sumber gambar dibaca dari tombol thumbnail
     // yang sudah dirender server, jadi tidak ada data yang perlu disuntik.
     (function () {
@@ -612,9 +615,9 @@ const pageTitle = car
       const copy = async () => {
         try {
           await navigator.clipboard.writeText(location.href);
-          say("Tautan disalin ✓");
+          say(copied);
         } catch {
-          say("Gagal menyalin tautan");
+          say(copyFail);
         }
       };
 
