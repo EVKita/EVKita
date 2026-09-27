@@ -10,7 +10,6 @@ import { readJson, writeJsonAtomic } from "./jsonfile";
 import { biayaDari } from "./ai-biaya.js";
 import { modelBawaan, siapRiset, tanggalWib } from "./ai-jobs";
 import { logActivity } from "./activity";
-import { ambilMediaResmi, unduhGambarResmi } from "./media-resmi";
 import { IMAGE_EXT } from "./imagefile";
 import {
   normalkanPengaturan,
@@ -201,12 +200,17 @@ const UPLOAD_DIR = () => path.resolve(process.cwd(), "data", "uploads");
  * pernah ditimpa. Video cukup disimpan sebagai alamat (YouTube/Vimeo, sama
  * seperti alur "Ambil media" di editor); gambar diunduh ke `data/uploads/` apa
  * adanya (tanpa dikecilkan, karena `sharp` sengaja tidak ada di paket rilis).
+ *
+ * `media-resmi` dimuat lewat `import()` dinamis, bukan impor statis: berkas itu
+ * menarik `node:dns/promises`, dan biayanya tidak pantas ikut ke dalam bundel
+ * middleware yang berjalan di SETIAP permintaan.
  */
 async function ambilMediaUntuk(vehicle: any): Promise<Record<string, any>> {
   const patch: Record<string, any> = {};
   const sumber = String(vehicle?.sumberUrl || "").trim();
   if (!sumber) return patch;
 
+  const { ambilMediaResmi, unduhGambarResmi } = await import("./media-resmi");
   const media = await ambilMediaResmi(sumber);
   if (!media.video.length && !media.gambar.length) return patch;
 
