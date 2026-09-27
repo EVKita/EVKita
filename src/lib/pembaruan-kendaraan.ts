@@ -16,7 +16,6 @@ import {
   normalkanPengaturan,
   pilihKendaraan,
   patchOtomatis,
-  PEMBARUAN_DEFAULTS,
 } from "./pembaruan.js";
 
 /**
