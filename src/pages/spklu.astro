@@ -1,0 +1,189 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { readContent } from "../lib/store";
+import { hanyaTayang } from "../lib/tayang.js";
+import { safeUrl } from "../lib/url.js";
+import { siteOrigin, canonicalUrl } from "../lib/site-url";
+import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
+
+/**
+ * Direktori SPKLU penuh.
+ *
+ * Beranda hanya menampilkan potongan direktori; halaman ini menampilkan
+ * SELURUH entri yang tayang sekaligus, tanpa paginasi — sama alasannya
+ * dengan indeks artikel: daftar kartu ringkas bukan beban, dan setiap
+ * entri mendapat tautan langsung dari satu halaman yang mudah dirayapi.
+ */
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+
+/**
+ * Setelan situs diterjemahkan sekali di sini — seluruh pembacaan `site.x`
+ * di bawah ini otomatis ikut bahasa yang dipilih pembaca.
+ */
+const site = cmsSite(content.site, lang);
+const brand = site.brandText || "EVKita";
+const brandFull = `${brand}${site.brandSuffix || ""}`;
+
+/**
+ * Saklar `showSpklu` yang memutuskan: kalau pemilik situs mematikan
+ * direktorinya di panel, halaman ini menjawab 404 dengan tampilan
+ * minimal — polanya sama dengan artikel yang tidak ditemukan.
+ */
+const tutup = !site.showSpklu;
+if (tutup) Astro.response.status = 404;
+
+/** Item bertanda `featured` naik ke atas — sisanya menjaga urutan aslinya. */
+const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
+
+/** Baris meta kartu direktori: hanya yang terisi, supaya kartu tidak bolong. */
+function metaRows(pairs: [string, any][]) {
+  return pairs.filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "");
+}
+
+/**
+ * Tautan lokasi SPKLU. `mapUrl` diisi dari panel; selama kosong, tautannya
+ * membuka pencarian Google Maps nama penyedia supaya tombol tidak pernah mati.
+ */
+function spkluMapUrl(s: any) {
+  return safeUrl(s.mapUrl) || `https://www.google.com/maps/search/${encodeURIComponent(`${s.name} SPKLU`)}`;
+}
+
+/** Ketersediaan SPKLU untuk mobil dan motor. Jenis kosong dianggap Mobil. */
+function spkluJenis(s: any) {
+  return {
+    mobil: !s.jenis || String(s.jenis).includes("Mobil"),
+    motor: String(s.jenis || "").includes("Motor"),
+  };
+}
+
+/** Seluruh entri tayang — tidak dipangkas seperti di beranda. */
+const spkluList = byFeatured((content.spklu || []).filter(hanyaTayang()));
+
+const judulHalaman = site.spkluTitle || t("pub.dir.pageSpklu");
+const lead = site.spkluNote || t("pub.dir.leadSpklu");
+const pageTitle = `${judulHalaman} — ${brandFull}`;
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+/**
+ * Alamat peta untuk JSON-LD. Hanya yang absolut yang dipakai — `safeUrl()`
+ * sudah membuang skema berbahaya, dan pola cadangan Google Maps bukan
+ * milik penyedia sehingga tidak layak diklaim sebagai `url` entri ini.
+ */
+function urlAbsolut(s: any) {
+  const u = safeUrl(s.mapUrl);
+  return u && /^https?:\/\//i.test(u) ? u : "";
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": canonical,
+      url: canonical,
+      name: pageTitle,
+      description: lead,
+      inLanguage: pubIntl(lang),
+      isPartOf: { "@type": "WebSite", name: brandFull, url: `${origin}/` },
+    },
+    {
+      "@type": "ItemList",
+      name: judulHalaman,
+      numberOfItems: spkluList.length,
+      itemListElement: spkluList.map((s: any, i: number) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: s.name,
+        ...(urlAbsolut(s) ? { url: urlAbsolut(s) } : {}),
+      })),
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+        { "@type": "ListItem", position: 2, name: judulHalaman, item: canonical },
+      ],
+    },
+  ],
+};
+---
+
+<Base
+  title={pageTitle}
+  description={tutup ? pageTitle : lead}
+  keywords={site.seoKeywords}
+  ogImage={site.seoOgImage}
+  site={site}
+>
+  {!tutup ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="" />
+
+  {tutup ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>{judulHalaman}</h1>
+      <p class="notfound-text">{t("pub.laman.404Text")}</p>
+      <a class="btn btn-primary" href="/">{t("pub.laman.kembali")}</a>
+    </main>
+  ) : (
+    <main class="container katalog" id="konten">
+      <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+        <a href="/">{t("pub.nav.beranda")}</a>
+        <span aria-hidden="true">/</span>
+        <span class="breadcrumb-current">{judulHalaman}</span>
+      </nav>
+
+      <header class="katalog-head">
+        <h1>{judulHalaman}</h1>
+        <p class="katalog-lead">{lead}</p>
+        <p class="result-count">{t("pub.dir.hitungSpklu", { n: spkluList.length })}</p>
+      </header>
+
+      <div class="dir-grid">
+        {spkluList.map((s: any) => (
+          <article class={`dir-card${s.featured ? " is-featured" : ""}`}>
+            <div class="dir-top">
+              <span class="dir-badge">SPKLU</span>
+              {s.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+            </div>
+            <h3 class="dir-title">{s.name}</h3>
+            {s.operator ? <p class="dir-sub">{s.operator}</p> : null}
+            <ul class="dir-meta-list">
+              {metaRows([
+                [t("pub.dir.lokasi"), s.area],
+                [t("pub.dir.alamat"), s.address],
+                [t("pub.dir.daya"), s.power ? `${s.power} kW` : ""],
+                [t("pub.dir.konektor"), s.connector],
+                [t("pub.dir.jumlahUnit"), s.count != null ? `${s.count} ${t("pub.dir.unit")}` : ""],
+                [t("pub.dir.jam"), s.hours],
+                [t("pub.dir.tarif"), s.price],
+              ]).map(([k, v]) => (
+                <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
+              ))}
+            </ul>
+            {s.note ? <p class="dir-note">{s.note}</p> : null}
+            <div class="spklu-avail">
+              <span class="spklu-avail-label">{t("pub.available")}</span>
+              <span class={`avail ${spkluJenis(s).mobil ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).mobil ? "✓" : "✗"} {t("pub.mobil")}</span>
+              <span class={`avail ${spkluJenis(s).motor ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).motor ? "✓" : "✗"} {t("pub.motor")}</span>
+            </div>
+            <div class="dir-actions">
+              <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </main>
+  )}
+
+  <SiteFooter site={site} base="/" />
+</Base>

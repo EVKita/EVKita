@@ -20,7 +20,7 @@ import {
 import { rupiahPenuh, rupiahHalus } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
-import { makePubT } from "../../lib/i18n/pub.js";
+import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
 
 /**
  * Kalkulator waktu & biaya sekali mengisi daya.
@@ -39,9 +39,11 @@ import { makePubT } from "../../lib/i18n/pub.js";
  */
 
 const content = readContent();
-const site = content.site;
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const site = cmsSite(content.site, lang);
 
-const t = makePubT(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const intl = pubIntl(lang);
 
 const cars = (content.cars || []).filter(hanyaTayang());
 const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [];
@@ -103,7 +105,7 @@ const hasil = hitungPengisian({
   rangeKm: terpilih ? terpilih.rangeKm : null,
 });
 
-const catatan = catatanHasil(hasil);
+const catatan = catatanHasil(hasil, t);
 
 /** Data kendaraan yang disuntik ke browser dipangkas ke field yang dipakai kotak pilihan. */
 const kendaraanLite = pilihan.map((c: any) => ({
@@ -115,9 +117,8 @@ const kendaraanLite = pilihan.map((c: any) => ({
 }));
 
 const brand = site.brandText || "EVKita";
-const pageTitle = `Kalkulator Biaya & Waktu Pengisian Mobil Listrik — ${brand}`;
-const metaDesc =
-  "Hitung sendiri: berapa kWh yang masuk, berapa lama mengisinya di SPKLU atau di rumah, dan habis berapa rupiah sekali isi.";
+const pageTitle = `${t("pub.kalk.pageBiaya")} — ${brand}`;
+const metaDesc = t("pub.kalk.descBiaya");
 
 const origin = siteOrigin(Astro.url);
 const canonical = canonicalUrl(Astro.url);
@@ -127,7 +128,7 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "WebApplication",
-      name: "Kalkulator biaya dan waktu pengisian kendaraan listrik",
+      name: t("pub.kalk.metaBiaya"),
       url: canonical,
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Web",
@@ -137,8 +138,8 @@ const jsonLd = {
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
-        { "@type": "ListItem", position: 2, name: "Kalkulator biaya pengisian" },
+        { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+        { "@type": "ListItem", position: 2, name: t("pub.kalk.titleBiaya") },
       ],
     },
   ],
@@ -146,7 +147,7 @@ const jsonLd = {
 
 /** Teks hasil yang dirender server; skrip browser menghitung ulang dengan fungsi yang sama. */
 const teks = {
-  durasi: teksDurasi(hasil),
+  durasi: teksDurasi(hasil, t),
   biaya: rupiahPenuh(hasil.biaya),
   perKwh: hasil.biayaPerKwh !== null ? rupiahHalus(hasil.biayaPerKwh) : "—",
   energiMasuk: kwhKeTeks(hasil.energiMasuk),
@@ -154,13 +155,13 @@ const teks = {
   km: kmKeTeks(hasil.kmDidapat),
 };
 
-const ringkas = teksRingkasPengisian(hasil);
+const ringkas = teksRingkasPengisian(hasil, t);
 ---
 
 <Base
   title={pageTitle}
   description={metaDesc}
-  keywords="biaya pengisian mobil listrik, lama cas mobil listrik, tarif SPKLU, kalkulator SPKLU"
+  keywords={t("pub.kalk.keywordBiaya")}
   ogImage={site.seoOgImage}
   site={site}
 >
@@ -177,11 +178,7 @@ const ringkas = teksRingkasPengisian(hasil);
 
     <header class="kalk-head">
       <h1>{t("pub.kalk.h1Biaya")}</h1>
-      <p class="kalk-lead">
-        Pilih kendaraannya, tentukan mau diisi dari berapa persen ke berapa persen, lalu sebutkan
-        daya stasiun dan tarifnya. Hasilnya berubah seketika, dan tautannya bisa dibagikan lengkap
-        dengan angka yang kamu pakai.
-      </p>
+      <p class="kalk-lead">{t("pub.kalk.leadBiaya")}</p>
     </header>
 
     <form class="kalk-form" id="pengisianForm" method="get" autocomplete="off">
@@ -220,10 +217,7 @@ const ringkas = teksRingkasPengisian(hasil);
         <div class="kalk-field">
           <label for="f-akhir">{t("pub.kalk.sampai")} <span class="kalk-unit">%</span></label>
           <input id="f-akhir" name="akhir" type="number" min="0" max="100" step="1" value={form.socAkhir} />
-          <p class="kalk-hint">
-            Bawaannya berhenti di {BATAS_TAPER}% karena di situlah pengisian DC mulai menukik —
-            alasan yang sama kenapa klaim pabrik hampir selalu berbunyi "10–{BATAS_TAPER}%".
-          </p>
+          <p class="kalk-hint">{t("pub.kalk.hintTaper", { batas: BATAS_TAPER })}</p>
         </div>
 
         <div class="kalk-field">
@@ -232,7 +226,7 @@ const ringkas = teksRingkasPengisian(hasil);
           <div class="kalk-presets">
             {DAYA_PRESETS.map((p) => (
               <button type="button" class="kalk-preset" data-target="f-daya" data-value={p.value}>
-                {p.label} <span>{p.value} kW</span>
+                {p.i18n ? t(p.i18n) : p.label} <span>{p.value} kW</span>
               </button>
             ))}
           </div>
@@ -244,7 +238,7 @@ const ringkas = teksRingkasPengisian(hasil);
           <div class="kalk-presets">
             {TARIF_PRESETS.map((p) => (
               <button type="button" class="kalk-preset" data-target="f-tarif" data-value={p.value}>
-                {p.label} <span>≈{Math.round(p.value).toLocaleString("id-ID")}</span>
+                {p.i18n ? t(p.i18n) : p.label} <span>≈{Math.round(p.value).toLocaleString(intl)}</span>
               </button>
             ))}
           </div>
@@ -300,25 +294,10 @@ const ringkas = teksRingkasPengisian(hasil);
     <section class="kalk-section">
       <h2>{t("pub.kalk.tidakDihitung")}</h2>
       <ul class="kalk-notes">
-        <li>
-          Lama pengisian selalu berupa rentang, dan itu disengaja. Daya papan nama stasiun jarang
-          mengalir utuh: kurva pengisian tiap kendaraan berbeda, baterai yang dingin atau terlalu
-          panas mengisi lebih lambat, dan satu stasiun yang dipakai dua mobil sekaligus membagi
-          dayanya.
-        </li>
-        <li>
-          Kapasitas baterai di katalog adalah angka kotor. Sebagian tidak pernah dipakai demi umur
-          sel, jadi "0%" di layar mobil bukan baterai yang benar-benar kosong.
-        </li>
-        <li>
-          Setara jarak tempuh diturunkan dari klaim pabrik (WLTP/NEDC). Di jalan sebenarnya hampir
-          selalu lebih pendek — lebih pendek lagi di tol, saat hujan, atau dengan AC menyala penuh.
-        </li>
-        <li>
-          Tarif SPKLU berbeda tiap operator dan bisa punya biaya layanan atau tarif parkir sendiri
-          yang tidak ikut terhitung di sini. Angka bawaannya perkiraan; ganti dengan yang
-          benar-benar tertera.
-        </li>
+        <li>{t("pub.kalk.tidakDihitungIsi1")}</li>
+        <li>{t("pub.kalk.tidakDihitungIsi2")}</li>
+        <li>{t("pub.kalk.tidakDihitungIsi3")}</li>
+        <li>{t("pub.kalk.tidakDihitungIsi4")}</li>
       </ul>
     </section>
 

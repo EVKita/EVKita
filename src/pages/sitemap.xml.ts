@@ -27,6 +27,10 @@ export const GET: APIRoute = ({ url }) => {
     { loc: `${origin}/`, priority: "1.0" },
     { loc: `${origin}/kalkulator/hemat-listrik-vs-bensin`, priority: "0.7" },
     { loc: `${origin}/kalkulator/biaya-pengisian`, priority: "0.7" },
+    { loc: `${origin}/spklu`, priority: "0.7" },
+    { loc: `${origin}/bengkel`, priority: "0.7" },
+    { loc: `${origin}/berita`, priority: "0.7" },
+    { loc: `${origin}/komunitas`, priority: "0.7" },
   ];
 
   /*
@@ -126,10 +130,18 @@ export const GET: APIRoute = ({ url }) => {
   const escapeXml = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+  /* Halaman direktori yang dimatikan di panel tidak ikut diumumkan. */
+  const sembunyi = new Set([
+    ...(content.site.showSpklu ? [] : [`${origin}/spklu`]),
+    ...(content.site.showBengkel ? [] : [`${origin}/bengkel`]),
+    ...(content.site.showBerita ? [] : [`${origin}/berita`, `${origin}/komunitas`]),
+  ]);
+  const entriesTayang = entries.filter((e) => !sembunyi.has(e.loc));
+
   const body =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    entries
+    entriesTayang
       .map((e) => {
         const lastmod = e.lastmod ? `\n    <lastmod>${escapeXml(e.lastmod)}</lastmod>` : "";
         return `  <url>\n    <loc>${escapeXml(e.loc)}</loc>${lastmod}\n    <priority>${e.priority}</priority>\n  </url>`;

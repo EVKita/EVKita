@@ -76,44 +76,52 @@ export const CONTACT_ROWS = [
   {
     key: "contactEmail",
     label: "Email",
+    i18n: "pub.footer.row.email",
     href: (v) => `mailto:${v}`,
     icon: `<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7.5 7.3 5a1.2 1.2 0 0 0 1.4 0l7.3-5"/>`,
   },
   {
     key: "contactPhone",
     label: "Telepon",
+    i18n: "pub.footer.row.telepon",
     href: (v) => `tel:${String(v).replace(/[^\d+]/g, "")}`,
     icon: `<path d="M6.2 3.8h2.4l1.4 3.4-1.8 1.3a11 11 0 0 0 5.3 5.3l1.3-1.8 3.4 1.4v2.4a2 2 0 0 1-2.2 2A14.6 14.6 0 0 1 4.2 6a2 2 0 0 1 2-2.2Z" stroke-linejoin="round"/>`,
   },
   {
     key: "contactWhatsapp",
     label: "WhatsApp",
+    i18n: "pub.footer.row.whatsapp",
     href: (v) => `https://wa.me/${String(v).replace(/[^\d]/g, "")}`,
     icon: `<path d="M20.2 11.7a8.2 8.2 0 0 1-12.1 7.2L3.8 20.2l1.4-4.2A8.2 8.2 0 1 1 20.2 11.7Z"/><path d="M9.2 8.6c.3-.1.6 0 .8.3l.7 1.2c.1.3.1.6-.1.8l-.4.5c-.1.2-.2.4 0 .7.4.7 1 1.3 1.7 1.7.3.2.5.1.7-.1l.5-.4c.2-.2.5-.2.8-.1l1.2.7c.3.2.4.5.3.8-.2.7-.9 1.2-1.7 1.2-2.6-.2-4.6-2.2-4.8-4.8 0-.8.5-1.5 1.2-1.7Z" stroke-linejoin="round"/>`,
   },
   {
     key: "contactAddress",
     label: "Alamat",
+    i18n: "pub.footer.row.alamat",
     href: null,
     icon: `<path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>`,
   },
   {
     key: "contactMapUrl",
     label: "Peta",
+    i18n: "pub.footer.row.peta",
     href: (v) => v,
     // Alamat peta selalu panjang dan tidak terbaca; yang ditampilkan ajakannya.
+    i18nText: "pub.footer.lihatPeta",
     text: () => "Lihat lokasi di peta",
     icon: `<path d="m9 3.8-5 2.4v14l5-2.4 6 2.4 5-2.4v-14l-5 2.4-6-2.4Z" stroke-linejoin="round"/><path d="M9 3.8v14M15 6.2v14"/>`,
   },
   {
     key: "contactHours",
     label: "Jam operasional",
+    i18n: "pub.footer.row.jam",
     href: null,
     icon: `<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3 1.8"/>`,
   },
   {
     key: "contactWebsite",
     label: "Situs web",
+    i18n: "pub.footer.row.situs",
     href: (v) => v,
     icon: `<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.2 2.3 3.4 5.3 3.4 8.5s-1.2 6.2-3.4 8.5c-2.2-2.3-3.4-5.3-3.4-8.5S9.8 5.8 12 3.5Z"/>`,
   },
@@ -168,19 +176,23 @@ export function normalizeMenus(value) {
  * @param {Record<string, any>} site Field `site`.
  * @param {{ label: string; href: string }[]} lamanMenu Hasil `tautanFooter().menu`.
  * @param {string} base Awalan tautan anchor ("" di beranda, "/" di subhalaman).
+ *
+ * Tiap entri bawaan membawa `i18n`: kunci di kamus situs publik. Panel tidak
+ * memakai field itu (ia punya terjemahannya sendiri), jadi label di sini tetap
+ * Bahasa Indonesia sebagai nilai bawaan.
  */
 export function menuBawaan(site, lamanMenu = [], base = "") {
   return [
-    { label: "Beranda", href: base || "/" },
-    { label: "Katalog", href: "/katalog" },
-    { label: "Merek", href: "/merek" },
-    { label: "Tipe bodi", href: "/tipe" },
-    { label: "Kalkulator hemat", href: "/kalkulator/hemat-listrik-vs-bensin" },
-    { label: "Biaya pengisian", href: "/kalkulator/biaya-pengisian" },
-    site.showSpklu ? { label: "SPKLU", href: `${base}#spklu` } : null,
-    site.showBengkel ? { label: "Bengkel", href: `${base}#bengkel` } : null,
-    site.showBerita ? { label: "Berita & Komunitas", href: `${base}#berita` } : null,
-    site.showAbout ? { label: "Tentang", href: `${base}#tentang` } : null,
+    { label: "Beranda", i18n: "pub.nav.beranda", href: base || "/" },
+    { label: "Katalog", i18n: "pub.katalog", href: "/katalog" },
+    { label: "Merek", i18n: "pub.menu.merek", href: "/merek" },
+    { label: "Tipe bodi", i18n: "pub.menu.tipe", href: "/tipe" },
+    { label: "Kalkulator hemat", i18n: "pub.menu.kalkHemat", href: "/kalkulator/hemat-listrik-vs-bensin" },
+    { label: "Biaya pengisian", i18n: "pub.menu.kalkIsi", href: "/kalkulator/biaya-pengisian" },
+    site.showSpklu ? { label: "SPKLU", i18n: "pub.nav.spklu", href: "/spklu" } : null,
+    site.showBengkel ? { label: "Bengkel", i18n: "pub.nav.bengkel", href: "/bengkel" } : null,
+    site.showBerita ? { label: "Berita & Komunitas", i18n: "pub.nav.berita", href: "/berita" } : null,
+    site.showAbout ? { label: "Tentang", i18n: "pub.nav.tentang", href: `${base}#tentang` } : null,
     ...(Array.isArray(lamanMenu) ? lamanMenu : []),
   ].filter(Boolean);
 }

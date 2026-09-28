@@ -1,6 +1,7 @@
 "use strict";
 
-import { esc, rupiah, cardHTML as buildCard, visualHTML as buildVisual } from "../lib/card-html.js";
+import { esc, rupiah, vehicleHref, cardHTML as buildCard, visualHTML as buildVisual } from "../lib/card-html.js";
+import { voteRowHtml, rankVotes } from "../lib/vote-html.js";
 import { MAX_COMPARE, compareTableHTML, compareSlug } from "../lib/compare-html.js";
 import { hargaWajar } from "../lib/vehicle-spec.js";
 import { makePubT, normalizePubLocale } from "../lib/i18n/pub.js";
@@ -74,6 +75,28 @@ const DEFAULTS = {
 };
 
 const state = { ...DEFAULTS, compare: [] };
+
+/**
+ * Beranda hanya etalase: tiga kartu pertama dalam keadaan bawaan. Seluruh
+ * katalog pindah ke /katalog lewat tombol "Buka katalog lengkap" di bawah
+ * grid. Angka 3 ini disamakan dengan HOME_CARDS di src/pages/index.astro —
+ * kalau salah satunya berubah tanpa yang lain, kartu akan melompat saat
+ * skrip selesai dimuat.
+ */
+const HOME_TEASER = 3;
+
+/* Keadaan bawaan = belum ada ketikan, pilihan, atau urutan yang diubah. */
+function isDefaultState() {
+  return (
+    !state.search.trim() &&
+    state.brand === "all" &&
+    state.body === "all" &&
+    state.price === "all" &&
+    state.range === "all" &&
+    state.battery === "all" &&
+    state.sort === DEFAULTS.sort
+  );
+}
 
 const $ = (id) => document.getElementById(id);
 
@@ -287,7 +310,10 @@ function renderHeroStats() {
 }
 
 function render() {
-  const list = getFiltered();
+  const full = getFiltered();
+  /* Etalase tiga kartu; interaksi apa pun (cari, filter, urut, tautan
+     berbagi berisi parameter) membuka seluruh hasil. */
+  const list = isDefaultState() && full.length > HOME_TEASER ? full.slice(0, HOME_TEASER) : full;
   const grid = $("grid");
   grid.className = "grid" + (state.view === "list" ? " as-list" : "");
   grid.innerHTML = list.map(cardHTML).join("");
@@ -654,3 +680,164 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
+
+/* ===== VoteKita: voting bintang pengunjung =====
+   Panel sisi kanan beranda (`aside#voteKita`): 10 mobil + 10 motor terfavorit.
+   Baris awalnya sudah dirender server lewat `voteRowHtml()` yang SAMA — di sini
+   tinggal menggambar ulang tiap ada suara masuk, supaya peringkatnya bergerak
+   langsung tanpa muat ulang. Suara sendiri diingat di `localStorage` dengan
+   kunci `evkita_vote_<jenis>_<id>`; nilainya dikirim sebagai `prev` agar suara
+   ulang hanya menggeser jumlah, bukan menambah suara baru. */
+
+(function voteKita() {
+  const daftarMobil = document.getElementById("voteMobil");
+  if (!daftarMobil) return; // halaman tanpa panel VoteKita: tidak ada kerjaan
+  const daftarMotor = document.getElementById("voteMotor");
+  const wadah = document.getElementById("voteKita");
+  const voteLang = readPubLang();
+
+  /* Agregat dari server (`{ cars: {id:{s,v}}, motors: {...} }`) — disalin
+     supaya suara yang baru masuk bisa digabung tanpa menunggu muat ulang. */
+  const agregat = { cars: {}, motors: {} };
+  try {
+    const awal = window.__EV_VOTES__ || {};
+    if (awal.cars && typeof awal.cars === "object") agregat.cars = { ...awal.cars };
+    if (awal.motors && typeof awal.motors === "object") agregat.motors = { ...awal.motors };
+  } catch {
+    /* abaikan */
+  }
+
+  const emberUntuk = (jenis) => (jenis === "motor" ? agregat.motors : agregat.cars);
+  const kendaraanUntuk = (jenis) => {
+    const dariWindow = jenis === "motor" ? window.__EV_MOTORS__ : window.__EV_CARS__;
+    const dariModul = jenis === "motor" ? MOTORS : EV_CARS;
+    if (Array.isArray(dariModul) && dariModul.length) return dariModul;
+    return Array.isArray(dariWindow) ? dariWindow : [];
+  };
+  const elUntuk = (jenis) => (jenis === "motor" ? daftarMotor : daftarMobil);
+
+  function bacaSuaraSaya(jenis, id) {
+    try {
+      const n = parseInt(window.localStorage.getItem(`evkita_vote_${jenis}_${id}`), 10);
+      return n >= 1 && n <= 5 ? n : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  function tulisSuaraSaya(jenis, id, bintang) {
+    try {
+      window.localStorage.setItem(`evkita_vote_${jenis}_${id}`, String(bintang));
+    } catch {
+      /* mode privat: voting tetap jalan, cuma tidak diingat */
+    }
+  }
+
+  /* Gambar ulang satu daftar (10 teratas, sudah terurut). Markupnya memakai
+     `voteRowHtml()` yang sama dengan render server — termasuk format angka
+     rata-rata per bahasa yang hidup di dalamnya. */
+  function gambarDaftar(jenis) {
+    const el = elUntuk(jenis);
+    if (!el) return;
+    const peringkat = rankVotes(kendaraanUntuk(jenis), emberUntuk(jenis), 10);
+    el.innerHTML = peringkat
+      .map((r, i) =>
+        voteRowHtml(r.v, emberUntuk(jenis)[r.v.id], {
+          t,
+          href: vehicleHref(r.v),
+          img: r.v.image,
+          myVote: bacaSuaraSaya(jenis, r.v.id),
+          lang: voteLang,
+          rank: i + 1,
+        })
+      )
+      .join("");
+  }
+
+  /* Baris galat kecil di kaki panel — dibuat bila orkestrator belum
+     menyediakannya, supaya kegagalan tidak diam. */
+  function tampilkanGalat(pesan) {
+    if (!wadah) return;
+    let el = wadah.querySelector(".vote-err");
+    if (!el) {
+      el = document.createElement("p");
+      el.className = "vote-err";
+      el.setAttribute("role", "alert");
+      wadah.appendChild(el);
+    }
+    el.hidden = !pesan;
+    if (pesan) el.textContent = pesan;
+  }
+
+  /* Sorot pratinjau: tombol yang dilewati kursor/terfokus ikut menyala. */
+  function sorotPratinjau(tombol, nyala) {
+    const baris = tombol.closest("[data-vote-id]");
+    if (!baris) return;
+    const n = parseInt(tombol.dataset.voteStars, 10);
+    baris.querySelectorAll("[data-vote-stars]").forEach((b) => {
+      if (parseInt(b.dataset.voteStars, 10) <= n) b.classList.toggle("preview", nyala);
+    });
+  }
+
+  async function kirimSuara(tombol) {
+    const baris = tombol.closest("[data-vote-id]");
+    if (!baris || baris.dataset.sibuk) return;
+    const jenis = baris.dataset.voteKind === "motor" ? "motor" : "mobil";
+    const id = baris.dataset.voteId || "";
+    const bintang = parseInt(tombol.dataset.voteStars, 10);
+    if (!id || !(bintang >= 1 && bintang <= 5)) return;
+    baris.dataset.sibuk = "1";
+    try {
+      const res = await fetch("/api/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: jenis, id, stars: bintang, prev: bacaSuaraSaya(jenis, id) }),
+      });
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        /* abaikan */
+      }
+      if (!res.ok || !data || !data.ok) throw new Error("gagal");
+      /* Jumlah lokal disamakan dengan jawaban server, lalu daftar digambar
+         ulang supaya peringkatnya langsung pindah. */
+      emberUntuk(jenis)[id] = { s: data.avg * data.votes, v: data.votes };
+      tulisSuaraSaya(jenis, id, bintang);
+      tampilkanGalat("");
+      gambarDaftar(jenis);
+    } catch {
+      tampilkanGalat(t("pub.vote.err"));
+    } finally {
+      delete baris.dataset.sibuk;
+    }
+  }
+
+  if (wadah) {
+    wadah.addEventListener("click", (e) => {
+      const tombol = e.target.closest("[data-vote-stars]");
+      if (!tombol || !wadah.contains(tombol)) return;
+      kirimSuara(tombol);
+    });
+    wadah.addEventListener("mouseover", (e) => {
+      const tombol = e.target.closest("[data-vote-stars]");
+      if (tombol) sorotPratinjau(tombol, true);
+    });
+    wadah.addEventListener("mouseout", (e) => {
+      const tombol = e.target.closest("[data-vote-stars]");
+      if (tombol) sorotPratinjau(tombol, false);
+    });
+    /* Papan ketik mendapat pratinjau yang sama lewat fokus. */
+    wadah.addEventListener("focusin", (e) => {
+      const tombol = e.target.closest("[data-vote-stars]");
+      if (tombol) sorotPratinjau(tombol, true);
+    });
+    wadah.addEventListener("focusout", (e) => {
+      const tombol = e.target.closest("[data-vote-stars]");
+      if (tombol) sorotPratinjau(tombol, false);
+    });
+  }
+
+  gambarDaftar("mobil");
+  gambarDaftar("motor");
+})();

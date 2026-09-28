@@ -1,41 +1,84 @@
 ---
 /**
- * Pemilih bahasa situs publik: Indonesia ↔ Inggris.
+ * Pemilih bahasa situs publik: Indonesia, Inggris, Mandarin.
  *
  * Bentuknya meniru tombol tema di sebelahnya (pill yang sama), tapi isinya
- * sepasang kode bahasa "IND/ENG". Kode yang sedang aktif ditandai; mengeklik
- * yang tidak aktif menulis cookie lalu memuat ulang halaman, supaya server
- * merender ulang seluruh teks dalam bahasa yang baru (SEO tetap utuh).
+ * tiga bendera: Merah Putih untuk Indonesia, bintang dan strip untuk
+ * Amerika Serikat, dan merah berbintang kuning untuk Tiongkok. Benderanya
+ * digambar sebagai `<svg>`, bukan emoji bendera —
+ * Windows tidak punya glif bendera dan menampilkan huruf wilayah dua karakter,
+ * sehingga yang terlihat justru "ID"/"US". Bendera yang aktif ditandai garis
+ * melingkar; mengeklik yang tidak aktif menulis cookie lalu memuat ulang
+ * halaman, supaya server merender ulang seluruh teks dalam bahasa yang baru
+ * (SEO tetap utuh).
+ *
+ * Tingginya sengaja sama dengan tinggi teks "IND/ENG" yang dulu dipakai (14px
+ * pada pill ber-padding 9px), supaya ukuran pil di header tidak berubah.
  */
 import { normalizePubLocale, PUB_COOKIE } from "../lib/i18n/pub.js";
 
 const current = normalizePubLocale(Astro.locals?.pubLang);
-const label = current === "id" ? "Bahasa: Indonesia" : "Language: English";
+const label = current === "en" ? "Language: English" : current === "zh" ? "语言：中文" : "Bahasa: Indonesia";
 ---
 <button
-  id="langToggle"
   class="lang-toggle"
   type="button"
   aria-label={label}
   title={label}
   data-current={current}
 >
-  <span class="lg-opt" data-lang="id" data-on={current === "id" ? "1" : undefined}>IND</span>
+  <span class="lg-opt" data-lang="id" data-on={current === "id" ? "1" : undefined}>
+    <svg viewBox="0 0 21 14" aria-hidden="true" focusable="false">
+      <rect width="21" height="7" fill="#CE1126" />
+      <rect y="7" width="21" height="7" fill="#FFFFFF" />
+    </svg>
+  </span>
   <span class="lg-sep" aria-hidden="true">/</span>
-  <span class="lg-opt" data-lang="en" data-on={current === "en" ? "1" : undefined}>ENG</span>
+  <span class="lg-opt" data-lang="en" data-on={current === "en" ? "1" : undefined}>
+    <svg viewBox="0 0 21 14" aria-hidden="true" focusable="false">
+      <rect width="21" height="14" fill="#FFFFFF" />
+      <g fill="#B22234">
+        <rect width="21" height="1.08" />
+        <rect y="2.15" width="21" height="1.08" />
+        <rect y="4.31" width="21" height="1.08" />
+        <rect y="6.46" width="21" height="1.08" />
+        <rect y="8.62" width="21" height="1.08" />
+        <rect y="10.77" width="21" height="1.08" />
+        <rect y="12.92" width="21" height="1.08" />
+      </g>
+      <rect width="8.4" height="7.54" fill="#3C3B6E" />
+    </svg>
+  </span>
+  <span class="lg-sep" aria-hidden="true">/</span>
+  <span class="lg-opt" data-lang="zh" data-on={current === "zh" ? "1" : undefined}>
+    <svg viewBox="0 0 21 14" aria-hidden="true" focusable="false">
+      <rect width="21" height="14" fill="#DE2910" />
+      <g fill="#FFDE00">
+        <polygon points="3.5,1.4 3.99,2.82 5.5,2.85 4.3,3.76 4.73,5.2 3.5,4.34 2.27,5.2 2.7,3.76 1.5,2.85 3.01,2.82" />
+        <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(7,1.4) scale(0.7) rotate(23)" />
+        <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(8.4,2.8) scale(0.7) rotate(46)" />
+        <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(8.4,4.9) scale(0.7) rotate(23)" />
+        <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(7,6.3) scale(0.7) rotate(46)" />
+      </g>
+    </svg>
+  </span>
 </button>
 
 <script>
   (function () {
-    var btn = document.getElementById("langToggle");
-    if (!btn) return;
+    // Delegasi di tingkat dokumen: komponen ini dirender DUA kali (bilah
+    // desktop + laci mobile), dan skrip Astro yang sama hanya berjalan sekali
+    // — mengikat satu id berarti salinan satunya mati total. Klik yang jatuh
+    // di luar bendera (pemisah, padding) sengaja diabaikan.
     var COOKIE = "evkita_pub_lang";
-    btn.addEventListener("click", function (e) {
+    document.addEventListener("click", function (e) {
       var target = e.target;
-      var opt = target && target.closest ? target.closest("[data-lang]") : null;
+      var opt = target && target.closest ? target.closest(".lang-toggle [data-lang]") : null;
       if (!opt) return;
-      var next = opt.getAttribute("data-lang") === "en" ? "en" : "id";
-      var now = btn.getAttribute("data-current");
+      var next = opt.getAttribute("data-lang") || "id";
+      if (next !== "id" && next !== "en" && next !== "zh") next = "id";
+      var btn = opt.closest(".lang-toggle");
+      var now = btn ? btn.getAttribute("data-current") : null;
       if (next === now) return;
       document.cookie = COOKIE + "=" + next + "; path=/; max-age=31536000; SameSite=Lax";
       location.reload();

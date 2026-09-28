@@ -11,7 +11,7 @@ import { consumptionKwhPer100 } from "../lib/hemat.js";
 import { taxoSlug } from "../lib/taxonomy.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
 import { mediaAlt } from "../lib/media.js";
-import { makePubT } from "../lib/i18n/pub.js";
+import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 
 /**
  * Halaman detail satu kendaraan — dipakai `/mobil/<slug>` DAN `/motor/<slug>`.
@@ -41,12 +41,16 @@ interface Props {
   pratinjau?: boolean;
 }
 
-const { site, vehicle: car, pool, kind, media: mediaMeta = {}, pratinjau = false } = Astro.props;
+const { site: siteProp, vehicle: car, pool, kind, media: mediaMeta = {}, pratinjau = false } = Astro.props;
 
-const t = makePubT(Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(siteProp, lang);
+const intl = pubIntl(lang);
 
 const isMotor = kind === "motor";
 const noun = isMotor ? t("pub.tax.motor") : t("pub.tax.mobil");
+const nounSatu = isMotor ? t("pub.tax.motorSatu") : t("pub.tax.mobilSatu");
 const nounCap = isMotor ? t("pub.detail.motorCap") : t("pub.detail.mobilCap");
 
 /**
@@ -69,17 +73,23 @@ const media: string[] = car ? [car.image, ...(car.gallery || [])].map(safeUrl).f
 
 const description = car
   ? car.description ||
-    `${car.brand} ${car.name} adalah ${noun} ${lower(car.bodyType)}${fmtRange ? ` dengan jarak tempuh ${fmtRange}` : ""}${car.rangeStandard ? ` (${car.rangeStandard})` : ""}${fmtBattery ? `, baterai ${fmtBattery}` : ""}${fmtPower ? `, dan tenaga ${fmtPower}` : ""}.`
+    [
+      t("pub.detail.descLead", { brand: car.brand, name: car.name, noun: nounSatu, body: lower(car.bodyType) }),
+      fmtRange ? t("pub.detail.frRange", { v: fmtRange }) : "",
+      car.rangeStandard ? ` (${car.rangeStandard})` : "",
+      fmtBattery ? t("pub.detail.frBattery", { v: fmtBattery }) : "",
+      fmtPower ? t("pub.detail.frPower", { v: fmtPower }) : "",
+    ].join("") + "."
   : "";
 
 const highlights = car
   ? car.highlights && car.highlights.length
     ? car.highlights
     : [
-        fmtRange ? `${fmtRange} jarak tempuh${car.rangeStandard ? ` (${car.rangeStandard})` : ""}` : "",
-        fmtBattery ? `${fmtBattery} kapasitas baterai` : "",
-        fmtPower ? `${fmtPower} tenaga maksimum` : "",
-        car.variants ? `${car.variants} varian tersedia` : "",
+        fmtRange ? t("pub.detail.hlRange", { v: `${fmtRange}${car.rangeStandard ? ` (${car.rangeStandard})` : ""}` }) : "",
+        fmtBattery ? t("pub.detail.hlBattery", { v: fmtBattery }) : "",
+        fmtPower ? t("pub.detail.hlPower", { v: fmtPower }) : "",
+        car.variants ? t("pub.detail.hlVarian", { n: car.variants }) : "",
       ].filter(Boolean)
   : [];
 
@@ -89,7 +99,7 @@ const related = car
       .slice(0, 4)
   : [];
 
-const priceText = car ? car.priceText || (car.price != null ? "Rp " + Number(car.price).toLocaleString("id-ID") : "") : "";
+const priceText = car ? car.priceText || (car.price != null ? "Rp " + Number(car.price).toLocaleString(intl) : "") : "";
 
 /**
  * Alamat halaman kelompok. Merek dan tipe bodi kini punya halamannya sendiri,
@@ -236,20 +246,20 @@ const jsonLd = car
             : {}),
           additionalProperty: [
             car.batteryKwh != null
-              ? { "@type": "PropertyValue", name: "Kapasitas baterai", value: car.batteryKwh, unitText: "kWh" }
+              ? { "@type": "PropertyValue", name: t("pub.kalk.kapasitas"), value: car.batteryKwh, unitText: "kWh" }
               : null,
             car.chargeDcKw != null
-              ? { "@type": "PropertyValue", name: "Pengisian cepat DC", value: car.chargeDcKw, unitText: "kW" }
+              ? { "@type": "PropertyValue", name: t("pub.detail.dcFast"), value: car.chargeDcKw, unitText: "kW" }
               : null,
             car.rangeStandard
-              ? { "@type": "PropertyValue", name: "Standar pengujian", value: car.rangeStandard }
+              ? { "@type": "PropertyValue", name: t("pub.detail.standarUji"), value: car.rangeStandard }
               : null,
           ].filter(Boolean),
         },
         {
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
+            { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
             { "@type": "ListItem", position: 2, name: induk.label, item: `${origin}${induk.href}` },
             ...(merekHref
               ? [{ "@type": "ListItem", position: 3, name: car.brand, item: `${origin}${merekHref}` }]
@@ -263,13 +273,13 @@ const jsonLd = car
 
 const pageTitle = car
   ? `${car.brand} ${car.name} — ${site.brandText || "EVKita"}`
-  : `Halaman tidak ditemukan — ${site.brandText || "EVKita"}`;
+  : `${t("pub.koleksi.notFound")} — ${site.brandText || "EVKita"}`;
 
 ---
 
 <Base
   title={pageTitle}
-  description={car ? car.tagline || description : "Halaman yang kamu cari tidak tersedia."}
+  description={car ? car.tagline || description : t("pub.notFound.desc")}
   keywords={car ? [car.brand, car.name, car.bodyType, ...(car.tags || [])].filter(Boolean).join(", ") : site.seoKeywords}
   ogImage={ogImage}
   ogType={car ? "product" : "website"}

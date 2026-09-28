@@ -10,6 +10,18 @@ import {
   catatanHasil,
 } from "../lib/pengisian.js";
 import { rupiahPenuh, rupiahHalus } from "../lib/hemat.js";
+import { makePubT, normalizePubLocale } from "../lib/i18n/pub.js";
+
+/* Bahasa situs publik dibaca dari cookie yang ditulis LanguageToggle. */
+function readPubLang() {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)evkita_pub_lang=([^;]+)/);
+    return normalizePubLocale(m ? m[1] : "");
+  } catch {
+    return "id";
+  }
+}
+const t = makePubT(readPubLang());
 
 /*
  * Sisi browser kalkulator biaya pengisian.
@@ -70,8 +82,8 @@ if (form) {
       rangeKm: v ? v.rangeKm : null,
     });
 
-    if (out.summary) out.summary.textContent = teksRingkasPengisian(h);
-    if (out.durasi) out.durasi.textContent = teksDurasi(h);
+    if (out.summary) out.summary.textContent = teksRingkasPengisian(h, t);
+    if (out.durasi) out.durasi.textContent = teksDurasi(h, t);
     if (out.biaya) out.biaya.textContent = rupiahPenuh(h.biaya);
     if (out.perKwh) out.perKwh.textContent = h.biayaPerKwh !== null ? rupiahHalus(h.biayaPerKwh) : "—";
     if (out.energi) out.energi.textContent = kwhKeTeks(h.energiMasuk);
@@ -82,7 +94,7 @@ if (form) {
       // Dibangun ulang setiap render: catatan yang tertinggal dari hitungan
       // sebelumnya akan memperingatkan soal keadaan yang sudah tidak berlaku.
       out.catatan.textContent = "";
-      for (const teks of catatanHasil(h)) {
+      for (const teks of catatanHasil(h, t)) {
         const li = document.createElement("li");
         li.textContent = teks;
         out.catatan.appendChild(li);

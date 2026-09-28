@@ -12,7 +12,7 @@ import {
   koleksiDescription,
 } from "../lib/taxonomy.js";
 import { siteOrigin, canonicalUrl, absoluteUrl } from "../lib/site-url";
-import { makePubT } from "../lib/i18n/pub.js";
+import { makePubT, normalizePubLocale, cmsSite } from "../lib/i18n/pub.js";
 
 /**
  * Halaman kelompok katalog — dipakai `/merek/*` DAN `/tipe/*`.
@@ -42,9 +42,11 @@ interface Props {
   media?: Record<string, any>;
 }
 
-const { site, jenis, pool, mode, group = null, media = {} } = Astro.props;
+const { site: siteProp, jenis, pool, mode, group = null, media = {} } = Astro.props;
 
-const t = makePubT(Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(siteProp, lang);
 
 const isMerek = jenis === "merek";
 const field = isMerek ? "brand" : "bodyType";
@@ -70,7 +72,7 @@ const silang = group ? groupByField(group.items, isMerek ? "bodyType" : "brand")
 /** Kelompok lain, tanpa yang sedang dibuka. Dibatasi supaya tidak jadi dinding. */
 const tetangga = group ? groups.filter((g) => g.slug !== group.slug).slice(0, 12) : [];
 
-const gridHtml = items.map((c: any) => cardHTML(c, { linkable: true, media, t })).join("");
+const gridHtml = items.map((c: any) => cardHTML(c, { linkable: true, media, t, lang })).join("");
 
 const brand = site.brandText || "EVKita";
 const origin = siteOrigin(Astro.url);
@@ -87,7 +89,7 @@ const h1 =
 
 const lead =
   mode === "kelompok" && group
-    ? koleksiLead(jenis, group.label, group.items, t)
+    ? koleksiLead(jenis, group.label, group.items, t, lang)
     : mode === "indeks"
       ? t("pub.koleksi.indeksLead", { count: countPhrase(s, t), n: groups.length, jenis: jenisKata })
       : "";
@@ -101,10 +103,10 @@ const pageTitle =
 
 const metaDesc =
   mode === "kelompok" && group
-    ? koleksiDescription(jenis, group.label, group.items, t)
+    ? koleksiDescription(jenis, group.label, group.items, t, lang)
     : mode === "indeks"
       ? t("pub.koleksi.metaIndeks", { jenis: jenisKata })
-      : "Halaman yang kamu cari tidak tersedia.";
+      : t("pub.notFound.desc");
 
 const jsonLd =
   mode === "kelompok" && group
@@ -155,7 +157,7 @@ const ringkasan = (g: { items: any[] }) => {
   const r = summarize(g.items);
   const bagian = [countPhrase(r, t)];
   if (r.hargaMin !== null) {
-    bagian.push(r.hargaMin === r.hargaMaks ? rupiah(r.hargaMin) : `${rupiah(r.hargaMin)}–${rupiah(r.hargaMaks)}`);
+    bagian.push(r.hargaMin === r.hargaMaks ? rupiah(r.hargaMin, lang) : `${rupiah(r.hargaMin, lang)}–${rupiah(r.hargaMaks, lang)}`);
   }
   return bagian.join(" · ");
 };

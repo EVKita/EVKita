@@ -1,4 +1,4 @@
-/* =========================================================================
+﻿/* =========================================================================
    EVKita — gaya situs publik.
    Nama variabel di :root dan [data-theme="dark"] dipakai ulang oleh
    admin.css yang dimuat setelah berkas ini, jadi variabel token tidak boleh
@@ -581,13 +581,38 @@ textarea {
 }
 
 .lg-opt {
+  display: inline-flex;
+  align-items: center;
   opacity: 0.5;
   transition: opacity 0.18s var(--ease), color 0.18s var(--ease);
+  /* Benderanya mungil (21px) — padding memperbesar sasaran sentuh supaya
+     klik tidak jatuh ke pemisah lalu diabaikan dalam diam. */
+  padding: 5px 3px;
+  margin: -5px -3px;
+  cursor: pointer;
 }
 
 .lg-opt[data-on] {
   opacity: 1;
   color: var(--accent-ink);
+}
+
+/* Benderanya digambar sebagai svg, tingginya disamakan dengan tinggi teks
+   IND/ENG yang dulu dipakai supaya ukuran pil di header tidak berubah.
+   Garis tipis di tepinya membuat bagian putih bendera tetap terlihat di atas
+   latar yang juga terang. */
+.lg-opt svg {
+  display: block;
+  width: 21px;
+  height: 14px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+/* Penanda bendera aktif: garis melingkar, tanpa mengubah tata letak. */
+.lg-opt[data-on] svg {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 1.5px;
 }
 
 .lg-sep {
@@ -5111,5 +5136,687 @@ html {
 
   .preview-bar-link {
     padding: 5px 10px;
+  }
+}
+
+/* ===== Pintu konten (ContentGate) ===== *
+ * Dialog "buka lebih banyak konten" saat pertama masuk. Selalu `hidden` di
+ * HTML � yang membukanya skrip kecil di Base.astro, jadi tanpa JavaScript dan
+ * bagi perayap ia tidak pernah ada. Kunci gulir memakai `html.modal-open`
+ * yang sama dengan modal bandingkan. */
+.gate[hidden] {
+  display: none;
+}
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.gate-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 9, 14, 0.6);
+  backdrop-filter: blur(4px);
+}
+.gate-box {
+  position: relative;
+  width: min(560px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 40px 36px 32px;
+  text-align: center;
+}
+.gate-eyebrow {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+}
+.gate-title {
+  margin: 0 0 12px;
+  font-size: 1.6rem;
+  line-height: 1.25;
+}
+.gate-sub {
+  margin: 0 0 28px;
+  color: var(--text-muted);
+}
+.gate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.gate-btn:hover {
+  border-color: var(--accent);
+  box-shadow: var(--ring);
+}
+.gate-btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gate-btn-cta {
+  font-weight: 700;
+  color: var(--text);
+}
+.gate-btn-sub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.gate-play {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  color: var(--accent);
+}
+@media (max-width: 560px) {
+  .gate-box {
+    padding: 32px 22px 26px;
+  }
+}
+
+/* ===== Pintu masuk pengunjung (MemberGate) ===== *
+ * Popup login pada klik kedua. Selalu `hidden` di HTML � skrip kecil di
+ * Base.astro yang membukanya, jadi tanpa JavaScript ia tidak pernah ada.
+ * Hijau tombol masuk dan biru tombol Google mengikuti contoh yang diminta
+ * pemilik, bukan warna aksen tema. */
+.member[hidden] {
+  display: none;
+}
+.member {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.member-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 9, 14, 0.6);
+  backdrop-filter: blur(4px);
+}
+.member-box {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 40px 56px 0;
+}
+.member-x {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 8px;
+  line-height: 1;
+}
+.member-x:hover {
+  color: var(--text);
+}
+.member-title {
+  margin: 0 0 28px;
+  text-align: center;
+  font-size: 1.15rem;
+}
+.member-field {
+  display: block;
+  margin: 0 0 16px;
+}
+.member-field > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+.member-field input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  color: var(--text);
+  font: inherit;
+}
+.member-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--ring);
+}
+.member-err {
+  margin: 0 0 12px;
+  color: var(--danger);
+  font-size: 0.92rem;
+}
+.member-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 20px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.member-login {
+  width: 100%;
+  padding: 13px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: #1e7a4c;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.member-login:hover {
+  background: #186840;
+}
+.member-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.member-or::before,
+.member-or::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--border);
+}
+.member-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #1a56db;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  color: #1a56db;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.member-google:hover {
+  background: rgba(26, 86, 219, 0.07);
+}
+.member-g {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.member-foot {
+  margin: 24px -56px 0;
+  padding: 18px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+@media (max-width: 560px) {
+  .member-box {
+    padding: 32px 22px 0;
+  }
+  .member-foot {
+    margin: 20px -22px 0;
+  }
+}
+
+/* ===== Sorotan SPKLU beranda ===== *
+ * Satu unggulan berfoto di kiri, dua kartu di kanan. Isi kartunya sama
+ * persis dengan kartu direktori biasa � yang beda hanya bingkainya, supaya
+ * barisan tiga kartu yang lama tidak menyisakan ruang kosong membosankan. */
+.dir-feat {
+  display: grid;
+  grid-template-columns: 1.12fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.dir-feat-side {
+  display: grid;
+  gap: 16px;
+}
+.dir-visual {
+  margin: -18px -18px 10px;
+  border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: #0a1428;
+}
+.dir-visual .dir-photo,
+.dir-visual .dir-illus {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@media (max-width: 900px) {
+  .news-feat {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sembunyikan kolom search/filter di layar lebar (PC) */
+@media (min-width: 901px) {
+  .search-wrap { display: none; }
+  .filter-row { display: none; }
+  .toolbar { display: none; }
+}
+
+/* Di layar kecil, tampilkan kembali toolbar untuk pencarian */
+@media (max-width: 900px) {
+  .toolbar { display: block; }
+}
+
+/* ===== Kolom beranda + panel "Mobil/Motor Kita" ===== *
+ * Panel peringkat di kiri, sisa seksi di kanan. Panel TIDAK dibuat lengket
+ * (sticky): ia ikut scroll normal bersama halaman, sesuai permintaan pemilik.
+ * Di layar sempit kembali satu kolom dengan isi utama dulu, panel sesudahnya
+ * (urutan DOM: isi dulu, panel kemudian; di desktop panel dipindah ke kiri
+ * lewat grid). */
+.home-cols {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  gap: 24px;
+  align-items: start;
+}
+.home-main {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  /* Bilah filter di dalam kolom ini position:sticky — tanpa penjepit ia
+     melukis keluar kolomnya dan menutupi panel kiri saat scroll. `clip`
+     (bukan `hidden`) menjaga sticky tetap berfungsi. */
+  overflow-x: clip;
+}
+/* Seksi-seksi di dalam kolom kanan melepas pembungkus containernya sendiri. */
+.home-main .container {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.home-side {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  /* Di atas bilah filter yang sticky (z-index 40) di kolom sebelah. */
+  position: relative;
+  z-index: 50;
+  /* Beri sedikit jarak di atas supaya tidak menutupi toolbar sticky */
+  margin-top: calc(var(--header-h) + 16px);
+}
+/* Panel kanan VoteKita: satu kolom dengan panel kiri. */
+.home-vote {
+  grid-column: 3;
+  grid-row: 1;
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  min-width: 0;
+}
+.vote-sub {
+  margin: 14px 0 10px;
+  font-size: 0.95rem;
+}
+.vote-sub:first-of-type {
+  margin-top: 0;
+}
+.vote-list {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.vote-err {
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+.kita-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+  /* Beri jarak di atas agar tidak menutupi toolbar/sticky di kolom sebelah */
+  margin-top: calc(var(--header-h) + 16px);
+}
+.kita-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.kita-sub {
+  margin: 4px 0 14px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.kita-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.kita-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+.kita-row:hover .kita-name {
+  text-decoration: underline;
+}
+.kita-rank {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg-tint);
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+.kita-list > li:first-child .kita-rank {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.kita-thumb {
+  flex: none;
+  width: 64px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--bg-tint);
+}
+.kita-thumb.kita-svg {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.kita-thumb.kita-svg svg {
+  width: 100%;
+  height: 100%;
+}
+.kita-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.kita-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kita-unit {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+@media (max-width: 1279px) {
+  .home-cols {
+    grid-template-columns: 1fr;
+  }
+  .home-main,
+  .home-side,
+  .home-vote {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+/* Lencana huruf pengganti foto berita yang kosong. */
+.kita-thumb.kita-huruf {
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+/* ===== Sorotan berita beranda ===== *
+ * Satu kartu besar di kiri, dua kartu di kanan — grid dua kolom yang sama
+ * dengan `.dir-feat` sorotan SPKLU. Isi kartunya sama persis dengan kartu
+ * berita biasa; yang beda hanya bingkainya. */
+.news-feat {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.news-feat .news-thumb {
+  display: none;
+}
+.news-feat .news-body {
+  padding-top: 0;
+}
+.news-feat .news-top {
+  padding-bottom: 4px;
+}
+.news-feat .news-title {
+  font-size: 14px;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.news-feat .news-source,
+.news-feat .badge-featured,
+.news-feat .news-foot {
+  display: none;
+}
+.news-feat .news-foot {
+  margin-top: 8px;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 4px;
+}
+.news-feat .news-date,
+.news-feat .dir-link {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Huruf CJK untuk pembaca Mandarin: font tema tidak membawa glif Han,
+   jadi Noto Sans SC (dimuat di Base.astro hanya saat lang zh) didahulukan.
+   PingFang SC dan Microsoft YaHei menutup perangkat Apple dan Windows
+   yang memblokir font Google. */
+[lang="zh"] body { font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", var(--font-sans); }
+
+/* ===== VoteKita: voting bintang pengunjung =====
+ * Panel sisi kanan beranda (`aside#voteKita`): 10 mobil + 10 motor terfavorit.
+ * Barisnya ringkas seperti `.kita-row` — bedanya ada bintang tampilan,
+ * lima tombol vote, dan baris jumlah suara. Kartunya memakai variabel tema
+ * yang sama dengan `.kita-card`, jadi ikut terang/gelap tanpa aturan ganda. */
+.vote-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+}
+.vote-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.vote-sub {
+  margin: 4px 0 14px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.vote-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.vote-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.vote-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.vote-rank {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg-tint);
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 0.78rem;
+}
+.vote-list > li:first-child .vote-rank {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.vote-thumb {
+  flex: none;
+  width: 56px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--bg-tint);
+}
+.vote-thumb.vote-huruf {
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+.vote-info {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.vote-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vote-name:hover {
+  text-decoration: underline;
+}
+.vote-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vote-display {
+  display: inline-flex;
+  gap: 1px;
+}
+.vote-star {
+  display: inline-flex;
+  line-height: 0;
+}
+.vote-star .vote-svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+/* Bintang tampilan yang kosong memakai warna garis tema — redup tapi tetap
+   terlihat di tema terang maupun gelap. */
+.vote-star.kosong {
+  color: var(--border);
+}
+.vote-avg {
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+/* Lima tombol vote: direset total (tanpa latar/bingkai bawaan peramban),
+   warnanya abu sampai dipilih atau dipratinjau. */
+.vote-btns {
+  display: flex;
+  gap: 0;
+}
+.vote-btn {
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 3px;
+  line-height: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: 6px;
+}
+.vote-btn .vote-svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.vote-btn:hover,
+.vote-btn.preview,
+.vote-btn.on {
+  color: #f59e0b;
+}
+.vote-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.vote-count {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.vote-err {
+  margin: 10px 0 0;
+  color: #dc2626;
+  font-size: 0.85rem;
+}
+/* Panelnya tinggal di kolom samping yang menyempit sendiri di layar kecil
+   (aturan `.home-cols`), jadi di sini hanya fotonya yang dikecilkan. */
+@media (max-width: 480px) {
+  .vote-thumb {
+    width: 48px;
+    height: 34px;
+  }
+  .vote-btn .vote-svg {
+    width: 20px;
+    height: 20px;
   }
 }

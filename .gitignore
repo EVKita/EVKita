@@ -9,6 +9,8 @@ release/
 Open Code server.docx
 .update/
 data/users.json
+data/members.json
+data/votes.json
 data/activity.json
 data/backups/
 .claude/
@@ -16,3 +18,4 @@ data/integrasi.json
 data/trafik/
 data/berita-jadwal.json
 data/peluncuran.json
+data/terjemahan/

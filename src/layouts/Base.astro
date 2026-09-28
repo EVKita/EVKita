@@ -2,7 +2,10 @@
 import "../styles/global.css";
 import { canonicalUrl } from "../lib/site-url";
 import { themeAccentStyle, themeStyle, themeBodyClass, themeExtraCss, themeFontHref, themeMode } from "../lib/theme.js";
+import { makePubT, cms, pubOgLocale } from "../lib/i18n/pub.js";
 import TagGoogle from "../components/TagGoogle.astro";
+import ContentGate from "../components/ContentGate.astro";
+import MemberGate from "../components/MemberGate.astro";
 
 interface Props {
   title?: string;
@@ -21,7 +24,7 @@ interface Props {
   ogType?: string;
   bodyClass?: string;
   /** Kode bahasa untuk atribut <html lang>. Panel admin mengirim bahasa
-      pilihan penggunanya; situs publik tetap Bahasa Indonesia. */
+      pilihan penggunanya; situs publik mengikuti pilihan bendera. */
   lang?: string;
   /**
    * Halaman yang tidak boleh masuk hasil pencarian: panel admin dan wizard
@@ -50,6 +53,13 @@ const {
 } = Astro.props;
 
 const canonical = canonicalUrl(Astro.url);
+
+/**
+ * Deskripsi meta. Nilai yang dikirim pemanggil diterjemahkan dulu (banyak
+ * halaman mengirim kalimat buatan sendiri), dan kalau tidak ada sama sekali
+ * jatuh ke deskripsi bawaan lewat kamus — bukan ke literal Bahasa Indonesia.
+ */
+const metaDesc = cms(description, lang) || makePubT(lang)("pub.base.desc");
 
 /*
  * Halaman panel (login, pembaruan) hanya mengambil warna aksennya supaya
@@ -160,7 +170,7 @@ const tagPublik = !!site && !accentOnly;
     {keywords ? <meta name="keywords" content={keywords} /> : null}
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:locale" content={lang === "en" ? "en_US" : "id_ID"} />
+    <meta property="og:locale" content={pubOgLocale(lang)} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}
@@ -180,11 +190,196 @@ const tagPublik = !!site && !accentOnly;
     <link rel="preload" as="style" href={fontHref} />
     <link rel="stylesheet" href={fontHref} media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href={fontHref} /></noscript>
+    {/*
+      Font CJK hanya untuk pembaca Mandarin: mengunduh Noto Sans SC di setiap
+      bahasa hanya menambah bobot tanpa guna, dan huruf Latin di kamus zh
+      tetap tertutup font tema di atas.
+    */}
+    {lang === "zh" ? (
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" />
+    ) : null}
     {extraCss ? <style is:inline set:html={extraCss}></style> : null}
     {tagPublik && <TagGoogle />}
     <slot name="head" />
   </head>
   <body style={bodyStyle} class={bodyClasses}>
     <slot />
+    {tagPublik && <ContentGate site={site} lang={lang} />}
+    {tagPublik && <MemberGate lang={lang} />}
+    {tagPublik && (
+      <script is:inline>
+        // Pintu konten (ContentGate): tampil saat kunjungan pertama, tutup
+        // 24 jam begitu tombolnya diklik. Markup pintunya selalu `hidden` —
+        // skrip inilah yang membukanya, jadi tanpa JavaScript dan bagi
+        // perayap isi halaman tetap terbuka penuh.
+        (function () {
+          var COOKIE = "evkita_gate";
+          var gate = document.getElementById("contentGate");
+          if (!gate) return;
+          var sudah = false;
+          try {
+            var parts = document.cookie.split(";");
+            for (var i = 0; i < parts.length; i++) {
+              if (parts[i].trim().indexOf(COOKIE + "=") === 0) { sudah = true; break; }
+            }
+          } catch (e) {}
+          if (sudah) { gate.remove(); return; }
+          var btn = document.getElementById("gateBtn");
+          gate.hidden = false;
+          document.documentElement.classList.add("modal-open");
+          if (btn) btn.focus();
+          if (btn) btn.addEventListener("click", function () {
+            try {
+              document.cookie = COOKIE + "=1; max-age=86400; path=/; SameSite=Lax";
+            } catch (e) {}
+            document.documentElement.classList.remove("modal-open");
+            gate.remove();
+          });
+        })();
+      </script>
+    )}
+    {tagPublik && (
+      <script is:inline>
+        // Pintu masuk pengunjung (MemberGate): muncul pada KLIK KEDUA di
+        // situs. Klik pertama biasanya tombol pintu konten; klik berikutnya —
+        // di halaman mana pun — membuka popup login ini. Masuk yang berhasil
+        // (atau menutupnya) dicatat supaya tidak mengganggu lagi.
+        (function () {
+          var gate = document.getElementById("memberGate");
+          if (!gate) return;
+          var KEY = "evkita_member_local";
+          var KLIK = "evkita_klik";
+          var TUNDA = "evkita_member_snooze";
+
+          function sudahMasuk() {
+            try {
+              if (/(?:^|;\s*)evkita_member=/.test(document.cookie)) return true;
+              var l = window.localStorage.getItem(KEY);
+              if (l) {
+                try {
+                  var d = JSON.parse(l);
+                  if (d && d.at && Date.now() - d.at < 30 * 24 * 3600 * 1000) return true;
+                } catch (e) { return true; }
+              }
+              if (window.sessionStorage.getItem(KEY)) return true;
+              if (window.sessionStorage.getItem(TUNDA)) return true;
+            } catch (e) {}
+            return false;
+          }
+          if (sudahMasuk()) { gate.remove(); return; }
+
+          var klik = 0, dibuka = false, selesai = false;
+          try { klik = parseInt(window.sessionStorage.getItem(KLIK) || "0", 10) || 0; } catch (e) {}
+
+          function err(msg) {
+            var p = document.getElementById("memberErr");
+            if (p) { p.textContent = msg; p.hidden = false; }
+          }
+          function buka() {
+            dibuka = true;
+            gate.hidden = false;
+            document.documentElement.classList.add("modal-open");
+            var em = gate.querySelector('input[type="email"]');
+            if (em) em.focus();
+          }
+          function tutup() {
+            document.documentElement.classList.remove("modal-open");
+            gate.remove();
+          }
+          function tunda() {
+            try { window.sessionStorage.setItem(TUNDA, "1"); } catch (e) {}
+            selesai = true;
+            tutup();
+          }
+
+          /* Capture: klik tetap terhitung walau elemen lain menghentikannya. */
+          document.addEventListener("click", function (e) {
+            if (selesai || dibuka) return;
+            if (gate.contains(e.target)) return;
+            klik++;
+            try { window.sessionStorage.setItem(KLIK, String(klik)); } catch (e2) {}
+            if (klik < 2) return;
+            /* Jangan menumpuk di atas pintu konten yang masih terbuka. */
+            var g = document.getElementById("contentGate");
+            if (g && !g.hidden) return;
+            buka();
+          }, true);
+
+          var x = document.getElementById("memberX");
+          if (x) x.addEventListener("click", tunda);
+          var latar = gate.querySelector("[data-member-tutup]");
+          if (latar) latar.addEventListener("click", tunda);
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && dibuka && !selesai) tunda();
+          });
+
+          var form = document.getElementById("memberForm");
+          if (form) form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var email = "";
+            var pass = "";
+            var ingat = false;
+            try {
+              email = String(form.email.value || "").trim();
+              pass = String(form.password.value || "");
+              ingat = !!form.remember.checked;
+            } catch (e2) {}
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err(gate.dataset.errEmail); return; }
+            if (pass.length < 6) { err(gate.dataset.errPass); return; }
+            /* Belum ada akun anggota di server (belum ada alur pendaftaran),
+               jadi masuk email dicatat di peramban pengunjung sendiri. */
+            try {
+              var rekam = JSON.stringify({ email: email, at: Date.now() });
+              if (ingat) window.localStorage.setItem(KEY, rekam);
+              else window.sessionStorage.setItem(KEY, rekam);
+            } catch (e3) {}
+            selesai = true;
+            tutup();
+          });
+
+          /* Masuk Google: asli bila Client ID terpasang, pesan jujur bila belum. */
+          window.evkitaGoogle = function (resp) {
+            var cred = resp && resp.credential;
+            if (!cred) { err(gate.dataset.errNet); return; }
+            fetch("/api/member-google", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ credential: cred }),
+            })
+              .then(function (r) {
+                return r.json().then(function (b) { return { s: r.status, b: b }; });
+              })
+              .then(function (x) {
+                if (x.s === 200 && x.b && x.b.ok) { selesai = true; tutup(); }
+                else { err(gate.dataset.errNet); }
+              })
+              .catch(function () { err(gate.dataset.errNet); });
+          };
+          var gbtn = document.getElementById("memberGoogle");
+          if (gbtn) gbtn.addEventListener("click", function () {
+            var clientId = gate.getAttribute("data-google-id") || "";
+            if (!clientId) { err(gate.dataset.errGoogleoff); return; }
+            var jalan = function () {
+              try {
+                window.google.accounts.id.initialize({
+                  client_id: clientId,
+                  callback: window.evkitaGoogle,
+                  auto_select: false,
+                });
+                window.google.accounts.id.prompt();
+              } catch (e) { err(gate.dataset.errNet); }
+            };
+            if (window.google && window.google.accounts && window.google.accounts.id) { jalan(); return; }
+            var s = document.createElement("script");
+            s.src = "https://accounts.google.com/gsi/client";
+            s.async = true;
+            s.defer = true;
+            s.onload = jalan;
+            s.onerror = function () { err(gate.dataset.errNet); };
+            document.head.appendChild(s);
+          });
+        })();
+      </script>
+    )}
   </body>
 </html>

@@ -3,6 +3,7 @@ import KoleksiPage from "../../components/KoleksiPage.astro";
 import { readContent } from "../../lib/store";
 import { groupByField, findGroup } from "../../lib/taxonomy.js";
 import { hanyaTayang } from "../../lib/tayang.js";
+import { terjemahContent } from "../../lib/terjemahan.js";
 
 /**
  * `/tipe` dan `/tipe/<tipe-bodi>`.
@@ -12,7 +13,7 @@ import { hanyaTayang } from "../../lib/tayang.js";
  * biasanya bukan merek melainkan bentuk — "SUV listrik", "hatchback listrik
  * murah" — dan itu pertanyaan yang tidak pernah punya halaman di situs ini.
  */
-const content = readContent();
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 const site = content.site;
 
 const pool = [

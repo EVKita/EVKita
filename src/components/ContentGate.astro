@@ -1,0 +1,54 @@
+---
+import { bacaIntegrasi } from "../lib/integrasi-simpan";
+import { SESSION_COOKIE } from "../lib/auth";
+import { makePubT } from "../lib/i18n/pub.js";
+
+interface Props {
+  site?: Record<string, any>;
+  lang?: string;
+}
+
+const { site, lang = Astro.locals?.pubLang || "id" } = Astro.props;
+
+/**
+ * Pintu konten: dialog "buka lebih banyak konten" saat pertama masuk.
+ *
+ * Syarat tampilnya disengaja: HANYA bila AdSense aktif dan ada id penayang.
+ * Tanpa iklan yang ditopang, pintu ini cuma dinding klik tanpa guna — jadi ia
+ * tidak dirender sama sekali. Pemilik yang sedang masuk ke panel juga tidak
+ * ikut dicegat, supaya menguji situs tidak berarti membuka pintunya dulu.
+ *
+ * Markupnya selalu `hidden`: yang membukanya adalah skrip kecil di Base.astro
+ * kalau cookie 24 jamnya belum ada. Tanpa JavaScript — dan bagi perayap — isi
+ * halaman tetap terbuka penuh karena kontennya memang tidak pernah disembunyikan.
+ */
+const cfg = bacaIntegrasi();
+const admin = !!Astro.cookies.get(SESSION_COOKIE)?.value;
+const tampil = cfg.adsenseAktif && !!cfg.adsenseId && !admin;
+
+const t = makePubT(lang);
+const brand = site?.brandText || "EVKita";
+---
+
+{tampil ? (
+  <div class="gate" id="contentGate" hidden>
+    <div class="gate-backdrop" aria-hidden="true"></div>
+    <div class="gate-box" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+      <p class="gate-eyebrow">{t("pub.gate.welcome", { brand })}</p>
+      <h2 class="gate-title" id="gateTitle">{t("pub.gate.title")}</h2>
+      <p class="gate-sub">{t("pub.gate.sub")}</p>
+      <button class="gate-btn" id="gateBtn" type="button">
+        <span class="gate-btn-text">
+          <span class="gate-btn-cta">{t("pub.gate.cta")}</span>
+          <span class="gate-btn-sub">{t("pub.gate.ctaSub")}</span>
+        </span>
+        <span class="gate-play" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="32" height="32">
+            <circle cx="16" cy="16" r="15" fill="currentColor" />
+            <path d="M13 10.5v11l9-5.5z" fill="#fff" />
+          </svg>
+        </span>
+      </button>
+    </div>
+  </div>
+) : null}

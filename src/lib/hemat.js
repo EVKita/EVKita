@@ -7,9 +7,13 @@
  * browser yang menghitung ulang setiap angka diubah. Pola yang sama dengan
  * `card-html.js` dan `compare-html.js`.
  *
- * Teksnya Bahasa Indonesia dan memang tidak diterjemahkan — situs publik ini
- * berbahasa Indonesia.
+ * Kalimat hasilnya ada di kamus situs publik (`src/lib/i18n/pub.js`). Tiap
+ * fungsi yang menghasilkan teks menerima `t` opsional; kalau tidak diisi ia
+ * memakai Bahasa Indonesia, jadi pemanggil yang lama tidak berubah artinya.
  */
+import { makePubT } from "./i18n/pub.js";
+
+const tId = makePubT("id");
 
 /**
  * Nilai awal formulir.
@@ -43,8 +47,8 @@ export const BATAS_BALIK_MODAL = 15 * 12;
 
 /** Tarif listrik yang lazim dipakai, sebagai tombol pintas. Keduanya perkiraan. */
 export const TARIF_PRESETS = [
-  { id: "rumah", label: "Di rumah", value: 1444.7, note: "tarif rumah tangga" },
-  { id: "spklu", label: "SPKLU", value: 2466, note: "pengisian umum" },
+  { id: "rumah", label: "Di rumah", i18n: "pub.hemat.rumah", value: 1444.7, note: "tarif rumah tangga", i18nNote: "pub.hemat.tarifRumah" },
+  { id: "spklu", label: "SPKLU", i18n: "pub.nav.spklu", value: 2466, note: "pengisian umum", i18nNote: "pub.hemat.pengisianUmum" },
 ];
 
 /**
@@ -194,18 +198,20 @@ export function rupiahHalus(n) {
  * apa pun, jadi membulatkannya ke bawah akan menjanjikan lebih cepat dari
  * yang sebenarnya.
  */
-export function lamaBalikModal(months) {
+export function lamaBalikModal(months, t = tId) {
   // `Number(null)` bernilai 0, jadi null harus dicegat SEBELUM diubah jadi
   // angka — kalau tidak, "belum bisa dihitung" terbaca "balik seketika".
   if (months === null || months === undefined) return "";
   const n = Number(months);
   if (!Number.isFinite(n)) return "";
   const m = Math.ceil(n);
-  if (m <= 0) return "langsung, sejak hari pertama";
-  if (m < 12) return `${m} bulan`;
+  if (m <= 0) return t("pub.hemat.balikLangsung");
+  if (m < 12) return t("pub.hemat.balikBulan", { n: m });
   const tahun = Math.floor(m / 12);
   const sisa = m % 12;
-  return sisa ? `${tahun} tahun ${sisa} bulan` : `${tahun} tahun`;
+  return sisa
+    ? t("pub.hemat.balikTahunBulan", { t: tahun, b: sisa })
+    : t("pub.hemat.balikTahun", { t: tahun });
 }
 
 /**
@@ -215,20 +221,23 @@ export function lamaBalikModal(months) {
  * berbeda antara render server dan render browser sama merusaknya dengan angka
  * yang berbeda.
  */
-export function teksBalikModal(hasil) {
-  if (hasil.paybackNever) return "Tidak pernah kembali";
-  if (hasil.paybackTooLong) return "Lebih lama dari umur pakai mobilnya";
-  return lamaBalikModal(hasil.paybackMonths) || "—";
+export function teksBalikModal(hasil, t = tId) {
+  if (hasil.paybackNever) return t("pub.hemat.tidakPernah");
+  if (hasil.paybackTooLong) return t("pub.hemat.terlaluLama");
+  return lamaBalikModal(hasil.paybackMonths, t) || "—";
 }
 
 /** Kalimat ringkas di atas kartu hasil. */
-export function teksRingkas(hasil) {
-  if (hasil.savingMonthly === null) return "Isi angkanya untuk melihat hasilnya.";
+export function teksRingkas(hasil, t = tId) {
+  if (hasil.savingMonthly === null) return t("pub.hemat.isiAngka");
   if (hasil.savingMonthly > 0) {
-    return `Dengan angka di atas, mobil listrik menghemat ${rupiahPenuh(hasil.savingMonthly)} sebulan — ${rupiahPenuh(hasil.savingYearly)} setahun.`;
+    return t("pub.hemat.hematBulan", {
+      bulan: rupiahPenuh(hasil.savingMonthly),
+      tahun: rupiahPenuh(hasil.savingYearly),
+    });
   }
   if (hasil.savingMonthly < 0) {
-    return `Dengan angka di atas, mobil listriknya justru lebih mahal ${rupiahPenuh(Math.abs(hasil.savingMonthly))} sebulan. Biasanya ini tanda tarif listrik yang dipakai terlalu tinggi, atau mobil bensin pembandingnya terlalu irit.`;
+    return t("pub.hemat.lebihMahal", { bulan: rupiahPenuh(Math.abs(hasil.savingMonthly)) });
   }
-  return "Dengan angka di atas, biaya keduanya persis sama.";
+  return t("pub.hemat.sama");
 }

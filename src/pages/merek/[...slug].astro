@@ -3,6 +3,7 @@ import KoleksiPage from "../../components/KoleksiPage.astro";
 import { readContent } from "../../lib/store";
 import { groupByField, findGroup } from "../../lib/taxonomy.js";
 import { hanyaTayang } from "../../lib/tayang.js";
+import { terjemahContent } from "../../lib/terjemahan.js";
 
 /**
  * `/merek` dan `/merek/<merek>`.
@@ -15,7 +16,7 @@ import { hanyaTayang } from "../../lib/tayang.js";
  * Daftar mereknya diturunkan dari `content.json`, bukan ditulis di kode: merek
  * yang baru ditambahkan lewat panel langsung punya halamannya sendiri.
  */
-const content = readContent();
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 const site = content.site;
 
 const pool = [

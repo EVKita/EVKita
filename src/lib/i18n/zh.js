@@ -447,6 +447,8 @@ export default {
   "field.price": "价格（印尼盾，数字）",
   "field.price.hint": "两个价格字段填其一即可，另一个会自动生成。",
   "field.priceText": "价格（显示文字）",
+  "field.penjualan2026": "2026年销量（辆）",
+  "field.penjualan2026.hint": "2026年售出数量。未知请留空——用于首页“我们的汽车/摩托车”榜单。",
   "field.videoUrl": "视频链接",
   "field.sumberUrl": "车型官方页面",
   "field.sumberUrl.hint": "车型官方页面链接，供“获取媒体”按钮使用；不会显示在网站上。",
@@ -459,6 +461,8 @@ export default {
 
   /* ---------- Field direktori ---------- */
   "field.spklu.name": "站点名称",
+  "field.spklu.image": "站点照片",
+  "field.spklu.image.hint": "充电站照片。没有照片时，精选卡片使用内置插图。",
   "field.spklu.name.ph": "例如 SPKLU PLN UP3 Menteng",
   "field.spklu.operator": "运营商",
   "field.spklu.operator.ph": "例如 PLN、Starvo、Utomo",
@@ -472,6 +476,8 @@ export default {
   "field.spklu.price": "收费标准",
   "field.spklu.price.ph": "例如 Rp 2.466/kWh",
   "field.bengkel.name": "维修厂名称",
+  "field.bengkel.image": "维修店照片",
+  "field.bengkel.image.hint": "维修店照片。没有照片时，精选卡片不显示图片。",
   "field.bengkel.type": "维修厂类型",
   "field.bengkel.type.ph": "例如 授权、独立、专修",
   "field.bengkel.brand": "服务品牌",

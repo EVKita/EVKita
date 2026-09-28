@@ -13,16 +13,19 @@ import LogoMark from "./LogoMark.astro";
 import { SOCIAL_NETWORKS, CONTACT_ROWS } from "../lib/footer.js";
 import { readContent } from "../lib/store";
 import { tautanFooter } from "../lib/laman.js";
-import { makePubT } from "../lib/i18n/pub.js";
+import { makePubT, cms, cmsSite } from "../lib/i18n/pub.js";
 
 interface Props {
   site: Record<string, any>;
   base?: string;
 }
 
-const { site } = Astro.props;
+const lang = Astro.locals?.pubLang;
+const t = makePubT(lang);
 
-const t = makePubT(Astro.locals?.pubLang);
+/** Seluruh teks antarmuka yang datang dari Pengaturan Situs diterjemahkan
+ *  sekali di sini, supaya baris-baris di bawahnya cukup membaca `site.x`. */
+const site = cmsSite(Astro.props.site, lang);
 
 /**
  * Tautan halaman statis (Tentang, Kebijakan Privasi, …).
@@ -60,9 +63,9 @@ const ICON_ATTRS = {
 /** Kolom menu buatan pemilik situs. Tautan tanpa alamat yang sah tidak ikut tampil. */
 const customMenus = (Array.isArray(site.footerMenus) ? site.footerMenus : [])
   .map((col: any) => ({
-    title: String(col?.title || ""),
+    title: cms(String(col?.title || ""), lang),
     links: (Array.isArray(col?.links) ? col.links : [])
-      .map((l: any) => ({ label: String(l?.label || "").trim(), href: safeUrl(l?.url) }))
+      .map((l: any) => ({ label: cms(String(l?.label || "").trim(), lang), href: safeUrl(l?.url) }))
       .filter((l: any) => l.label && l.href),
   }))
   .filter((col: any) => col.links.length);
@@ -84,18 +87,20 @@ const contacts = site.showFooterContact
       const value = String(site[row.key] || "").trim();
       if (!value) return null;
       const href = row.href ? safeUrl(row.href(value)) : "";
-      return { ...row, value: row.text ? row.text() : value, href };
+      const label = row.i18n ? t(row.i18n) : row.label;
+      const shown = row.i18nText ? t(row.i18nText) : row.text ? row.text() : value;
+      return { ...row, label, value: shown, href };
     }).filter(Boolean)
   : [];
 
 const legal = [
   ...(Array.isArray(site.footerLegal) ? site.footerLegal : [])
-    .map((l: any) => ({ label: String(l?.label || "").trim(), href: safeUrl(l?.url) }))
+    .map((l: any) => ({ label: cms(String(l?.label || "").trim(), lang), href: safeUrl(l?.url) }))
     .filter((l: any) => l.label && l.href),
   // Halaman statis yang letaknya "Bilah bawah" — tempat lazim tautan
   // kebijakan privasi dan disclaimer. Alamatnya dirakit sendiri dari slug,
   // jadi tidak perlu lewat safeUrl().
-  ...lamanFooter.legal,
+  ...lamanFooter.legal.map((l: any) => ({ ...l, label: cms(l.label, lang) })),
 ];
 
 const year = new Date().getFullYear();
@@ -151,7 +156,7 @@ const hasSource = site.showFooterSource && (site.footerSourceText || site.footer
 
         {contacts.length ? (
           <details class="footer-col footer-col-contact" open>
-            <summary><h4>{site.footerContactTitle || "Kontak"}</h4></summary>
+            <summary><h4>{site.footerContactTitle || t("pub.footer.kontak")}</h4></summary>
             <ul class="footer-contact">
               {contacts.map((c: any) => (
                 <li>
@@ -174,7 +179,7 @@ const hasSource = site.showFooterSource && (site.footerSourceText || site.footer
 
         {hasSource ? (
           <details class="footer-col" open>
-            <summary><h4>{site.footerSourceTitle || "Sumber Data"}</h4></summary>
+            <summary><h4>{site.footerSourceTitle || t("pub.footer.sumber")}</h4></summary>
             <div class="footer-source">
               {site.footerSourceText ? (
                 site.footerSourceUrl ? (

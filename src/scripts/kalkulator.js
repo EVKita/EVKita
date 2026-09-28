@@ -1,6 +1,18 @@
 "use strict";
 
 import { hitungHemat, rupiahPenuh, rupiahHalus, teksBalikModal, teksRingkas } from "../lib/hemat.js";
+import { makePubT, normalizePubLocale } from "../lib/i18n/pub.js";
+
+/* Bahasa situs publik dibaca dari cookie yang ditulis LanguageToggle. */
+function readPubLang() {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)evkita_pub_lang=([^;]+)/);
+    return normalizePubLocale(m ? m[1] : "");
+  } catch {
+    return "id";
+  }
+}
+const t = makePubT(readPubLang());
 
 /*
  * Sisi browser kalkulator hemat.
@@ -52,14 +64,14 @@ if (form) {
       icePrice: val(fields.icePrice),
     });
 
-    if (out.summary) out.summary.textContent = teksRingkas(h);
+    if (out.summary) out.summary.textContent = teksRingkas(h, t);
     if (out.ev) out.ev.textContent = rupiahPenuh(h.evMonthly);
     if (out.evKm) out.evKm.textContent = rupiahHalus(h.evPerKm);
     if (out.ice) out.ice.textContent = rupiahPenuh(h.iceMonthly);
     if (out.iceKm) out.iceKm.textContent = rupiahHalus(h.icePerKm);
     if (out.saving) out.saving.textContent = rupiahPenuh(h.savingMonthly);
     if (out.savingYear) out.savingYear.textContent = rupiahPenuh(h.savingYearly);
-    if (out.payback) out.payback.textContent = teksBalikModal(h);
+    if (out.payback) out.payback.textContent = teksBalikModal(h, t);
 
     syncUrl();
   };

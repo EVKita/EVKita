@@ -1,0 +1,7 @@
+At line:1 char:44
++ cd C:\Users\nurra\Documents\Web Project EV && npx astro dev --port 43 ...
++                                            ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+ 

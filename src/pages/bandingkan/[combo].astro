@@ -16,7 +16,7 @@ import {
 import { rivalsFor } from "../../lib/compare-pairs.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
-import { makePubT } from "../../lib/i18n/pub.js";
+import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
 
 /**
  * Halaman perbandingan yang punya alamatnya sendiri.
@@ -31,10 +31,11 @@ import { makePubT } from "../../lib/i18n/pub.js";
  * yang dipakai modal beranda di browser, jadi keduanya tidak bisa berselisih.
  */
 
-const content = readContent();
-const site = content.site;
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
 
-const t = makePubT(Astro.locals?.pubLang);
+const content = readContent();
+const site = cmsSite(content.site, lang);
 
 const cars = (content.cars || []).filter(hanyaTayang());
 const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [];
@@ -73,7 +74,7 @@ if (items.length < 2) {
 
 const names = items.map((v: any) => `${v.brand} ${v.name}`);
 const heading = names.join(" vs ");
-const verdicts = items.length >= 2 ? compareVerdicts(items, t) : [];
+const verdicts = items.length >= 2 ? compareVerdicts(items, t, lang) : [];
 
 /** Bentuk bodi yang dibandingkan, tanpa pengulangan: "SUV" atau "SUV dan Sedan". */
 const bodyTypes = [...new Set(items.map((v: any) => v.bodyType).filter(Boolean))];
@@ -109,7 +110,7 @@ const lead = items.length >= 2
 
 const metaDesc = items.length >= 2
   ? t("pub.banding.metaDesc", { heading })
-  : "Perbandingan yang kamu cari tidak tersedia.";
+  : t("pub.notFound.banding");
 
 const brand = site.brandText || "EVKita";
 const pageTitle = items.length >= 2 ? `${heading} — ${t("pub.banding.title")} | ${brand}` : `${t("pub.banding.notFound")} — ${brand}`;
@@ -117,7 +118,7 @@ const pageTitle = items.length >= 2 ? `${heading} — ${t("pub.banding.title")} 
 const origin = siteOrigin(Astro.url);
 const canonical = canonicalUrl(Astro.url);
 
-const tableHtml = items.length >= 2 ? compareTableHTML(items, { linkHead: true, t }) : "";
+const tableHtml = items.length >= 2 ? compareTableHTML(items, { linkHead: true, t, lang }) : "";
 
 /**
  * Perbandingan lain yang masuk akal dari kendaraan yang sedang dilihat.
@@ -164,8 +165,8 @@ const jsonLd = items.length >= 2
         {
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
-            { "@type": "ListItem", position: 2, name: "Bandingkan", item: `${origin}/#daftar` },
+            { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: t("pub.banding.crumb"), item: `${origin}/#daftar` },
             { "@type": "ListItem", position: 3, name: heading },
           ],
         },
@@ -238,7 +239,7 @@ const jsonLd = items.length >= 2
         <div class="cmp-links">
           {items.map((v: any) => (
             <a class="btn btn-outline btn-sm" href={vehicleHref(v)}>
-              {v.brand} {v.name}{priceLabel(v) ? ` · ${priceLabel(v)}` : ""}
+              {v.brand} {v.name}{priceLabel(v, lang) ? ` · ${priceLabel(v, lang)}` : ""}
             </a>
           ))}
         </div>

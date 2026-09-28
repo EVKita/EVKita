@@ -18,7 +18,8 @@ import {
 import { slugLaman } from "../../lib/laman.js";
 import { safeUrl } from "../../lib/url.js";
 import { canonicalUrl, absoluteUrl } from "../../lib/site-url";
-import { makePubT } from "../../lib/i18n/pub.js";
+import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
+import { terjemahContent } from "../../lib/terjemahan.js";
 
 /**
  * Satu artikel orisinal.
@@ -35,13 +36,14 @@ import { makePubT } from "../../lib/i18n/pub.js";
  *   3. **Pratinjau bertanda tangan** untuk artikel draf, pola yang sama dengan
  *      kendaraan dan halaman statis.
  */
-const content = readContent();
-const site = content.site;
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const localeTanggal = pubIntl(lang);
+
+const content = await terjemahContent(readContent(), lang);
+const site = cmsSite(content.site, lang);
 const brand = site.brandText || "EVKita";
 const brandFull = `${brand}${site.brandSuffix || ""}`;
-
-const t = makePubT(Astro.locals?.pubLang);
-const localeTanggal = Astro.locals?.pubLang === "en" ? "en-US" : "id-ID";
 
 const slug = slugLaman(Astro.params.slug || "");
 const semua = content.artikel || [];
@@ -70,7 +72,7 @@ const sumber = artikel ? sumberTampil(artikel.sources) : [];
 
 const pageTitle = artikel
   ? artikel.seoTitle || `${judul} — ${brandFull}`
-  : `Artikel tidak ditemukan — ${brandFull}`;
+  : `${t("pub.artikel.notFound")} — ${brandFull}`;
 
 const ogImage = artikel && artikel.image ? absoluteUrl(Astro.url, artikel.image) : site.seoOgImage;
 
@@ -118,7 +120,7 @@ const jsonLd =
             mainEntityOfPage: canonicalUrl(Astro.url),
             headline: judul,
             description: deskripsi,
-            inLanguage: "id-ID",
+            inLanguage: localeTanggal,
             ...(terbit ? { datePublished: tanggalIso(artikel) } : {}),
             ...(artikel.updatedAt ? { dateModified: artikel.updatedAt } : {}),
             author: {
@@ -133,8 +135,8 @@ const jsonLd =
           {
             "@type": "BreadcrumbList",
             itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Beranda", item: `${Astro.url.origin}/` },
-              { "@type": "ListItem", position: 2, name: "Artikel", item: `${Astro.url.origin}/artikel` },
+              { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${Astro.url.origin}/` },
+              { "@type": "ListItem", position: 2, name: t("pub.nav.artikel"), item: `${Astro.url.origin}/artikel` },
               { "@type": "ListItem", position: 3, name: judul, item: canonicalUrl(Astro.url) },
             ],
           },

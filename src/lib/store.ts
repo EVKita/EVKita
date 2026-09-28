@@ -218,6 +218,13 @@ function normalizeCar(c: any, kind: "mobil" | "motor"): any {
     variantNames,
     price: numOrNull(c?.price),
     priceText: str(c?.priceText),
+    /* Penjualan 2026 untuk panel "Mobil/Motor Kita" di beranda. Bukan angka
+       atau negatif berarti tidak ikut peringkat — klaim tanpa data tidak
+       ditampilkan. */
+    penjualan2026: (() => {
+      const n = numOrNull(c?.penjualan2026);
+      return n !== null && n >= 0 ? Math.round(n) : null;
+    })(),
     stale: !!c?.stale,
     featured: !!c?.featured,
     status,
@@ -255,6 +262,9 @@ function normalizeSpklu(v: any): any {
     website: str(v?.website),
     mapUrl: str(v?.mapUrl),
     note: str(v?.note),
+    /* Foto untuk kartu unggulan di beranda. Tanpa foto, ilustrasi bawaan
+       yang tampil — jadi kosong pun tetap rapi. */
+    image: str(v?.image),
     featured: !!v?.featured,
     status: str(v?.status) === "draft" ? "draft" : "published",
     publishAt: str(v?.publishAt),
@@ -277,6 +287,9 @@ function normalizeBengkel(v: any): any {
     website: str(v?.website),
     mapUrl: str(v?.mapUrl),
     note: str(v?.note),
+    /* Foto untuk kartu unggulan di beranda. Tanpa foto, kartu unggulan
+       tampil tanpa gambar — tidak ada ilustrasi pengganti. */
+    image: str(v?.image),
     featured: !!v?.featured,
     status: str(v?.status) === "draft" ? "draft" : "published",
     publishAt: str(v?.publishAt),

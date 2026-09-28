@@ -1,4 +1,7 @@
 import { rupiahPenuh } from "./hemat.js";
+import { makePubT } from "./i18n/pub.js";
+
+const tId = makePubT("id");
 
 /**
  * Hitungan waktu dan biaya sekali mengisi daya.
@@ -17,8 +20,9 @@ import { rupiahPenuh } from "./hemat.js";
  * dan "37 menit" untuk sesuatu yang sebenarnya antara setengah jam dan satu jam
  * adalah kepastian palsu. Yang keluar dari sini selalu rentang.
  *
- * Teksnya Bahasa Indonesia dan memang tidak diterjemahkan — situs publik ini
- * berbahasa Indonesia.
+ * Kalimat hasilnya ada di kamus situs publik (`src/lib/i18n/pub.js`). Tiap
+ * fungsi yang menghasilkan teks menerima `t` opsional; kalau tidak diisi ia
+ * memakai Bahasa Indonesia, jadi pemanggil yang lama tidak berubah artinya.
  */
 
 /** Nilai awal formulir. Semuanya perkiraan yang bisa diubah pembaca. */
@@ -37,11 +41,11 @@ export const DEFAULTS = {
  * kecil, dan itulah yang membuat hasilnya berupa rentang.
  */
 export const DAYA_PRESETS = [
-  { id: "rumah", label: "Colokan rumah", value: 2.2, note: "AC, 10 A" },
+  { id: "rumah", label: "Colokan rumah", i18n: "pub.peng.colokanRumah", value: 2.2, note: "AC, 10 A" },
   { id: "wallbox", label: "Wallbox", value: 7, note: "AC, 1 fase" },
   { id: "ac-publik", label: "AC publik", value: 22, note: "AC, 3 fase" },
-  { id: "dc-spklu", label: "DC SPKLU", value: 50, note: "isi cepat" },
-  { id: "dc-ultra", label: "DC ultra", value: 150, note: "isi sangat cepat" },
+  { id: "dc-spklu", label: "DC SPKLU", value: 50, note: "isi cepat", i18nNote: "pub.peng.modeCepat" },
+  { id: "dc-ultra", label: "DC ultra", value: 150, note: "isi sangat cepat", i18nNote: "pub.peng.modeSangatCepat" },
 ];
 
 /**
@@ -251,17 +255,17 @@ export function hitungPengisian(input) {
 }
 
 /** "48 menit", "1 jam 20 menit", "7 jam". Dibulatkan ke menit penuh. */
-export function menitKeTeks(menit) {
+export function menitKeTeks(menit, t = tId) {
   // `Number(null)` bernilai 0, jadi null harus dicegat SEBELUM diubah jadi
   // angka — kalau tidak, "belum bisa dihitung" terbaca "selesai seketika".
   if (menit === null || menit === undefined) return "";
   const n = Number(menit);
   if (!Number.isFinite(n) || n < 0) return "";
   const m = Math.round(n);
-  if (m < 60) return `${m} menit`;
+  if (m < 60) return t("pub.peng.menit", { n: m });
   const jam = Math.floor(m / 60);
   const sisa = m % 60;
-  return sisa ? `${jam} jam ${sisa} menit` : `${jam} jam`;
+  return sisa ? t("pub.peng.jamMenit", { j: jam, m: sisa }) : t("pub.peng.jam", { n: jam });
 }
 
 /**
@@ -270,9 +274,9 @@ export function menitKeTeks(menit) {
  * Kalau kedua ujungnya membulat ke teks yang sama, satu teks saja yang keluar —
  * "20 menit – 20 menit" bukan kejujuran, itu cuma berisik.
  */
-export function teksDurasi(hasil) {
-  const cepat = menitKeTeks(hasil.menitCepat);
-  const lambat = menitKeTeks(hasil.menitLambat);
+export function teksDurasi(hasil, t = tId) {
+  const cepat = menitKeTeks(hasil.menitCepat, t);
+  const lambat = menitKeTeks(hasil.menitLambat, t);
   if (!cepat || !lambat) return "—";
   return cepat === lambat ? cepat : `${cepat} – ${lambat}`;
 }
@@ -296,25 +300,29 @@ export function kmKeTeks(n) {
  * berbeda antara render server dan render browser sama merusaknya dengan angka
  * yang berbeda.
  */
-export function teksRingkasPengisian(hasil) {
-  if (hasil.socSalah) {
-    return "Persentase akhir harus lebih besar daripada persentase awal — kalau tidak, tidak ada yang diisi.";
-  }
-  if (!hasil.ok) return "Isi kapasitas baterai dan rentang pengisiannya untuk melihat hasilnya.";
+export function teksRingkasPengisian(hasil, t = tId) {
+  if (hasil.socSalah) return t("pub.peng.ringkasSalah");
+  if (!hasil.ok) return t("pub.peng.ringkasKosong");
 
   const energi = kwhKeTeks(hasil.energiMasuk);
-  const durasi = hasil.menitCepat !== null ? teksDurasi(hasil) : null;
+  const durasi = hasil.menitCepat !== null ? teksDurasi(hasil, t) : null;
+  const soc = hasil.selisihSoc;
 
   if (hasil.biaya !== null && durasi) {
-    return `Mengisi ${hasil.selisihSoc}% baterai berarti memasukkan ${energi}, memakan waktu ${durasi}, dan menghabiskan ${rupiahPenuh(hasil.biaya)}.`;
+    return t("pub.peng.ringkasBiayaDurasi", {
+      soc,
+      energi,
+      durasi,
+      biaya: rupiahPenuh(hasil.biaya),
+    });
   }
   if (hasil.biaya !== null) {
-    return `Mengisi ${hasil.selisihSoc}% baterai berarti memasukkan ${energi} dan menghabiskan ${rupiahPenuh(hasil.biaya)}. Isi daya stasiunnya untuk tahu berapa lama.`;
+    return t("pub.peng.ringkasBiaya", { soc, energi, biaya: rupiahPenuh(hasil.biaya) });
   }
   if (durasi) {
-    return `Mengisi ${hasil.selisihSoc}% baterai berarti memasukkan ${energi} dan memakan waktu ${durasi}. Isi tarifnya untuk tahu habis berapa.`;
+    return t("pub.peng.ringkasDurasi", { soc, energi, durasi });
   }
-  return `Mengisi ${hasil.selisihSoc}% baterai berarti memasukkan ${energi} ke dalamnya.`;
+  return t("pub.peng.ringkasEnergi", { soc, energi });
 }
 
 /**
@@ -324,38 +332,29 @@ export function teksRingkasPengisian(hasil) {
  *
  * @returns {string[]}
  */
-export function catatanHasil(hasil) {
+export function catatanHasil(hasil, t = tId) {
   const out = [];
 
   if (hasil.dibatasiKendaraan) {
-    out.push(
-      `Stasiunnya lebih kencang daripada yang bisa diterima kendaraan ini. Yang dipakai menghitung adalah ${hasil.dayaEfektif} kW, bukan daya stasiunnya — sisanya tidak terpakai.`
-    );
+    out.push(t("pub.peng.catDibatasi", { daya: hasil.dayaEfektif }));
   } else if (hasil.batasTakDiketahui && hasil.menitCepat !== null) {
-    out.push(
-      "Katalog belum mencatat daya pengisian maksimum kendaraan ini, jadi hitungan di atas menganggap seluruh daya stasiun benar-benar diterima. Kalau batas kendaraannya lebih rendah, waktunya lebih lama."
-    );
+    out.push(t("pub.peng.catBatas"));
   }
 
   if (hasil.lewatiTaper && hasil.mode === "dc") {
-    out.push(
-      `Pengisian DC menukik tajam di atas ${BATAS_TAPER}%. Bagian terakhir itulah yang paling sulit ditebak, dan itu sebabnya rentang di atas melebar — hampir semua klaim pabrik berhenti di ${BATAS_TAPER}% justru karena ini.`
-    );
+    out.push(t("pub.peng.catTaper", { batas: BATAS_TAPER }));
   }
 
   if (hasil.menitCepat !== null) {
-    out.push(
-      hasil.mode === "dc"
-        ? "Angka waktunya rentang, bukan satu angka: daya yang benar-benar mengalir bergantung pada kurva pengisian tiap kendaraan, suhu baterai, dan berapa kendaraan lain yang berbagi stasiun yang sama."
-        : "Pengisian AC dayanya rata sepanjang pengisian, jadi rentangnya sempit — yang membatasi biasanya pengisi bawaan kendaraan, bukan stasiunnya."
-    );
+    out.push(hasil.mode === "dc" ? t("pub.peng.catRentangDc") : t("pub.peng.catRentangAc"));
   }
 
   if (hasil.energiDitagih !== null) {
+    const ef = Math.round(hasil.efisiensi * 100);
     out.push(
       hasil.dayaTakDiketahui
-        ? `Yang dibayar lebih besar daripada yang masuk ke baterai: sebagian energi jadi panas. Karena daya stasiunnya belum diisi, hitungan ini terpaksa menganggapnya pengisian AC dengan efisiensi ${Math.round(hasil.efisiensi * 100)}% — pengisian DC lebih sedikit rugi, jadi biayanya akan sedikit lebih murah daripada yang tertulis.`
-        : `Yang dibayar lebih besar daripada yang masuk ke baterai: sebagian energi jadi panas. Hitungan ini memakai efisiensi ${Math.round(hasil.efisiensi * 100)}% untuk pengisian ${hasil.mode.toUpperCase()}, dan itu perkiraan — tidak ada angkanya di katalog.`
+        ? t("pub.peng.catEfisiensiAc", { ef })
+        : t("pub.peng.catEfisiensiDc", { ef, mode: hasil.mode.toUpperCase() })
     );
   }
 

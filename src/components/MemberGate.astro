@@ -1,0 +1,74 @@
+---
+import { bacaIntegrasi } from "../lib/integrasi-simpan";
+import { SESSION_COOKIE, sessionUserId } from "../lib/auth";
+import { MEMBER_COOKIE } from "../lib/member.js";
+import { makePubT } from "../lib/i18n/pub.js";
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = Astro.locals?.pubLang || "id" } = Astro.props;
+
+/**
+ * Pintu masuk pengunjung: popup login pada klik kedua.
+ *
+ * Tidak dirender bila pemilik sedang masuk panel atau pengunjung sudah punya
+ * sesi anggota yang sah — keduanya sudah dikenal, tidak perlu ditanya lagi.
+ * Markupnya selalu `hidden`: skrip kecil di Base.astro yang menghitung klik
+ * dan membukanya. Tanpa JavaScript ia tidak pernah ada.
+ *
+ * Masuk email + kata sandi dicatat di peramban pengunjung sendiri (belum ada
+ * akun anggota di server — belum ada alur pendaftaran). Masuk Google memakai
+ * Google Identity Services bila `googleClientId` terisi di pengaturan
+ * integrasi, dan diverifikasi server di `/api/member-google`.
+ */
+const admin = !!Astro.cookies.get(SESSION_COOKIE)?.value;
+const anggota = !!sessionUserId(Astro.cookies.get(MEMBER_COOKIE)?.value);
+const tampil = !admin && !anggota;
+
+const t = makePubT(lang);
+const googleId = bacaIntegrasi().googleClientId || "";
+const tahun = new Date().getFullYear();
+---
+
+{tampil ? (
+  <div
+    class="member"
+    id="memberGate"
+    hidden
+    data-google-id={googleId || undefined}
+    data-err-email={t("pub.member.badEmail")}
+    data-err-pass={t("pub.member.shortPass")}
+    data-err-net={t("pub.member.errNet")}
+    data-err-googleoff={t("pub.member.googleOff")}
+  >
+    <div class="member-backdrop" data-member-tutup aria-hidden="true"></div>
+    <div class="member-box" role="dialog" aria-modal="true" aria-labelledby="memberTitle">
+      <button class="member-x" id="memberX" type="button" aria-label={t("pub.member.close")}>✕</button>
+      <h2 class="member-title" id="memberTitle">{t("pub.member.title")}</h2>
+      <form class="member-form" id="memberForm" novalidate>
+        <label class="member-field">
+          <span>{t("pub.member.email")}</span>
+          <input type="email" name="email" autocomplete="email" />
+        </label>
+        <label class="member-field">
+          <span>{t("pub.member.password")}</span>
+          <input type="password" name="password" autocomplete="current-password" />
+        </label>
+        <p class="member-err" id="memberErr" hidden></p>
+        <label class="member-remember">
+          <input type="checkbox" name="remember" />
+          <span>{t("pub.member.remember")}</span>
+        </label>
+        <button class="member-login" type="submit">{t("pub.member.login")}</button>
+      </form>
+      <div class="member-or"><span>{t("pub.member.or")}</span></div>
+      <button class="member-google" id="memberGoogle" type="button">
+        <span class="member-g" aria-hidden="true">G</span>
+        <span>Google</span>
+      </button>
+      <p class="member-foot">{t("pub.member.rights", { year: tahun })}</p>
+    </div>
+  </div>
+) : null}

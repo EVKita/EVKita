@@ -464,6 +464,8 @@ export default {
   "field.price": "Harga (Rupiah, angka)",
   "field.price.hint": "Cukup isi salah satu kolom harga — yang lain diisi otomatis.",
   "field.priceText": "Harga (teks tampil)",
+  "field.penjualan2026": "Penjualan 2026 (unit)",
+  "field.penjualan2026.hint": "Unit terjual sepanjang 2026. Kosongkan bila belum tahu — dipakai panel Mobil/Motor Kita di beranda.",
   "field.videoUrl": "URL Video",
   "field.sumberUrl": "Halaman Resmi Model",
   "field.sumberUrl.hint": "Alamat halaman resmi model. Dipakai tombol Ambil Media; tidak tampil di situs.",
@@ -476,6 +478,8 @@ export default {
 
   /* ---------- Field direktori ---------- */
   "field.spklu.name": "Nama Lokasi",
+  "field.spklu.image": "Foto Lokasi",
+  "field.spklu.image.hint": "Foto stasiun pengisian. Tanpa foto, kartu unggulan memakai ilustrasi bawaan.",
   "field.spklu.name.ph": "mis. SPKLU PLN UP3 Menteng",
   "field.spklu.operator": "Operator",
   "field.spklu.operator.ph": "mis. PLN, Starvo, Utomo",
@@ -489,6 +493,8 @@ export default {
   "field.spklu.price": "Tarif",
   "field.spklu.price.ph": "mis. Rp 2.466/kWh",
   "field.bengkel.name": "Nama Bengkel",
+  "field.bengkel.image": "Foto Bengkel",
+  "field.bengkel.image.hint": "Foto tempat servis. Tanpa foto, kartu unggulan tampil tanpa gambar.",
   "field.bengkel.type": "Jenis Bengkel",
   "field.bengkel.type.ph": "mis. Resmi, Umum, Spesialis",
   "field.bengkel.brand": "Merek yang Dilayani",

@@ -448,6 +448,8 @@ export default {
   "field.price": "Price (Rupiah, number)",
   "field.price.hint": "Fill in either price field — the other is derived automatically.",
   "field.priceText": "Price (display text)",
+  "field.penjualan2026": "2026 sales (units)",
+  "field.penjualan2026.hint": "Units sold in 2026. Leave empty if unknown — feeds the home Our Cars/Bikes panels.",
   "field.videoUrl": "Video URL",
   "field.sumberUrl": "Official Model Page",
   "field.sumberUrl.hint": "URL of the model's official page. Used by the Fetch Media button; not shown on the site.",
@@ -460,6 +462,8 @@ export default {
 
   /* ---------- Field direktori ---------- */
   "field.spklu.name": "Location Name",
+  "field.spklu.image": "Location Photo",
+  "field.spklu.image.hint": "Photo of the charging station. Without one, the featured card uses the built-in illustration.",
   "field.spklu.name.ph": "e.g. SPKLU PLN UP3 Menteng",
   "field.spklu.operator": "Operator",
   "field.spklu.operator.ph": "e.g. PLN, Starvo, Utomo",
@@ -473,6 +477,8 @@ export default {
   "field.spklu.price": "Tariff",
   "field.spklu.price.ph": "e.g. Rp 2,466/kWh",
   "field.bengkel.name": "Workshop Name",
+  "field.bengkel.image": "Workshop Photo",
+  "field.bengkel.image.hint": "Photo of the workshop. Without one, the featured card shows no picture.",
   "field.bengkel.type": "Workshop Kind",
   "field.bengkel.type.ph": "e.g. Authorised, Independent, Specialist",
   "field.bengkel.brand": "Brands Served",

@@ -142,9 +142,11 @@ export function koleksiTitle(jenis, label, s, t) {
  * @param {"merek"|"tipe"} jenis
  * @param {string} label nama merek atau tipe bodi apa adanya
  * @param {any[]} items
+ * @param {any} [t] fungsi terjemah
+ * @param {string} [lang] bahasa harga ("zh" memakai 亿/万, tanpa itu bawaan)
  * @returns {string} satu kalimat lengkap dengan titiknya
  */
-export function koleksiLead(jenis, label, items, t) {
+export function koleksiLead(jenis, label, items, t, lang) {
   const tt = t || tId;
   const s = summarize(items);
   if (!s.total) return "";
@@ -165,8 +167,8 @@ export function koleksiLead(jenis, label, items, t) {
   if (s.hargaMin !== null) {
     const nilai =
       s.hargaMin === s.hargaMaks
-        ? rupiah(s.hargaMin)
-        : `${rupiah(s.hargaMin)} ${tt("pub.tax.sampai")} ${rupiah(s.hargaMaks)}`;
+        ? rupiah(s.hargaMin, lang)
+        : `${rupiah(s.hargaMin, lang)} ${tt("pub.tax.sampai")} ${rupiah(s.hargaMaks, lang)}`;
     klausa.push(tt(s.hargaLengkap ? "pub.tax.harganya" : "pub.tax.hargaTercatat", { nilai }));
   }
 
@@ -182,7 +184,7 @@ export function koleksiLead(jenis, label, items, t) {
 }
 
 /** Deskripsi meta — sengaja berbeda dari kalimat pembuka, bukan salinannya. */
-export function koleksiDescription(jenis, label, items, t) {
+export function koleksiDescription(jenis, label, items, t, lang) {
   const tt = t || tId;
   const s = summarize(items);
   const count = countPhrase(s, tt);
@@ -190,9 +192,9 @@ export function koleksiDescription(jenis, label, items, t) {
     jenis === "tipe" ? tt("pub.tax.bertipe", { label }) : tt("pub.tax.dari", { label });
   const harga =
     s.hargaMin !== null && s.hargaMin !== s.hargaMaks
-      ? tt("pub.tax.harga", { nilai: `${rupiah(s.hargaMin)}–${rupiah(s.hargaMaks)}` })
+      ? tt("pub.tax.harga", { nilai: `${rupiah(s.hargaMin, lang)}–${rupiah(s.hargaMaks, lang)}` })
       : s.hargaMin !== null
-        ? tt("pub.tax.harga", { nilai: rupiah(s.hargaMin) })
+        ? tt("pub.tax.harga", { nilai: rupiah(s.hargaMin, lang) })
         : "";
   return tt("pub.tax.daftar", { count, apa }) + harga;
 }

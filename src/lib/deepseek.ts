@@ -17,6 +17,7 @@
  */
 
 import { createSseParser, jsonData } from "./sse.js";
+import { getEnv } from "./env";
 
 const BASE_URL = "https://api.deepseek.com";
 
@@ -688,4 +689,234 @@ export async function rapikanJadiJson(opts: {
   const hasil = uraiJson(data?.choices?.[0]?.message?.content || "");
   if (!hasil) return { ok: false, errorKey: "err.ai.jawabanTidakTerbaca" };
   return { ok: true, hasil, usage: data?.usage };
+}
+
+/* ==========================================================================
+ * Penerjemahan massal (situs publik berbahasa Inggris)
+ *
+ * Satu-satunya inferensi di luar riset kendaraan. Permintaannya dibuat
+ * sesederhana mungkin dan memakai **Chat Completions dengan
+ * `response_format: json_object`** — mekanisme keluaran terstruktur yang sama
+ * dengan `rapikanJadiJson()`, dan satu-satunya yang punya contoh berjalan di
+ * dokumentasi DeepSeek. `json_schema` tidak dipakai di sini: jalur itu sudah
+ * terbukti tidak ditegakkan ketika dipakai bersama `web_search`, dan jalur
+ * cadangan tidak boleh memakai mekanisme yang sama dengan yang gagal.
+ *
+ * Batas tanggung jawabnya sengaja sempit: menerjemahkan larik string lalu
+ * mengembalikan larik dengan panjang dan urutan yang sama, ATAU melempar
+ * galat. Yang memutuskan teks apa yang dikumpulkan, di mana hasilnya
+ * disimpan, dan bagaimana kegagalannya ditanggani ada di
+ * `src/lib/terjemahan.js` — berkas itu yang jatuh ke teks Indonesia kalau
+ * terjadi apa pun di sini.
+ * ========================================================================== */
+
+/** Arah terjemahan. Tulisannya bebas; yang dipakai sekarang `id` → `en`. */
+export interface BahasaTerjemahan {
+  dari: string;
+  ke: string;
+}
+
+export interface OpsiTerjemah {
+  /**
+   * Kunci API. Kalau tidak diberikan, diambil dari `DEEPSEEK_API_KEY` lewat
+   * `getEnv()` — kunci yang sama dengan yang dipakai riset dan halaman
+   * Pengaturan AI. Kunci tidak pernah ditulis ke log mana pun.
+   */
+  apiKey?: string;
+}
+
+/**
+ * Galat terjemahan, membawa `errorKey` seperti seluruh galat panel.
+ *
+ * Dilempar, bukan dikembalikan sebagai `null`: pemanggil (terjemahan.js)
+ * menangkap SEMUA galat dan jatuh ke teks asli, jadi bentuk galatnya hanya
+ * penting untuk pengujian dan untuk pesan yang bisa dibaca manusia.
+ */
+export class GalatTerjemahan extends Error {
+  errorKey: string;
+
+  constructor(errorKey: string, pesan?: string) {
+    super(pesan || errorKey);
+    this.name = "GalatTerjemahan";
+    this.errorKey = errorKey;
+  }
+}
+
+/**
+ * Batas tunggu satu permintaan terjemahan.
+ *
+ * Jauh lebih panjang daripada pembacaan saldo: batch-nya bisa berisi puluhan
+ * paragraf Markdown, dan model memang butuh waktu menuliskannya. Tetap
+ * dibatasi supaya satu permintaan yang menggantung tidak menahan antrean
+ * seluruh proses.
+ */
+const TERJEMAH_TIMEOUT_MS = 90_000;
+
+/**
+ * Model yang dipakai.
+ *
+ * Sama dengan `rapikanJadiJson()`: pekerjaannya menyalin dan menerjemahkan,
+ * bukan menilai, jadi model termurah sudah cukup — dan menulis ulang nama
+ * modelnya di dua tempat di berkas ini lebih baik daripada mengimpornya dari
+ * `ai-jobs.ts`, yang justru mengimpor berkas ini.
+ */
+const MODEL_TERJEMAH = "deepseek-v4-flash";
+
+/**
+ * Mengambil larik terjemahan dari jawaban model, apa pun bentuk pembungkusnya.
+ *
+ * Perintahnya meminta `{"terjemahan": [...]}`, tapi `json_object` tidak
+ * MENEGAKKAN isi objeknya — model bisa saja menjawab `{"hasil": [...]}` atau
+ * kunci lain. Selama panjangnya tepat dan seluruh isinya string, larik mana
+ * pun diterima; pemeriksaan itulah yang membuat keputusan ini aman, bukan
+ * namanya.
+ */
+function ambilLarikTerjemahan(hasil: any, panjang: number): string[] | null {
+  const kandidat: any[] = [hasil];
+  if (hasil && typeof hasil === "object" && !Array.isArray(hasil)) {
+    kandidat.push(...Object.values(hasil));
+  }
+  for (const k of kandidat) {
+    if (Array.isArray(k) && k.length === panjang && k.every((x) => typeof x === "string")) {
+      return k as string[];
+    }
+  }
+  return null;
+}
+
+/**
+ * Menerjemahkan larik teks Indonesia jadi larik teks Inggris.
+ *
+ * Keluarannya SELALU sepanjang dan seurutan masukannya — kalau tidak, atau
+ * kalau terjadi apa pun selain jawaban yang utuh (jaringan mati, kunci
+ * ditolak, saldo habis, model menjawab bukan JSON), fungsi ini MELEMPAR.
+ * Tidak pernah mengembalikan setengah jawaban: pemanggil yang menerima
+ * larik pasti boleh memakainya apa adanya.
+ */
+export async function terjemahkanBerteks(
+  teks: string[],
+  bahasa: BahasaTerjemahan,
+  opsi: OpsiTerjemah = {}
+): Promise<string[]> {
+  if (!Array.isArray(teks)) {
+    throw new GalatTerjemahan("err.ai.jawabanTidakTerbaca", "Bukan larik teks.");
+  }
+  if (!teks.length) return [];
+  for (const t of teks) {
+    if (typeof t !== "string") {
+      throw new GalatTerjemahan("err.ai.jawabanTidakTerbaca", "Ada elemen yang bukan teks.");
+    }
+  }
+
+  const kunci = String(opsi.apiKey ?? getEnv("DEEPSEEK_API_KEY", "")).trim();
+  if (!kunci) {
+    // Sengaja galat tersendiri: tanpa kunci, terjemahan memang mustahil, dan
+    // pemanggil harus bisa membedakan "belum dipasang" dari "sedang gangguan"
+    // tanpa pernah melihat nilai kuncinya.
+    throw new GalatTerjemahan("err.ai.belumAdaKunci", "Kunci API DeepSeek belum dipasang.");
+  }
+
+  const dari = String(bahasa?.dari || "id");
+  const ke = String(bahasa?.ke || "en");
+
+  /*
+   * Nama bahasa untuk baris pembuka perintah. Kodenya (`id`, `en`, `zh`)
+   * dipakai di tempat lain sebagai kunci, tapi model membaca kalimat —
+   * "ke Bahasa zh" bukan bahasa siapa pun.
+   */
+  const NAMA_BAHASA: Record<string, string> = { id: "Indonesia", en: "Inggris", zh: "Mandarin" };
+  const namaDari = NAMA_BAHASA[dari] || dari;
+  const namaKe = NAMA_BAHASA[ke] || ke;
+  /* Gaya tulisan mengikuti bahasa TUJUAN, bukan sumber: tiap pembaca menilai
+     "alami" menurut bahasanya sendiri. */
+  const gaya =
+    ke === "zh"
+      ? "用自然、地道的简体中文书写，不要逐字翻译。"
+      : ke === "en"
+        ? "Tulis Bahasa Inggris yang alami, bukan terjemahan kata per kata."
+        : "Tulis Bahasa Indonesia yang alami, bukan terjemahan kata per kata.";
+
+  const perintah = [
+    `Anda menerjemahkan teks dari Bahasa ${namaDari} ke Bahasa ${namaKe} untuk sebuah situs web.`,
+    "Pesan pengguna adalah larik JSON berisi string. Terjemahkan SETIAP elemennya.",
+    'Jawab HANYA dengan satu objek JSON berbentuk {"terjemahan": [...]} — tanpa penjelasan, tanpa komentar, dan tanpa pembungkus markdown.',
+    `Larik "terjemahan" harus berisi tepat ${teks.length} string, urutannya sama persis dengan larik masukan.`,
+    "Aturan tiap elemen:",
+    "- Token placeholder dalam kurung kurawal — misalnya {brand}, {tahun}, {count} — ditulis persis seperti aslinya, termasuk kurungnya.",
+    "- Struktur Markdown dipertahankan: judul, daftar, kutipan, dan penekanan tetap ada. Pada tautan [teks](/alamat) hanya teks yang diterjemahkan; alamatnya tidak diubah.",
+    "- Angka, satuan, singkatan teknis, nama merek, nama model, serta nama orang dan tempat ditulis apa adanya.",
+    "- Jangan menambah, menghapus, menggabung, atau membelah elemen.",
+    `- ${gaya}`,
+  ].join("\n");
+
+  const totalKarakter = teks.reduce((n, t) => n + t.length, 0);
+
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), TERJEMAH_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${kunci}`,
+      },
+      signal: ac.signal,
+      body: JSON.stringify({
+        model: MODEL_TERJEMAH,
+        messages: [
+          { role: "system", content: perintah },
+          { role: "user", content: JSON.stringify(teks) },
+        ],
+        response_format: { type: "json_object" },
+        // Menerjemahkan tidak butuh penalaran; menyalakan reasoning hanya
+        // menambah biaya tanpa memperbaiki satu pun terjemahan.
+        thinking: { type: "disabled" },
+        // Menutup panjang masukan (8.000 karakter ≈ 3.000 token) dengan ruang
+        // untuk keluaran yang panjangnya kira-kira sama, ditambah sedikit
+        // ruang bernapas. Yang ditagih hanya token yang benar-benar dibuat.
+        max_tokens: Math.min(16_000, 4_000 + totalKarakter),
+      }),
+    });
+  } catch {
+    // Jaringan mati, DNS gagal, atau batas waktu tercapai. Ketiganya berarti
+    // hal yang sama bagi pemanggil: terjemahan tidak ada, teks asli yang
+    // dipakai.
+    throw new GalatTerjemahan("err.ai.tidakTerhubung");
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!res.ok) throw new GalatTerjemahan(errorKeyForStatus(res.status));
+
+  let data: any;
+  try {
+    const raw = (await res.text()).trim();
+    if (!raw) throw new Error("kosong");
+    data = JSON.parse(raw);
+  } catch {
+    throw new GalatTerjemahan("err.ai.jawabanTidakTerbaca");
+  }
+
+  const hasil = uraiJson(String(data?.choices?.[0]?.message?.content || ""));
+  const larik = ambilLarikTerjemahan(hasil, teks.length);
+  if (!larik) {
+    throw new GalatTerjemahan("err.ai.jawabanTidakTerbaca", "Jawaban model bukan larik terjemahan.");
+  }
+
+  for (let i = 0; i < teks.length; i++) {
+    const keluar = larik[i];
+    if (typeof keluar !== "string") {
+      throw new GalatTerjemahan("err.ai.jawabanTidakTerbaca", "Ada elemen jawaban yang bukan teks.");
+    }
+    if (teks[i].length > 0 && keluar.trim() === "") {
+      // Sumbernya terisi tapi terjemahannya kosong berarti model melewatkan
+      // elemen ini. Memakainya akan menghapus teks dari halaman; lebih baik
+      // seluruh batch gagal dan semuanya tampil Bahasa Indonesia.
+      throw new GalatTerjemahan("err.ai.jawabanTidakTerbaca", "Ada terjemahan yang kosong.");
+    }
+  }
+
+  return larik;
 }

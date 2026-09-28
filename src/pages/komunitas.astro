@@ -1,0 +1,144 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { readContent } from "../lib/store";
+import { hanyaTayang } from "../lib/tayang.js";
+import { safeUrl } from "../lib/url.js";
+import { siteOrigin, canonicalUrl } from "../lib/site-url";
+import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
+
+/**
+ * Daftar komunitas yang penuh.
+ *
+ * Pasangan dari halaman `/berita`: beranda menampilkan komunitas sebagai
+ * sub-seksi di bawah berita, halaman ini menampilkannya semua sekaligus.
+ * Kartunya tautan keluar ke kanal resmi komunitasnya — sama seperti di
+ * beranda.
+ *
+ * Urutannya sama dengan beranda: yang bertanda `featured` naik ke atas,
+ * sisanya menjaga urutan aslinya.
+ */
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+
+/** Setelan situs diterjemahkan sekali di sini — seluruh pembacaan `site.x`
+ *  di bawah ini otomatis ikut bahasa yang dipilih pembaca. */
+const site = cmsSite(content.site, lang);
+const brand = site.brandText || "EVKita";
+const brandFull = `${brand}${site.brandSuffix || ""}`;
+
+/** Komunitas memakai bendera yang sama dengan berita — keduanya satu seksi
+ *  "Berita & Komunitas" di beranda, jadi dimatikan lewat saklar yang sama. */
+if (!site.showBerita) Astro.response.status = 404;
+
+/** Item bertanda `featured` naik ke atas — sisanya menjaga urutan aslinya. */
+const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
+
+/** Draf dan yang belum tiba jadwalnya tidak boleh bocor ke halaman publik. */
+const komunitasList = site.showBerita ? byFeatured((content.komunitas || []).filter(hanyaTayang())) : [];
+
+const judul = t("pub.dir.pageKomunitas");
+const lead = t("pub.dir.leadKomunitas");
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+const pageTitle = site.showBerita ? `${judul} — ${brandFull}` : `${t("pub.koleksi.notFound")} — ${brand}`;
+const metaDesc = site.showBerita ? lead : t("pub.laman.404Text");
+const localeTag = pubIntl(lang);
+
+const jsonLd = site.showBerita
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebPage",
+          "@id": canonical,
+          url: canonical,
+          name: pageTitle,
+          description: metaDesc,
+          inLanguage: localeTag,
+          isPartOf: { "@type": "WebSite", name: brandFull, url: `${origin}/` },
+        },
+        {
+          "@type": "ItemList",
+          name: judul,
+          numberOfItems: komunitasList.length,
+          itemListElement: komunitasList.map((k: any, i: number) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: k.name,
+            ...(safeUrl(k.url) ? { url: safeUrl(k.url) } : {}),
+          })),
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: judul, item: canonical },
+          ],
+        },
+      ],
+    }
+  : null;
+---
+
+<Base
+  title={pageTitle}
+  description={metaDesc}
+  keywords={site.seoKeywords}
+  ogImage={site.seoOgImage}
+  site={site}
+>
+  {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="" />
+
+  {!site.showBerita ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>{t("pub.koleksi.notFound")}</h1>
+      <p class="notfound-text">
+        {t("pub.laman.404Text")}
+      </p>
+      <a class="btn btn-primary" href="/">{t("pub.laman.kembali")}</a>
+    </main>
+  ) : (
+    <main class="container katalog" id="konten">
+      <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+        <a href="/">{t("pub.nav.beranda")}</a>
+        <span aria-hidden="true">/</span>
+        <span class="breadcrumb-current">{judul}</span>
+      </nav>
+
+      <header class="katalog-head">
+        <h1>{judul}</h1>
+        <p class="katalog-lead">{lead}</p>
+        <p class="katalog-lead">{t("pub.dir.hitungKomunitas", { n: komunitasList.length })}</p>
+      </header>
+
+      <div class="dir-grid">
+        {komunitasList.map((k: any) => (
+          <article class={`dir-card${k.featured ? " is-featured" : ""}`}>
+            <div class="dir-top">
+              <span class="dir-badge">{t("pub.komunitas")}</span>
+              {k.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+            </div>
+            <h3 class="dir-title">{k.name}</h3>
+            {k.source ? <p class="dir-sub">{k.source}</p> : null}
+            {k.note ? <p class="dir-note">{k.note}</p> : null}
+            <div class="dir-actions">
+              <a class="dir-link" href={safeUrl(k.url)} target="_blank" rel="noopener">{t("pub.visit")} →</a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </main>
+  )}
+
+  <SiteFooter site={site} base="/" />
+</Base>

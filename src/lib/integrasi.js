@@ -35,9 +35,20 @@ export const BAWAAN = {
   // Google Search Console
   gscAktif: false,
   gscToken: "",
+
+  /*
+   * Login Google pengunjung (opsional, tanpa saklar sendiri).
+   *
+   * Client ID OAuth dari Google Cloud Console; tombol "Google" di pintu masuk
+   * pengunjung hanya dirender bila nilainya sah. Disimpan di berkas yang sama
+   * karena sifatnya sama: id publik yang tampil di HTML, bukan rahasia.
+   * Rahasianya (client secret) tidak pernah dibutuhkan — token ID
+   * diverifikasi server lewat kunci publik Google.
+   */
+  googleClientId: "",
 };
 
-export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken"];
+export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken", "googleClientId"];
 export const KUNCI_SAKLAR = ["gaAktif", "gaAbaikanAdmin", "adsenseAktif", "adsenseAuto", "gscAktif"];
 
 /**
@@ -52,6 +63,7 @@ export const POLA = {
   gaId: /^(G-[A-Z0-9]{4,20}|UA-\d{4,12}-\d{1,4}|GT-[A-Z0-9]{4,20})$/,
   adsenseId: /^ca-pub-\d{10,20}$/,
   gscToken: /^[A-Za-z0-9_-]{20,100}$/,
+  googleClientId: /^\d{6,30}-[A-Za-z0-9_-]{8,80}\.apps\.googleusercontent\.com$/,
 };
 
 /** Membaca berkas pengaturan apa adanya jadi bentuk yang lengkap dan aman. */
@@ -69,6 +81,9 @@ export function normalisasi(raw) {
   if (!POLA.gaId.test(out.gaId)) { out.gaId = ""; out.gaAktif = false; }
   if (!POLA.adsenseId.test(out.adsenseId)) { out.adsenseId = ""; out.adsenseAktif = false; }
   if (!POLA.gscToken.test(out.gscToken)) { out.gscToken = ""; out.gscAktif = false; }
+  /* Client ID yang tidak sah dianggap tidak ada: tombol Google-nya yang
+     hilang, bukan halaman yang rusak. */
+  if (!POLA.googleClientId.test(out.googleClientId)) out.googleClientId = "";
   out.adsTxt = bersihkanAdsTxt(out.adsTxt);
   return out;
 }
@@ -170,6 +185,13 @@ export function hostCsp(cfg) {
       "https://www.google.com",
       "https://ep2.adtrafficquality.google"
     );
+  }
+
+  /* Tombol login Google memuat pustakanya dari akun Google. */
+  if (s.googleClientId) {
+    out.script.push("https://accounts.google.com");
+    out.frame.push("https://accounts.google.com");
+    out.connect.push("https://accounts.google.com");
   }
 
   return out;

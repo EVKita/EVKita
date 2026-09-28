@@ -7,19 +7,25 @@ import { readContent } from "../lib/store";
 import { carSVG, defaultColor } from "../lib/cars-ui.js";
 import { safeUrl } from "../lib/url.js";
 import { cardHTML, defaultSort, vehicleHref } from "../lib/card-html.js";
-import { PER_PAGE } from "../lib/pagination.js";
 import { siteOrigin } from "../lib/site-url";
 import { altMapFor, mediaAlt } from "../lib/media.js";
 import { hanyaTayang } from "../lib/tayang.js";
 import { menuBawaan } from "../lib/footer.js";
 import { tautanFooter } from "../lib/laman.js";
 import { artikelTayang } from "../lib/artikel.js";
-import { makePubT } from "../lib/i18n/pub.js";
+import { makePubT, normalizePubLocale, cms, cmsSite, pubIntl } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
+import { bacaVotes } from "../lib/vote-store.js";
+import { rankVotes, voteRowHtml } from "../lib/vote-html.js";
 
-const content = readContent();
-const { site } = content;
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 
-const t = makePubT(Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+
+/** Setelan situs diterjemahkan sekali di sini — seluruh pembacaan `site.x`
+ *  di bawah ini otomatis ikut bahasa yang dipilih pembaca. */
+const site = cmsSite(content.site, lang);
 
 /**
  * Kendaraan berstatus draft hanya untuk penyunting — halaman publik tidak
@@ -55,15 +61,28 @@ const featured = [
   ...motors.filter((c: any) => c.featured),
 ].slice(0, 8);
 
-function fmtPrice(v: any) {
-  if (v.priceText) return v.priceText;
-  if (v.price == null) return "Harga belum tersedia";
-  if (v.price >= 1_000_000_000) return "Rp " + (v.price / 1_000_000_000).toFixed(2).replace(".", ",") + " M";
-  return "Rp " + Math.round(v.price / 1_000_000) + " jt";
+function trimNum(x: number) {
+  return String(Math.round(x * 100) / 100);
 }
 
-const heroTitle = site.heroTitle || `Katalog kendaraan listrik ${site.brandText || ""}`.trim();
-const heroSub = site.heroSub || "Bandingkan jarak tempuh, baterai, tenaga, dan harga dalam satu tempat.";
+function fmtPrice(v: any) {
+  /* Angka didahulukan supaya satuannya ikut bahasa (jt/M/万/亿);
+     teks bebas hanya dipakai kalau angkanya memang tidak ada — nilainya
+     diisi otomatis dari angka saat menyimpan di panel. */
+  if (v.price != null) {
+    if (lang === "zh") {
+      if (v.price >= 1e8) return t("pub.price.miliar", { n: trimNum(v.price / 1e8) });
+      return t("pub.price.juta", { n: trimNum(v.price / 1e4) });
+    }
+    if (v.price >= 1_000_000_000) return t("pub.price.miliar", { n: (v.price / 1_000_000_000).toFixed(2).replace(".", ",") });
+    return t("pub.price.juta", { n: String(Math.round(v.price / 1_000_000)) });
+  }
+  if (v.priceText) return v.priceText;
+  return t("pub.card.priceNa");
+}
+
+const heroTitle = site.heroTitle || t("pub.hero.titleFallback", { brand: site.brandText || "" }).trim();
+const heroSub = site.heroSub || t("pub.hero.subFallback");
 
 const seoTitle = site.seoTitle || `${site.brandText || "EVKita"} — ${heroTitle}`;
 const seoDesc = site.seoDescription || heroSub;
@@ -73,20 +92,59 @@ const bengkelList = byFeatured(bengkel);
 const beritaList = byFeatured(berita);
 const komunitasList = byFeatured(komunitas);
 
+/* Etalase direktori: tiga entri pertama, sisanya di halaman penuhnya
+   (/spklu, /bengkel, /berita, /komunitas) lewat tombol di bawah tiap grid. */
+const TEASER_DIR = 3;
+
+/**
+ * Panel "Mobil/Motor Kita": 5 penjualan terbanyak 2026 dengan foto asli
+ * katalog. Tanpa angka penjualan tidak ada peringkat — panel yang datanya
+ * kosong disembunyikan, bukan diisi tebakan.
+ */
+const byLaris = (list: any[]) =>
+  list
+    .filter((v: any) => v.penjualan2026 !== null && v.penjualan2026 !== undefined && Number(v.penjualan2026) > 0)
+    .sort((a: any, b: any) => b.penjualan2026 - a.penjualan2026)
+    .slice(0, 5);
+const mobilKita = byLaris(cars);
+const fmtUnit = (n: any) => Number(n).toLocaleString(pubIntl(lang));
+
+/** Panel berita: 5 berita pertama kurasi pemilik, lengkap dengan fotonya. */
+const beritaKita = beritaList.slice(0, 5);
+
+/**
+ * Panel VoteKita: 10 terfavorit pilihan pengunjung per jenis. Peringkat
+ * dihitung dari agregat suara (`data/votes.json`); tanpa suara urutannya
+ * mengikuti urutan bawaan katalog. Agregat penuh disuntik ke browser supaya
+ * daftar bisa diurut ulang seketika setelah voting tanpa memuat ulang.
+ */
+const votes = bacaVotes();
+const voteMobil = rankVotes(defaultSort(cars), votes.cars, 10);
+const voteMotor = site.showMotor ? rankVotes(defaultSort(motors), votes.motors, 10) : [];
+
+/** Sorotan SPKLU beranda: entri pertama tampil besar berfoto di kiri. */
+const spkluUnggulan = spkluList[0] || null;
+const spkluSisi = spkluList.slice(1, TEASER_DIR);
+
 /**
  * Tautan "Jelajahi" — dulu kolom menu di dalam footer, kini seksi sendiri di
  * beranda tepat di bawah katalog. Susunannya dari `menuBawaan()` di
  * src/lib/footer.js, halaman statisnya dari `tautanFooter()`.
  */
-const jelajahi = site.showFooterMenu ? menuBawaan(site, tautanFooter(content.halaman).menu) : [];
+const jelajahi = site.showFooterMenu
+  ? menuBawaan(site, tautanFooter(content.halaman).menu).map((l: any) => ({
+      ...l,
+      label: l.i18n ? t(l.i18n) : cms(l.label, lang),
+    }))
+  : [];
 
 /**
  * Bengkel dipisah menjadi dua kelompok supaya pembaca tidak mencampur servis
  * motor dengan servis mobil. Entri bertipe "Mobil & Motor" tampil di keduanya.
  */
 const bengkelGroups = [
-  { title: "Motor Listrik", items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
-  { title: "Mobil Listrik", items: bengkelList.filter((b: any) => b.type.includes("Mobil")) },
+  { title: t("pub.index.grupMotor"), items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
+  { title: t("pub.index.grupMobil"), items: bengkelList.filter((b: any) => b.type.includes("Mobil")) },
 ].filter((g) => g.items.length);
 
 /** Baris meta kartu direktori: hanya yang terisi, supaya kartu tidak bolong. */
@@ -137,9 +195,10 @@ function spkluJenis(s: any) {
  */
 const canonical = `${siteOrigin(Astro.url)}/`;
 
-/* Sama dengan isi satu halaman /katalog — dua tempat, satu angka. */
-const SSR_CARDS = PER_PAGE;
-const initialCards = defaultSort(cars).slice(0, SSR_CARDS);
+/* Beranda hanya etalase tiga kartu — seluruh katalog ada di /katalog.
+   Angka 3 ini disamakan dengan HOME_TEASER di src/scripts/app.js. */
+const HOME_CARDS = 3;
+const initialCards = defaultSort(cars).slice(0, HOME_CARDS);
 const initialGrid = initialCards.map((c: any) => cardHTML(c, { linkable: true, media: content.media, t })).join("");
 
 /**
@@ -184,13 +243,13 @@ const jsonLd = {
       url: canonical,
       name: `${site.brandText || "EVKita"}${site.brandSuffix || ""}`,
       description: seoDesc,
-      inLanguage: "id-ID",
+      inLanguage: pubIntl(lang),
     },
     // Daftar kendaraan sebagai ItemList: inilah yang memberi tahu mesin
     // pencari bahwa halaman ini adalah katalog, bukan sekadar halaman muka.
     {
       "@type": "ItemList",
-      name: site.katalogTitle || "Katalog Kendaraan Listrik",
+      name: site.katalogTitle || cms("Katalog Kendaraan Listrik", lang),
       numberOfItems: cars.length + motors.length,
       itemListElement: [...cars, ...motors].slice(0, 30).map((v: any, i: number) => ({
         "@type": "ListItem",
@@ -283,8 +342,8 @@ const jsonLd = {
       <section class="section jelajahi-section" id="jelajahi">
         <div class="container">
           <div class="jelajahi-card">
-            <h2 class="section-title">{site.footerMenuTitle || "Jelajahi"}</h2>
-            <nav class="tag-row" aria-label={site.footerMenuTitle || "Jelajahi"}>
+            <h2 class="section-title">{site.footerMenuTitle || t("pub.jelajahi")}</h2>
+            <nav class="tag-row" aria-label={site.footerMenuTitle || t("pub.jelajahi")}>
               {jelajahi.map((l: any) => <a class="tag-pill" href={l.href}>{l.label}</a>)}
             </nav>
           </div>
@@ -292,22 +351,26 @@ const jsonLd = {
       </section>
     ) : null}
 
+    {/* Kolom dua: panel peringkat di kiri, sisa seksi di kanan. Di layar
+        sempit kembali satu kolom dengan isi utama dulu, panel sesudahnya. */}
+    <div class="container home-cols">
+      <div class="home-main">
     <section class="section catalog" id="daftar">
       <div class="container">
         <div class="section-head">
           <div>
-            <h2 class="section-title">{site.katalogTitle || "Katalog Kendaraan Listrik"}</h2>
+            <h2 class="section-title">{site.katalogTitle || cms("Katalog Kendaraan Listrik", lang)}</h2>
             {site.katalogNote ? <p class="section-note">{site.katalogNote}</p> : null}
           </div>
           {site.showMotor ? (
-            <div class="mode-toggle" id="modeToggle" role="tablist" aria-label="Jenis kendaraan">
+            <div class="mode-toggle" id="modeToggle" role="tablist" aria-label={t("pub.index.jenis")}>
               <button type="button" class="mode-btn active" data-mode="mobil" role="tab" aria-selected="true">{t("pub.mobil")}</button>
               <button type="button" class="mode-btn" data-mode="motor" role="tab" aria-selected="false">{t("pub.motor")}</button>
             </div>
           ) : null}
         </div>
 
-        <div class="chips-row" id="bodyChips" role="group" aria-label="Filter cepat tipe bodi"></div>
+        <div class="chips-row" id="bodyChips" role="group" aria-label={t("pub.index.filterTipe")}></div>
 
         <div class="toolbar" id="toolbar">
           <div class="toolbar-top">
@@ -318,13 +381,13 @@ const jsonLd = {
               <input type="search" id="search" placeholder={t("pub.search.ph")} autocomplete="off" aria-label={t("pub.search.ph")} />
             </div>
 
-            <div class="view-switch" id="viewSwitch" role="group" aria-label="Tampilan daftar">
-              <button type="button" data-view="grid" class="active" aria-label="Tampilan kisi" title="Kisi">▦</button>
-              <button type="button" data-view="list" aria-label="Tampilan daftar" title="Daftar">☰</button>
+            <div class="view-switch" id="viewSwitch" role="group" aria-label={t("pub.index.viewGroup")}>
+              <button type="button" data-view="grid" class="active" aria-label={t("pub.index.viewGrid")} title={t("pub.index.titleGrid")}>▦</button>
+              <button type="button" data-view="list" aria-label={t("pub.index.viewList")} title={t("pub.index.titleList")}>☰</button>
             </div>
 
             <button id="filterToggle" class="btn btn-ghost btn-sm filter-toggle" type="button" aria-expanded="false" aria-controls="filterRow">
-              Filter
+              {t("pub.index.filterBtn")}
             </button>
           </div>
 
@@ -383,12 +446,13 @@ const jsonLd = {
           <button id="emptyReset" class="btn btn-outline btn-sm" type="button">{t("pub.empty.reset")}</button>
         </div>
 
-        {/* Tanpa JavaScript, katalog di atas berhenti di kartu ke-12 dan
+        {/* Tanpa JavaScript, katalog di atas berhenti di tiga kartu dan
             filternya tidak berfungsi. Tautan ini yang membawa pembaca — dan
             perayap — ke seluruh katalog yang dirender server dan berhalaman.
             Sengaja tanpa nomor halaman: begitu app.js jalan, daftar di atas
-            memuat semuanya, dan "halaman 1 dari 3" di bawahnya akan berbohong. */}
-        {cars.length > SSR_CARDS ? (
+            tetap tiga kartu dalam keadaan bawaan, dan "halaman 1 dari 3" di
+            bawahnya akan berbohong. */}
+        {cars.length > HOME_CARDS ? (
           <p class="catalog-all">
             <a class="btn btn-outline" href="/katalog">{t("pub.catalog.all")} →</a>
           </p>
@@ -401,47 +465,123 @@ const jsonLd = {
         <div class="container">
           <div class="section-head">
             <div>
-              <h2 class="section-title">{site.spkluTitle || "SPKLU Indonesia"}</h2>
+              <h2 class="section-title">{site.spkluTitle || cms("SPKLU Indonesia", lang)}</h2>
               {site.spkluNote ? <p class="section-note">{site.spkluNote}</p> : null}
             </div>
             {/* Direktori ini menyebut DI MANA bisa mengisi; yang belum pernah
                 dijawabnya adalah berapa lama dan habis berapa. */}
-            <a class="section-link" href="/kalkulator/biaya-pengisian">Hitung biaya pengisian →</a>
+            <a class="section-link" href="/kalkulator/biaya-pengisian">{t("pub.index.hitungIsi")} →</a>
           </div>
-          <div class="dir-grid">
-            {spkluList.map((s: any) => (
+          {/* Sorotan: satu unggulan berfoto di kiri, sisanya di kanan.
+              Isinya sama persis dengan kartu biasa — yang beda hanya
+              bingkainya. */}
+          <div class="dir-feat">
+            {spkluUnggulan ? (
+              <article class={`dir-card${spkluUnggulan.featured ? " is-featured" : ""}`}>
+                <div class="dir-visual">
+                  {spkluUnggulan.image ? (
+                    <img class="dir-photo" src={safeUrl(spkluUnggulan.image)} alt={spkluUnggulan.name} loading="lazy" decoding="async" />
+                  ) : (
+                    <svg class="dir-illus" viewBox="0 0 400 225" aria-hidden="true" focusable="false">
+                      <defs>
+                        <linearGradient id="spkluBg" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0" stop-color="#12325b" />
+                          <stop offset="1" stop-color="#0a1428" />
+                        </linearGradient>
+                        <linearGradient id="spkluBolt" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0" stop-color="#ff8a00" />
+                          <stop offset="1" stop-color="#ff3d2e" />
+                        </linearGradient>
+                      </defs>
+                      <rect width="400" height="225" fill="url(#spkluBg)" />
+                      <ellipse cx="200" cy="198" rx="150" ry="12" fill="#ffffff" opacity="0.06" />
+                      <rect x="150" y="58" width="100" height="132" rx="14" fill="#1b3a63" />
+                      <rect x="150" y="58" width="100" height="132" rx="14" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="2" />
+                      <rect x="166" y="76" width="68" height="42" rx="6" fill="#0a1428" />
+                      <path d="M205 82l-14 21h9l-3 13 14-21h-9l3-13z" fill="url(#spkluBolt)" />
+                      <circle cx="178" cy="140" r="7" fill="#0a1428" stroke="#7fd4ff" stroke-width="2" />
+                      <circle cx="200" cy="140" r="7" fill="#0a1428" stroke="#7fd4ff" stroke-width="2" />
+                      <circle cx="222" cy="140" r="7" fill="#0a1428" stroke="#7fd4ff" stroke-width="2" />
+                      <rect x="170" y="160" width="60" height="8" rx="4" fill="#7fd4ff" opacity="0.7" />
+                      <path d="M250 150 C 300 150, 300 100, 338 100" fill="none" stroke="#0a1428" stroke-width="11" stroke-linecap="round" />
+                      <path d="M250 150 C 300 150, 300 100, 338 100" fill="none" stroke="#3d5a85" stroke-width="4" stroke-linecap="round" />
+                      <rect x="330" y="88" width="26" height="24" rx="6" fill="#e8edf5" />
+                      <rect x="354" y="93" width="10" height="4" fill="#9fb0c7" />
+                      <rect x="354" y="103" width="10" height="4" fill="#9fb0c7" />
+                      <rect x="138" y="188" width="124" height="10" rx="5" fill="#0a1428" />
+                    </svg>
+                  )}
+                </div>
+                <div class="dir-top">
+                  <span class="dir-badge">SPKLU</span>
+                  {spkluUnggulan.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+                </div>
+                <h3 class="dir-title">{spkluUnggulan.name}</h3>
+                {spkluUnggulan.operator ? <p class="dir-sub">{spkluUnggulan.operator}</p> : null}
+                <ul class="dir-meta-list">
+                  {metaRows([
+                    [t("pub.dir.lokasi"), spkluUnggulan.area],
+                    [t("pub.dir.alamat"), spkluUnggulan.address],
+                    [t("pub.dir.daya"), spkluUnggulan.power ? `${spkluUnggulan.power} kW` : ""],
+                    [t("pub.dir.konektor"), spkluUnggulan.connector],
+                    [t("pub.dir.jumlahUnit"), spkluUnggulan.count != null ? `${spkluUnggulan.count} ${t("pub.dir.unit")}` : ""],
+                    [t("pub.dir.jam"), spkluUnggulan.hours],
+                    [t("pub.dir.tarif"), spkluUnggulan.price],
+                  ]).map(([k, v]) => (
+                    <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
+                  ))}
+                </ul>
+                {spkluUnggulan.note ? <p class="dir-note">{spkluUnggulan.note}</p> : null}
+                <div class="spklu-avail">
+                  <span class="spklu-avail-label">{t("pub.available")}</span>
+                  <span class={`avail ${spkluJenis(spkluUnggulan).mobil ? "is-ya" : "is-tidak"}`}>{spkluJenis(spkluUnggulan).mobil ? "✓" : "✗"} {t("pub.mobil")}</span>
+                  <span class={`avail ${spkluJenis(spkluUnggulan).motor ? "is-ya" : "is-tidak"}`}>{spkluJenis(spkluUnggulan).motor ? "✓" : "✗"} {t("pub.motor")}</span>
+                </div>
+                <div class="dir-actions">
+                  <a class="dir-link" href={spkluMapUrl(spkluUnggulan)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
+                </div>
+              </article>
+            ) : null}
+            <div class="dir-feat-side">
+              {spkluSisi.map((s: any) => (
               <article class={`dir-card${s.featured ? " is-featured" : ""}`}>
                 <div class="dir-top">
                   <span class="dir-badge">SPKLU</span>
-                  {s.featured ? <span class="badge badge-featured">Pilihan</span> : null}
+                  {s.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
                 </div>
                 <h3 class="dir-title">{s.name}</h3>
                 {s.operator ? <p class="dir-sub">{s.operator}</p> : null}
                 <ul class="dir-meta-list">
                   {metaRows([
-                    ["Lokasi", s.area],
-                    ["Alamat", s.address],
-                    ["Daya", s.power ? `${s.power} kW` : ""],
-                    ["Konektor", s.connector],
-                    ["Jumlah unit", s.count != null ? `${s.count} unit` : ""],
-                    ["Jam", s.hours],
-                    ["Tarif", s.price],
+                    [t("pub.dir.lokasi"), s.area],
+                    [t("pub.dir.alamat"), s.address],
+                    [t("pub.dir.daya"), s.power ? `${s.power} kW` : ""],
+                    [t("pub.dir.konektor"), s.connector],
+                    [t("pub.dir.jumlahUnit"), s.count != null ? `${s.count} ${t("pub.dir.unit")}` : ""],
+                    [t("pub.dir.jam"), s.hours],
+                    [t("pub.dir.tarif"), s.price],
                   ]).map(([k, v]) => (
                     <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
                   ))}
                 </ul>
                 {s.note ? <p class="dir-note">{s.note}</p> : null}
                 <div class="spklu-avail">
-                  <span class="spklu-avail-label">Tersedia untuk</span>
-                  <span class={`avail ${spkluJenis(s).mobil ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).mobil ? "✓" : "✗"} Mobil</span>
-                  <span class={`avail ${spkluJenis(s).motor ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).motor ? "✓" : "✗"} Motor</span>
+                  <span class="spklu-avail-label">{t("pub.available")}</span>
+                  <span class={`avail ${spkluJenis(s).mobil ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).mobil ? "✓" : "✗"} {t("pub.mobil")}</span>
+                  <span class={`avail ${spkluJenis(s).motor ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).motor ? "✓" : "✗"} {t("pub.motor")}</span>
                 </div>
                 <div class="dir-actions">
-                  <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">Lokasi SPKLU →</a>
+                  <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
                 </div>
               </article>
-            ))}
+              ))}
+            </div>
           </div>
+          {spkluList.length > TEASER_DIR ? (
+            <p class="catalog-all">
+              <a class="btn btn-outline" href="/spklu">{t("pub.catalog.all")} →</a>
+            </p>
+          ) : null}
         </div>
       </section>
     ) : null}
@@ -451,41 +591,114 @@ const jsonLd = {
         <div class="container">
           <div class="section-head">
             <div>
-              <h2 class="section-title">{site.bengkelTitle || "Bengkel & Servis EV"}</h2>
+              <h2 class="section-title">{site.bengkelTitle || cms("Bengkel & Servis EV", lang)}</h2>
               {site.bengkelNote ? <p class="section-note">{site.bengkelNote}</p> : null}
             </div>
           </div>
           {bengkelGroups.map((g: any) => (
             <div class="dir-group">
               <h3 class="dir-group-title">{g.title}</h3>
-              <div class="dir-grid">
-                {g.items.map((b: any) => (
+              {/* Sorotan per kelompok: pola yang sama dengan SPKLU — entri
+                  pertama tampil besar di kiri (berfoto kalau ada fotonya,
+                  tanpa gambar pengganti kalau tidak), sisanya di kanan.
+                  Kelompok berisi satu entri tetap memakai grid biasa. */}
+              {g.items.length >= 2 ? (
+              <div class="dir-feat">
+                {g.items.slice(0, 1).map((b: any) => (
                   <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
+                    {b.image ? (
+                    <div class="dir-visual">
+                      <img class="dir-photo" src={safeUrl(b.image)} alt={b.name} loading="lazy" decoding="async" />
+                    </div>
+                    ) : null}
                     <div class="dir-top">
-                      <span class="dir-badge">{b.type || "Bengkel"}</span>
-                      {b.featured ? <span class="badge badge-featured">Pilihan</span> : null}
+                      <span class="dir-badge">{cms(b.type, lang) || t("pub.dir.bengkel")}</span>
+                      {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
                     </div>
                     <h3 class="dir-title">{b.name}</h3>
                     {b.brand ? <p class="dir-sub">{b.brand}</p> : null}
                     <ul class="dir-meta-list">
                       {metaRows([
-                        ["Lokasi", b.area],
-                        ["Alamat", b.address],
-                        ["Telepon", b.phone],
-                        ["Jam", b.hours],
-                        ["Layanan", b.services],
+                        [t("pub.dir.lokasi"), b.area],
+                        [t("pub.dir.alamat"), b.address],
+                        [t("pub.dir.telepon"), b.phone],
+                        [t("pub.dir.jam"), b.hours],
+                        [t("pub.dir.layanan"), b.services],
                       ]).map(([k, v]) => (
                         <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
                       ))}
                     </ul>
                     {b.note ? <p class="dir-note">{b.note}</p> : null}
                     <div class="dir-actions">
-                      <a class="dir-link" href={bengkelMapUrl(b)} target="_blank" rel="noopener">Lokasi →</a>
-                      {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>Telepon</a> : null}
+                      <a class="dir-link" href={bengkelMapUrl(b)} target="_blank" rel="noopener">{t("pub.dir.lokasi")} →</a>
+                      {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>{t("pub.dir.telepon")}</a> : null}
+                    </div>
+                  </article>
+                ))}
+                <div class="dir-feat-side">
+                  {g.items.slice(1, TEASER_DIR).map((b: any) => (
+                  <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
+                    <div class="dir-top">
+                      <span class="dir-badge">{cms(b.type, lang) || t("pub.dir.bengkel")}</span>
+                      {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+                    </div>
+                    <h3 class="dir-title">{b.name}</h3>
+                    {b.brand ? <p class="dir-sub">{b.brand}</p> : null}
+                    <ul class="dir-meta-list">
+                      {metaRows([
+                        [t("pub.dir.lokasi"), b.area],
+                        [t("pub.dir.alamat"), b.address],
+                        [t("pub.dir.telepon"), b.phone],
+                        [t("pub.dir.jam"), b.hours],
+                        [t("pub.dir.layanan"), b.services],
+                      ]).map(([k, v]) => (
+                        <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
+                      ))}
+                    </ul>
+                    {b.note ? <p class="dir-note">{b.note}</p> : null}
+                    <div class="dir-actions">
+                      <a class="dir-link" href={bengkelMapUrl(b)} target="_blank" rel="noopener">{t("pub.dir.lokasi")} →</a>
+                      {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>{t("pub.dir.telepon")}</a> : null}
+                    </div>
+                  </article>
+                  ))}
+                </div>
+              </div>
+              ) : (
+              <div class="dir-grid">
+                {g.items.slice(0, TEASER_DIR).map((b: any) => (
+                  <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
+                    <div class="dir-top">
+                      <span class="dir-badge">{cms(b.type, lang) || t("pub.dir.bengkel")}</span>
+                      {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+                    </div>
+                    <h3 class="dir-title">{b.name}</h3>
+                    {b.brand ? <p class="dir-sub">{b.brand}</p> : null}
+                    <ul class="dir-meta-list">
+                      {metaRows([
+                        [t("pub.dir.lokasi"), b.area],
+                        [t("pub.dir.alamat"), b.address],
+                        [t("pub.dir.telepon"), b.phone],
+                        [t("pub.dir.jam"), b.hours],
+                        [t("pub.dir.layanan"), b.services],
+                      ]).map(([k, v]) => (
+                        <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
+                      ))}
+                    </ul>
+                    {b.note ? <p class="dir-note">{b.note}</p> : null}
+                    <div class="dir-actions">
+                      <a class="dir-link" href={bengkelMapUrl(b)} target="_blank" rel="noopener">{t("pub.dir.lokasi")} →</a>
+                      {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>{t("pub.dir.telepon")}</a> : null}
                     </div>
                   </article>
                 ))}
               </div>
+              )}
+              {g.items.length > TEASER_DIR ? (
+                <p class="catalog-all">
+                  <a class="btn btn-outline" href="/bengkel">{t("pub.catalog.all")} →</a>
+                </p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -505,9 +718,11 @@ const jsonLd = {
             <div class="news-sub">
               <h3 class="news-sub-title">{site.beritaTitle || t("pub.beritaTerkini")}</h3>
               {site.beritaNote ? <p class="section-note">{site.beritaNote}</p> : null}
-              <div class="news-grid">
-                {beritaList.map((n: any) => (
-                  <a class={`news-card${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
+              {/* Sorotan berita: artikel pertama tampil besar di kiri,
+                  sisanya di kanan. Isinya sama persis dengan kartu biasa. */}
+              <div class="news-feat">
+                {beritaList.slice(0, 1).map((n: any) => (
+                  <a class={`news-card news-card-feat${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
                     {n.image ? (
                       <div class="news-thumb"><img src={safeUrl(n.image)} alt="" loading="lazy" /></div>
                     ) : null}
@@ -525,15 +740,44 @@ const jsonLd = {
                     </div>
                   </a>
                 ))}
+                <div class="news-feat-side">
+                  {beritaList.slice(1, TEASER_DIR).map((n: any) => (
+                  <a class={`news-card${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
+                    {n.image ? (
+                      <div class="news-thumb"><img src={safeUrl(n.image)} alt="" loading="lazy" /></div>
+                    ) : null}
+                    <div class="news-body">
+                      <div class="news-top">
+                        {n.source ? <span class="news-source">{n.source}</span> : null}
+                        {n.featured ? <span class="badge badge-featured">{t("pub.sorotan")}</span> : null}
+                      </div>
+                      <h3 class="news-title">{n.title}</h3>
+                      {n.excerpt ? <p class="news-excerpt">{n.excerpt}</p> : null}
+                      <div class="news-foot">
+                        {n.date ? <span class="news-date">{n.date}</span> : <span></span>}
+                        <span class="dir-link">{t("pub.read")} →</span>
+                      </div>
+                    </div>
+                  </a>
+                  ))}
+                </div>
               </div>
+              {beritaList.length > TEASER_DIR ? (
+                <p class="catalog-all">
+                  <a class="btn btn-outline" href="/berita">{t("pub.catalog.all")} →</a>
+                </p>
+              ) : null}
             </div>
           ) : null}
 
           {komunitasList.length ? (
             <div class="news-sub">
               <h3 class="news-sub-title">{t("pub.komunitas")}</h3>
-              <div class="dir-grid">
-                {komunitasList.map((k: any) => (
+              {/* Sorotan komunitas: pola yang sama dengan SPKLU — entri
+                  pertama tampil besar di kiri, sisanya di kanan. Komunitas
+                  tidak punya foto, jadi tidak ada blok visual. */}
+              <div class="dir-feat">
+                {komunitasList.slice(0, 1).map((k: any) => (
                   <article class={`dir-card${k.featured ? " is-featured" : ""}`}>
                     <div class="dir-top">
                       <span class="dir-badge">{t("pub.komunitas")}</span>
@@ -547,7 +791,28 @@ const jsonLd = {
                     </div>
                   </article>
                 ))}
+                <div class="dir-feat-side">
+                  {komunitasList.slice(1, TEASER_DIR).map((k: any) => (
+                  <article class={`dir-card${k.featured ? " is-featured" : ""}`}>
+                    <div class="dir-top">
+                      <span class="dir-badge">{t("pub.komunitas")}</span>
+                      {k.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+                    </div>
+                    <h3 class="dir-title">{k.name}</h3>
+                    {k.source ? <p class="dir-sub">{k.source}</p> : null}
+                    {k.note ? <p class="dir-note">{k.note}</p> : null}
+                    <div class="dir-actions">
+                      <a class="dir-link" href={safeUrl(k.url)} target="_blank" rel="noopener">{t("pub.visit")} →</a>
+                    </div>
+                  </article>
+                  ))}
+                </div>
               </div>
+              {komunitasList.length ? (
+                <p class="catalog-all">
+                  <a class="btn btn-outline" href="/komunitas">{t("pub.catalog.all")} →</a>
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -581,6 +846,81 @@ const jsonLd = {
         </div>
       </section>
     ) : null}
+      </div>
+      {(mobilKita.length || beritaKita.length) ? (
+        <aside class="home-side" aria-label={t("pub.kita.sub")}>
+          {mobilKita.length ? (
+            <section class="kita-card">
+              <h2 class="kita-title">{t("pub.kita.mobil")}</h2>
+              <p class="kita-sub">{t("pub.kita.sub")}</p>
+              <ol class="kita-list">
+                {mobilKita.map((v: any, i: number) => (
+                  <li>
+                    <a class="kita-row" href={vehicleHref(v)}>
+                      <span class="kita-rank" aria-hidden="true">{i + 1}</span>
+                      {v.image ? (
+                        <img class="kita-thumb" src={safeUrl(v.image)} alt="" loading="lazy" decoding="async" />
+                      ) : (
+                        <span class="kita-thumb kita-svg" aria-hidden="true" set:html={carSVG(v, defaultColor(v), t)} />
+                      )}
+                      <span class="kita-info">
+                        <span class="kita-name">{v.brand} {v.name}</span>
+                        <span class="kita-unit">{t("pub.kita.unit", { n: fmtUnit(v.penjualan2026) })}</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+          {beritaKita.length ? (
+            <section class="kita-card">
+              <h2 class="kita-title">{t("pub.beritaTerkini")}</h2>
+              <p class="kita-sub">{t("pub.kita.beritaSub")}</p>
+              <ol class="kita-list">
+                {beritaKita.map((n: any, i: number) => (
+                  <li>
+                    <a class="kita-row" href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
+                      <span class="kita-rank" aria-hidden="true">{i + 1}</span>
+                      {n.image ? (
+                        <img class="kita-thumb" src={safeUrl(n.image)} alt="" loading="lazy" decoding="async" />
+                      ) : (
+                        <span class="kita-thumb kita-huruf" aria-hidden="true">{String(n.source || n.title || "?").trim().charAt(0).toUpperCase()}</span>
+                      )}
+                      <span class="kita-info">
+                        <span class="kita-name">{n.title}</span>
+                        <span class="kita-unit">{[n.source, n.date].filter(Boolean).join(" · ")}</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+        </aside>
+      ) : null}
+      <aside class="home-vote" id="voteKita" aria-label={t("pub.vote.title")}>
+        <section class="kita-card">
+          <h2 class="kita-title">{t("pub.vote.title")}</h2>
+          <p class="kita-sub">{t("pub.vote.sub")}</p>
+          <h3 class="vote-sub">{t("pub.vote.mobil")}</h3>
+          <ol class="vote-list" id="voteMobil">
+            {voteMobil.map(({ v, avg, votes: vv }: any, i: number) => (
+              <li set:html={voteRowHtml(v, { s: avg * vv, v: vv }, { t, href: vehicleHref(v), lang, rank: i + 1 })} />
+            ))}
+          </ol>
+          {voteMotor.length ? (
+            <h3 class="vote-sub">{t("pub.vote.motor")}</h3>
+            <ol class="vote-list" id="voteMotor">
+              {voteMotor.map(({ v, avg, votes: vv }: any, i: number) => (
+                <li set:html={voteRowHtml(v, { s: avg * vv, v: vv }, { t, href: vehicleHref(v), lang, rank: i + 1 })} />
+              ))}
+            </ol>
+          ) : null}
+          <p class="vote-err" id="voteErr" hidden></p>
+        </section>
+      </aside>
+    </div>
   </main>
 
   <!-- Panel bandingkan: kerangka statis, isinya dirender app.js -->
@@ -588,8 +928,8 @@ const jsonLd = {
     <div class="container compare-dock-inner">
       <div class="compare-dock-items" id="compareItems"></div>
       <div class="compare-dock-actions">
-        <button type="button" class="btn btn-ghost btn-sm" id="compareClear">Kosongkan</button>
-        <button type="button" class="btn btn-primary btn-sm" id="compareOpen">Bandingkan</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="compareClear">{t("pub.compare.clear")}</button>
+        <button type="button" class="btn btn-primary btn-sm" id="compareOpen">{t("pub.card.compare")}</button>
       </div>
     </div>
   </div>
@@ -598,13 +938,13 @@ const jsonLd = {
     <div class="compare-modal-backdrop" data-compare-close></div>
     <div class="compare-modal-box" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
       <div class="compare-modal-head">
-        <h2 id="compareTitle">Perbandingan Spesifikasi</h2>
+        <h2 id="compareTitle">{t("pub.compare.title")}</h2>
         <div class="compare-modal-head-actions">
           {/* Modal ini tidak punya alamat sendiri; tautan inilah yang memberi
               perbandingan yang sedang dilihat sebuah URL untuk dibagikan.
               app.js yang mengisi href-nya setiap tabel dirender ulang. */}
-          <a class="btn btn-ghost btn-sm" id="compareLink" href="/" hidden>Buka sebagai halaman</a>
-          <button type="button" class="compare-close" data-compare-close aria-label="Tutup perbandingan">✕</button>
+          <a class="btn btn-ghost btn-sm" id="compareLink" href="/" hidden>{t("pub.compare.asPage")}</a>
+          <button type="button" class="compare-close" data-compare-close aria-label={t("pub.compare.closeAria")}>✕</button>
         </div>
       </div>
       <div class="compare-modal-body" id="compareBody"></div>
@@ -617,6 +957,9 @@ const jsonLd = {
     window.__EV_CARS__ = carsLite;
     window.__EV_MOTORS__ = motorsLite;
     window.__EV_MEDIA_ALT__ = mediaAltLite;
+  </script>
+  <script define:vars={{ votes }}>
+    window.__EV_VOTES__ = votes;
   </script>
   <script src="../scripts/app.js"></script>
 </Base>

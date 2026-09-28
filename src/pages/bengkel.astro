@@ -1,0 +1,193 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { readContent } from "../lib/store";
+import { hanyaTayang } from "../lib/tayang.js";
+import { safeUrl } from "../lib/url.js";
+import { siteOrigin, canonicalUrl } from "../lib/site-url";
+import { makePubT, normalizePubLocale, cms, cmsSite, pubIntl } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
+
+/**
+ * Direktori bengkel penuh.
+ *
+ * Beranda menampilkan bengkel berkelompok Motor/Mobil; halaman ini memuat
+ * SELURUH entri yang tayang dengan pengelompokan yang sama, tanpa
+ * paginasi — daftar kartu ringkas bukan beban, dan setiap entri mendapat
+ * tautan langsung dari satu halaman yang mudah dirayapi.
+ */
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+
+/**
+ * Setelan situs diterjemahkan sekali di sini — seluruh pembacaan `site.x`
+ * di bawah ini otomatis ikut bahasa yang dipilih pembaca.
+ */
+const site = cmsSite(content.site, lang);
+const brand = site.brandText || "EVKita";
+const brandFull = `${brand}${site.brandSuffix || ""}`;
+
+/**
+ * Saklar `showBengkel` yang memutuskan: kalau pemilik situs mematikan
+ * direktorinya di panel, halaman ini menjawab 404 dengan tampilan
+ * minimal — polanya sama dengan artikel yang tidak ditemukan.
+ */
+const tutup = !site.showBengkel;
+if (tutup) Astro.response.status = 404;
+
+/** Item bertanda `featured` naik ke atas — sisanya menjaga urutan aslinya. */
+const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
+
+/** Baris meta kartu direktori: hanya yang terisi, supaya kartu tidak bolong. */
+function metaRows(pairs: [string, any][]) {
+  return pairs.filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "");
+}
+
+/**
+ * Tautan lokasi bengkel. Polanya sama dengan SPKLU: `mapUrl` dari panel
+ * dipakai kalau ada, kalau tidak pencarian Google Maps nama bengkelnya.
+ * Alamat ikut kalau terisi, tetapi `area` sengaja tidak — isinya
+ * "Indonesia" untuk hampir semua entri, dan itu tidak menyempitkan
+ * pencarian sedikit pun.
+ */
+function bengkelMapUrl(b: any) {
+  const q = [b.name, b.address].map((v) => String(v || "").trim()).filter(Boolean).join(" ");
+  return safeUrl(b.mapUrl) || `https://www.google.com/maps/search/${encodeURIComponent(q)}`;
+}
+
+/** Seluruh entri tayang — tidak dipangkas seperti di beranda. */
+const bengkelList = byFeatured((content.bengkel || []).filter(hanyaTayang()));
+
+/**
+ * Bengkel dipisah menjadi dua kelompok supaya pembaca tidak mencampur servis
+ * motor dengan servis mobil. Entri bertipe "Mobil & Motor" tampil di keduanya.
+ */
+const bengkelGroups = [
+  { title: t("pub.index.grupMotor"), items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
+  { title: t("pub.index.grupMobil"), items: bengkelList.filter((b: any) => b.type.includes("Mobil")) },
+].filter((g) => g.items.length);
+
+const judulHalaman = site.bengkelTitle || t("pub.dir.pageBengkel");
+const lead = site.bengkelNote || t("pub.dir.leadBengkel");
+const pageTitle = `${judulHalaman} — ${brandFull}`;
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+/**
+ * Alamat peta untuk JSON-LD. Hanya yang absolut yang dipakai — `safeUrl()`
+ * sudah membuang skema berbahaya, dan pola cadangan Google Maps bukan
+ * milik bengkelnya sehingga tidak layak diklaim sebagai `url` entri ini.
+ */
+function urlAbsolut(b: any) {
+  const u = safeUrl(b.mapUrl);
+  return u && /^https?:\/\//i.test(u) ? u : "";
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": canonical,
+      url: canonical,
+      name: pageTitle,
+      description: lead,
+      inLanguage: pubIntl(lang),
+      isPartOf: { "@type": "WebSite", name: brandFull, url: `${origin}/` },
+    },
+    {
+      "@type": "ItemList",
+      name: judulHalaman,
+      numberOfItems: bengkelList.length,
+      itemListElement: bengkelList.map((b: any, i: number) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: b.name,
+        ...(urlAbsolut(b) ? { url: urlAbsolut(b) } : {}),
+      })),
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+        { "@type": "ListItem", position: 2, name: judulHalaman, item: canonical },
+      ],
+    },
+  ],
+};
+---
+
+<Base
+  title={pageTitle}
+  description={tutup ? pageTitle : lead}
+  keywords={site.seoKeywords}
+  ogImage={site.seoOgImage}
+  site={site}
+>
+  {!tutup ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="" />
+
+  {tutup ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>{judulHalaman}</h1>
+      <p class="notfound-text">{t("pub.laman.404Text")}</p>
+      <a class="btn btn-primary" href="/">{t("pub.laman.kembali")}</a>
+    </main>
+  ) : (
+    <main class="container katalog" id="konten">
+      <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+        <a href="/">{t("pub.nav.beranda")}</a>
+        <span aria-hidden="true">/</span>
+        <span class="breadcrumb-current">{judulHalaman}</span>
+      </nav>
+
+      <header class="katalog-head">
+        <h1>{judulHalaman}</h1>
+        <p class="katalog-lead">{lead}</p>
+        <p class="result-count">{t("pub.dir.hitungBengkel", { n: bengkelList.length })}</p>
+      </header>
+
+      {bengkelGroups.map((g: any) => (
+        <div class="dir-group">
+          <h3 class="dir-group-title">{g.title}</h3>
+          <div class="dir-grid">
+            {g.items.map((b: any) => (
+              <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
+                <div class="dir-top">
+                  <span class="dir-badge">{cms(b.type, lang) || t("pub.dir.bengkel")}</span>
+                  {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+                </div>
+                <h3 class="dir-title">{b.name}</h3>
+                {b.brand ? <p class="dir-sub">{b.brand}</p> : null}
+                <ul class="dir-meta-list">
+                  {metaRows([
+                    [t("pub.dir.lokasi"), b.area],
+                    [t("pub.dir.alamat"), b.address],
+                    [t("pub.dir.telepon"), b.phone],
+                    [t("pub.dir.jam"), b.hours],
+                    [t("pub.dir.layanan"), b.services],
+                  ]).map(([k, v]) => (
+                    <li><span class="dir-k">{k}</span><span class="dir-v">{v}</span></li>
+                  ))}
+                </ul>
+                {b.note ? <p class="dir-note">{b.note}</p> : null}
+                <div class="dir-actions">
+                  <a class="dir-link" href={bengkelMapUrl(b)} target="_blank" rel="noopener">{t("pub.dir.lokasi")} →</a>
+                  {b.phone ? <a class="dir-link ghost" href={`tel:${String(b.phone).replace(/[^\d+]/g, "")}`}>{t("pub.dir.telepon")}</a> : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      ))}
+    </main>
+  )}
+
+  <SiteFooter site={site} base="/" />
+</Base>

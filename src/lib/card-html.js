@@ -1,7 +1,7 @@
 import { paletteFor, defaultColor, carSVG } from "./cars-ui.js";
 import { safeUrl as allowedUrl } from "./url.js";
 import { mediaAlt } from "./media.js";
-import { makePubT } from "./i18n/pub.js";
+import { makePubT, normalizePubLocale } from "./i18n/pub.js";
 
 const tId = makePubT("id");
 
@@ -42,14 +42,33 @@ export function safeUrl(v) {
   return esc(allowedUrl(v));
 }
 
-export function rupiah(n) {
+/**
+ * Angka harga ringkas untuk kartu dan kalimat pembuka.
+ *
+ * Bahasa Indonesia dan Inggris memakai singkatan rupiah ("Rp 350 jt",
+ * "Rp 1,20 M") — pembaca Mandarin memakai satuan aslinya: ≥1e8 tampil
+ * sebagai "亿", di bawahnya sebagai "万". Angka dipangkas sampai dua
+ * desimal lalu nol yang tidak perlu dibuang (`String(Math.round(x*100)/100)`),
+ * jadi 3,50 → "3.5" dan 2,00 → "2".
+ *
+ * `lang` opsional; tanpa itu keluarannya persis seperti sebelumnya.
+ */
+function trimNum(x) {
+  return String(Math.round(x * 100) / 100);
+}
+
+export function rupiah(n, lang) {
   if (n === null || n === undefined) return "";
+  if (normalizePubLocale(lang) === "zh") {
+    if (n >= 100000000) return trimNum(n / 100000000) + "亿";
+    return trimNum(n / 10000) + "万";
+  }
   if (n >= 1000000000) return "Rp " + (n / 1000000000).toFixed(2).replace(".", ",") + " M";
   return "Rp " + Math.round(n / 1000000) + " jt";
 }
 
-export function priceLabel(c) {
-  return c.priceText || (c.price != null ? rupiah(c.price) : "");
+export function priceLabel(c, lang) {
+  return c.priceText || (c.price != null ? rupiah(c.price, lang) : "");
 }
 
 /**
@@ -162,13 +181,16 @@ export function extraSpecs(c, t) {
 export function cardHTML(c, opts) {
   const o = withDefaults(opts);
   const t = o.t;
+  /* Bahasa harga: pemanggil server mengirim `lang`, sisanya (beranda lama,
+     `app.js`) memakai bawaan Indonesia seperti sebelumnya. */
+  const lang = o.lang;
 
   const range = c.rangeKm
     ? `<span class="spec-value">${esc(c.rangeKm)} km</span>${c.rangeStandard ? `<span class="spec-note">${esc(c.rangeStandard)}</span>` : ""}`
     : '<span class="spec-value">—</span>';
 
-  const price = priceLabel(c)
-    ? `<span class="card-price">${esc(priceLabel(c))}</span>`
+  const price = priceLabel(c, lang)
+    ? `<span class="card-price">${esc(priceLabel(c, lang))}</span>`
     : `<span class="card-price na">${esc(t("pub.card.priceNa"))}</span>`;
 
   const badges = [];

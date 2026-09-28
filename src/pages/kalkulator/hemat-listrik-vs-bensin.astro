@@ -16,7 +16,7 @@ import {
 } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
-import { makePubT } from "../../lib/i18n/pub.js";
+import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
 
 /**
  * Kalkulator hemat: listrik vs bensin.
@@ -34,9 +34,11 @@ import { makePubT } from "../../lib/i18n/pub.js";
  */
 
 const content = readContent();
-const site = content.site;
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const site = cmsSite(content.site, lang);
 
-const t = makePubT(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const intl = pubIntl(lang);
 
 const cars = (content.cars || []).filter(hanyaTayang());
 
@@ -90,9 +92,8 @@ const mobilLite = pilihan.map((c: any) => ({
 }));
 
 const brand = site.brandText || "EVKita";
-const pageTitle = `Kalkulator Hemat Mobil Listrik vs Bensin — ${brand}`;
-const metaDesc =
-  "Hitung sendiri: biaya listrik per bulan, biaya bensin per bulan, selisihnya, dan berapa lama selisih harga beli mobil listrik itu kembali.";
+const pageTitle = `${t("pub.kalk.pageHemat")} — ${brand}`;
+const metaDesc = t("pub.kalk.descHemat");
 
 const origin = siteOrigin(Astro.url);
 const canonical = canonicalUrl(Astro.url);
@@ -102,7 +103,7 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "WebApplication",
-      name: "Kalkulator hemat mobil listrik vs bensin",
+      name: t("pub.kalk.metaHemat"),
       url: canonical,
       applicationCategory: "FinanceApplication",
       operatingSystem: "Web",
@@ -112,8 +113,8 @@ const jsonLd = {
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
-        { "@type": "ListItem", position: 2, name: "Kalkulator hemat" },
+        { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+        { "@type": "ListItem", position: 2, name: t("pub.kalk.titleHemat") },
       ],
     },
   ],
@@ -131,13 +132,13 @@ const teks = {
   icePerKm: rupiahHalus(hasil.icePerKm),
   savingMonthly: rupiahPenuh(hasil.savingMonthly),
   savingYearly: rupiahPenuh(hasil.savingYearly),
-  payback: teksBalikModal(hasil),
+  payback: teksBalikModal(hasil, t),
 };
 
-const ringkas = teksRingkas(hasil);
+const ringkas = teksRingkas(hasil, t);
 ---
 
-<Base title={pageTitle} description={metaDesc} keywords="kalkulator mobil listrik, biaya mobil listrik, listrik vs bensin, hemat mobil listrik" ogImage={site.seoOgImage} site={site}>
+<Base title={pageTitle} description={metaDesc} keywords={t("pub.kalk.keywordHemat")} ogImage={site.seoOgImage} site={site}>
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
   <SiteHeader site={site} base="/" active="" />
@@ -151,10 +152,7 @@ const ringkas = teksRingkas(hasil);
 
     <header class="kalk-head">
       <h1>{t("pub.kalk.h1Hemat")}</h1>
-      <p class="kalk-lead">
-        Isi harga BBM, tarif listrik, dan jarak tempuhmu sebulan. Hasilnya berubah seketika, dan
-        tautannya bisa dibagikan lengkap dengan angka yang kamu pakai.
-      </p>
+      <p class="kalk-lead">{t("pub.kalk.leadHemat")}</p>
     </header>
 
     <form class="kalk-form" id="kalkForm" method="get" autocomplete="off">
@@ -166,16 +164,13 @@ const ringkas = teksRingkas(hasil);
               <option value={c.id} selected={c.id === form.mobil}>{c.brand} {c.name}</option>
             ))}
           </select>
-          <p class="kalk-hint">Memilih mobil mengisi konsumsi dan harga di bawah. Keduanya tetap bisa diubah.</p>
+          <p class="kalk-hint">{t("pub.kalk.hintPilihMobil")}</p>
         </div>
 
         <div class="kalk-field">
           <label for="f-kwh">{t("pub.kalk.konsumsi")} <span class="kalk-unit">kWh / 100 km</span></label>
           <input id="f-kwh" name="kwh" type="number" min="1" step="0.1" value={form.kwhPer100} />
-          <p class="kalk-hint">
-            Dihitung dari kapasitas baterai dibagi jarak tempuh klaim pabrik. Di jalan sebenarnya
-            biasanya lebih boros — naikkan sedikit kalau mau angka yang lebih jujur.
-          </p>
+          <p class="kalk-hint">{t("pub.kalk.hintKonsumsi")}</p>
         </div>
 
         <div class="kalk-field">
@@ -184,7 +179,7 @@ const ringkas = teksRingkas(hasil);
           <div class="kalk-presets">
             {TARIF_PRESETS.map((p) => (
               <button type="button" class="kalk-preset" data-target="f-listrik" data-value={p.value}>
-                {p.label} <span>≈{Math.round(p.value).toLocaleString("id-ID")}</span>
+                {p.i18n ? t(p.i18n) : p.label} <span>≈{Math.round(p.value).toLocaleString(intl)}</span>
               </button>
             ))}
           </div>
@@ -201,7 +196,7 @@ const ringkas = teksRingkas(hasil);
         </div>
 
         <div class="kalk-field">
-          <label for="f-km">{t("pub.kalk.jarakBulan")} <span class="kalk-unit">km / bulan</span></label>
+          <label for="f-km">{t("pub.kalk.jarakBulan")} <span class="kalk-unit">{t("pub.kalk.kmBulan")}</span></label>
           <input id="f-km" name="km" type="number" min="1" step="50" value={form.kmPerMonth} />
         </div>
 
@@ -213,7 +208,7 @@ const ringkas = teksRingkas(hasil);
         <div class="kalk-field">
           <label for="f-harga-bensin">{t("pub.kalk.hargaBensin")} <span class="kalk-unit">Rp</span></label>
           <input id="f-harga-bensin" name="hargaBensin" type="number" min="0" step="1000000" value={form.icePrice || ""} placeholder={t("pub.kalk.opsional")} />
-          <p class="kalk-hint">Diisi kalau mau tahu kapan selisih harga belinya kembali.</p>
+          <p class="kalk-hint">{t("pub.kalk.hintHargaBensin")}</p>
         </div>
       </div>
 
@@ -262,10 +257,10 @@ const ringkas = teksRingkas(hasil);
       {/* Kalkulator yang menyajikan asumsinya sebagai fakta lebih menyesatkan
           daripada tidak ada kalkulator sama sekali. */}
       <ul class="kalk-notes">
-        <li>Semua angka bawaan hanyalah perkiraan. Harga BBM berbeda tiap jenis dan daerah, tarif listrik berbeda tiap golongan — ganti dengan angka yang benar-benar kamu bayar.</li>
-        <li>Konsumsi listrik diturunkan dari klaim pabrik (WLTP/NEDC). Pemakaian sehari-hari hampir selalu lebih boros, dan mengisi baterai sendiri punya rugi daya.</li>
-        <li>Perhitungan ini murni bahan bakar. Servis berkala, pajak, asuransi, penyusutan, dan penggantian baterai tidak ikut — semuanya bisa mengubah kesimpulan.</li>
-        <li>Balik modal dihitung dari selisih harga beli dibagi penghematan bulanan, tanpa bunga, cicilan, atau kenaikan harga di masa depan.</li>
+        <li>{t("pub.kalk.tidakDihitungHemat1")}</li>
+        <li>{t("pub.kalk.tidakDihitungHemat2")}</li>
+        <li>{t("pub.kalk.tidakDihitungHemat3")}</li>
+        <li>{t("pub.kalk.tidakDihitungHemat4")}</li>
       </ul>
     </section>
 

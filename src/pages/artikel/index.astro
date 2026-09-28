@@ -4,9 +4,10 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import ArtikelCard from "../../components/ArtikelCard.astro";
 import { readContent } from "../../lib/store";
-import { artikelTayang, tanggalArtikel } from "../../lib/artikel.js";
+import { artikelTayang, tanggalArtikel, hrefArtikel } from "../../lib/artikel.js";
 import { siteOrigin, canonicalUrl, absoluteUrl } from "../../lib/site-url";
-import { makePubT } from "../../lib/i18n/pub.js";
+import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
+import { terjemahContent } from "../../lib/terjemahan.js";
 
 /**
  * Indeks artikel orisinal.
@@ -21,12 +22,13 @@ import { makePubT } from "../../lib/i18n/pub.js";
  * Urutannya terbaru lebih dulu, dengan tahun sebagai pemisah supaya daftar
  * yang panjang tetap bisa dipindai.
  */
-const content = readContent();
-const site = content.site;
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+
+const content = await terjemahContent(readContent(), lang);
+const site = cmsSite(content.site, lang);
 const brand = site.brandText || "EVKita";
 const brandFull = `${brand}${site.brandSuffix || ""}`;
-
-const t = makePubT(Astro.locals?.pubLang);
 
 const daftar = artikelTayang(content.artikel);
 
@@ -42,10 +44,10 @@ for (const a of daftar) {
 const origin = siteOrigin(Astro.url);
 const canonical = canonicalUrl(Astro.url);
 
-const pageTitle = `Artikel & Panduan Kendaraan Listrik — ${brandFull}`;
+const pageTitle = `${t("pub.artikel.pageTitle")} — ${brandFull}`;
 const metaDesc = daftar.length
-  ? `${daftar.length} artikel orisinal tentang kendaraan listrik di Indonesia: panduan, perbandingan, dan ulasan yang sumbernya dicantumkan.`
-  : `Artikel dan panduan kendaraan listrik di Indonesia dari ${brand}.`;
+  ? t("pub.artikel.metaDesc", { n: daftar.length })
+  : t("pub.artikel.metaDescEmpty", { brand });
 
 const jsonLd = daftar.length
   ? {
@@ -57,12 +59,12 @@ const jsonLd = daftar.length
           url: canonical,
           name: pageTitle,
           description: metaDesc,
-          inLanguage: "id-ID",
+          inLanguage: pubIntl(lang),
           isPartOf: { "@type": "WebSite", name: brandFull, url: `${origin}/` },
         },
         {
           "@type": "ItemList",
-          name: `Artikel ${brand}`,
+          name: `${t("pub.artikel.kategori")} ${brand}`,
           numberOfItems: daftar.length,
           itemListElement: daftar.slice(0, 30).map((a: any, i: number) => ({
             "@type": "ListItem",
@@ -74,8 +76,8 @@ const jsonLd = daftar.length
         {
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Beranda", item: `${origin}/` },
-            { "@type": "ListItem", position: 2, name: "Artikel", item: canonical },
+            { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: t("pub.nav.artikel"), item: canonical },
           ],
         },
       ],
@@ -90,7 +92,7 @@ const jsonLd = daftar.length
   ogImage={site.seoOgImage}
   site={site}
 >
-  <link slot="head" rel="alternate" type="application/rss+xml" title={`Artikel ${brandFull}`} href="/artikel/rss.xml" />
+  <link slot="head" rel="alternate" type="application/rss+xml" title={`${t("pub.artikel.kategori")} ${brandFull}`} href="/artikel/rss.xml" />
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
   <SiteHeader site={site} base="/" active="artikel" />

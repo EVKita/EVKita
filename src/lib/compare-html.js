@@ -27,7 +27,7 @@ export const MAX_COMPARE = 3;
  * kalau tak satu pun kendaraan punya nilainya, supaya tabel tidak berlubang.
  */
 export const COMPARE_ROWS = [
-  { key: "price", labelKey: "pub.cmp.harga", text: (c) => priceLabel(c), num: (c) => c.price, best: "min" },
+  { key: "price", labelKey: "pub.cmp.harga", text: (c, t, lang) => priceLabel(c, lang), num: (c) => c.price, best: "min" },
   { key: "rangeKm", labelKey: "pub.cmp.range", text: (c) => (c.rangeKm != null ? c.rangeKm + " km" : ""), num: (c) => c.rangeKm, best: "max" },
   { key: "rangeStandard", labelKey: "pub.cmp.standard", text: (c) => c.rangeStandard || "" },
   { key: "batteryKwh", labelKey: "pub.cmp.battery", text: (c) => (c.batteryKwh != null ? c.batteryKwh + " kWh" : ""), num: (c) => c.batteryKwh, best: "max" },
@@ -86,16 +86,18 @@ const VERDICT_KEYS = [
  * karena "unggul" atas data yang bolong bukan kesimpulan, melainkan tebakan.
  *
  * @param {any[]} items
+ * @param {any} [t] fungsi terjemah
+ * @param {string} [lang] bahasa harga ("zh" memakai 亿/万, tanpa itu bawaan)
  * @returns {{ key: string, label: string, winner: any, value: string }[]}
  */
-export function compareVerdicts(items, t) {
+export function compareVerdicts(items, t, lang) {
   const tt = t || tId;
   return VERDICT_KEYS.map(({ key, phraseKey }) => {
     const row = COMPARE_ROWS.find((r) => r.key === key);
     if (!row) return null;
     const i = bestIndex(row, items);
     if (i < 0) return null;
-    return { key, label: tt(row.labelKey), phrase: tt(phraseKey), winner: items[i], value: row.text(items[i], tt) };
+    return { key, label: tt(row.labelKey), phrase: tt(phraseKey), winner: items[i], value: row.text(items[i], tt, lang) };
   }).filter(Boolean);
 }
 
@@ -151,13 +153,15 @@ function headVisual(c) {
 
 /**
  * @param {any[]} items kendaraan yang dibandingkan, urutannya jadi urutan kolom
- * @param {{ linkHead?: boolean }} [opts] `linkHead` menautkan judul kolom ke
+ * @param {{ linkHead?: boolean, lang?: string }} [opts] `linkHead` menautkan judul kolom ke
  *   halaman detail — dipakai halaman perbandingan, tidak di modal beranda yang
- *   memang tidak dimaksudkan untuk membawa orang pergi.
+ *   memang tidak dimaksudkan untuk membawa orang pergi. `lang` mengatur bahasa
+ *   harga; tanpa itu memakai bawaan Indonesia.
  */
 export function compareTableHTML(items, opts) {
   const linkHead = !!(opts && opts.linkHead);
   const t = (opts && opts.t) || tId;
+  const lang = opts && opts.lang;
 
   const head = items
     .map((c) => {
@@ -172,7 +176,7 @@ export function compareTableHTML(items, opts) {
     .join("");
 
   const rows = COMPARE_ROWS.map((row) => {
-    const texts = items.map((c) => row.text(c, t));
+    const texts = items.map((c) => row.text(c, t, lang));
     if (!texts.some((t) => t)) return "";
     const winner = bestIndex(row, items);
     const cells = texts

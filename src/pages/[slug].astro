@@ -8,6 +8,8 @@ import { hanyaTayang } from "../lib/tayang.js";
 import { verifyPreviewToken } from "../lib/pratinjau";
 import { hrefLaman, isiLaman, ringkasLaman, slugLaman } from "../lib/laman.js";
 import { canonicalUrl, absoluteUrl } from "../lib/site-url";
+import { makePubT, normalizePubLocale, cms, cmsSite, pubIntl } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
 
 /**
  * Halaman statis: Tentang, Kebijakan Privasi, Disclaimer, dan apa pun yang
@@ -24,9 +26,14 @@ import { canonicalUrl, absoluteUrl } from "../lib/site-url";
  * salah satu rute itu tidak akan pernah terbuka — dan itu ditolak di panel
  * lewat `SLUG_TERPAKAI` di `src/lib/laman.js`.
  */
-const content = readContent();
-const site = content.site;
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+
+const content = await terjemahContent(readContent(), lang);
+const site = cmsSite(content.site, lang);
 const brand = site.brandText || "EVKita";
+
+const localeTanggal = pubIntl(lang);
 
 const slug = slugLaman(Astro.params.slug || "");
 const semua = content.halaman || [];
@@ -51,13 +58,13 @@ if (!laman) Astro.response.status = 404;
 
 const vars = { brand, tahun: String(new Date().getFullYear()) };
 
-const judul = laman ? isiLaman(laman.title, vars) : "";
+const judul = laman ? cms(isiLaman(laman.title, vars), lang) : "";
 const isiHtml = laman ? markdownToHtml(isiLaman(laman.body, vars)) : "";
-const deskripsi = laman ? ringkasLaman(laman, vars) : "";
+const deskripsi = laman ? cms(ringkasLaman(laman, vars), lang) : "";
 
 const pageTitle = laman
   ? isiLaman(laman.seoTitle, vars) || `${judul} — ${brand}`
-  : `Halaman tidak ditemukan — ${brand}`;
+  : `${t("pub.koleksi.notFound")} — ${brand}`;
 
 const ogImage = laman && laman.image ? absoluteUrl(Astro.url, laman.image) : site.seoOgImage;
 
@@ -84,7 +91,7 @@ const lainnya = semua
 const diperbarui = laman && laman.updatedAt ? new Date(laman.updatedAt) : null;
 const diperbaruiTeks =
   diperbarui && !Number.isNaN(diperbarui.getTime())
-    ? diperbarui.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    ? diperbarui.toLocaleDateString(localeTanggal, { day: "numeric", month: "long", year: "numeric" })
     : "";
 
 const jsonLd = laman
@@ -97,7 +104,7 @@ const jsonLd = laman
           url: canonicalUrl(Astro.url),
           name: judul,
           description: deskripsi,
-          inLanguage: "id-ID",
+          inLanguage: localeTanggal,
           ...(laman.updatedAt ? { dateModified: laman.updatedAt } : {}),
           isPartOf: {
             "@type": "WebSite",
@@ -108,7 +115,7 @@ const jsonLd = laman
         {
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Beranda", item: absoluteUrl(Astro.url, "/") },
+            { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: absoluteUrl(Astro.url, "/") },
             { "@type": "ListItem", position: 2, name: judul, item: canonicalUrl(Astro.url) },
           ],
         },
@@ -135,16 +142,16 @@ const jsonLd = laman
   {!laman ? (
     <main class="container notfound" id="konten">
       <p class="notfound-code">404</p>
-      <h1>Halaman tidak ditemukan</h1>
+      <h1>{t("pub.koleksi.notFound")}</h1>
       <p class="notfound-text">
-        Alamat ini mungkin sudah berubah atau halamannya belum dipublikasikan.
+        {t("pub.laman.404Text")}
       </p>
-      <a class="btn btn-primary" href="/">Kembali ke beranda</a>
+      <a class="btn btn-primary" href="/">{t("pub.laman.kembali")}</a>
     </main>
   ) : (
     <main class="container laman" id="konten">
-      <nav class="breadcrumb" aria-label="Remah roti">
-        <a href="/">Beranda</a>
+      <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+        <a href="/">{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         <span class="breadcrumb-current">{judul}</span>
       </nav>
@@ -155,14 +162,14 @@ const jsonLd = laman
           {deskripsi ? <p class="laman-lead">{deskripsi}</p> : null}
           {diperbaruiTeks ? (
             <p class="laman-stamp">
-              Terakhir diperbarui <time datetime={laman.updatedAt}>{diperbaruiTeks}</time>
+              {t("pub.artikel.diperbarui")} <time datetime={laman.updatedAt}>{diperbaruiTeks}</time>
             </p>
           ) : null}
         </header>
 
         {daftarIsi.length ? (
-          <nav class="laman-toc" aria-label="Daftar isi halaman">
-            <h2>Di halaman ini</h2>
+          <nav class="laman-toc" aria-label={t("pub.laman.ariaToc")}>
+            <h2>{t("pub.laman.diHalaman")}</h2>
             <ol>
               {daftarIsi.map((b) => (
                 <li><a href={`#${b.id}`}>{b.label}</a></li>
@@ -176,10 +183,10 @@ const jsonLd = laman
 
       {lainnya.length ? (
         <section class="laman-lain">
-          <h2>Halaman lainnya</h2>
+          <h2>{t("pub.laman.lainnya")}</h2>
           <div class="tag-row">
             {lainnya.map((p: any) => (
-              <a class="tag-pill" href={hrefLaman(p)}>{isiLaman(p.title, vars)}</a>
+              <a class="tag-pill" href={hrefLaman(p)}>{cms(isiLaman(p.title, vars), lang)}</a>
             ))}
           </div>
         </section>
@@ -193,11 +200,11 @@ const jsonLd = laman
       terakhir — alasan lengkapnya ada di VehicleDetail.astro. */}
   {pratinjau ? (
     <div class="preview-bar" role="status">
-      <span class="preview-bar-tag">Pratinjau</span>
+      <span class="preview-bar-tag">{t("pub.detail.pratinjau")}</span>
       <p class="preview-bar-text">
-        Halaman ini <strong>belum tayang</strong>. Tautan pratinjau ini kedaluwarsa dalam dua jam.
+        {t("pub.detail.pratinjauText")}
       </p>
-      <a class="preview-bar-link" href="/admin">Buka panel</a>
+      <a class="preview-bar-link" href="/admin">{t("pub.detail.bukaPanel")}</a>
     </div>
   ) : null}
 </Base>

@@ -1,12 +1,11 @@
 /**
- * Kamus bahasa situs PUBLIK (Indonesia & Inggris).
+ * Kamus bahasa situs PUBLIK (Indonesia, Inggris & Mandarin).
  *
  * Panel admin sudah punya tiga bahasa lewat `src/lib/i18n/*.js`; berkas ini
- * khusus untuk teks yang tampil di situs publik. Dua kamus sengaja dipisahkan:
- * panel boleh menawarkan Mandarin, situs publik cukup Indonesia dan Inggris,
- * dan isi datanya (nama merek, deskripsi kendaraan, isi artikel) tetap
- * tersimpan dalam Bahasa Indonesia — yang diterjemahkan di sini hanya
- * antarmukanya.
+ * khusus untuk teks yang tampil di situs publik. Isi datanya (nama merek,
+ * deskripsi kendaraan, isi artikel) tetap tersimpan dalam Bahasa Indonesia —
+ * yang diterjemahkan di sini hanya antarmukanya, sementara isinya lewat
+ * lapisan AI di `src/lib/terjemahan.js`.
  *
  * Sengaja JavaScript polos tanpa API Node, supaya bisa dipakai dua tempat:
  * frontmatter `.astro` (dirender server) dan skrip peramban bila dibutuhkan.
@@ -54,6 +53,45 @@ const ID = {
   "pub.empty.text": "Coba longgarkan filter atau ubah kata kunci pencarian.",
   "pub.empty.reset": "Reset semua filter",
   "pub.catalog.all": "Buka katalog lengkap",
+
+  // — Panel "Mobil/Motor Kita": 5 penjualan terbanyak 2026 —
+  "pub.kita.mobil": "Mobil Kita",
+  "pub.kita.motor": "Motor Kita",
+  "pub.kita.sub": "5 penjualan terbanyak 2026",
+  "pub.kita.unit": "{n} unit",
+  "pub.kita.beritaSub": "5 berita EV paling menarik",
+
+  // — VoteKita: 10 terfavorit pilihan pengunjung, voting bintang —
+  "pub.vote.title": "VoteKita",
+  "pub.vote.mobil": "Mobil Kita",
+  "pub.vote.motor": "Motor Kita",
+  "pub.vote.sub": "10 terfavorit pilihan pengunjung — klik bintang untuk ikut voting",
+  "pub.vote.suara": "{n} suara",
+  "pub.vote.belum": "Belum ada suara",
+  "pub.vote.bintang": "Beri {n} bintang",
+  "pub.vote.err": "Voting gagal. Coba lagi.",
+
+  // — Pintu konten (ContentGate): tampil sekali sehari bila AdSense aktif —
+  "pub.gate.welcome": "Selamat datang di {brand}",
+  "pub.gate.title": "Buka lebih banyak konten",
+  "pub.gate.sub":
+    "EVKita gratis berkat iklan. Klik tombol di bawah untuk lanjut membaca seluruh isi situs.",
+  "pub.gate.cta": "Lanjut ke EVKita",
+  "pub.gate.ctaSub": "Akses seluruh situs selama 24 jam",
+
+  // — Masuk pengunjung (MemberGate): muncul pada klik kedua —
+  "pub.member.title": "Selamat datang di EVKita.com",
+  "pub.member.email": "Email",
+  "pub.member.password": "Kata sandi",
+  "pub.member.remember": "Ingat saya",
+  "pub.member.login": "Masuk",
+  "pub.member.or": "atau masuk dengan",
+  "pub.member.rights": "© {year} evkita.com Seluruh hak cipta dilindungi.",
+  "pub.member.close": "Tutup",
+  "pub.member.badEmail": "Isi alamat email yang sah.",
+  "pub.member.shortPass": "Kata sandi minimal 6 karakter.",
+  "pub.member.errNet": "Tidak bisa masuk sekarang. Coba lagi.",
+  "pub.member.googleOff": "Login Google belum diaktifkan. Masuk dengan email.",
 
   "pub.sort.brand": "Merek (A–Z)",
   "pub.sort.priceAsc": "Harga terendah",
@@ -335,6 +373,213 @@ const ID = {
   "pub.kalk.setahun": "setahun",
   "pub.kalk.selisihHarga": "Selisih harga beli kembali",
   "pub.kalk.dariPenghematan": "dari penghematan bahan bakar saja",
+
+  "pub.tax.mobilSatu": "mobil listrik",
+  "pub.tax.motorSatu": "motor listrik",
+  "pub.detail.descLead": "{brand} {name} adalah {noun} {body}",
+  "pub.detail.frRange": " dengan jarak tempuh {v}",
+  "pub.detail.frBattery": ", baterai {v}",
+  "pub.detail.frPower": ", dan tenaga {v}",
+  "pub.detail.hlRange": "{v} jarak tempuh",
+  "pub.detail.hlBattery": "{v} kapasitas baterai",
+  "pub.detail.hlPower": "{v} tenaga maksimum",
+  "pub.detail.hlVarian": "{n} varian tersedia",
+  "pub.detail.dcFast": "Pengisian cepat DC",
+  "pub.detail.standarUji": "Standar pengujian",
+
+  // — Tampilan & tombol yang tidak berasal dari kamus sebelumnya —
+  "pub.theme.aria": "Ganti tema terang atau gelap",
+  "pub.theme.gelap": "Gelap",
+  "pub.theme.terang": "Terang",
+  "pub.base.desc":
+    "Basis data mobil listrik yang dijual di Indonesia: spesifikasi, jarak tempuh, baterai, tenaga, dan harga.",
+  "pub.hero.titleFallback": "Katalog kendaraan listrik {brand}",
+  "pub.hero.subFallback": "Bandingkan jarak tempuh, baterai, tenaga, dan harga dalam satu tempat.",
+  "pub.index.jenis": "Jenis kendaraan",
+  "pub.index.filterTipe": "Filter cepat tipe bodi",
+  "pub.index.filterBtn": "Filter",
+  "pub.index.viewGrid": "Tampilan kisi",
+  "pub.index.viewList": "Tampilan daftar",
+  "pub.index.viewGroup": "Tampilan",
+  "pub.index.titleGrid": "Kisi",
+  "pub.index.titleList": "Daftar",
+  "pub.index.grupMotor": "Motor Listrik",
+  "pub.index.grupMobil": "Mobil Listrik",
+  "pub.index.hitungIsi": "Hitung biaya pengisian",
+  "pub.dir.lokasi": "Lokasi",
+  "pub.dir.alamat": "Alamat",
+  "pub.dir.daya": "Daya",
+  "pub.dir.konektor": "Konektor",
+  "pub.dir.jumlahUnit": "Jumlah unit",
+  "pub.dir.unit": "unit",
+  "pub.dir.jam": "Jam",
+  "pub.dir.tarif": "Tarif",
+  "pub.dir.layanan": "Layanan",
+  "pub.dir.telepon": "Telepon",
+  "pub.dir.bengkel": "Bengkel",
+  "pub.dir.lokasiSpklu": "Lokasi SPKLU",
+
+  // — Halaman direktori penuh (tautan "Buka katalog lengkap" di beranda) —
+  "pub.dir.pageSpklu": "SPKLU Indonesia",
+  "pub.dir.leadSpklu":
+    "Seluruh lokasi pengisian kendaraan listrik yang tercatat — saringannya ada di beranda, di sini semuanya tampil sekaligus.",
+  "pub.dir.hitungSpklu": "{n} titik pengisian",
+  "pub.dir.pageBengkel": "Bengkel & Servis EV",
+  "pub.dir.leadBengkel":
+    "Seluruh bengkel dan tempat servis kendaraan listrik yang tercatat, dikelompokkan untuk motor dan mobil.",
+  "pub.dir.hitungBengkel": "{n} bengkel",
+  "pub.dir.pageBerita": "Berita Kendaraan Listrik",
+  "pub.dir.leadBerita":
+    "Seluruh berita kendaraan listrik yang dikurasi — judul dan ringkasannya di sini, isi lengkapnya di situs penerbitnya.",
+  "pub.dir.hitungBerita": "{n} berita",
+  "pub.dir.pageKomunitas": "Komunitas Kendaraan Listrik",
+  "pub.dir.leadKomunitas":
+    "Seluruh komunitas kendaraan listrik yang tercatat — klik untuk mengunjungi kanal resminya.",
+  "pub.dir.hitungKomunitas": "{n} komunitas",
+  "pub.compare.title": "Perbandingan Spesifikasi",
+  "pub.compare.asPage": "Buka sebagai halaman",
+  "pub.compare.clear": "Kosongkan",
+  "pub.compare.closeAria": "Tutup perbandingan",
+  "pub.price.juta": "Rp {n} jt",
+  "pub.price.miliar": "Rp {n} M",
+  "pub.menu.merek": "Merek",
+  "pub.menu.tipe": "Tipe bodi",
+  "pub.menu.kalkHemat": "Kalkulator hemat",
+  "pub.menu.kalkIsi": "Biaya pengisian",
+  "pub.footer.kontak": "Kontak",
+  "pub.footer.sumber": "Sumber Data",
+  "pub.footer.lihatPeta": "Lihat lokasi di peta",
+  "pub.footer.row.email": "Email",
+  "pub.footer.row.telepon": "Telepon",
+  "pub.footer.row.whatsapp": "WhatsApp",
+  "pub.footer.row.alamat": "Alamat",
+  "pub.footer.row.peta": "Peta",
+  "pub.footer.row.jam": "Jam operasional",
+  "pub.footer.row.situs": "Situs web",
+  "pub.notFound.desc": "Halaman yang kamu cari tidak tersedia.",
+  "pub.notFound.banding": "Perbandingan yang kamu cari tidak tersedia.",
+  "pub.katalog.judul": "Katalog mobil listrik di Indonesia",
+  "pub.katalog.halaman": "Halaman katalog",
+  "pub.laman.diHalaman": "Di halaman ini",
+  "pub.laman.lainnya": "Halaman lainnya",
+  "pub.laman.ariaToc": "Daftar isi halaman",
+  "pub.laman.404Text": "Alamat ini mungkin sudah berubah atau halamannya belum dipublikasikan.",
+  "pub.laman.kembali": "Kembali ke beranda",
+  "pub.kalk.descBiaya":
+    "Hitung sendiri: berapa kWh yang masuk, berapa lama mengisinya di SPKLU atau di rumah, dan habis berapa rupiah sekali isi.",
+  "pub.kalk.metaBiaya": "Kalkulator biaya dan waktu pengisian kendaraan listrik",
+  "pub.kalk.keywordBiaya":
+    "biaya pengisian mobil listrik, lama cas mobil listrik, tarif SPKLU, kalkulator SPKLU",
+  "pub.kalk.descHemat":
+    "Hitung sendiri: biaya listrik per bulan, biaya bensin per bulan, selisihnya, dan berapa lama selisih harga beli mobil listrik itu kembali.",
+  "pub.kalk.metaHemat": "Kalkulator hemat mobil listrik vs bensin",
+  "pub.kalk.keywordHemat":
+    "kalkulator mobil listrik, biaya mobil listrik, listrik vs bensin, hemat mobil listrik",
+
+  // — Prosa halaman kalkulator —
+  "pub.kalk.kmBulan": "km / bulan",
+  "pub.kalk.pageBiaya": "Kalkulator Biaya & Waktu Pengisian Mobil Listrik",
+  "pub.kalk.pageHemat": "Kalkulator Hemat Mobil Listrik vs Bensin",
+  "pub.kalk.leadBiaya":
+    "Pilih kendaraannya, tentukan mau diisi dari berapa persen ke berapa persen, lalu sebutkan daya stasiun dan tarifnya. Hasilnya berubah seketika, dan tautannya bisa dibagikan lengkap dengan angka yang kamu pakai.",
+  "pub.kalk.hintTaper":
+    "Bawaannya berhenti di {batas}% karena di situlah pengisian DC mulai menukik — alasan yang sama kenapa klaim pabrik hampir selalu berbunyi “10–{batas}%”.",
+  "pub.kalk.tidakDihitungIsi1":
+    "Lama pengisian selalu berupa rentang, dan itu disengaja. Daya papan nama stasiun jarang mengalir utuh: kurva pengisian tiap kendaraan berbeda, baterai yang dingin atau terlalu panas mengisi lebih lambat, dan satu stasiun yang dipakai dua mobil sekaligus membagi dayanya.",
+  "pub.kalk.tidakDihitungIsi2":
+    "Kapasitas baterai di katalog adalah angka kotor. Sebagian tidak pernah dipakai demi umur sel, jadi “0%” di layar mobil bukan baterai yang benar-benar kosong.",
+  "pub.kalk.tidakDihitungIsi3":
+    "Setara jarak tempuh diturunkan dari klaim pabrik (WLTP/NEDC). Di jalan sebenarnya hampir selalu lebih pendek — lebih pendek lagi di tol, saat hujan, atau dengan AC menyala penuh.",
+  "pub.kalk.tidakDihitungIsi4":
+    "Tarif SPKLU berbeda tiap operator dan bisa punya biaya layanan atau tarif parkir sendiri yang tidak ikut terhitung di sini. Angka bawaannya perkiraan; ganti dengan yang benar-benar tertera.",
+  "pub.kalk.leadHemat":
+    "Isi harga BBM, tarif listrik, dan jarak tempuhmu sebulan. Hasilnya berubah seketika, dan tautannya bisa dibagikan lengkap dengan angka yang kamu pakai.",
+  "pub.kalk.hintPilihMobil":
+    "Memilih mobil mengisi konsumsi dan harga di bawah. Keduanya tetap bisa diubah.",
+  "pub.kalk.hintKonsumsi":
+    "Dihitung dari kapasitas baterai dibagi jarak tempuh klaim pabrik. Di jalan sebenarnya biasanya lebih boros — naikkan sedikit kalau mau angka yang lebih jujur.",
+  "pub.kalk.hintHargaBensin": "Diisi kalau mau tahu kapan selisih harga belinya kembali.",
+  "pub.kalk.tidakDihitungHemat1":
+    "Semua angka bawaan hanyalah perkiraan. Harga BBM berbeda tiap jenis dan daerah, tarif listrik berbeda tiap golongan — ganti dengan angka yang benar-benar kamu bayar.",
+  "pub.kalk.tidakDihitungHemat2":
+    "Konsumsi listrik diturunkan dari klaim pabrik (WLTP/NEDC). Pemakaian sehari-hari hampir selalu lebih boros, dan mengisi baterai sendiri punya rugi daya.",
+  "pub.kalk.tidakDihitungHemat3":
+    "Perhitungan ini murni bahan bakar. Servis berkala, pajak, asuransi, penyusutan, dan penggantian baterai tidak ikut — semuanya bisa mengubah kesimpulan.",
+  "pub.kalk.tidakDihitungHemat4":
+    "Balik modal dihitung dari selisih harga beli dibagi penghematan bulanan, tanpa bunga, cicilan, atau kenaikan harga di masa depan.",
+
+  // — Kalimat hasil kalkulator (src/lib/hemat.js) —
+  "pub.hemat.rumah": "Di rumah",
+  "pub.hemat.tarifRumah": "tarif rumah tangga",
+  "pub.hemat.pengisianUmum": "pengisian umum",
+  "pub.hemat.balikLangsung": "langsung, sejak hari pertama",
+  "pub.hemat.balikBulan": "{n} bulan",
+  "pub.hemat.balikTahunBulan": "{t} tahun {b} bulan",
+  "pub.hemat.balikTahun": "{t} tahun",
+  "pub.hemat.tidakPernah": "Tidak pernah kembali",
+  "pub.hemat.terlaluLama": "Lebih lama dari umur pakai mobilnya",
+  "pub.hemat.isiAngka": "Isi angkanya untuk melihat hasilnya.",
+  "pub.hemat.hematBulan":
+    "Dengan angka di atas, mobil listrik menghemat {bulan} sebulan — {tahun} setahun.",
+  "pub.hemat.lebihMahal":
+    "Dengan angka di atas, mobil listriknya justru lebih mahal {bulan} sebulan. Biasanya ini tanda tarif listrik yang dipakai terlalu tinggi, atau mobil bensin pembandingnya terlalu irit.",
+  "pub.hemat.sama": "Dengan angka di atas, biaya keduanya persis sama.",
+
+  // — Kalimat hasil kalkulator pengisian (src/lib/pengisian.js) —
+  "pub.peng.colokanRumah": "Colokan rumah",
+  "pub.peng.modeCepat": "isi cepat",
+  "pub.peng.modeSangatCepat": "isi sangat cepat",
+  "pub.peng.menit": "{n} menit",
+  "pub.peng.jam": "{n} jam",
+  "pub.peng.jamMenit": "{j} jam {m} menit",
+  "pub.peng.ringkasSalah":
+    "Persentase akhir harus lebih besar daripada persentase awal — kalau tidak, tidak ada yang diisi.",
+  "pub.peng.ringkasKosong": "Isi kapasitas baterai dan rentang pengisiannya untuk melihat hasilnya.",
+  "pub.peng.ringkasBiayaDurasi":
+    "Mengisi {soc}% baterai berarti memasukkan {energi}, memakan waktu {durasi}, dan menghabiskan {biaya}.",
+  "pub.peng.ringkasBiaya":
+    "Mengisi {soc}% baterai berarti memasukkan {energi} dan menghabiskan {biaya}. Isi daya stasiunnya untuk tahu berapa lama.",
+  "pub.peng.ringkasDurasi":
+    "Mengisi {soc}% baterai berarti memasukkan {energi} dan memakan waktu {durasi}. Isi tarifnya untuk tahu habis berapa.",
+  "pub.peng.ringkasEnergi": "Mengisi {soc}% baterai berarti memasukkan {energi} ke dalamnya.",
+  "pub.peng.catDibatasi":
+    "Stasiunnya lebih kencang daripada yang bisa diterima kendaraan ini. Yang dipakai menghitung adalah {daya} kW, bukan daya stasiunnya — sisanya tidak terpakai.",
+  "pub.peng.catBatas":
+    "Katalog belum mencatat daya pengisian maksimum kendaraan ini, jadi hitungan di atas menganggap seluruh daya stasiun benar-benar diterima. Kalau batas kendaraannya lebih rendah, waktunya lebih lama.",
+  "pub.peng.catTaper":
+    "Pengisian DC menukik tajam di atas {batas}%. Bagian terakhir itulah yang paling sulit ditebak, dan itu sebabnya rentang di atas melebar — hampir semua klaim pabrik berhenti di {batas}% justru karena ini.",
+  "pub.peng.catRentangDc":
+    "Angka waktunya rentang, bukan satu angka: daya yang benar-benar mengalir bergantung pada kurva pengisian tiap kendaraan, suhu baterai, dan berapa kendaraan lain yang berbagi stasiun yang sama.",
+  "pub.peng.catRentangAc":
+    "Pengisian AC dayanya rata sepanjang pengisian, jadi rentangnya sempit — yang membatasi biasanya pengisi bawaan kendaraan, bukan stasiunnya.",
+  "pub.peng.catEfisiensiAc":
+    "Yang dibayar lebih besar daripada yang masuk ke baterai: sebagian energi jadi panas. Karena daya stasiunnya belum diisi, hitungan ini terpaksa menganggapnya pengisian AC dengan efisiensi {ef}% — pengisian DC lebih sedikit rugi, jadi biayanya akan sedikit lebih murah daripada yang tertulis.",
+  "pub.peng.catEfisiensiDc":
+    "Yang dibayar lebih besar daripada yang masuk ke baterai: sebagian energi jadi panas. Hitungan ini memakai efisiensi {ef}% untuk pengisian {mode}, dan itu perkiraan — tidak ada angkanya di katalog.",
+
+  // — src/pages/katalog/[...hal].astro —
+  "pub.katalog.pageTitle1": "Katalog Mobil Listrik di Indonesia — {brand}",
+  "pub.katalog.pageTitleN": "Katalog Mobil Listrik — Halaman {nomor} dari {jumlahHalaman} — {brand}",
+  "pub.katalog.halamanJudul": "Katalog mobil listrik — halaman {nomor}",
+  "pub.katalog.crumbHalaman": "Halaman {nomor}",
+  "pub.katalog.meta1":
+    "Daftar lengkap {total} mobil listrik yang dijual di Indonesia beserta jarak tempuh, kapasitas baterai, tenaga, dan harganya.",
+  "pub.katalog.metaN":
+    "Mobil listrik ke-{dari} sampai ke-{sampai} dari {total} model yang dijual di Indonesia, lengkap dengan spesifikasi dan harganya.",
+  "pub.katalog.404Title": "Halaman katalog tidak ada",
+  "pub.katalog.404Text": "Katalog ini hanya punya {jumlahHalaman} halaman. Mulai lagi dari halaman pertama.",
+  "pub.katalog.lead":
+    "Menampilkan <strong>{dari}–{sampai}</strong> dari <strong>{total}</strong> model. Urutannya dari jarak tempuh terjauh.",
+  "pub.katalog.leadLink": "Cari dan saring di beranda →",
+
+  // — src/pages/artikel/index.astro —
+  "pub.artikel.pageTitle": "Artikel & Panduan Kendaraan Listrik",
+  "pub.artikel.metaDesc":
+    "{n} artikel orisinal tentang kendaraan listrik di Indonesia: panduan, perbandingan, dan ulasan yang sumbernya dicantumkan.",
+  "pub.artikel.metaDescEmpty": "Artikel dan panduan kendaraan listrik di Indonesia dari {brand}.",
+
+  // — src/pages/bandingkan/[combo].astro —
+  "pub.banding.crumb": "Bandingkan",
 };
 
 const EN = {
@@ -379,6 +624,45 @@ const EN = {
   "pub.empty.text": "Try relaxing the filters or changing your search.",
   "pub.empty.reset": "Reset all filters",
   "pub.catalog.all": "Open full catalogue",
+
+  // — "Our Cars/Bikes" panels: top 5 sellers of 2026 —
+  "pub.kita.mobil": "Our Cars",
+  "pub.kita.motor": "Our Motorbikes",
+  "pub.kita.sub": "Top 5 best sellers of 2026",
+  "pub.kita.unit": "{n} units",
+  "pub.kita.beritaSub": "Top 5 most interesting EV news",
+
+  // — VoteKita: top 10 visitor favorites, star voting —
+  "pub.vote.title": "VoteKita",
+  "pub.vote.mobil": "Mobil Kita",
+  "pub.vote.motor": "Motor Kita",
+  "pub.vote.sub": "Top 10 visitor favorites — click a star to vote",
+  "pub.vote.suara": "{n} votes",
+  "pub.vote.belum": "No votes yet",
+  "pub.vote.bintang": "Rate {n} stars",
+  "pub.vote.err": "Vote failed. Try again.",
+
+  // — Content gate (ContentGate): shown once a day when AdSense is on —
+  "pub.gate.welcome": "Welcome to {brand}",
+  "pub.gate.title": "Unlock more content",
+  "pub.gate.sub":
+    "EVKita is free thanks to ads. Click the button below to keep reading everything on this site.",
+  "pub.gate.cta": "Continue to EVKita",
+  "pub.gate.ctaSub": "Site-wide access for 24 hours",
+
+  // — Visitor sign-in (MemberGate): shown on the second click —
+  "pub.member.title": "Welcome to EVKita",
+  "pub.member.email": "Email",
+  "pub.member.password": "Password",
+  "pub.member.remember": "Remember Me",
+  "pub.member.login": "Login",
+  "pub.member.or": "or sign in with",
+  "pub.member.rights": "© {year} evkita.com All rights reserved.",
+  "pub.member.close": "Close",
+  "pub.member.badEmail": "Enter a valid email address.",
+  "pub.member.shortPass": "Password must be at least 6 characters.",
+  "pub.member.errNet": "Could not sign you in. Please try again.",
+  "pub.member.googleOff": "Google sign-in is not enabled yet. Please use email.",
 
   "pub.sort.brand": "Brand (A–Z)",
   "pub.sort.priceAsc": "Lowest price",
@@ -660,9 +944,709 @@ const EN = {
   "pub.kalk.setahun": "a year",
   "pub.kalk.selisihHarga": "Purchase-price gap recovered",
   "pub.kalk.dariPenghematan": "from fuel savings alone",
+
+  "pub.tax.mobilSatu": "electric car",
+  "pub.tax.motorSatu": "electric motorcycle",
+  "pub.detail.descLead": "{brand} {name} is an {noun} ({body})",
+  "pub.detail.frRange": ", {v} range",
+  "pub.detail.frBattery": ", {v} battery",
+  "pub.detail.frPower": " and {v} of power",
+  "pub.detail.hlRange": "{v} range",
+  "pub.detail.hlBattery": "{v} battery capacity",
+  "pub.detail.hlPower": "{v} peak power",
+  "pub.detail.hlVarian": "{n} variants available",
+  "pub.detail.dcFast": "DC fast charging",
+  "pub.detail.standarUji": "Test standard",
+
+  // — UI strings that had no key before —
+  "pub.theme.aria": "Toggle light or dark theme",
+  "pub.theme.gelap": "Dark",
+  "pub.theme.terang": "Light",
+  "pub.base.desc":
+    "Database of electric cars sold in Indonesia: specifications, range, battery, power and prices.",
+  "pub.hero.titleFallback": "Electric vehicle catalogue {brand}",
+  "pub.hero.subFallback": "Compare range, battery, power and prices in one place.",
+  "pub.index.jenis": "Vehicle type",
+  "pub.index.filterTipe": "Quick body type filter",
+  "pub.index.filterBtn": "Filter",
+  "pub.index.viewGrid": "Grid view",
+  "pub.index.viewList": "List view",
+  "pub.index.viewGroup": "View",
+  "pub.index.titleGrid": "Grid",
+  "pub.index.titleList": "List",
+  "pub.index.grupMotor": "Electric motorcycles",
+  "pub.index.grupMobil": "Electric cars",
+  "pub.index.hitungIsi": "Estimate charging cost",
+  "pub.dir.lokasi": "Location",
+  "pub.dir.alamat": "Address",
+  "pub.dir.daya": "Power",
+  "pub.dir.konektor": "Connector",
+  "pub.dir.jumlahUnit": "Number of units",
+  "pub.dir.unit": "units",
+  "pub.dir.jam": "Hours",
+  "pub.dir.tarif": "Rate",
+  "pub.dir.layanan": "Services",
+  "pub.dir.telepon": "Phone",
+  "pub.dir.bengkel": "Workshop",
+  "pub.dir.lokasiSpklu": "Charging station map",
+
+  // — Full directory pages ("Open full catalogue" links on the home page) —
+  "pub.dir.pageSpklu": "Indonesian Charging Stations",
+  "pub.dir.leadSpklu":
+    "Every recorded electric vehicle charging location — the filters live on the home page; here everything is shown at once.",
+  "pub.dir.hitungSpklu": "{n} charging points",
+  "pub.dir.pageBengkel": "EV Workshops & Service",
+  "pub.dir.leadBengkel":
+    "Every recorded electric vehicle workshop and service point, grouped for motorbikes and cars.",
+  "pub.dir.hitungBengkel": "{n} workshops",
+  "pub.dir.pageBerita": "Electric Vehicle News",
+  "pub.dir.leadBerita":
+    "Every curated electric vehicle news item — headlines and summaries here, the full story on the publisher's site.",
+  "pub.dir.hitungBerita": "{n} news items",
+  "pub.dir.pageKomunitas": "Electric Vehicle Communities",
+  "pub.dir.leadKomunitas":
+    "Every recorded electric vehicle community — click through to visit their official channel.",
+  "pub.dir.hitungKomunitas": "{n} communities",
+  "pub.compare.title": "Specification comparison",
+  "pub.compare.asPage": "Open as a page",
+  "pub.compare.clear": "Clear",
+  "pub.compare.closeAria": "Close comparison",
+  "pub.price.juta": "Rp {n} million",
+  "pub.price.miliar": "Rp {n} billion",
+  "pub.menu.merek": "Brands",
+  "pub.menu.tipe": "Body types",
+  "pub.menu.kalkHemat": "Savings calculator",
+  "pub.menu.kalkIsi": "Charging cost",
+  "pub.footer.kontak": "Contact",
+  "pub.footer.sumber": "Data sources",
+  "pub.footer.lihatPeta": "View location on the map",
+  "pub.footer.row.email": "Email",
+  "pub.footer.row.telepon": "Phone",
+  "pub.footer.row.whatsapp": "WhatsApp",
+  "pub.footer.row.alamat": "Address",
+  "pub.footer.row.peta": "Map",
+  "pub.footer.row.jam": "Opening hours",
+  "pub.footer.row.situs": "Website",
+  "pub.notFound.desc": "The page you are looking for is not available.",
+  "pub.notFound.banding": "The comparison you are looking for is not available.",
+  "pub.katalog.judul": "Electric car catalogue for Indonesia",
+  "pub.katalog.halaman": "Catalogue page",
+  "pub.laman.diHalaman": "On this page",
+  "pub.laman.lainnya": "Other pages",
+  "pub.laman.ariaToc": "Page contents",
+  "pub.laman.404Text": "This address may have changed, or the page has not been published.",
+  "pub.laman.kembali": "Back to home",
+  "pub.kalk.descBiaya":
+    "Work it out yourself: how many kWh go in, how long it takes at a public charger or at home, and what one charge costs.",
+  "pub.kalk.metaBiaya": "Electric vehicle charging cost and time calculator",
+  "pub.kalk.keywordBiaya":
+    "ev charging cost, how long to charge an ev, charging station rate, charging calculator",
+  "pub.kalk.descHemat":
+    "Work it out yourself: electricity cost per month, petrol cost per month, the difference, and how long the EV's higher price takes to pay back.",
+  "pub.kalk.metaHemat": "Electric car vs petrol savings calculator",
+  "pub.kalk.keywordHemat":
+    "ev calculator, electric car cost, ev vs petrol, electric car savings",
+
+  // — Calculator page prose —
+  "pub.kalk.kmBulan": "km / month",
+  "pub.kalk.pageBiaya": "EV Charging Cost & Time Calculator",
+  "pub.kalk.pageHemat": "Electric Car vs Petrol Savings Calculator",
+  "pub.kalk.leadBiaya":
+    "Pick the vehicle, choose which percentages to charge between, then enter the station's power and rate. The result updates instantly, and the link can be shared with your exact figures.",
+  "pub.kalk.hintTaper":
+    "By default it stops at {batas}% because that is where DC charging drops off sharply — the same reason factory claims almost always say “10–{batas}%”.",
+  "pub.kalk.tidakDihitungIsi1":
+    "Charging time is always a range, and that is deliberate. Nameplate power rarely flows the whole way: every vehicle charges differently, a cold or overheated battery charges slower, and one station shared by two cars splits its power.",
+  "pub.kalk.tidakDihitungIsi2":
+    "The battery capacity in the catalogue is a gross figure. Part of it is never used to protect cell life, so “0%” on the car's screen is not an empty battery.",
+  "pub.kalk.tidakDihitungIsi3":
+    "The equivalent range is derived from factory claims (WLTP/NEDC). On real roads it is almost always shorter — shorter still on motorways, in rain, or with the air conditioning running flat out.",
+  "pub.kalk.tidakDihitungIsi4":
+    "Charging rates differ between operators and may include service charges or their own parking tariff, which are not counted here. The default figure is an estimate; replace it with what is actually listed.",
+  "pub.kalk.leadHemat":
+    "Enter your fuel price, electricity rate, and monthly mileage. The result updates instantly, and the link can be shared with your exact figures.",
+  "pub.kalk.hintPilihMobil":
+    "Choosing a car fills in the consumption and price below. Both can still be changed.",
+  "pub.kalk.hintKonsumsi":
+    "Derived from battery capacity divided by the claimed range. Real-world driving usually uses more — nudge it up a little for a more honest figure.",
+  "pub.kalk.hintHargaBensin": "Fill this in if you want to know when the price difference pays back.",
+  "pub.kalk.tidakDihitungHemat1":
+    "All default figures are estimates only. Fuel prices differ by region, electricity rates by household class — replace them with what you actually pay.",
+  "pub.kalk.tidakDihitungHemat2":
+    "Electricity consumption is derived from factory claims (WLTP/NEDC). Everyday driving almost always uses more, and charging a battery yourself loses power.",
+  "pub.kalk.tidakDihitungHemat3":
+    "This calculation is fuel only. Scheduled servicing, tax, insurance, depreciation, and battery replacement are excluded — any of them can change the conclusion.",
+  "pub.kalk.tidakDihitungHemat4":
+    "Payback is the price difference divided by the monthly saving, with no interest, instalments, or future price rises.",
+
+  // — Calculator result sentences (src/lib/hemat.js) —
+  "pub.hemat.rumah": "At home",
+  "pub.hemat.tarifRumah": "household tariff",
+  "pub.hemat.pengisianUmum": "public charging",
+  "pub.hemat.balikLangsung": "right away, from day one",
+  "pub.hemat.balikBulan": "{n} months",
+  "pub.hemat.balikTahunBulan": "{t} years {b} months",
+  "pub.hemat.balikTahun": "{t} years",
+  "pub.hemat.tidakPernah": "Never pays back",
+  "pub.hemat.terlaluLama": "Longer than the car itself lasts",
+  "pub.hemat.isiAngka": "Fill in the numbers to see the result.",
+  "pub.hemat.hematBulan":
+    "With the figures above, the electric car saves {bulan} a month — {tahun} a year.",
+  "pub.hemat.lebihMahal":
+    "With the figures above, the electric car actually costs {bulan} more a month. That usually means the electricity rate used is too high, or the petrol comparison car is unusually efficient.",
+  "pub.hemat.sama": "With the figures above, the two cost exactly the same.",
+
+  // — Calculator result sentences (src/lib/pengisian.js) —
+  "pub.peng.colokanRumah": "Home socket",
+  "pub.peng.modeCepat": "fast charging",
+  "pub.peng.modeSangatCepat": "very fast charging",
+  "pub.peng.menit": "{n} min",
+  "pub.peng.jam": "{n} hr",
+  "pub.peng.jamMenit": "{j} hr {m} min",
+  "pub.peng.ringkasSalah":
+    "The final percentage has to be higher than the starting one — otherwise nothing is being charged.",
+  "pub.peng.ringkasKosong": "Enter the battery capacity and charging range to see the result.",
+  "pub.peng.ringkasBiayaDurasi":
+    "Charging {soc}% of the battery means putting in {energi}, taking {durasi}, and costing {biaya}.",
+  "pub.peng.ringkasBiaya":
+    "Charging {soc}% of the battery means putting in {energi} and costing {biaya}. Enter the station's power to see how long it takes.",
+  "pub.peng.ringkasDurasi":
+    "Charging {soc}% of the battery means putting in {energi} and taking {durasi}. Enter the tariff to see what it costs.",
+  "pub.peng.ringkasEnergi": "Charging {soc}% of the battery means putting in {energi}.",
+  "pub.peng.catDibatasi":
+    "The station is faster than this vehicle can accept. The figure uses {daya} kW, not the station's power — the rest is unused.",
+  "pub.peng.catBatas":
+    "The catalogue does not record this vehicle's maximum charging power, so the figure above assumes the full station power is accepted. If the vehicle's limit is lower, it takes longer.",
+  "pub.peng.catTaper":
+    "DC charging drops sharply above {batas}%. That last stretch is the hardest to predict, which is why the range above widens — almost every manufacturer's claim stops at {batas}% precisely because of this.",
+  "pub.peng.catRentangDc":
+    "The time is a range, not a single figure: the power actually flowing depends on each vehicle's charging curve, the battery's temperature, and how many other vehicles share the same station.",
+  "pub.peng.catRentangAc":
+    "AC charging draws a flat power throughout, so the range is narrow — the limit is usually the vehicle's own charger, not the station.",
+  "pub.peng.catEfisiensiAc":
+    "What you pay is more than what enters the battery: some energy becomes heat. Because the station's power is not recorded, this calculation has to assume AC charging at {ef}% efficiency — DC loses less, so the real cost will be slightly lower than shown.",
+  "pub.peng.catEfisiensiDc":
+    "What you pay is more than what enters the battery: some energy becomes heat. This calculation uses {ef}% efficiency for {mode} charging, and that is an estimate — the catalogue has no figure for it.",
+
+  // — src/pages/katalog/[...hal].astro —
+  "pub.katalog.pageTitle1": "Electric Car Catalogue for Indonesia — {brand}",
+  "pub.katalog.pageTitleN": "Electric Car Catalogue — Page {nomor} of {jumlahHalaman} — {brand}",
+  "pub.katalog.halamanJudul": "Electric car catalogue — page {nomor}",
+  "pub.katalog.crumbHalaman": "Page {nomor}",
+  "pub.katalog.meta1":
+    "A complete list of the {total} electric cars sold in Indonesia, with range, battery capacity, power, and prices.",
+  "pub.katalog.metaN":
+    "Electric cars {dari}–{sampai} of {total} models sold in Indonesia, complete with specifications and prices.",
+  "pub.katalog.404Title": "That catalogue page does not exist",
+  "pub.katalog.404Text": "This catalogue only has {jumlahHalaman} pages. Start again from the first page.",
+  "pub.katalog.lead":
+    "Showing <strong>{dari}–{sampai}</strong> of <strong>{total}</strong> models, sorted by longest range.",
+  "pub.katalog.leadLink": "Search and filter on the home page →",
+
+  // — src/pages/artikel/index.astro —
+  "pub.artikel.pageTitle": "Electric Vehicle Articles & Guides",
+  "pub.artikel.metaDesc":
+    "{n} original articles about electric vehicles in Indonesia: guides, comparisons, and reviews that cite their sources.",
+  "pub.artikel.metaDescEmpty": "Electric vehicle articles and guides for Indonesia from {brand}.",
+
+  // — src/pages/bandingkan/[combo].astro —
+  "pub.banding.crumb": "Compare",
 };
 
-const DICTS = { id: ID, en: EN };
+const ZH = {
+  "pub.nav.beranda": "首页",
+  "pub.nav.beranda.note": "目录概览",
+  "pub.nav.mobil": "电动汽车",
+  "pub.nav.mobil.note": "参数与价格",
+  "pub.nav.spklu": "充电站",
+  "pub.nav.spklu.note": "充电地点",
+  "pub.nav.bengkel": "维修店",
+  "pub.nav.bengkel.note": "保养与维修",
+  "pub.nav.berita": "新闻与社区",
+  "pub.nav.berita.note": "新闻与社区",
+  "pub.nav.artikel": "文章",
+  "pub.nav.artikel.note": "指南与评测",
+  "pub.nav.tentang": "关于",
+  "pub.nav.tentang.note": "关于本站",
+  "pub.skip": "跳转到内容",
+  "pub.nav.main": "主导航",
+  "pub.nav.open": "打开导航菜单",
+  "pub.nav.close": "关闭导航菜单",
+  "pub.nav.menu": "导航菜单",
+  "pub.backToTop": "回到顶部",
+  "pub.footer.nav": "页脚链接",
+  "pub.feat": "精选",
+  "pub.feat.note": "目录编辑精选",
+  "pub.feat.seeAll": "查看全部",
+  "pub.jelajahi": "探索",
+  "pub.mobil": "汽车",
+  "pub.motor": "摩托车",
+  "pub.filter.brand": "品牌",
+  "pub.filter.body": "车身类型",
+  "pub.filter.price": "价格区间",
+  "pub.filter.range": "续航里程",
+  "pub.filter.battery": "电池",
+  "pub.filter.sort": "排序",
+  "pub.filter.reset": "重置",
+  "pub.search.ph": "搜索品牌、型号或标签…",
+  "pub.empty.title": "没有符合条件的车型",
+  "pub.empty.text": "请放宽筛选条件或更换搜索关键词。",
+  "pub.empty.reset": "重置所有筛选",
+  "pub.catalog.all": "打开完整目录",
+
+  // — “我们的汽车/摩托车”榜单：2026年最畅销的5款 —
+  "pub.kita.mobil": "我们的汽车",
+  "pub.kita.motor": "我们的摩托车",
+  "pub.kita.sub": "2026年最畅销的5款",
+  "pub.kita.unit": "{n}辆",
+  "pub.kita.beritaSub": "最值得关注的5条电动车新闻",
+
+  // — VoteKita：访客最喜爱的10款，星级投票 —
+  "pub.vote.title": "VoteKita",
+  "pub.vote.mobil": "Mobil Kita",
+  "pub.vote.motor": "Motor Kita",
+  "pub.vote.sub": "访客最喜爱的10款——点击星星参与投票",
+  "pub.vote.suara": "{n}票",
+  "pub.vote.belum": "暂无投票",
+  "pub.vote.bintang": "评{n}星",
+  "pub.vote.err": "投票失败，请重试。",
+  "pub.gate.welcome": "欢迎来到{brand}",
+  "pub.gate.title": "解锁更多内容",
+  "pub.gate.sub": "EVKita因广告而免费提供。请点击下方按钮，继续阅读本站全部内容。",
+  "pub.gate.cta": "继续访问EVKita",
+  "pub.gate.ctaSub": "全站24小时访问",
+  "pub.member.title": "欢迎来到EVKita.com",
+  "pub.member.email": "邮箱",
+  "pub.member.password": "密码",
+  "pub.member.remember": "记住我",
+  "pub.member.login": "登录",
+  "pub.member.or": "或使用以下方式登录",
+  "pub.member.rights": "© {year} evkita.com版权所有。",
+  "pub.member.close": "关闭",
+  "pub.member.badEmail": "请输入有效的电子邮箱地址。",
+  "pub.member.shortPass": "密码至少需要6个字符。",
+  "pub.member.errNet": "目前无法登录，请重试。",
+  "pub.member.googleOff": "Google登录尚未启用，请使用邮箱登录。",
+  "pub.sort.brand": "品牌（A–Z）",
+  "pub.sort.priceAsc": "价格最低",
+  "pub.sort.priceDesc": "价格最高",
+  "pub.sort.rangeDesc": "续航最长",
+  "pub.sort.batteryDesc": "电池最大",
+  "pub.sort.powerDesc": "动力最强",
+  "pub.sort.newest": "最近更新",
+  "pub.artikel": "文章与指南",
+  "pub.artikel.note": "注明来源的原创文章",
+  "pub.artikel.all": "全部文章",
+  "pub.read": "阅读",
+  "pub.visit": "访问",
+  "pub.sorotan": "亮点",
+  "pub.pilihan": "精选",
+  "pub.available": "适用于",
+  "pub.location": "地点",
+  "pub.phone": "电话",
+  "pub.biaya": "计算充电费用",
+  "pub.berita": "新闻与社区",
+  "pub.beritaTerkini": "最新新闻",
+  "pub.komunitas": "社区",
+  "pub.card.variant": "版本",
+  "pub.card.standard": "标准",
+  "pub.card.color": "颜色",
+  "pub.card.colorAria": "颜色{color}",
+  "pub.card.topSpeed": "最高车速",
+  "pub.card.seats": "座位",
+  "pub.card.dcFast": "DC快充",
+  "pub.card.range": "续航里程",
+  "pub.card.battery": "电池",
+  "pub.card.power": "动力",
+  "pub.card.variants": "版本",
+  "pub.card.priceNa": "价格暂无",
+  "pub.card.featured": "精选",
+  "pub.card.stale": "数据已过时",
+  "pub.card.detail": "查看详情",
+  "pub.card.compare": "对比",
+  "pub.card.from": "起价",
+  "pub.cmp.harga": "价格",
+  "pub.cmp.range": "续航里程",
+  "pub.cmp.standard": "测试标准",
+  "pub.cmp.battery": "电池",
+  "pub.cmp.power": "动力",
+  "pub.cmp.torque": "扭矩",
+  "pub.cmp.accel": "0–100 km/h",
+  "pub.cmp.topSpeed": "最高车速",
+  "pub.cmp.dc": "DC快充",
+  "pub.cmp.ac": "AC充电",
+  "pub.cmp.time": "充电时间",
+  "pub.cmp.drive": "驱动",
+  "pub.cmp.seats": "座位",
+  "pub.cmp.year": "年",
+  "pub.cmp.warranty": "质保",
+  "pub.cmp.variants": "版本",
+  "pub.cmp.specs": "参数",
+  "pub.cmp.phrase.range": "续航里程更长",
+  "pub.cmp.phrase.price": "价格更实惠",
+  "pub.cmp.phrase.battery": "电池容量更大",
+  "pub.cmp.phrase.power": "动力更强",
+  "pub.cmp.phrase.accel": "加速更快",
+  "pub.cmp.phrase.dc": "DC充电更快",
+  "pub.dan": "和",
+  "pub.tax.mobil": "电动汽车",
+  "pub.tax.motor": "电动摩托车",
+  "pub.tax.kendaraan": "电动车",
+  "pub.tax.titleMobil": "电动汽车",
+  "pub.tax.titleMotor": "电动摩托车",
+  "pub.tax.titleKendaraan": "电动车",
+  "pub.tax.titleTipe": "{label}{noun}",
+  "pub.tax.titleMerek": "{label}{noun}",
+  "pub.tax.dari": "来自{label}",
+  "pub.tax.bertipe": "{label}车型",
+  "pub.tax.pokokMerek": "在印度尼西亚销售的{count}款{label}",
+  "pub.tax.pokokTipe": "在印度尼西亚销售的{count}款{label}车型",
+  "pub.tax.dariMerek": "来自{n}个品牌",
+  "pub.tax.dalamTipe": "涵盖{n}种车身类型",
+  "pub.tax.harganya": "售价{nilai}",
+  "pub.tax.hargaTercatat": "价格为{nilai}",
+  "pub.tax.sampai": "至",
+  "pub.tax.jaraknya": "续航里程{nilai}",
+  "pub.tax.jarakTercatat": "续航里程为{nilai}",
+  "pub.tax.daftar": "在印度尼西亚销售的{count}款{apa}一览，包含续航里程、电池容量、动力和价格。",
+  "pub.tax.harga": " 价格{nilai}。",
+  "pub.color.putih": "白色",
+  "pub.color.silver": "银色",
+  "pub.color.abu": "灰色",
+  "pub.color.hitam": "黑色",
+  "pub.color.merah": "红色",
+  "pub.color.biru": "蓝色",
+  "pub.color.teal": "青色",
+  "pub.color.hijau": "绿色",
+  "pub.color.kuning": "黄色",
+  "pub.color.oranye": "橙色",
+  "pub.color.cokelat": "棕色",
+  "pub.color.ungu": "紫色",
+  "pub.ev": "电动车",
+  "pub.unit.dtk": "秒",
+  "pub.unit.kursi": "座",
+  "pub.unit.kmj": "km/h",
+  "pub.breadcrumb": "面包屑",
+  "pub.katalog": "目录",
+  "pub.koleksi.merek": "电动车品牌",
+  "pub.koleksi.tipe": "电动车车身类型",
+  "pub.koleksi.merekLawan": "品牌",
+  "pub.koleksi.tipeLawan": "车身类型",
+  "pub.koleksi.notFound": "页面未找到",
+  "pub.koleksi.indeksLead": "在印度尼西亚销售的{count}，共分为{n}种{jenis}。",
+  "pub.koleksi.jenisMerek": "品牌",
+  "pub.koleksi.jenisTipe": "车身类型",
+  "pub.koleksi.hargaSpesifikasi": "价格 & 参数",
+  "pub.koleksi.merekLain": "其他品牌",
+  "pub.koleksi.tipeLain": "其他车身类型",
+  "pub.koleksi.diIndonesia": "在印度尼西亚",
+  "pub.koleksi.metaIndeks": "在印度尼西亚销售的所有{jenis}电动车，包含车型数量和价格区间。",
+  "pub.koleksi.notFoundMerekTitle": "该品牌不在目录中",
+  "pub.koleksi.notFoundTipeTitle": "该车身类型不在目录中",
+  "pub.koleksi.notFoundMerekText": "该地址提到的品牌没有任何车辆使用。完整列表见以下页面。",
+  "pub.koleksi.notFoundTipeText": "该地址提到的车身类型没有任何车辆使用。完整列表见以下页面。",
+  "pub.koleksi.lihatSemua": "查看所有{jenis}",
+  "pub.koleksi.diHalaman": "本页的{judul}",
+  "pub.koleksi.lihatSeluruh": "查看全部{n}种{jenis}",
+  "pub.koleksi.lanjut": "继续探索",
+  "pub.koleksi.katalogLengkap": "完整目录",
+  "pub.koleksi.semua": "所有{jenis}",
+  "pub.koleksi.kalkulator": "省钱计算器",
+  "pub.detail.brand": "品牌",
+  "pub.detail.model": "车型",
+  "pub.detail.bodyType": "车身类型",
+  "pub.detail.year": "年",
+  "pub.detail.range": "续航里程",
+  "pub.detail.battery": "电池容量",
+  "pub.detail.power": "功率",
+  "pub.detail.torque": "扭矩",
+  "pub.detail.accel": "0–100 km/h加速",
+  "pub.detail.topSpeed": "最高车速",
+  "pub.detail.drive": "驱动方式",
+  "pub.detail.seats": "座位数",
+  "pub.detail.dc": "DC快充",
+  "pub.detail.ac": "AC充电",
+  "pub.detail.chargeTime": "充电时间",
+  "pub.detail.warranty": "质保",
+  "pub.detail.harga": "价格",
+  "pub.detail.variant": "版本",
+  "pub.detail.description": "描述",
+  "pub.detail.highlights": "亮点",
+  "pub.detail.specs": "参数",
+  "pub.detail.tags": "标签",
+  "pub.detail.compare": "对比",
+  "pub.detail.jelajahi": "探索",
+  "pub.detail.related": "相关{noun}",
+  "pub.detail.share": "分享",
+  "pub.detail.copy": "复制链接",
+  "pub.detail.hitungHemat": "计算省钱",
+  "pub.detail.hitungIsi": "计算充电费用",
+  "pub.detail.bukaKatalog": "打开目录",
+  "pub.detail.mulaiDari": "起",
+  "pub.detail.semua": "所有{label}{noun}",
+  "pub.detail.semuaTipe": "所有{label}车型的{noun}",
+  "pub.detail.notFound": "{noun}未找到",
+  "pub.detail.notFoundText": "该页面可能已被删除或尚未发布。请通过目录重新搜索。",
+  "pub.detail.foto": "照片{n}",
+  "pub.detail.perbesar": "放大图片",
+  "pub.detail.copied": "链接已复制 ✓",
+  "pub.detail.copyFail": "复制链接失败",
+  "pub.detail.pratinjau": "预览",
+  "pub.detail.pratinjauText": "该页面尚未发布。此预览链接将在两小时后过期。",
+  "pub.detail.bukaPanel": "打开面板",
+  "pub.detail.motorCap": "摩托车",
+  "pub.detail.mobilCap": "汽车",
+  "pub.lb.close": "关闭",
+  "pub.lb.prev": "上一张",
+  "pub.lb.next": "下一张",
+  "pub.filter.semuaHarga": "所有价格",
+  "pub.filter.under300": "3000万以下",
+  "pub.filter.under500": "5000万以下",
+  "pub.filter.rentang500": "5000万–8000万",
+  "pub.filter.over800": "8000万以上",
+  "pub.filter.semuaJarak": "所有续航",
+  "pub.filter.under200": "200 km以下",
+  "pub.filter.rentang200": "200–350 km",
+  "pub.filter.rentang350": "350–500 km",
+  "pub.filter.over500": "500 km及以上",
+  "pub.filter.semuaKapasitas": "全部容量",
+  "pub.filter.under40": "40 kWh以下",
+  "pub.filter.rentang40": "40 – 60 kWh",
+  "pub.filter.rentang60": "60 – 80 kWh",
+  "pub.filter.over80": "80 kWh及以上",
+  "pub.filter.semuaMerek": "全部品牌",
+  "pub.filter.semuaTipe": "全部类型",
+  "pub.filter.semua": "全部",
+  "pub.stat.models": "收录车型",
+  "pub.stat.brands": "品牌",
+  "pub.stat.minPrice": "最低价格",
+  "pub.stat.maxRange": "最长续航里程",
+  "pub.result.all": "显示<b>{n}</b> {noun}",
+  "pub.result.filtered": "显示<b>{n}</b>／共<b>{total}</b> {noun}",
+  "pub.compare.remove": "将{name}移出对比",
+  "pub.compare.hint": "请至少选择两辆车进行对比。",
+  "pub.banding.title": "参数对比",
+  "pub.banding.notFound": "未找到对比",
+  "pub.banding.lead": "在印度尼西亚销售的{names}（{kind}{body}）参数对比。",
+  "pub.banding.leadFallback": "各项数据在下方表格中并列展示。",
+  "pub.banding.metaDesc": "{heading}：并列对比续航里程、电池、动力、充电时间与价格。",
+  "pub.banding.notFoundText": "该地址提到的车辆不在目录中，或仅有一辆车。请从目录中选择要对比的车辆。",
+  "pub.banding.siapaUnggul": "各项优胜者",
+  "pub.banding.note": "仅当某列数据对所有车辆都齐全时，才能评出优胜。没有胜出者的行表示数据相同，或暂缺数据。",
+  "pub.banding.berdampingan": "参数并列展示",
+  "pub.banding.masingMasing": "各车型页面",
+  "pub.banding.lain": "其他对比",
+  "pub.artikel.title": "电动汽车文章与指南",
+  "pub.artikel.lead": "由{brand}团队原创撰写。凡引用数据或价格的文章，文末均列出来源，方便你自行核实。",
+  "pub.artikel.empty": "暂无已发布的文章",
+  "pub.artikel.emptyText": "首篇文章正在准备中。同时，你可以从首页打开车辆目录。",
+  "pub.artikel.back": "返回首页",
+  "pub.artikel.notFound": "未找到文章",
+  "pub.artikel.notFoundText": "该地址可能已更改，或文章尚未发布。",
+  "pub.artikel.lihatSemua": "查看全部文章",
+  "pub.artikel.menitBaca": "{n}分钟阅读",
+  "pub.artikel.diperbarui": "最近更新",
+  "pub.artikel.daftarIsi": "目录",
+  "pub.artikel.diArtikel": "在本文中",
+  "pub.artikel.sumber": "来源",
+  "pub.artikel.sumberNote": "本文中的数据与事实均引自以下页面。打开链接是核实数据是否仍然有效最快的方式。",
+  "pub.artikel.lainnya": "其他文章",
+  "pub.artikel.kategori": "文章",
+  "pub.artikel.tanpaTanggal": "无日期",
+  "pub.kalk.kendaraan": "车辆",
+  "pub.kalk.pilihHint": "选择车辆会自动填入其电池容量，数字仍可修改。",
+  "pub.kalk.kapasitas": "电池容量",
+  "pub.kalk.mulai": "从",
+  "pub.kalk.sampai": "至",
+  "pub.kalk.daya": "充电功率",
+  "pub.kalk.tarif": "电价",
+  "pub.kalk.hitung": "计算",
+  "pub.kalk.lama": "充电时长",
+  "pub.kalk.rentang": "为区间，而非单一数值",
+  "pub.kalk.biaya": "单次充电费用",
+  "pub.kalk.perKwh": "按实际充入的每kWh计",
+  "pub.kalk.masuk": "充入电池",
+  "pub.kalk.dibayar": "计费",
+  "pub.kalk.setara": "等效续航里程",
+  "pub.kalk.klaim": "按厂商标称",
+  "pub.kalk.lihatSpesifikasi": "查看完整参数",
+  "pub.kalk.titleBiaya": "充电费用计算器",
+  "pub.kalk.h1Biaya": "充一次电：要多久，花多少？",
+  "pub.kalk.titleHemat": "省钱计算器",
+  "pub.kalk.h1Hemat": "电动汽车对比燃油车：自己算一算",
+  "pub.kalk.tidakDihitung": "此处未计入的项目",
+  "pub.kalk.lanjut": "继续",
+  "pub.kalk.kalkulatorHemat": "省钱计算器：电动汽车对比燃油车",
+  "pub.kalk.daftarSpklu": "充电站列表",
+  "pub.kalk.mobilListrik": "电动汽车",
+  "pub.kalk.konsumsi": "电耗",
+  "pub.kalk.hargaBbm": "燃油价格",
+  "pub.kalk.konsumsiBensin": "燃油车油耗",
+  "pub.kalk.jarakBulan": "行驶里程",
+  "pub.kalk.hargaEv": "电动汽车价格",
+  "pub.kalk.hargaBensin": "燃油车价格",
+  "pub.kalk.opsional": "可选",
+  "pub.kalk.listrikBulan": "电费，每月",
+  "pub.kalk.bensinBulan": "油费，每月",
+  "pub.kalk.selisih": "差额",
+  "pub.kalk.perKm": "每km",
+  "pub.kalk.setahun": "每年",
+  "pub.kalk.selisihHarga": "购车差价回本",
+  "pub.kalk.dariPenghematan": "仅按燃料节省计算",
+  "pub.tax.mobilSatu": "电动汽车",
+  "pub.tax.motorSatu": "电动摩托车",
+  "pub.detail.descLead": "{brand} {name}是一款{noun}（{body}）",
+  "pub.detail.frRange": "，续航里程{v}",
+  "pub.detail.frBattery": "，电池{v}",
+  "pub.detail.frPower": "，动力{v}",
+  "pub.detail.hlRange": "{v}续航里程",
+  "pub.detail.hlBattery": "{v}电池容量",
+  "pub.detail.hlPower": "{v}峰值功率",
+  "pub.detail.hlVarian": "有{n}个版本可选",
+  "pub.detail.dcFast": "DC快充",
+  "pub.detail.standarUji": "测试标准",
+  "pub.theme.aria": "切换浅色或深色主题",
+  "pub.theme.gelap": "深色",
+  "pub.theme.terang": "浅色",
+  "pub.base.desc": "在印度尼西亚销售的电动汽车数据库：规格、续航里程、电池、动力与价格。",
+  "pub.hero.titleFallback": "{brand}电动汽车目录",
+  "pub.hero.subFallback": "在一个地方对比续航里程、电池、动力与价格。",
+  "pub.index.jenis": "车辆类型",
+  "pub.index.filterTipe": "车身类型快速筛选",
+  "pub.index.filterBtn": "筛选",
+  "pub.index.viewGrid": "网格视图",
+  "pub.index.viewList": "列表视图",
+  "pub.index.viewGroup": "视图",
+  "pub.index.titleGrid": "网格",
+  "pub.index.titleList": "列表",
+  "pub.index.grupMotor": "电动摩托车",
+  "pub.index.grupMobil": "电动汽车",
+  "pub.index.hitungIsi": "估算充电费用",
+  "pub.dir.lokasi": "位置",
+  "pub.dir.alamat": "地址",
+  "pub.dir.daya": "功率",
+  "pub.dir.konektor": "接口",
+  "pub.dir.jumlahUnit": "设备数量",
+  "pub.dir.unit": "台",
+  "pub.dir.jam": "营业时间",
+  "pub.dir.tarif": "收费",
+  "pub.dir.layanan": "服务",
+  "pub.dir.telepon": "电话",
+  "pub.dir.bengkel": "维修店",
+  "pub.dir.lokasiSpklu": "充电站地图",
+  "pub.dir.pageSpklu": "印度尼西亚充电站",
+  "pub.dir.leadSpklu": "所有已收录的电动车充电地点——筛选功能在首页，这里一次性展示全部。",
+  "pub.dir.hitungSpklu": "{n}个充电点",
+  "pub.dir.pageBengkel": "电动车维修店与保养",
+  "pub.dir.leadBengkel": "所有已收录的电动车维修店和售后服务点，按电动摩托车和电动汽车分类。",
+  "pub.dir.hitungBengkel": "{n}家维修店",
+  "pub.dir.pageBerita": "电动车新闻",
+  "pub.dir.leadBerita": "所有精选电动车新闻——标题和摘要在这里，完整内容请前往原发布网站阅读。",
+  "pub.dir.hitungBerita": "{n}条新闻",
+  "pub.dir.pageKomunitas": "电动车社区",
+  "pub.dir.leadKomunitas": "所有已收录的电动车社区——点击前往其官方频道。",
+  "pub.dir.hitungKomunitas": "{n}个社区",
+  "pub.compare.title": "参数对比",
+  "pub.compare.asPage": "作为页面打开",
+  "pub.compare.clear": "清空",
+  "pub.compare.closeAria": "关闭对比",
+  "pub.price.juta": "Rp {n}万",
+  "pub.price.miliar": "Rp {n}亿",
+  "pub.menu.merek": "品牌",
+  "pub.menu.tipe": "车身类型",
+  "pub.menu.kalkHemat": "省钱计算器",
+  "pub.menu.kalkIsi": "充电费用",
+  "pub.footer.kontak": "联系",
+  "pub.footer.sumber": "数据来源",
+  "pub.footer.lihatPeta": "在地图上查看位置",
+  "pub.footer.row.email": "邮箱",
+  "pub.footer.row.telepon": "电话",
+  "pub.footer.row.whatsapp": "WhatsApp",
+  "pub.footer.row.alamat": "地址",
+  "pub.footer.row.peta": "地图",
+  "pub.footer.row.jam": "营业时间",
+  "pub.footer.row.situs": "网站",
+  "pub.notFound.desc": "你要找的页面不存在。",
+  "pub.notFound.banding": "你要找的对比不存在。",
+  "pub.katalog.judul": "印度尼西亚电动汽车目录",
+  "pub.katalog.halaman": "目录页面",
+  "pub.laman.diHalaman": "本页内容",
+  "pub.laman.lainnya": "其他页面",
+  "pub.laman.ariaToc": "页面目录",
+  "pub.laman.404Text": "该地址可能已变更，或该页面尚未发布。",
+  "pub.laman.kembali": "返回首页",
+  "pub.kalk.descBiaya": "自己算一算：充入多少kWh，在公共充电站或在家里充电需要多久，充一次电要花多少钱。",
+  "pub.kalk.metaBiaya": "电动车充电费用和时间计算器",
+  "pub.kalk.keywordBiaya": "电动车充电费用，电动车充电要多久，充电站收费，充电计算器",
+  "pub.kalk.descHemat": "自己算一算：每月电费、每月油费、两者差额，以及电动汽车高出的购车价需要多久才能回本。",
+  "pub.kalk.metaHemat": "电动汽车对比燃油车省钱计算器",
+  "pub.kalk.keywordHemat": "电动车计算器，电动车费用，电与油对比，电动车省钱",
+  "pub.kalk.kmBulan": "km/月",
+  "pub.kalk.pageBiaya": "电动汽车充电费用与时间计算器",
+  "pub.kalk.pageHemat": "电动汽车对比燃油车省钱计算器",
+  "pub.kalk.leadBiaya": "选择车辆，设定要从百分之几充到百分之几，再填写充电站功率和收费标准。结果会即时更新，链接可以连同你填写的数字一起分享。",
+  "pub.kalk.hintTaper": "默认充到{batas}%即停止，因为直流快充到这里会明显降速——这也是厂家宣传几乎都写“10–{batas}%”的原因。",
+  "pub.kalk.tidakDihitungIsi1": "充电时长始终是一个区间，这是故意的。充电站的标称功率很少能全程跑满：每辆车的充电曲线不同，电池过冷或过热都会充得更慢，同一台充电桩同时给两辆车充还会分流功率。",
+  "pub.kalk.tidakDihitungIsi2": "目录中的电池容量是毛容量。出于电芯寿命考虑，其中一部分永远不会被使用，所以车机屏幕上的“0%”并不是电池真正被掏空。",
+  "pub.kalk.tidakDihitungIsi3": "等效续航由厂家宣传值（WLTP/NEDC）推算而来。实际路上跑几乎总是更短——跑高速、下雨天或空调全开时，还会更短。",
+  "pub.kalk.tidakDihitungIsi4": "各运营商的充电收费不同，还可能有不计入这里的服务费或停车费。默认数字只是估算，请换成实际标示的价格。",
+  "pub.kalk.leadHemat": "填写油价、电价和你每月的行驶里程。结果会即时更新，链接可以连同你填写的数字一起分享。",
+  "pub.kalk.hintPilihMobil": "选择车辆后会自动填入下方的能耗和价格，两者仍可手动修改。",
+  "pub.kalk.hintKonsumsi": "由电池容量除以厂家宣传续航算出。实际驾驶通常更耗电——想让数字更实在，可以稍微调高一点。",
+  "pub.kalk.hintHargaBensin": "如果想知道高出的购车价何时回本，请填写这一项。",
+  "pub.kalk.tidakDihitungHemat1": "所有默认数字都只是估算。油价因油品和地区而异，电价因用电类别而异——请换成你实际支付的价格。",
+  "pub.kalk.tidakDihitungHemat2": "用电量由厂家宣传值（WLTP/NEDC）推算而来。日常使用几乎总是更耗电，给电池充电本身也有电能损耗。",
+  "pub.kalk.tidakDihitungHemat3": "这项计算只算燃料。定期保养、税费、保险、折旧和更换电池都不包括在内——其中任何一项都可能改变结论。",
+  "pub.kalk.tidakDihitungHemat4": "回本周期用购车差价除以每月省下的钱算出，不含利息、分期和未来涨价。",
+  "pub.hemat.rumah": "在家",
+  "pub.hemat.tarifRumah": "家庭电价",
+  "pub.hemat.pengisianUmum": "公共充电",
+  "pub.hemat.balikLangsung": "立即回本，从第一天起",
+  "pub.hemat.balikBulan": "{n}个月",
+  "pub.hemat.balikTahunBulan": "{t}年{b}个月",
+  "pub.hemat.balikTahun": "{t}年",
+  "pub.hemat.tidakPernah": "永远无法回本",
+  "pub.hemat.terlaluLama": "比车辆本身的使用寿命还长",
+  "pub.hemat.isiAngka": "填写数字即可查看结果。",
+  "pub.hemat.hematBulan": "按以上数字，电动汽车每月省{bulan}——每年省{tahun}。",
+  "pub.hemat.lebihMahal": "按以上数字，电动汽车反而每月贵{bulan}。这通常说明所用电价太高，或者对比的燃油车太省油。",
+  "pub.hemat.sama": "按以上数字，两者费用完全相同。",
+  "pub.peng.colokanRumah": "家用插座",
+  "pub.peng.modeCepat": "快充",
+  "pub.peng.modeSangatCepat": "超快充",
+  "pub.peng.menit": "{n}分钟",
+  "pub.peng.jam": "{n}小时",
+  "pub.peng.jamMenit": "{j}小时{m}分钟",
+  "pub.peng.ringkasSalah": "结束电量必须大于起始电量——否则等于没有充电。",
+  "pub.peng.ringkasKosong": "填写电池容量和充电区间即可查看结果。",
+  "pub.peng.ringkasBiayaDurasi": "给电池充{soc}%，意味着充入{energi}，用时{durasi}，花费{biaya}。",
+  "pub.peng.ringkasBiaya": "给电池充{soc}%，意味着充入{energi}，花费{biaya}。填写充电站功率即可知道需要多久。",
+  "pub.peng.ringkasDurasi": "给电池充{soc}%，意味着充入{energi}，用时{durasi}。填写收费标准即可知道要花多少。",
+  "pub.peng.ringkasEnergi": "给电池充{soc}%，意味着充入{energi}。",
+  "pub.peng.catDibatasi": "充电站功率超过了这辆车能接受的上限。计算按{daya} kW进行，而不是按充电站功率——多余部分用不上。",
+  "pub.peng.catBatas": "目录尚未收录这辆车的最大充电功率，因此以上计算默认充电站功率可被全部接受。如果车辆上限更低，实际用时会更长。",
+  "pub.peng.catTaper": "直流充电在{batas}%以上会大幅降速。最后这一段最难预估，所以上面的区间会变宽——几乎所有厂家宣传都只标到{batas}%，正是这个原因。",
+  "pub.peng.catRentangDc": "时间是一个区间，而不是单一数字：实际充入功率取决于每辆车的充电曲线、电池温度，以及同时共用同一台充电站的车辆数量。",
+  "pub.peng.catRentangAc": "交流充电全程功率平稳，所以区间很窄——起限制作用的通常是车载充电机，而不是充电站。",
+  "pub.peng.catEfisiensiAc": "实际支付的电量大于进入电池的电量：一部分能量变成了热量。由于尚未填写充电站功率，这里只能按交流充电{ef}%的效率计算——直流损耗更小，因此实际费用会比显示的略低。",
+  "pub.peng.catEfisiensiDc": "实际支付的电量大于进入电池的电量：一部分能量变成了热量。这里按{mode}充电{ef}%的效率计算，这只是估算——目录中没有该数字。",
+  "pub.katalog.pageTitle1": "印度尼西亚电动汽车目录——{brand}",
+  "pub.katalog.pageTitleN": "电动汽车目录——第{nomor}页，共{jumlahHalaman}页——{brand}",
+  "pub.katalog.halamanJudul": "电动汽车目录——第{nomor}页",
+  "pub.katalog.crumbHalaman": "第{nomor}页",
+  "pub.katalog.meta1": "在印度尼西亚销售的{total}款电动汽车完整名单，含续航里程、电池容量、动力和价格。",
+  "pub.katalog.metaN": "在印度尼西亚销售的{total}款车型中的第{dari}至{sampai}款，含完整参数和价格。",
+  "pub.katalog.404Title": "该目录页面不存在",
+  "pub.katalog.404Text": "该目录只有{jumlahHalaman}页，请从第一页重新开始。",
+  "pub.katalog.lead": "显示<strong>{dari}–{sampai}</strong>款，共<strong>{total}</strong>款，按续航里程从长到短排序。",
+  "pub.katalog.leadLink": "在首页搜索和筛选→",
+  "pub.artikel.pageTitle": "电动车文章与指南",
+  "pub.artikel.metaDesc": "{n}篇关于印度尼西亚电动车的原创文章：注明出处的指南、对比和评测。",
+  "pub.artikel.metaDescEmpty": "来自{brand}的印度尼西亚电动车文章与指南。",
+  "pub.banding.crumb": "对比",
+};
+
+const DICTS = { id: ID, en: EN, zh: ZH };
 
 /** Nama cookie pilihan bahasa situs publik. */
 export const PUB_COOKIE = "evkita_pub_lang";
@@ -672,6 +1656,22 @@ export const PUB_DEFAULT = "id";
 export function normalizePubLocale(value) {
   const s = String(value || "").toLowerCase().split(/[-_]/)[0];
   return DICTS[s] ? s : PUB_DEFAULT;
+}
+
+/** Locale `Intl` per bahasa publik — untuk tanggal dan angka. */
+export function pubIntl(locale) {
+  const code = normalizePubLocale(locale);
+  if (code === "zh") return "zh-CN";
+  if (code === "en") return "en-US";
+  return "id-ID";
+}
+
+/** Varian `og:locale` per bahasa publik. */
+export function pubOgLocale(locale) {
+  const code = normalizePubLocale(locale);
+  if (code === "zh") return "zh_CN";
+  if (code === "en") return "en_US";
+  return "id_ID";
 }
 
 function interpolate(text, vars) {
@@ -694,3 +1694,129 @@ export function makePubT(locale) {
   const code = normalizePubLocale(locale);
   return (key, vars) => pubT(code, key, vars);
 }
+
+/**
+ * Peta isi `data/content.json` yang berbahasa Indonesia ke Bahasa Inggris.
+ *
+ * Isi yang disimpan pemilik situs — nama kendaraan, judul berita, isi artikel,
+ * deskripsi bengkel — adalah tulisan editorial dan TIDAK diterjemahkan di
+ * sini; ia tetap bahasa tulisannya sendiri. Yang masuk daftar ini hanya teks
+ * antarmuka yang kebetulan disimpan sebagai data: setelan Pengaturan Situs
+ * dan judul halaman statis yang tampil sebagai tautan navigasi.
+ *
+ * Pencocokannya berdasarkan NILAI TEPAT, bukan kunci, supaya mengubah teks
+ * lewat panel tidak membuat padanannya diam-diam lenyap — teks baru yang belum
+ * ada di daftar ini akan tampil apa adanya, bukan jadi teks Inggris yang salah.
+ */
+const CMS_EN = {
+  "Basis data kendaraan listrik Indonesia": "Indonesia's electric vehicle database",
+  "Kendaraan Listrik Indonesia": "Electric Vehicles in Indonesia",
+  "Panduan Lengkap Kendaraan Listrik": "The complete electric vehicle guide",
+  "Katalog Kendaraan Listrik": "Electric Vehicle Catalogue",
+  "Bandingkan spesifikasi dan harga": "Compare specifications and prices",
+  "SPKLU Indonesia": "Public EV charging in Indonesia",
+  "Jaringan pengisian daya publik": "Public charging network",
+  "Bengkel & Servis EV": "EV workshops & service",
+  "Mobil & motor listrik": "Electric cars & motorcycles",
+  "Berita Terkini": "Latest news",
+  Tentang: "About",
+  Jelajahi: "Explore",
+  Kontak: "Contact",
+  "Ikuti Kami": "Follow us",
+  "Sumber Data": "Data sources",
+  "Harga & spesifikasi dapat berubah sewaktu-waktu.":
+    "Prices and specifications may change at any time.",
+  "Harga dan spesifikasi dapat berubah sewaktu-waktu. Selalu konfirmasi ke dealer resmi.":
+    "Prices and specifications may change at any time. Always confirm with an authorised dealer.",
+  "Halaman ini adalah situs referensi mandiri untuk mobil listrik yang tersedia di pasar Indonesia. Data spesifikasi (jarak tempuh, kapasitas baterai, tenaga, varian, dan harga) dirangkum dari EVdata.id. Standar pengukuran jarak tempuh dapat berbeda antar model (WLTP, NEDC, CLTC, atau klaim pabrikan), sehingga angka antar model tidak selalu dapat dibandingkan langsung.":
+    "This page is an independent reference site for electric cars available on the Indonesian market. Specification data (range, battery capacity, power, variants and price) is compiled from EVdata.id. Range test standards differ between models (WLTP, NEDC, CLTC or manufacturer claims), so figures are not always directly comparable.",
+  // Judul halaman statis yang tampil di Jelajahi, footer, dan remah roti.
+  "Edukasi Dasar: Belum Punya EV": "EV basics: before you own one",
+  "Edukasi Dasar": "EV basics",
+  "Kepemilikan & Perawatan": "Ownership & maintenance",
+  "Motor Listrik": "Electric motorcycles",
+  "Rute & Perjalanan EV": "EV routes & trips",
+  "Rute & Perjalanan": "Routes & trips",
+  "Berita & Komunitas": "News & community",
+  "Tentang Kami": "About us",
+  "Kebijakan Privasi": "Privacy policy",
+  "Syarat & Ketentuan": "Terms & conditions",
+  Disclaimer: "Disclaimer",
+};
+
+/**
+ * Terjemahkan satu nilai isi kalau sedang dalam Bahasa Inggris.
+ * Nilai yang tidak ada di peta — termasuk seluruh tulisan editorial —
+ * dilewatkan apa adanya.
+ */
+export function cms(teks, locale) {
+  if (teks === null || teks === undefined) return teks;
+  const code = normalizePubLocale(locale);
+  if (code !== "en" && code !== "zh") return teks;
+  const s = String(teks);
+  const peta = code === "en" ? CMS_EN : CMS_ZH;
+  return peta[s] !== undefined ? peta[s] : s;
+}
+
+/**
+ * Salinan objek `site` dengan seluruh nilai string-nya sudah diterjemahkan.
+ * Dipanggil sekali di tiap halaman publik, supaya baris-baris di bawahnya cukup
+ * membaca `site.x` tanpa perlu tahu soal bahasa.
+ */
+export function cmsSite(site, locale) {
+  if (!site) return site;
+  const code = normalizePubLocale(locale);
+  if (code !== "en" && code !== "zh") return site;
+  const out = {};
+  for (const k of Object.keys(site)) {
+    const v = site[k];
+    out[k] = typeof v === "string" ? cms(v, locale) : v;
+  }
+  return out;
+}
+
+/**
+ * Peta isi `data/content.json` yang berbahasa Indonesia ke Bahasa Mandarin.
+ *
+ * Kembaran `CMS_EN` untuk bendera China: teks antarmuka yang kebetulan
+ * disimpan sebagai data (setelan Pengaturan Situs dan judul halaman statis).
+ * Sama seperti kembarannya, pencocokannya NILAI TEPAT — tulisan editorial
+ * (deskripsi, artikel, berita) bukan lewat sini melainkan lewat lapisan AI
+ * `terjemahContent()`, yang kuncinya per teks persis sehingga suntingan
+ * otomatis diterjemahkan ulang.
+ */
+const CMS_ZH = {
+  "Basis data kendaraan listrik Indonesia": "印度尼西亚电动车数据库",
+  "Kendaraan Listrik Indonesia": "印度尼西亚电动汽车",
+  "Panduan Lengkap Kendaraan Listrik": "电动车完整指南",
+  "Katalog Kendaraan Listrik": "电动汽车目录",
+  "Bandingkan spesifikasi dan harga": "对比参数与价格",
+  "SPKLU Indonesia": "印度尼西亚充电站",
+  "Jaringan pengisian daya publik": "公共充电网络",
+  "Bengkel & Servis EV": "电动车维修店与保养",
+  "Mobil & motor listrik": "电动汽车与电动摩托车",
+  "Berita Terkini": "最新新闻",
+  Tentang: "关于",
+  Jelajahi: "探索",
+  Kontak: "联系",
+  "Ikuti Kami": "关注我们",
+  "Sumber Data": "数据来源",
+  "Harga & spesifikasi dapat berubah sewaktu-waktu.":
+    "价格与参数可能随时变化。",
+  "Harga dan spesifikasi dapat berubah sewaktu-waktu. Selalu konfirmasi ke dealer resmi.":
+    "价格与参数可能随时变化，请务必向官方经销商确认。",
+  "Halaman ini adalah situs referensi mandiri untuk mobil listrik yang tersedia di pasar Indonesia. Data spesifikasi (jarak tempuh, kapasitas baterai, tenaga, varian, dan harga) dirangkum dari EVdata.id. Standar pengukuran jarak tempuh dapat berbeda antar model (WLTP, NEDC, CLTC, atau klaim pabrikan), sehingga angka antar model tidak selalu dapat dibandingkan langsung.":
+    "本站是面向印度尼西亚市场在售电动汽车的独立参考站。参数数据（续航里程、电池容量、动力、版本与价格）汇总自EVdata.id。各车型的续航测试标准可能不同（WLTP、NEDC、CLTC或厂家宣传值），因此车型之间的数据并不总能直接对比。",
+  // Judul halaman statis yang tampil di Jelajahi, footer, dan remah roti.
+  "Edukasi Dasar: Belum Punya EV": "EV基础知识：购车前必读",
+  "Edukasi Dasar": "EV基础知识",
+  "Kepemilikan & Perawatan": "用车与保养",
+  "Motor Listrik": "电动摩托车",
+  "Rute & Perjalanan EV": "EV路线与出行",
+  "Rute & Perjalanan": "路线与出行",
+  "Berita & Komunitas": "新闻与社区",
+  "Tentang Kami": "关于我们",
+  "Kebijakan Privasi": "隐私政策",
+  "Syarat & Ketentuan": "条款与条件",
+  Disclaimer: "免责声明",
+};

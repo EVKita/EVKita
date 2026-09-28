@@ -1,6 +1,7 @@
 ---
 import { bacaMenit, hrefArtikel, ringkasArtikel, tanggalArtikel } from "../lib/artikel.js";
 import { safeUrl } from "../lib/url.js";
+import { makePubT, normalizePubLocale, pubIntl } from "../lib/i18n/pub.js";
 
 /**
  * Satu kartu artikel.
@@ -16,9 +17,12 @@ interface Props {
 
 const { artikel } = Astro.props;
 
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+
 const tanggal = tanggalArtikel(artikel);
 const tanggalTeks = tanggal
-  ? new Date(`${tanggal}T00:00:00+07:00`).toLocaleDateString("id-ID", {
+  ? new Date(`${tanggal}T00:00:00+07:00`).toLocaleDateString(pubIntl(lang), {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -36,13 +40,13 @@ const gambar = safeUrl(artikel.image);
   <div class="artikel-body">
     <div class="artikel-top">
       {artikel.category ? <span class="artikel-kategori">{artikel.category}</span> : <span></span>}
-      {artikel.featured ? <span class="badge badge-featured">Sorotan</span> : null}
+      {artikel.featured ? <span class="badge badge-featured">{t("pub.sorotan")}</span> : null}
     </div>
     <h3 class="artikel-judul">{artikel.title}</h3>
     <p class="artikel-ringkas">{ringkasArtikel(artikel)}</p>
     <div class="artikel-kaki">
       <span class="artikel-tanggal">{tanggalTeks}</span>
-      <span class="artikel-baca">{bacaMenit(artikel)} menit baca</span>
+      <span class="artikel-baca">{t("pub.artikel.menitBaca", { n: bacaMenit(artikel) })}</span>
     </div>
   </div>
 </a>

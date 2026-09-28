@@ -35,9 +35,9 @@ const mark = typed.slice(0, 3);
 const links = [
   { id: "beranda", label: t("pub.nav.beranda"), href: base || "/", mode: "", note: t("pub.nav.beranda.note") },
   { id: "mobil", label: t("pub.nav.mobil"), href: `${base}#daftar`, mode: "mobil", note: t("pub.nav.mobil.note") },
-  site.showSpklu ? { id: "spklu", label: t("pub.nav.spklu"), href: `${base}#spklu`, mode: "", note: t("pub.nav.spklu.note") } : null,
-  site.showBengkel ? { id: "bengkel", label: t("pub.nav.bengkel"), href: `${base}#bengkel`, mode: "", note: t("pub.nav.bengkel.note") } : null,
-  site.showBerita ? { id: "berita", label: t("pub.nav.berita"), href: `${base}#berita`, mode: "", note: t("pub.nav.berita.note") } : null,
+  site.showSpklu ? { id: "spklu", label: t("pub.nav.spklu"), href: "/spklu", mode: "", note: t("pub.nav.spklu.note") } : null,
+  site.showBengkel ? { id: "bengkel", label: t("pub.nav.bengkel"), href: "/bengkel", mode: "", note: t("pub.nav.bengkel.note") } : null,
+  site.showBerita ? { id: "berita", label: t("pub.nav.berita"), href: "/berita", mode: "", note: t("pub.nav.berita.note") } : null,
   { id: "artikel", label: t("pub.nav.artikel"), href: `${base}/artikel`, mode: "", note: t("pub.nav.artikel.note") },
   site.showAbout ? { id: "tentang", label: t("pub.nav.tentang"), href: `${base}#tentang`, mode: "", note: t("pub.nav.tentang.note") } : null,
 ].filter(Boolean) as { id: string; label: string; href: string; mode: string; note: string }[];
@@ -62,7 +62,7 @@ const ICONS: Record<string, string> = {
 
 <header class="masthead" id="masthead">
   <div class="container masthead-inner">
-    <a href={base || "/"} class="logo" aria-label={`${brand}${suffix} — beranda`}>
+    <a href={base || "/"} class="logo" aria-label={`${brand}${suffix} — ${t("pub.nav.beranda")}`}>
       {site.logoImage ? (
         <img class="logo-img" src={safeUrl(site.logoImage)} alt="" width="40" height="40" />
       ) : useInitials ? (
@@ -94,6 +94,8 @@ const ICONS: Record<string, string> = {
         aria-expanded="false"
         aria-controls="navDrawer"
         aria-label={t("pub.nav.open")}
+        data-label-open={t("pub.nav.open")}
+        data-label-close={t("pub.nav.close")}
       >
         <span class="nav-toggle-bars" aria-hidden="true">
           <span class="nav-toggle-bar"></span>
@@ -194,7 +196,11 @@ const ICONS: Record<string, string> = {
       // toolbar `position: sticky` ikut lepas dari viewport.
       root.classList.toggle("nav-open", open);
       toggle.setAttribute("aria-expanded", String(open));
-      toggle.setAttribute("aria-label", open ? "Tutup menu navigasi" : "Buka menu navigasi");
+      // Label dua arah datang dari markup — skrip ini tidak boleh tahu bahasa.
+      toggle.setAttribute(
+        "aria-label",
+        open ? toggle.dataset.labelClose || "" : toggle.dataset.labelOpen || ""
+      );
       drawer.setAttribute("aria-hidden", String(!open));
 
       if (open) {
