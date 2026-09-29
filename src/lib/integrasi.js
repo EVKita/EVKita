@@ -103,6 +103,10 @@ export function periksa(masuk) {
   if (nilai.gaId && !POLA.gaId.test(nilai.gaId)) galat.push("err.integrasi.gaId");
   if (nilai.adsenseId && !POLA.adsenseId.test(nilai.adsenseId)) galat.push("err.integrasi.adsenseId");
   if (nilai.gscToken && !POLA.gscToken.test(nilai.gscToken)) galat.push("err.integrasi.gscToken");
+  /* Client ID yang bentuknya salah langsung ditolak di sini, supaya panel
+     tidak melaporkan "tersimpan" sementara tombol Google-nya tetap hilang
+     (normalisasi akan membuangnya saat dibaca). */
+  if (nilai.googleClientId && !POLA.googleClientId.test(nilai.googleClientId)) galat.push("err.integrasi.googleClientId");
 
   /*
    * Saklar yang menyala tanpa id adalah keadaan yang paling sering bikin orang

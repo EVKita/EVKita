@@ -70,6 +70,8 @@ const ID = {
   "pub.vote.belum": "Belum ada suara",
   "pub.vote.bintang": "Beri {n} bintang",
   "pub.vote.err": "Voting gagal. Coba lagi.",
+  "pub.vote.lainnya": "Pilihan lain",
+  "pub.vote.ciutkan": "Tutup",
 
   // — Pintu konten (ContentGate): tampil sekali sehari bila AdSense aktif —
   "pub.gate.welcome": "Selamat datang di {brand}",
@@ -641,6 +643,8 @@ const EN = {
   "pub.vote.belum": "No votes yet",
   "pub.vote.bintang": "Rate {n} stars",
   "pub.vote.err": "Vote failed. Try again.",
+  "pub.vote.lainnya": "Other choices",
+  "pub.vote.ciutkan": "Collapse",
 
   // — Content gate (ContentGate): shown once a day when AdSense is on —
   "pub.gate.welcome": "Welcome to {brand}",
@@ -1210,6 +1214,8 @@ const ZH = {
   "pub.vote.belum": "暂无投票",
   "pub.vote.bintang": "评{n}星",
   "pub.vote.err": "投票失败，请重试。",
+  "pub.vote.lainnya": "更多选择",
+  "pub.vote.ciutkan": "收起",
   "pub.gate.welcome": "欢迎来到{brand}",
   "pub.gate.title": "解锁更多内容",
   "pub.gate.sub": "EVKita因广告而免费提供。请点击下方按钮，继续阅读本站全部内容。",

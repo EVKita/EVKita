@@ -682,7 +682,9 @@ if (document.readyState === "loading") {
 }
 
 /* ===== VoteKita: voting bintang pengunjung =====
-   Panel sisi kanan beranda (`aside#voteKita`): 10 mobil + 10 motor terfavorit.
+   Panel sisi kanan beranda (`aside#voteKita`): 10 mobil + 10 motor terfavorit,
+   masing-masing lima pertama tampil dan sisanya menunggu tombol "Pilihan
+   lain" (`data-vote-more`) dibuka.
    Baris awalnya sudah dirender server lewat `voteRowHtml()` yang SAMA — di sini
    tinggal menggambar ulang tiap ada suara masuk, supaya peringkatnya bergerak
    langsung tanpa muat ulang. Suara sendiri diingat di `localStorage` dengan
@@ -733,12 +735,20 @@ if (document.readyState === "loading") {
     }
   }
 
+  /* Batas tampil tiap daftar: lima pertama terlihat, sisanya menunggu tombol
+     "Pilihan lain" dibuka. Angkanya sama dengan render server di
+     `index.astro` — keduanya harus sepakat. */
+  const BATAS_TAMPIL = 5;
+
   /* Gambar ulang satu daftar (10 teratas, sudah terurut). Markupnya memakai
      `voteRowHtml()` yang sama dengan render server — termasuk format angka
-     rata-rata per bahasa yang hidup di dalamnya. */
+     rata-rata per bahasa yang hidup di dalamnya. Keadaan buka/tutup tombol
+     "Pilihan lain" dibaca dari `dataset` daftarnya, jadi suara yang masuk
+     tidak menutup kembali daftar yang sedang dibuka. */
   function gambarDaftar(jenis) {
     const el = elUntuk(jenis);
     if (!el) return;
+    const terbuka = el.dataset.expanded === "1";
     const peringkat = rankVotes(kendaraanUntuk(jenis), emberUntuk(jenis), 10);
     el.innerHTML = peringkat
       .map((r, i) =>
@@ -749,9 +759,43 @@ if (document.readyState === "loading") {
           myVote: bacaSuaraSaya(jenis, r.v.id),
           lang: voteLang,
           rank: i + 1,
+          hidden: !terbuka && i >= BATAS_TAMPIL,
         })
       )
       .join("");
+    selaraskanTombol(el);
+  }
+
+  /* Teks dan panah tombol "Pilihan lain" mengikuti keadaan daftarnya. */
+  function selaraskanTombol(el) {
+    if (!wadah || !el || !el.id) return;
+    const tombol = wadah.querySelector(`[data-vote-more="${el.id}"]`);
+    if (!tombol) return;
+    const terbuka = el.dataset.expanded === "1";
+    const teks = tombol.querySelector("[data-vote-more-teks]");
+    const panah = tombol.querySelector("[data-vote-more-panah]");
+    if (teks) teks.textContent = terbuka ? t("pub.vote.ciutkan") : t("pub.vote.lainnya");
+    if (panah) panah.textContent = terbuka ? " ↑" : " ↓";
+    tombol.setAttribute("aria-expanded", terbuka ? "true" : "false");
+  }
+
+  /* Buka/tutup pilihan lain: baris di luar lima pertama disembunyikan atau
+     ditampilkan kembali. Anak langsung dipakai sebagai patokan (bukan kelas
+     baris), supaya menutup dua bentuk markup: bungkus `<li>` dari render
+     server dan baris langsung dari gambar ulang di sini. */
+  function jungkitLainnya(tombol) {
+    const el = tombol && tombol.dataset && tombol.dataset.voteMore
+      ? document.getElementById(tombol.dataset.voteMore)
+      : null;
+    if (!el) return;
+    const terbuka = el.dataset.expanded === "1";
+    el.dataset.expanded = terbuka ? "0" : "1";
+    Array.prototype.forEach.call(el.children, (baris, i) => {
+      if (i < BATAS_TAMPIL) return;
+      if (terbuka) baris.setAttribute("hidden", "");
+      else baris.removeAttribute("hidden");
+    });
+    selaraskanTombol(el);
   }
 
   /* Baris galat kecil di kaki panel — dibuat bila orkestrator belum
@@ -815,6 +859,8 @@ if (document.readyState === "loading") {
 
   if (wadah) {
     wadah.addEventListener("click", (e) => {
+      const lainnya = e.target.closest("[data-vote-more]");
+      if (lainnya && wadah.contains(lainnya)) { jungkitLainnya(lainnya); return; }
       const tombol = e.target.closest("[data-vote-stars]");
       if (!tombol || !wadah.contains(tombol)) return;
       kirimSuara(tombol);

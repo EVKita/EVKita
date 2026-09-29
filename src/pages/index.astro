@@ -884,9 +884,7 @@ const jsonLd = {
                       <span class="kita-rank" aria-hidden="true">{i + 1}</span>
                       {n.image ? (
                         <img class="kita-thumb" src={safeUrl(n.image)} alt="" loading="lazy" decoding="async" />
-                      ) : (
-                        <span class="kita-thumb kita-huruf" aria-hidden="true">{String(n.source || n.title || "?").trim().charAt(0).toUpperCase()}</span>
-                      )}
+                      ) : null}
                       <span class="kita-info">
                         <span class="kita-name">{n.title}</span>
                         <span class="kita-unit">{[n.source, n.date].filter(Boolean).join(" · ")}</span>
@@ -906,16 +904,22 @@ const jsonLd = {
           <h3 class="vote-sub">{t("pub.vote.mobil")}</h3>
           <ol class="vote-list" id="voteMobil">
             {voteMobil.map(({ v, avg, votes: vv }: any, i: number) => (
-              <li set:html={voteRowHtml(v, { s: avg * vv, v: vv }, { t, href: vehicleHref(v), lang, rank: i + 1 })} />
+              <li hidden={i >= 5} set:html={voteRowHtml(v, { s: avg * vv, v: vv }, { t, href: vehicleHref(v), lang, rank: i + 1 })} />
             ))}
           </ol>
+          {voteMobil.length > 5 ? (
+            <button type="button" class="vote-more" data-vote-more="voteMobil" aria-expanded="false"><span data-vote-more-teks>{t("pub.vote.lainnya")}</span><span data-vote-more-panah aria-hidden="true"> ↓</span></button>
+          ) : null}
           {voteMotor.length ? (
             <h3 class="vote-sub">{t("pub.vote.motor")}</h3>
             <ol class="vote-list" id="voteMotor">
               {voteMotor.map(({ v, avg, votes: vv }: any, i: number) => (
-                <li set:html={voteRowHtml(v, { s: avg * vv, v: vv }, { t, href: vehicleHref(v), lang, rank: i + 1 })} />
+                <li hidden={i >= 5} set:html={voteRowHtml(v, { s: avg * vv, v: vv }, { t, href: vehicleHref(v), lang, rank: i + 1 })} />
               ))}
             </ol>
+          ) : null}
+          {voteMotor.length > 5 ? (
+            <button type="button" class="vote-more" data-vote-more="voteMotor" aria-expanded="false"><span data-vote-more-teks>{t("pub.vote.lainnya")}</span><span data-vote-more-panah aria-hidden="true"> ↓</span></button>
           ) : null}
           <p class="vote-err" id="voteErr" hidden></p>
         </section>

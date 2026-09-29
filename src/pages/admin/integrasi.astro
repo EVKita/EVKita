@@ -15,9 +15,9 @@ import { makeT, localeMeta } from "../../lib/i18n/index.js";
  *
  * Sengaja HALAMAN SENDIRI, bukan satu tampilan lagi di dalam /admin, dan
  * alasannya sama dengan halaman Pembaruan: isinya tidak menyentuh
- * `content.json` sama sekali. Menaruhnya di dalam aplikasi satu-halaman berarti
- * memuat seluruh CMS — 7.000 baris admin.js, seluruh katalog, mesin simpan
- * otomatis — untuk sebuah formulir berisi tiga id. Halaman ini hanya membawa
+  * `content.json` sama sekali. Menaruhnya di dalam aplikasi satu-halaman berarti
+  * memuat seluruh CMS — 7.000 baris admin.js, seluruh katalog, mesin simpan
+  * otomatis — untuk sebuah formulir berisi empat id. Halaman ini hanya membawa
  * `admin-shell.js` (sidebar dan tombol keluar) dan skrip formulirnya sendiri.
  *
  * Ia juga yang menjadi pasangan panel Analitik: yang satu memasang alat ukur
@@ -64,6 +64,7 @@ const texts = {
     "err.integrasi.gaId": t("err.integrasi.gaId"),
     "err.integrasi.adsenseId": t("err.integrasi.adsenseId"),
     "err.integrasi.gscToken": t("err.integrasi.gscToken"),
+    "err.integrasi.googleClientId": t("err.integrasi.googleClientId"),
     "err.integrasi.gaKosong": t("err.integrasi.gaKosong"),
     "err.integrasi.adsenseKosong": t("err.integrasi.adsenseKosong"),
     "err.integrasi.gscKosong": t("err.integrasi.gscKosong"),
@@ -256,6 +257,35 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
             </p>
           </section>
 
+          <!-- ===== Login Google pengunjung ===== -->
+          <section class="panel form-section">
+            <div class="form-section-head integrasi-head">
+              <span class="integrasi-logo" aria-hidden="true">🔑</span>
+              <div>
+                <h2>{t("integrasi.login")}</h2>
+                <p>{t("integrasi.login.desc")}</p>
+              </div>
+              <span class={statusKelas(!!cfg.googleClientId)} data-status="login" data-on={t("integrasi.on")} data-off={t("integrasi.off")}>{statusTeks(!!cfg.googleClientId)}</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="field full">
+                <label for="i-googleClientId">{t("integrasi.login.id")}</label>
+                <input id="i-googleClientId" name="googleClientId" value={cfg.googleClientId} placeholder="1234567890-abcdefgh.apps.googleusercontent.com" spellcheck="false" autocapitalize="none" autocomplete="off" />
+                <span class="hint">{t("integrasi.login.idHint")}</span>
+              </div>
+            </div>
+
+            <ol class="integrasi-langkah">
+              <li>{t("integrasi.login.step1")}</li>
+              <li>{t("integrasi.login.step2")}</li>
+              <li>{t("integrasi.login.step3")}</li>
+            </ol>
+            <p class="hint">
+              <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">{t("integrasi.login.open")}</a>
+            </p>
+          </section>
+
           <div class="form-actions">
             <button type="button" class="btn btn-outline" id="integrasi-uji">{t("integrasi.check")}</button>
             <button type="submit" class="btn btn-primary" id="integrasi-save">{t("common.save")}</button>
@@ -298,10 +328,11 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
         adsTxt: form.elements.adsTxt.value,
         gscAktif: form.elements.gscAktif.checked,
         gscToken: form.elements.gscToken.value.trim(),
+        googleClientId: form.elements.googleClientId.value.trim(),
       });
 
       function tandaiStatus(cfg) {
-        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: cfg.gscAktif };
+        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: cfg.gscAktif, login: !!cfg.googleClientId };
         for (const [kunci, aktif] of Object.entries(peta)) {
           const el = document.querySelector('[data-status="' + kunci + '"]');
           if (!el) continue;
@@ -342,6 +373,7 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
           form.elements.gaId.value = cfg.gaId;
           form.elements.adsenseId.value = cfg.adsenseId;
           form.elements.gscToken.value = cfg.gscToken;
+          form.elements.googleClientId.value = cfg.googleClientId;
           form.elements.adsTxt.value = cfg.adsTxt;
           form.elements.gaAktif.checked = cfg.gaAktif;
           form.elements.adsenseAktif.checked = cfg.adsenseAktif;

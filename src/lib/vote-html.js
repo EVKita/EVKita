@@ -113,7 +113,9 @@ export function rankVotes(vehicles, agg, limit = 10) {
  *
  * `o = { t, href, img, myVote, lang }` — `rank` boleh ditambah pemanggil untuk
  * nomor urutnya. `t` fungsi terjemah yang sudah terikat ke bahasa pembaca,
- * `lang` (`id`/`en`/`zh`) hanya untuk format angka.
+ * `lang` (`id`/`en`/`zh`) hanya untuk format angka. `hidden: true`
+ * menyembunyikan baris (dipakai tombol "Pilihan lain": lima pertama tampil,
+ * sisanya menunggu dibuka) tanpa mengubah peringkatnya.
  */
 export function voteRowHtml(v, stat, o) {
   const pil = o || {};
@@ -145,7 +147,7 @@ export function voteRowHtml(v, stat, o) {
     suara > 0 ? escVote(t("pub.vote.suara", { n: suara })) : escVote(t("pub.vote.belum"));
 
   return (
-    `<li class="vote-row" data-vote-kind="${escVote(kind)}" data-vote-id="${escVote(id)}">` +
+    `<li class="vote-row"${pil.hidden ? " hidden" : ""} data-vote-kind="${escVote(kind)}" data-vote-id="${escVote(id)}">` +
     `<span class="vote-rank">${escVote(pil.rank === undefined || pil.rank === null ? "" : pil.rank)}</span>` +
     thumb +
     `<div class="vote-info">` +
