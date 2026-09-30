@@ -2,7 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { getEnv } from "./env";
-import { jalankanRiset, rapikanJadiJson } from "./deepseek";
+import {
+  mesinAktif,
+  kunciMesin,
+  jalankanRiset,
+  rapikanJadiJson,
+  biayaDariUsage,
+  BISA_DIRAPIKAN,
+} from "./ai-mesin";
 import { buildSchema, buildInstructions } from "./ai-prompt.js";
 import { bersihkanUsulan } from "./ai-usulan.js";
 import { readContent, writeContent } from "./store";
@@ -164,26 +171,23 @@ async function risetSatu(
       signal: ac.signal,
     });
 
-    if (res.usage) biaya += biayaDari(res.usage, model, new Date()).rupiah;
+    if (res.usage) biaya += biayaDariUsage(res.usage, model, new Date()).rupiah;
 
     if (res.ok) {
       usulan = bersihkanUsulan(res.hasil, { kind: kendaraan.kind }).usulan;
-    } else if (
-      res.mentah &&
-      (res.errorKey === "err.ai.jawabanTidakTerbaca" || res.errorKey === "err.ai.jawabanTerpotong")
-    ) {
+    } else if (res.mentah && !!res.errorKey && BISA_DIRAPIKAN.has(res.errorKey)) {
       const rapi = await rapikanJadiJson({ apiKey, schema, mentah: res.mentah, signal: ac.signal });
       if (rapi.ok) {
-        if (rapi.usage) biaya += biayaDari(rapi.usage, "deepseek-v4-flash", new Date()).rupiah;
+        if (rapi.usage) biaya += biayaDariUsage(rapi.usage, model, new Date()).rupiah;
         usulan = bersihkanUsulan(rapi.hasil, { kind: kendaraan.kind }).usulan;
       } else {
         errorKey = rapi.errorKey || "err.ai.jawabanTidakTerbaca";
       }
     } else {
-      errorKey = res.errorKey || "err.ai.deepseekBermasalah";
+      errorKey = res.errorKey || galatBermasalah();
     }
   } catch {
-    errorKey = "err.ai.tidakTerhubung";
+    errorKey = galatTidakTerhubung();
   } finally {
     clearTimeout(batas);
   }

@@ -5372,19 +5372,15 @@ html {
 .member-google:hover {
   background: rgba(26, 86, 219, 0.07);
 }
-/* Wadah tombol resmi Google (digambar GIS): tombolnya selebar popup. */
-.member-google-wrap {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  min-height: 44px;
-}
-.member-google-wrap > div {
-  width: 100% !important;
-}
+/* Logo G resmi di tombol Google: 18px, sejajar teks. */
 .member-g {
-  font-weight: 700;
-  font-size: 1.15rem;
+  display: inline-flex;
+  line-height: 0;
+}
+.member-g svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 .member-foot {
   margin: 24px -56px 0;

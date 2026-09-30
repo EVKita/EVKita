@@ -1,11 +1,22 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { getEnv } from "./env";
-import { jalankanRiset, rapikanJadiJson, type Langkah } from "./deepseek";
+import type { Langkah } from "./deepseek";
+import {
+  mesinAktif,
+  kunciMesin,
+  modelUntuk,
+  modelBawaan as modelBawaanMesin,
+  siapRiset as siapRisetMesin,
+  galatBelumAdaKunci,
+  galatBermasalah,
+  BISA_DIRAPIKAN,
+  jalankanRiset,
+  rapikanJadiJson,
+  biayaDariUsage,
+} from "./ai-mesin";
 import { buildInstructions, buildSchema, emptyFieldKeys, PRICE_FIELDS } from "./ai-prompt.js";
 import { bersihkanUsulan } from "./ai-usulan.js";
-import { biayaDari, MODEL_BAWAAN, MODEL_PILIHAN } from "./ai-biaya.js";
 import { kindOfCollection } from "./vehicle-spec.js";
 
 /**
@@ -66,7 +77,7 @@ export interface Job {
   usage: any;
   biaya: { usd: number; rupiah: number } | null;
   errorKey: string;
-  /** Pesan asli dari DeepSeek saat gagal. Kosong kalau tidak ada. */
+  /** Pesan asli dari penyedia saat gagal. Kosong kalau tidak ada. */
   detail: string;
   /** Hasilnya perlu dirapikan panggilan kedua. Lihat `rapikanJadiJson`. */
   duaLangkah: boolean;
@@ -86,21 +97,19 @@ const pemakaian = new Map<string, number>();
  * hari kerja tanpa alasan yang bisa dijelaskan ke siapa pun.
  */
 /**
- * Model bawaan panel, dari `.env`.
+ * Model bawaan panel, dari `.env` (DEEPSEEK_MODEL atau GEMINI_MODEL menurut
+ * mesin aktif).
  *
  * Disimpan di `.env` dan bukan di `content.json` karena ia menempel pada
- * pemasangan, bukan pada isi situs — sama seperti kuncinya. Nilai yang tidak
- * dikenali jatuh ke bawaan, bukan diteruskan ke DeepSeek: satu salah ketik di
- * berkas konfigurasi tidak boleh membuat setiap riset gagal.
+ * pemasangan, bukan pada isi situs — sama seperti kuncinya.
  */
 export function modelBawaan(): string {
-  const dari = getEnv("DEEPSEEK_MODEL", "");
-  return MODEL_PILIHAN.includes(dari) ? dari : MODEL_BAWAAN;
+  return modelBawaanMesin();
 }
 
-/** Apakah riset sudah bisa dijalankan sama sekali? */
+/** Apakah riset sudah bisa dijalankan sama sekali (dengan mesin aktifnya)? */
 export function siapRiset(): boolean {
-  return !!getEnv("DEEPSEEK_API_KEY", "");
+  return siapRisetMesin();
 }
 
 export function tanggalWib(now = new Date()): string {
@@ -260,8 +269,8 @@ function gagalMulai(errorKey: string, vars?: Record<string, string | number>): M
 }
 
 export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
-  const apiKey = getEnv("DEEPSEEK_API_KEY", "");
-  if (!apiKey) return gagalMulai("err.ai.belumAdaKunci");
+  const apiKey = kunciMesin(mesinAktif());
+  if (!apiKey) return gagalMulai(galatBelumAdaKunci());
 
   const { me, col, vehicle, mode } = opts;
   const brand = String(vehicle?.brand || "").trim();
@@ -275,7 +284,7 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     return gagalMulai("err.ai.kuotaHabis", { n: KUOTA_HARIAN });
   }
 
-  const model = MODEL_PILIHAN.includes(opts.model) ? opts.model : modelBawaan();
+  const model = modelUntuk(opts.model);
   const kind = kindOfCollection(col);
 
   let only: string[] | undefined;
@@ -345,15 +354,14 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     .then(async (res) => {
       job.langkah = res.langkah;
       job.usage = res.usage || null;
-      if (res.usage) job.biaya = biayaDari(res.usage, model, new Date());
+      if (res.usage) job.biaya = biayaDariUsage(res.usage, model, new Date());
 
       /*
        * Model menjawab, tapi bukan JSON — dan jawabannya memuat temuan yang
        * sudah dibayar sepuluh putaran pencarian. Jangan dibuang: kirim ke
        * panggilan kedua yang murah untuk dirapikan bentuknya.
        */
-      const bisaDirapikan =
-        res.errorKey === "err.ai.jawabanTidakTerbaca" || res.errorKey === "err.ai.jawabanTerpotong";
+      const bisaDirapikan = !!res.errorKey && BISA_DIRAPIKAN.has(res.errorKey);
       if (!res.ok && bisaDirapikan && res.mentah) {
         const rapi = await rapikanJadiJson({
           apiKey,
@@ -365,10 +373,10 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
           job.duaLangkah = true;
           if (rapi.usage) {
             job.biaya = {
-              usd: (job.biaya?.usd || 0) + biayaDari(rapi.usage, "deepseek-v4-flash", new Date()).usd,
+              usd: (job.biaya?.usd || 0) + biayaDariUsage(rapi.usage, job.model, new Date()).usd,
               rupiah:
                 (job.biaya?.rupiah || 0) +
-                biayaDari(rapi.usage, "deepseek-v4-flash", new Date()).rupiah,
+                biayaDariUsage(rapi.usage, job.model, new Date()).rupiah,
             };
           }
           job.status = "selesai";
@@ -379,7 +387,7 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
 
       if (!res.ok) {
         job.status = res.errorKey === "err.ai.dibatalkan" ? "batal" : "gagal";
-        job.errorKey = res.errorKey || "err.ai.deepseekBermasalah";
+        job.errorKey = res.errorKey || galatBermasalah();
         job.detail = res.detail || "";
         // Nol token terpakai berarti nol biaya. Lihat `kembalikanPemakaian`.
         if (!res.usage) kembalikanPemakaian(job.userId);
@@ -390,7 +398,7 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     })
     .catch(() => {
       job.status = "gagal";
-      job.errorKey = "err.ai.deepseekBermasalah";
+      job.errorKey = galatBermasalah();
       kembalikanPemakaian(job.userId);
     })
     .finally(() => {
