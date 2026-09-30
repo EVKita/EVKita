@@ -262,6 +262,9 @@ const tagPublik = !!site && !accentOnly;
                 } catch (e) { return true; }
               }
               if (window.sessionStorage.getItem(KEY)) return true;
+              /* Ditutup sekali = tidak muncul 7 hari, lintas kunjungan. */
+              var sn = parseInt(window.localStorage.getItem(TUNDA) || "0", 10) || 0;
+              if (sn && Date.now() - sn < 7 * 24 * 3600 * 1000) return true;
               if (window.sessionStorage.getItem(TUNDA)) return true;
             } catch (e) {}
             return false;
@@ -281,13 +284,19 @@ const tagPublik = !!site && !accentOnly;
             document.documentElement.classList.add("modal-open");
             var em = gate.querySelector('input[type="email"]');
             if (em) em.focus();
+            /* Tawarkan masuk Google sekali ketuk begitu popup dibuka. */
+            pasangGoogle();
+            tawarOneTap();
           }
           function tutup() {
             document.documentElement.classList.remove("modal-open");
             gate.remove();
           }
           function tunda() {
-            try { window.sessionStorage.setItem(TUNDA, "1"); } catch (e) {}
+            try {
+              window.localStorage.setItem(TUNDA, String(Date.now()));
+              window.sessionStorage.setItem(TUNDA, "1");
+            } catch (e) {}
             selesai = true;
             tutup();
           }
@@ -337,7 +346,10 @@ const tagPublik = !!site && !accentOnly;
             tutup();
           });
 
-          /* Masuk Google: asli bila Client ID terpasang, pesan jujur bila belum. */
+          /* Masuk Google: tombol resmi + One Tap otomatis, langsung masuk.
+             Aktif hanya bila Client ID terpasang (Admin → Integrasi); kalau
+             tidak, wadahnya memang tidak dirender. */
+          var googleSiap = false;
           window.evkitaGoogle = function (resp) {
             var cred = resp && resp.credential;
             if (!cred) { err(gate.dataset.errNet); return; }
@@ -350,34 +362,48 @@ const tagPublik = !!site && !accentOnly;
                 return r.json().then(function (b) { return { s: r.status, b: b }; });
               })
               .then(function (x) {
-                if (x.s === 200 && x.b && x.b.ok) { selesai = true; tutup(); }
+                /* Cookie sesi 30 hari sudah dipasang server: muat ulang
+                   supaya pintu ini tidak pernah tampil lagi. */
+                if (x.s === 200 && x.b && x.b.ok) { selesai = true; location.reload(); }
                 else { err(gate.dataset.errNet); }
               })
               .catch(function () { err(gate.dataset.errNet); });
           };
-          var gbtn = document.getElementById("memberGoogle");
-          if (gbtn) gbtn.addEventListener("click", function () {
+          function pasangGoogle() {
+            if (googleSiap) return;
+            var wadah = document.getElementById("memberGoogleBtn");
             var clientId = gate.getAttribute("data-google-id") || "";
-            if (!clientId) { err(gate.dataset.errGoogleoff); return; }
-            var jalan = function () {
-              try {
-                window.google.accounts.id.initialize({
-                  client_id: clientId,
-                  callback: window.evkitaGoogle,
-                  auto_select: false,
-                });
-                window.google.accounts.id.prompt();
-              } catch (e) { err(gate.dataset.errNet); }
-            };
-            if (window.google && window.google.accounts && window.google.accounts.id) { jalan(); return; }
-            var s = document.createElement("script");
-            s.src = "https://accounts.google.com/gsi/client";
-            s.async = true;
-            s.defer = true;
-            s.onload = jalan;
-            s.onerror = function () { err(gate.dataset.errNet); };
-            document.head.appendChild(s);
-          });
+            if (!wadah || !clientId) return;
+            if (!(window.google && window.google.accounts && window.google.accounts.id)) return;
+            try {
+              window.google.accounts.id.initialize({
+                client_id: clientId,
+                callback: window.evkitaGoogle,
+                auto_select: true,
+              });
+              window.google.accounts.id.renderButton(wadah, {
+                theme: "outline",
+                size: "large",
+                text: "signin_with",
+                width: Math.min(320, wadah.clientWidth || 320),
+              });
+              googleSiap = true;
+            } catch (e) {}
+          }
+          /* Pustaka Google dimuat di MemberGate; kalau popup dibuka sebelum
+             ia selesai, tombol digambar saat itu juga. */
+          var _cobaGoogle = 0;
+          var googleTimer = setInterval(function () {
+            pasangGoogle();
+            if (googleSiap || ++_cobaGoogle > 40) clearInterval(googleTimer);
+          }, 500);
+          function tawarOneTap() {
+            try {
+              var clientId = gate.getAttribute("data-google-id") || "";
+              if (!clientId || !googleSiap) return;
+              window.google.accounts.id.prompt();
+            } catch (e) {}
+          }
         })();
       </script>
     )}

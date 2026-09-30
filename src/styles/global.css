@@ -5372,6 +5372,16 @@ html {
 .member-google:hover {
   background: rgba(26, 86, 219, 0.07);
 }
+/* Wadah tombol resmi Google (digambar GIS): tombolnya selebar popup. */
+.member-google-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+}
+.member-google-wrap > div {
+  width: 100% !important;
+}
 .member-g {
   font-weight: 700;
   font-size: 1.15rem;
@@ -5394,14 +5404,15 @@ html {
 }
 
 /* ===== Sorotan SPKLU beranda ===== *
- * Satu unggulan berfoto di kiri, dua kartu di kanan. Isi kartunya sama
- * persis dengan kartu direktori biasa � yang beda hanya bingkainya, supaya
- * barisan tiga kartu yang lama tidak menyisakan ruang kosong membosankan. */
+ * Satu unggulan berfoto di kiri, dua kartu di kanan. Kartu kiri MEMANJANG
+ * mengikuti tinggi kolom kanan (`stretch`), supaya bawahnya selalu rata —
+ * tidak ada lagi kartu menggantung. Isi kartunya sama persis dengan kartu
+ * direktori biasa — yang beda hanya bingkainya. */
 .dir-feat {
   display: grid;
   grid-template-columns: 1.12fr 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 .dir-feat-side {
   display: grid;
@@ -5628,13 +5639,14 @@ html {
 
 /* ===== Sorotan berita beranda ===== *
  * Satu kartu besar di kiri, dua kartu di kanan — grid dua kolom yang sama
- * dengan `.dir-feat` sorotan SPKLU. Isi kartunya sama persis dengan kartu
+ * dengan `.dir-feat` sorotan SPKLU. Kartu kiri memanjang mengikuti kolom
+ * kanan supaya bawahnya rata. Isi kartunya sama persis dengan kartu
  * berita biasa; yang beda hanya bingkainya. */
 .news-feat {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 .news-feat .news-thumb {
   display: none;
@@ -5664,6 +5676,26 @@ html {
 .news-feat .dir-link {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* ===== Sorotan artikel beranda ===== *
+ * Satu kartu berfoto memanjang di kiri, dua kartu teks tanpa gambar di
+ * kanan — pola yang sama dengan sorotan bengkel. Kartu kiri mengikuti tinggi
+ * kolom kanan supaya bawahnya selalu rata. */
+.artikel-feat {
+  display: grid;
+  grid-template-columns: 1.12fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+.artikel-feat-side {
+  display: grid;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .artikel-feat {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Huruf CJK untuk pembaca Mandarin: font tema tidak membawa glif Han,
@@ -5852,6 +5884,77 @@ html {
 .vote-more:hover {
   border-color: var(--accent-ink);
   background: var(--accent-soft);
+}
+/* Kotak cari VoteKita: selebar kartu, huruf ikut tema (Menu Tampilan →
+   Huruf) — ukuran dan posisi baris tidak berubah. */
+.vote-cari {
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-tint);
+  color: inherit;
+  font: inherit;
+  font-size: 0.82rem;
+}
+.vote-cari::placeholder {
+  color: var(--text-muted);
+}
+.vote-cari:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  background: var(--bg-card);
+}
+/* Petunjuk satu-favorit: satu baris kecil di bawah subjudul. */
+.vote-hint {
+  margin: -6px 0 10px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+/* Bilah persen ala Shining Awards: 4px di dalam baris info. */
+.vote-bar {
+  flex: 1 1 40px;
+  min-width: 40px;
+  max-width: 110px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--bg-tint);
+  overflow: hidden;
+}
+.vote-isi {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #f59e0b;
+}
+.vote-persen {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+/* Lencana favorit: kecil di sebelah nama, huruf ikut tema. */
+.vote-fav {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.vote-empty {
+  padding: 10px 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  list-style: none;
+}
+.vote-info-ok {
+  margin: 10px 0 0;
+  color: var(--accent-ink);
+  font-size: 0.85rem;
 }
 /* Panelnya tinggal di kolom samping yang menyempit sendiri di layar kecil
    (aturan `.home-cols`), jadi di sini hanya fotonya yang dikecilkan. */

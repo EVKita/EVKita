@@ -323,6 +323,43 @@ describe("penerapan usulan", () => {
   });
 });
 
+describe("penjualan 2026 ikut riset", () => {
+  it("masuk skema mobil dan motor sebagai bilangan bulat (boleh null)", () => {
+    for (const kind of ["mobil", "motor"] as const) {
+      const props = buildSchema(kind).properties.field.properties;
+      assert.equal("penjualan2026" in props, true);
+      // Null berarti "tidak ada sumber yang menyebut" — jawaban yang sah.
+      assert.deepEqual(props.penjualan2026.properties.nilai.type, ["integer", "null"]);
+    }
+  });
+
+  it("angka wajar lolos, di luar batas dibuang", () => {
+    const { usulan } = bersihkanUsulan(jawaban({ penjualan2026: isi(12500) }), { kind: "mobil" });
+    assert.equal(usulan.length, 1);
+    assert.equal(usulan[0].nilai, 12500);
+    const { usulan: kosong, peringatan } = bersihkanUsulan(jawaban({ penjualan2026: isi(5000000) }), {
+      kind: "mobil",
+    });
+    assert.equal(kosong.length, 0);
+    assert.deepEqual(peringatan, ["penjualan2026: diluarBatas"]);
+  });
+
+  it("tulisan ribuan yang ambigu ditolak, bukan ditebak", () => {
+    // "12.500" bisa berarti 12500 atau 12,5 — keduanya masuk akal untuk
+    // penjualan, jadi aturannya menolak, sama seperti field angka lain.
+    const { usulan, peringatan } = bersihkanUsulan(jawaban({ penjualan2026: isi("12.500") }), {
+      kind: "motor",
+    });
+    assert.equal(usulan.length, 0);
+    assert.deepEqual(peringatan, ["penjualan2026: ambigu"]);
+  });
+
+  it("field kosong ikut mode lengkapi-yang-kosong", () => {
+    assert.equal(emptyFieldKeys("mobil", { penjualan2026: null }).includes("penjualan2026"), true);
+    assert.equal(emptyFieldKeys("mobil", { penjualan2026: 12500 }).includes("penjualan2026"), false);
+  });
+});
+
 describe("jawaban yang rusak", () => {
   it("objek kosong tidak meledak", () => {
     const hasil = bersihkanUsulan({}, { kind: "mobil" });

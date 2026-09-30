@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { avgOf, rankVotes, voteRowHtml } from "../src/lib/vote-html.js";
-import { bacaVotes, terapkanVote } from "../src/lib/vote-store.js";
+import { avgOf, rankVotes, saringKendaraan, voteRowHtml } from "../src/lib/vote-html.js";
+import { bacaVotes, sahVid, terapkanVote, totalSuara } from "../src/lib/vote-store.js";
 
 /**
  * Inti VoteKita: rata-rata, urutan peringkat, dan delta suara.
@@ -38,14 +38,14 @@ describe("rankVotes", () => {
     { id: "d", kind: "mobil", brand: "Merek", name: "D" },
   ];
 
-  it("rata-rata tertinggi dulu, yang belum disuara paling belakang", () => {
+  it("suara terbanyak dulu — yang paling banyak dipilih di atas", () => {
     const agg = { a: { s: 9, v: 2 }, b: { s: 5, v: 1 } };
     const urut = rankVotes(armada, agg, 10).map((r) => r.v.id);
-    assert.deepEqual(urut, ["b", "a", "c", "d"]);
+    assert.deepEqual(urut, ["a", "b", "c", "d"]);
   });
 
-  it("seri rata-rata dimenangkan oleh suara terbanyak", () => {
-    const agg = { a: { s: 4, v: 1 }, b: { s: 8, v: 2 } };
+  it("seri suara dimenangkan oleh rata-rata tertinggi", () => {
+    const agg = { a: { s: 4, v: 1 }, b: { s: 5, v: 1 } };
     const urut = rankVotes(armada, agg, 10).map((r) => r.v.id);
     assert.equal(urut[0], "b");
     assert.equal(urut[1], "a");
@@ -89,6 +89,43 @@ describe("terapkanVote", () => {
   });
 });
 
+describe("saringKendaraan", () => {
+  const peringkat = [
+    { v: { id: "byd-atto-3", brand: "BYD", name: "Atto 3" }, avg: 5, votes: 2 },
+    { v: { id: "wuling-cloud", brand: "Wuling", name: "Cloud EV" }, avg: 5, votes: 1 },
+    { v: { id: "alva-cervo", brand: "Alva", name: "Cervo" }, avg: 5, votes: 1 },
+  ];
+
+  it("kueri kosong mengembalikan daftar apa adanya", () => {
+    assert.equal(saringKendaraan(peringkat, "").length, 3);
+    assert.equal(saringKendaraan(peringkat, "   ").length, 3);
+  });
+
+  it("merek yang diketik langsung ketemu", () => {
+    const hasil = saringKendaraan(peringkat, "byd");
+    assert.deepEqual(hasil.map((r) => r.v.id), ["byd-atto-3"]);
+  });
+
+  it("tidak peka huruf besar dan mendukung banyak kata", () => {
+    assert.equal(saringKendaraan(peringkat, "WULING cloud").length, 1);
+    assert.equal(saringKendaraan(peringkat, "tesla").length, 0);
+  });
+});
+
+describe("sahVid dan totalSuara", () => {
+  it("vid acak sah, yang pendek atau berspasi tidak", () => {
+    assert.equal(sahVid("abcdef1234567890"), true);
+    assert.equal(sahVid("pendek"), false);
+    assert.equal(sahVid("ada spasi di sini 123"), false);
+    assert.equal(sahVid(""), false);
+  });
+
+  it("menjumlahkan seluruh suara sejenis", () => {
+    assert.equal(totalSuara({ a: { s: 9, v: 2 }, b: { s: 5, v: 1 } }), 3);
+    assert.equal(totalSuara({}), 0);
+    assert.equal(totalSuara(undefined), 0);
+  });
+});
 describe("bacaVotes", () => {
   it("selalu berbentuk { cars, motors } walau berkasnya tidak ada", () => {
     const semua = bacaVotes();
@@ -118,5 +155,17 @@ describe("voteRowHtml", () => {
     const html = voteRowHtml(v, { s: 5, v: 1 }, { t: tPalsu, lang: "id", myVote: 4 });
     assert.match(html, /vote-huruf/);
     assert.equal((html.match(/vote-btn on/g) || []).length, 4);
+  });
+
+  it("favorit sendiri memakai lencana, persen muncul bila ada total", () => {
+    const html = voteRowHtml(v, { s: 9, v: 2 }, { t: tPalsu, lang: "id", favorit: true, totalSuara: 4 });
+    assert.match(html, /vote-fav/);
+    assert.match(html, /vote-bar/);
+    assert.match(html, /vote-persen/);
+  });
+
+  it("tanpa total tidak ada bilah persen", () => {
+    const html = voteRowHtml(v, { s: 9, v: 2 }, { t: tPalsu, lang: "id" });
+    assert.doesNotMatch(html, /vote-bar/);
   });
 });

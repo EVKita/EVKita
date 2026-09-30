@@ -74,6 +74,12 @@ export const RESEARCHABLE = [
   { key: "price", type: "integer", car: true, motor: true, min: 5_000_000, max: 20_000_000_000, unit: "Rp", desc: "Harga on the road dalam Rupiah, sebagai angka bulat tanpa titik atau nama mata uang. Sebutkan di catatan itu OTR mana dan per tanggal berapa." },
   { key: "priceText", type: "text", car: true, motor: true, max: 60, desc: "Harga yang sama dalam bentuk singkat untuk ditampilkan, mis. \"Rp 415 jt\"." },
 
+  /* Angka penjualan 2026: umpan panel "Mobil/Motor Kita" di beranda. Masuk
+     skema supaya MESIN AUTO-UPDATE harian ikut menyegarkannya dari sumber
+     resmi (Gaikindo/pabrikan) — bukan hanya spesifikasi dan harga. Tanpa
+     baris ini tidak ada jalur otomatis yang menyentuhnya. */
+  { key: "penjualan2026", type: "integer", car: true, motor: true, min: 0, max: 1000000, unit: "unit", desc: "Unit terjual di Indonesia sepanjang tahun 2026 (wholesales Gaikindo atau angka resmi pabrikan). Tulis angka tahun berjalan apa adanya; kosongkan kalau tidak ada sumber yang menyebut." },
+
   { key: "variantNames", type: "list", car: true, motor: true, maxItems: 12, maxLen: 60, desc: "Nama varian resmi yang dijual di Indonesia, mis. [\"Dynamic\", \"Premium\"]." },
   { key: "colors", type: "list", car: true, motor: true, maxItems: 20, maxLen: 40, desc: "Nama warna bodi yang tersedia." },
 ];

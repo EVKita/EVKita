@@ -1,7 +1,7 @@
 "use strict";
 
 import { esc, rupiah, vehicleHref, cardHTML as buildCard, visualHTML as buildVisual } from "../lib/card-html.js";
-import { voteRowHtml, rankVotes } from "../lib/vote-html.js";
+import { voteRowHtml, rankVotes, saringKendaraan } from "../lib/vote-html.js";
 import { MAX_COMPARE, compareTableHTML, compareSlug } from "../lib/compare-html.js";
 import { hargaWajar } from "../lib/vehicle-spec.js";
 import { makePubT, normalizePubLocale } from "../lib/i18n/pub.js";
@@ -77,13 +77,13 @@ const DEFAULTS = {
 const state = { ...DEFAULTS, compare: [] };
 
 /**
- * Beranda hanya etalase: tiga kartu pertama dalam keadaan bawaan. Seluruh
+ * Beranda etalase: empat kartu pertama dalam keadaan bawaan. Seluruh
  * katalog pindah ke /katalog lewat tombol "Buka katalog lengkap" di bawah
- * grid. Angka 3 ini disamakan dengan HOME_CARDS di src/pages/index.astro —
+ * grid. Angka 4 ini disamakan dengan HOME_CARDS di src/pages/index.astro —
  * kalau salah satunya berubah tanpa yang lain, kartu akan melompat saat
  * skrip selesai dimuat.
  */
-const HOME_TEASER = 3;
+const HOME_TEASER = 4;
 
 /* Keadaan bawaan = belum ada ketikan, pilihan, atau urutan yang diubah. */
 function isDefaultState() {
@@ -311,7 +311,7 @@ function renderHeroStats() {
 
 function render() {
   const full = getFiltered();
-  /* Etalase tiga kartu; interaksi apa pun (cari, filter, urut, tautan
+  /* Etalase empat kartu; interaksi apa pun (cari, filter, urut, tautan
      berbagi berisi parameter) membuka seluruh hasil. */
   const list = isDefaultState() && full.length > HOME_TEASER ? full.slice(0, HOME_TEASER) : full;
   const grid = $("grid");
@@ -681,15 +681,17 @@ if (document.readyState === "loading") {
   init();
 }
 
-/* ===== VoteKita: voting bintang pengunjung =====
-   Panel sisi kanan beranda (`aside#voteKita`): 10 mobil + 10 motor terfavorit,
-   masing-masing lima pertama tampil dan sisanya menunggu tombol "Pilihan
-   lain" (`data-vote-more`) dibuka.
+/* ===== VoteKita: satu pengunjung satu favorit per jenis =====
+   Panel sisi kanan beranda (`aside#voteKita`): 10 mobil + 10 motor terfavorit
+   ala Shining Awards — suara terbanyak di atas, tersedikit di bawah, plus
+   bilah persen dan lencana favorit. Masing-masing punya kotak cari: ketik
+   merek/model langsung keluar beserta gambarnya.
    Baris awalnya sudah dirender server lewat `voteRowHtml()` yang SAMA — di sini
    tinggal menggambar ulang tiap ada suara masuk, supaya peringkatnya bergerak
-   langsung tanpa muat ulang. Suara sendiri diingat di `localStorage` dengan
-   kunci `evkita_vote_<jenis>_<id>`; nilainya dikirim sebagai `prev` agar suara
-   ulang hanya menggeser jumlah, bukan menambah suara baru. */
+   langsung tanpa muat ulang. Favorit sendiri diingat di `localStorage`
+   (`evkita_fav_mobil` / `evkita_fav_motor`, satu id per jenis); memilih
+   kendaraan lain MEMINDAHKAN suara lewat server (cookie `evkita_vid`),
+   bukan menambah suara baru. */
 
 (function voteKita() {
   const daftarMobil = document.getElementById("voteMobil");
@@ -727,6 +729,24 @@ if (document.readyState === "loading") {
     }
   }
 
+  /* Satu favorit per jenis — id kendaraan pilihan pengunjung ini. */
+  function bacaFavorit(jenis) {
+    try {
+      return String(window.localStorage.getItem(`evkita_fav_${jenis}`) || "");
+    } catch {
+      return "";
+    }
+  }
+
+  function tulisFavorit(jenis, id) {
+    try {
+      if (!id) window.localStorage.removeItem(`evkita_fav_${jenis}`);
+      else window.localStorage.setItem(`evkita_fav_${jenis}`, String(id));
+    } catch {
+      /* mode privat: voting tetap jalan, cuma tidak diingat */
+    }
+  }
+
   function tulisSuaraSaya(jenis, id, bintang) {
     try {
       window.localStorage.setItem(`evkita_vote_${jenis}_${id}`, String(bintang));
@@ -740,29 +760,43 @@ if (document.readyState === "loading") {
      `index.astro` — keduanya harus sepakat. */
   const BATAS_TAMPIL = 5;
 
-  /* Gambar ulang satu daftar (10 teratas, sudah terurut). Markupnya memakai
-     `voteRowHtml()` yang sama dengan render server — termasuk format angka
-     rata-rata per bahasa yang hidup di dalamnya. Keadaan buka/tutup tombol
-     "Pilihan lain" dibaca dari `dataset` daftarnya, jadi suara yang masuk
-     tidak menutup kembali daftar yang sedang dibuka. */
-  function gambarDaftar(jenis) {
+  /* Gambar ulang satu daftar. Tanpa kueri: 10 teratas sudah terurut (suara
+     terbanyak dulu), lima pertama tampil dan sisanya menunggu tombol
+     "Pilihan lain". Dengan kueri: seluruh katalog disaring merek/modelnya
+     (beserta gambarnya) dan ditampilkan sekaligus — ini mesin cari VoteKita.
+     Markupnya memakai `voteRowHtml()` yang sama dengan render server. */
+  function gambarDaftar(jenis, query) {
     const el = elUntuk(jenis);
     if (!el) return;
+    const q = String(query === undefined ? el.dataset.query || "" : query || "");
+    el.dataset.query = q;
     const terbuka = el.dataset.expanded === "1";
-    const peringkat = rankVotes(kendaraanUntuk(jenis), emberUntuk(jenis), 10);
-    el.innerHTML = peringkat
-      .map((r, i) =>
-        voteRowHtml(r.v, emberUntuk(jenis)[r.v.id], {
-          t,
-          href: vehicleHref(r.v),
-          img: r.v.image,
-          myVote: bacaSuaraSaya(jenis, r.v.id),
-          lang: voteLang,
-          rank: i + 1,
-          hidden: !terbuka && i >= BATAS_TAMPIL,
-        })
-      )
-      .join("");
+    const penuh = rankVotes(kendaraanUntuk(jenis), emberUntuk(jenis), 100000);
+    const cari = saringKendaraan(penuh, q);
+    const tampil = q ? cari.slice(0, 20) : cari.slice(0, 10);
+    const agg = emberUntuk(jenis);
+    let total = 0;
+    for (const k of Object.keys(agg)) total += Number((agg[k] && agg[k].v) || 0);
+    const fav = bacaFavorit(jenis);
+    if (!tampil.length) {
+      el.innerHTML = `<li class="vote-empty">${esc(t("pub.vote.kosong"))}</li>`;
+    } else {
+      el.innerHTML = tampil
+        .map((r, i) =>
+          voteRowHtml(r.v, emberUntuk(jenis)[r.v.id], {
+            t,
+            href: vehicleHref(r.v),
+            img: r.v.image,
+            myVote: bacaSuaraSaya(jenis, r.v.id),
+            lang: voteLang,
+            rank: q ? "" : i + 1,
+            hidden: !q && !terbuka && i >= BATAS_TAMPIL,
+            totalSuara: total,
+            favorit: fav !== "" && fav === r.v.id,
+          })
+        )
+        .join("");
+    }
     selaraskanTombol(el);
   }
 
@@ -830,6 +864,7 @@ if (document.readyState === "loading") {
     const id = baris.dataset.voteId || "";
     const bintang = parseInt(tombol.dataset.voteStars, 10);
     if (!id || !(bintang >= 1 && bintang <= 5)) return;
+    const favLama = bacaFavorit(jenis);
     baris.dataset.sibuk = "1";
     try {
       const res = await fetch("/api/vote", {
@@ -844,12 +879,27 @@ if (document.readyState === "loading") {
         /* abaikan */
       }
       if (!res.ok || !data || !data.ok) throw new Error("gagal");
-      /* Jumlah lokal disamakan dengan jawaban server, lalu daftar digambar
+      /* Jumlah lokal disamakan dengan jawaban server: suara baru masuk dan
+         suara lama yang dipindahkan ikut diperbarui, lalu daftar digambar
          ulang supaya peringkatnya langsung pindah. */
       emberUntuk(jenis)[id] = { s: data.avg * data.votes, v: data.votes };
+      if (data.lama && data.lama.id && data.lama.id !== id) {
+        if (data.lama.votes > 0) emberUntuk(jenis)[data.lama.id] = { s: data.lama.avg * data.lama.votes, v: data.lama.votes };
+        else delete emberUntuk(jenis)[data.lama.id];
+        try {
+          window.localStorage.removeItem(`evkita_vote_${jenis}_${data.lama.id}`);
+        } catch {
+          /* abaikan */
+        }
+      }
       tulisSuaraSaya(jenis, id, bintang);
+      tulisFavorit(jenis, id);
       tampilkanGalat("");
       gambarDaftar(jenis);
+      if (favLama && favLama !== "" && favLama !== id) {
+        const nama = (baris.querySelector(".vote-name") || {}).textContent || "";
+        tampilkanInfo(t("pub.vote.pindah", { nama: String(nama).replace(/★.*$/, "").trim() || id }));
+      }
     } catch {
       tampilkanGalat(t("pub.vote.err"));
     } finally {
@@ -857,7 +907,35 @@ if (document.readyState === "loading") {
     }
   }
 
+  /* Kabar sukses kecil di kaki panel — hilang sendiri setelah 4 detik. */
+  function tampilkanInfo(pesan) {
+    if (!wadah) return;
+    let el = wadah.querySelector(".vote-info-ok");
+    if (!el) {
+      el = document.createElement("p");
+      el.className = "vote-info-ok";
+      el.setAttribute("role", "status");
+      wadah.appendChild(el);
+    }
+    el.hidden = !pesan;
+    if (pesan) el.textContent = pesan;
+    if (el._t) clearTimeout(el._t);
+    if (pesan) {
+      el._t = setTimeout(() => {
+        el.hidden = true;
+      }, 4000);
+    }
+  }
+
   if (wadah) {
+    wadah.addEventListener("input", (e) => {
+      const cari = e.target.closest("[data-vote-cari]");
+      if (!cari || !wadah.contains(cari)) return;
+      const el = document.getElementById(cari.dataset.voteCari);
+      if (!el) return;
+      const jenis = el.id === "voteMotor" ? "motor" : "mobil";
+      gambarDaftar(jenis, cari.value);
+    });
     wadah.addEventListener("click", (e) => {
       const lainnya = e.target.closest("[data-vote-more]");
       if (lainnya && wadah.contains(lainnya)) { jungkitLainnya(lainnya); return; }

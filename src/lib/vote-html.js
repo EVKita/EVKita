@@ -88,9 +88,11 @@ export function avgOf(stat) {
 }
 
 /**
- * Peringkat suara: rata-rata tertinggi dulu, seri oleh suara terbanyak, seri
- * lagi oleh urutan asal (stabil — yang lebih dulu di katalog tetap di atas).
- * Mengembalikan paling banyak `limit` butir `{ v, avg, votes }`.
+ * Peringkat suara ala Shining Awards: suara TERBANYAK dulu, seri oleh
+ * rata-rata tertinggi, seri lagi oleh urutan asal (stabil — yang lebih dulu
+ * di katalog tetap di atas). Yang paling banyak dipilih di atas, yang paling
+ * sedikit (atau belum dipilih) di bawah. Mengembalikan paling banyak `limit`
+ * butir `{ v, avg, votes }`.
  */
 export function rankVotes(vehicles, agg, limit = 10) {
   const ember = agg && typeof agg === "object" ? agg : {};
@@ -100,10 +102,27 @@ export function rankVotes(vehicles, agg, limit = 10) {
     const suara = Number(stat && stat.v) || 0;
     return { v, avg: avgOf(stat), votes: suara > 0 ? Math.floor(suara) : 0, idx: i };
   });
-  hasil.sort((a, b) => b.avg - a.avg || b.votes - a.votes || a.idx - b.idx);
+  hasil.sort((a, b) => b.votes - a.votes || b.avg - a.avg || a.idx - b.idx);
   const batas = limit === undefined ? 10 : Number(limit);
   const potong = Number.isFinite(batas) && batas >= 0 ? Math.floor(batas) : 10;
   return hasil.slice(0, potong).map(({ v, avg, votes }) => ({ v, avg, votes }));
+}
+
+/**
+ * Saring kendaraan untuk kotak cari VoteKita: ketik merek/model langsung
+ * keluar beserta gambarnya. Pencocokan huruf-kecil atas gabungan
+ * `brand + name + id`, urutan asal dipertahankan (pemanggil memberi daftar
+ * yang sudah berperingkat). Kueri kosong mengembalikan daftar apa adanya.
+ */
+export function saringKendaraan(daftar, query) {
+  const list = Array.isArray(daftar) ? daftar : [];
+  const q = String(query || "").trim().toLowerCase();
+  if (!q) return list;
+  return list.filter((r) => {
+    const v = (r && r.v) || r || {};
+    const hay = `${v.brand || ""} ${v.name || ""} ${v.id || ""}`.toLowerCase();
+    return q.split(/\s+/).every((pot) => pot && hay.includes(pot));
+  });
 }
 
 /**
@@ -115,7 +134,9 @@ export function rankVotes(vehicles, agg, limit = 10) {
  * nomor urutnya. `t` fungsi terjemah yang sudah terikat ke bahasa pembaca,
  * `lang` (`id`/`en`/`zh`) hanya untuk format angka. `hidden: true`
  * menyembunyikan baris (dipakai tombol "Pilihan lain": lima pertama tampil,
- * sisanya menunggu dibuka) tanpa mengubah peringkatnya.
+ * sisanya menunggu dibuka) tanpa mengubah peringkatnya. `totalSuara` jumlah
+ * seluruh suara sejenis untuk bilah persen ala Shining Awards; `favorit: true`
+ * menandai pilihan pengunjung ini sendiri.
  */
 export function voteRowHtml(v, stat, o) {
   const pil = o || {};
@@ -146,13 +167,30 @@ export function voteRowHtml(v, stat, o) {
   const hitung =
     suara > 0 ? escVote(t("pub.vote.suara", { n: suara })) : escVote(t("pub.vote.belum"));
 
+  /* Bilah persen ala Shining Awards: bagian suara baris ini dari seluruh
+     suara sejenisnya. Tipis (4px) di dalam info — ukuran dan posisi baris
+     tidak berubah. */
+  const total = Number(pil.totalSuara) || 0;
+  let barisPersen = "";
+  if (total > 0 && suara > 0) {
+    const persen = Math.max(0, Math.min(100, (suara / total) * 100));
+    const lebar = (Math.round(persen * 10) / 10).toLocaleString(locale);
+    barisPersen =
+      `<span class="vote-bar" aria-hidden="true"><span class="vote-isi" style="width:${escVote(String(Math.round(persen * 10) / 10))}%"></span></span>` +
+      `<span class="vote-persen">${escVote(lebar)}%</span>`;
+  }
+
+  const lencana = pil.favorit
+    ? `<span class="vote-fav" title="${escVote(t("pub.vote.satu"))}">★ ${escVote(t("pub.vote.favorit"))}</span>`
+    : "";
+
   return (
     `<li class="vote-row"${pil.hidden ? " hidden" : ""} data-vote-kind="${escVote(kind)}" data-vote-id="${escVote(id)}">` +
     `<span class="vote-rank">${escVote(pil.rank === undefined || pil.rank === null ? "" : pil.rank)}</span>` +
     thumb +
     `<div class="vote-info">` +
-    `<a class="vote-name" href="${escVote(href)}">${escVote(nama)}</a>` +
-    `<span class="vote-meta">${starsHtml(avg, `${kind}-${id}`)}<span class="vote-avg">${escVote(avgTeks)}</span></span>` +
+    `<a class="vote-name" href="${escVote(href)}">${escVote(nama)}${lencana}</a>` +
+    `<span class="vote-meta">${starsHtml(avg, `${kind}-${id}`)}<span class="vote-avg">${escVote(avgTeks)}</span>${barisPersen}</span>` +
     `<div class="vote-btns" role="group" aria-label="${escVote(nama)}">${tombol}</div>` +
     `<span class="vote-count">${hitung}</span>` +
     `</div></li>`

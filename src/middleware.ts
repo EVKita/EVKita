@@ -5,6 +5,7 @@ import { catatKunjungan } from "./lib/trafik-rekam";
 import { jadwalkanBerita } from "./lib/berita-harian";
 import { jadwalkanPeluncuran } from "./lib/peluncuran-rekam";
 import { jadwalkanPembaruan } from "./lib/pembaruan-kendaraan";
+import { jadwalkanPantauan } from "./lib/pemantau";
 import { SESSION_COOKIE } from "./lib/auth";
 import { normalizePubLocale, PUB_COOKIE } from "./lib/i18n/pub.js";
 
@@ -194,6 +195,8 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   jadwalkanBerita();
   jadwalkanPeluncuran();
   jadwalkanPembaruan();
+  /* Pemantau sinyal per jam: gratis (RSS saja), antrean review di panel. */
+  jadwalkanPantauan();
 
   return response;
 };
