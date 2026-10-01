@@ -184,6 +184,14 @@ export function normalizeArtikel(v) {
      */
     aiAssisted: bool(v && v.aiAssisted),
 
+    /**
+     * Penanda draf buatan mesin harian (`artikel-harian.ts`). Hanya draf
+     * otomatis yang boleh dibersihkan otomatis setelah tua; tulisan manusia —
+     * walau pernah dibantu AI (`aiAssisted`) — dan apa pun yang sudah
+     * diterbitkan manusia tidak pernah disentuh pembersihan.
+     */
+    auto: v && v.auto === true,
+
     // Tanggal terbit yang ditulis manusia, terpisah dari jadwal tayang.
     date: tanggalSah(v && v.date),
 

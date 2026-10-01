@@ -3,6 +3,7 @@ import { bacaIntegrasi } from "./lib/integrasi-simpan";
 import { hostCsp } from "./lib/integrasi.js";
 import { catatKunjungan } from "./lib/trafik-rekam";
 import { jadwalkanBerita } from "./lib/berita-harian";
+import { jadwalkanArtikel } from "./lib/artikel-harian";
 import { jadwalkanPeluncuran } from "./lib/peluncuran-rekam";
 import { jadwalkanPembaruan } from "./lib/pembaruan-kendaraan";
 import { jadwalkanPantauan } from "./lib/pemantau";
@@ -187,12 +188,14 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   }
 
   /*
-   * Berita harian dan pemantau model viral. Dipanggil tanpa `await` — keduanya
-   * berjalan di latar belakang, sekali sehari, dan tidak boleh memperlambat
-   * satu pun permintaan pembaca. Lihat src/lib/berita-harian.ts dan
+   * Berita harian, draf artikel harian, dan pemantau model viral. Dipanggil
+   * tanpa `await` — ketiganya berjalan di latar belakang, sekali sehari, dan
+   * tidak boleh memperlambat satu pun permintaan pembaca. Lihat
+   * src/lib/berita-harian.ts, src/lib/artikel-harian.ts, dan
    * src/lib/peluncuran-rekam.ts.
    */
   jadwalkanBerita();
+  jadwalkanArtikel();
   jadwalkanPeluncuran();
   jadwalkanPembaruan();
   /* Pemantau sinyal per jam: gratis (RSS saja), antrean review di panel. */

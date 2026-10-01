@@ -1661,6 +1661,7 @@ function setView(view, opts) {
   if (view === "profile") { tfaCtx = null; renderProfile(); render2fa(); loadLoginHistory(); }
   if (view === "users") loadUsers();
   if (view === "ai") loadAi();
+  if (view === "artikel") loadArtikelAuto();
   if (view === "activity") loadActivityPage();
   if (view === "analitik") loadAnalitik();
   if (view === "media") loadMediaDisk();
@@ -5293,6 +5294,10 @@ function bindEvents() {
         aksi.disabled = true;
         void perbaruiBeritaPanel().finally(() => { aksi.disabled = false; });
       }
+      if (aksi.getAttribute("data-aksi") === "artikel-tulis") {
+        aksi.disabled = true;
+        void tulisArtikelSekarang().finally(() => { aksi.disabled = false; });
+      }
       return;
     }
 
@@ -7221,6 +7226,144 @@ function renderPembaruan() {
 }
 
 /* ------------------------------------------------------------------ *
+ * 25b3. Draf artikel otomatis harian
+ *
+ * Saklar + status satu draf sehari, digambar ke `#artikel-auto-root` di view
+ * Artikel dan memakai `/api/artikel-auto`. Editor tidak punya kemampuan "ai"
+ * sehingga endpoint menjawab 403 — dalam hal itu wadahnya dikosongkan
+ * diam-diam, bukan menampilkan gembok.
+ * ------------------------------------------------------------------ */
+
+let artikelAuto = null;
+let artikelAutoTimer = null;
+
+async function loadArtikelAuto() {
+  try {
+    const res = await fetch("/api/artikel-auto");
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    artikelAuto = data;
+  } catch {
+    artikelAuto = null;
+  }
+  renderArtikelAuto();
+}
+
+async function simpanArtikelAuto(parsial) {
+  try {
+    const res = await fetch("/api/artikel-auto", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsial),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    artikelAuto = data;
+    renderArtikelAuto();
+    toast(t("drafauto.saved"), "success");
+  } catch (err) {
+    toast(err.message, "error");
+    loadArtikelAuto();
+  }
+}
+
+async function tulisArtikelSekarang() {
+  try {
+    const res = await fetch("/api/artikel-auto", { method: "POST" });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    toast(t("drafauto.running"), "success");
+    artikelAuto = { ...(artikelAuto || {}), jalan: true };
+    renderArtikelAuto();
+    mulaiPollArtikelAuto();
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+/** Menanyakan kabar ke server selama penulisan masih berjalan. */
+function mulaiPollArtikelAuto() {
+  if (artikelAutoTimer) return;
+  artikelAutoTimer = setInterval(async () => {
+    const masihJalan = artikelAuto && artikelAuto.jalan;
+    if (!masihJalan) {
+      clearInterval(artikelAutoTimer);
+      artikelAutoTimer = null;
+      return;
+    }
+    try {
+      const res = await fetch("/api/artikel-auto");
+      const data = await res.json();
+      if (data && data.ok) {
+        artikelAuto = data;
+        renderArtikelAuto();
+      }
+    } catch {
+      /* gangguan jaringan — coba lagi di giliran berikutnya */
+    }
+  }, 4000);
+}
+
+function renderArtikelAuto() {
+  const root = $("artikel-auto-root");
+  if (!root) return;
+
+  /* Tanpa kemampuan "ai" (Editor) endpoint 403 → wadah kosong, bukan gembok:
+     menulis draf memakai kuota AI sehingga pengaturannya bukan urusan Editor,
+     tapi daftar artikelnya sendiri tetap bisa dibuka. */
+  if (!artikelAuto) {
+    root.innerHTML = "";
+    return;
+  }
+
+  const p = artikelAuto.pengaturan || {};
+  const terakhir = artikelAuto.terakhir || {};
+  const siap = !!artikelAuto.siap;
+  const tunggu = artikelAuto.tunggu || 0;
+
+  const statusHtml = artikelAuto.jalan
+    ? `<p class="ai-note ai-note-info">${esc(t("drafauto.running"))}</p>`
+    : terakhir.tanggal
+      ? `<p class="hint">${esc(t("drafauto.lastSummary", { judul: terakhir.judul || "—", tanggal: terakhir.tanggal }))}</p>`
+      : `<p class="hint">${esc(t("drafauto.lastEmpty"))}</p>`;
+
+  root.innerHTML = `
+    <div class="form-section-head">
+      <h2>${esc(t("drafauto.title"))}</h2>
+      <p>${esc(t("drafauto.desc"))}</p>
+    </div>
+
+    <div class="field-grid">
+      <div class="field">
+        <label class="switch-row">
+          <input type="checkbox" id="drafauto-aktif"${p.aktif ? " checked" : ""} />
+          <span class="switch" aria-hidden="true"></span>
+          <span>${esc(t("drafauto.aktif"))}</span>
+        </label>
+        <div class="hint">${esc(t("drafauto.aktifHint"))}</div>
+      </div>
+    </div>
+
+    <div class="ai-pembaruan-status">
+      <h3>${esc(t("drafauto.lastTitle"))}</h3>
+      ${statusHtml}
+      <p class="hint">${esc(t("drafauto.pending", { n: tunggu }))}</p>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" id="drafauto-tulis"${siap ? "" : " disabled"}>${esc(t("drafauto.tulis"))}</button>
+      ${siap ? "" : `<p class="hint">${esc(t("drafauto.tanpaKunci"))}</p>`}
+    </div>`;
+
+  const el = $("drafauto-aktif");
+  if (el) el.addEventListener("change", (e) => simpanArtikelAuto({ aktif: !!e.target.checked }));
+  const btn = $("drafauto-tulis");
+  if (btn) btn.addEventListener("click", tulisArtikelSekarang);
+
+  if (artikelAuto.jalan) mulaiPollArtikelAuto();
+}
+
+/* ------------------------------------------------------------------ *
  * 25c. Riset AI di editor kendaraan
  *
  * Satu modal, tiga keadaan berurutan:
@@ -8156,6 +8299,7 @@ const QUICK_ACTIONS = [
   { key: "dash.quick.addMotor", add: "motors", icon: "M8 17h6l3-6h-4l-2-3H8M14 8h3" },
   { key: "dash.quick.addBerita", add: "berita", icon: "M4 5h12a1 1 0 0 1 1 1v12a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5ZM7 9h6M7 13h6" },
   { key: "dash.quick.refreshBerita", aksi: "berita-refresh", icon: "M4 12a8 8 0 0 1 13.7-5.7M20 12a8 8 0 0 1-13.7 5.7M20 4v4h-4M4 20v-4h4" },
+  { key: "dash.quick.writeArtikel", aksi: "artikel-tulis", icon: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" },
   { key: "dash.quick.site", view: "site", icon: "M10.3 4.3a1.7 1.7 0 0 1 3.4 0l.1.6 1.6.9.6-.2a1.7 1.7 0 0 1 1.9 2.6l-.4.5.6 1.7.6.3a1.7 1.7 0 0 1 0 3l-.6.3-.6 1.7.4.5a1.7 1.7 0 0 1-1.9 2.6l-.6-.2-1.6.9-.1.6a1.7 1.7 0 0 1-3.4 0l-.1-.6-1.6-.9-.6.2a1.7 1.7 0 0 1-1.9-2.6l.4-.5-.6-1.7-.6-.3a1.7 1.7 0 0 1 0-3l.6-.3.6-1.7-.4-.5a1.7 1.7 0 0 1 1.9-2.6l.6.2 1.6-.9ZM12 9.4a2.6 2.6 0 1 0 0 5.2 2.6 2.6 0 0 0 0-5.2Z" },
 ];
 

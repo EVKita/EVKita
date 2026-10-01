@@ -50,7 +50,7 @@ function tulisJadwal(v: any): void {
 }
 
 /** Mengambil satu feed, menyaring yang relevan, memetakan ke bentuk berita. */
-async function ambilSumber(sumber: { id: string; nama: string; feed: string }): Promise<any[]> {
+async function ambilSumber(sumber: { id: string; nama: string; feed: string }): Promise<{ items: any[]; error: string }> {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), 15000);
   try {
@@ -61,9 +61,9 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string }): 
       },
       signal: c.signal,
     });
-    if (!r.ok) return [];
+    if (!r.ok) return { items: [], error: `http${r.status}` };
     const xml = await r.text();
-    return parseFeed(xml)
+    const items = parseFeed(xml)
       .filter((it) => relevanBerita(`${it.title} ${it.excerpt}`))
       .map((it) => ({
         id: "",
@@ -79,8 +79,9 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string }): 
         updatedAt: new Date().toISOString(),
         updatedBy: "",
       }));
+    return { items, error: "" };
   } catch {
-    return [];
+    return { items: [], error: "jaringan" };
   } finally {
     clearTimeout(t);
   }
@@ -96,17 +97,22 @@ let sedangJalan = false;
 export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}) {
   const hariIni = tanggalWib();
   const jadwal = bacaJadwal();
-  if (!paksa && jadwal.tanggal === hariIni) return { dilewati: true, tanggal: hariIni };
+  /* Hari ini dilewati hanya bila putaran terakhir BERHASIL. Gagal — semua
+     sumber mati atau tak ada yang bisa diambil — boleh dicoba lagi di
+     kunjungan berikutnya, bukan hangus sehari penuh. Sebelumnya tanggal
+     ditandai SEBELUM menarik, jadi satu kegagalan sesaat menghanguskan
+     seluruh harinya tanpa jejak. */
+  if (!paksa && jadwal.tanggal === hariIni && jadwal.hasil && jadwal.hasil.ok) {
+    return { dilewati: true, tanggal: hariIni };
+  }
   if (sedangJalan) return { dilewati: true, tanggal: hariIni };
 
   sedangJalan = true;
-  // Ditandai SEBELUM menarik: permintaan lain yang datang saat penarikan
-  // berjalan tidak boleh memulai penarikan kedua.
-  tulisJadwal({ ...jadwal, tanggal: hariIni });
 
   try {
     const hasil = await Promise.all(SUMBER_BERITA.map((s) => ambilSumber(s)));
-    const baru = hasil.flat();
+    const gagal = SUMBER_BERITA.filter((_, i) => hasil[i].error).map((s) => s.nama);
+    const baru = hasil.map((h) => h.items).flat();
     const content = readContent();
     const { daftar, ditambah } = gabungBerita(content.berita || [], baru, MAKS_BERITA);
     if (ditambah > 0) {
@@ -123,17 +129,26 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
       }
     }
 
+    /* Berhasil bila ada yang ditambah, atau semua sumber terbaca (hanya
+       memang tidak ada kabar EV baru). Gagal sebagian tapi ada hasil tetap
+       dihitung selesai — sumber yang mati dicoba lagi besok. */
+    const ok = ditambah > 0 || gagal.length === 0;
     const ringkas = {
       dilewati: false,
       tanggal: hariIni,
       ditambah,
       total: daftar.length,
       sumber: SUMBER_BERITA.map((s) => s.nama),
+      gagal,
+      ok,
+      ...(gagal.length && ditambah === 0 ? { error: `sumber mati: ${gagal.join(", ")}` } : {}),
     };
     tulisJadwal({ tanggal: hariIni, hasil: ringkas });
     return ringkas;
   } catch (e: any) {
-    return { dilewati: false, tanggal: hariIni, ditambah: 0, error: String((e && e.message) || e) };
+    const ringkas = { dilewati: false, tanggal: hariIni, ditambah: 0, ok: false, error: String((e && e.message) || e) };
+    tulisJadwal({ tanggal: hariIni, hasil: ringkas });
+    return ringkas;
   } finally {
     sedangJalan = false;
   }

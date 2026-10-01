@@ -16,5 +16,10 @@ export const POST: APIRoute = async ({ cookies }) => {
   if (!me) return unauthorized();
 
   const hasil = await perbaruiBerita({ paksa: true });
+  /* Gagal total (tak satu pun sumber terbaca) dilaporkan sebagai galat
+     supaya panel menampilkan "gagal", bukan "tidak ada berita baru". */
+  if (!hasil.dilewati && (hasil as any).error && !(hasil as any).ditambah) {
+    return json({ ok: false, ...hasil }, 502);
+  }
   return json({ ok: true, ...hasil });
 };
