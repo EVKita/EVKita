@@ -1,0 +1,349 @@
+---
+import { makePubT } from "../lib/i18n/pub.js";
+
+interface Props {
+  lang?: string;
+}
+
+const { lang = Astro.locals?.pubLang || "id" } = Astro.props;
+
+/**
+ * Kotak cari situs: tombol kaca pembesar di header (di samping Tentang di
+ * laci mobile, di deretan aksi pada desktop) membuka overlay ini. Mengetik
+ * satu huruf pun langsung menampilkan yang cocok — kendaraan, merek, dan
+ * halaman — dan pengunjung tinggal memilih salah satunya.
+ *
+ * Indeksnya diunduh sekali dari `/api/cari` saat pertama dibuka, lalu
+ * penyaringannya jalan di peramban: hasilnya seketika tanpa perjalanan
+ * jaringan per ketikan, di HP mana pun. Tanpa JavaScript tombolnya tidak
+ * ke mana-mana — isinya tetap terjangkau lewat menu Jelajahi di beranda.
+ *
+ * Teks dinamis (kosong, judul kelompok) lewat atribut `data-*`, pola yang
+ * sama dengan MemberGate: skrip klien tidak boleh tahu bahasa.
+ */
+const t = makePubT(lang);
+---
+
+<div
+  class="cari"
+  id="siteCari"
+  hidden
+  data-kosong={t("pub.cari.kosong")}
+  data-g-kendaraan={t("pub.cari.kendaraan")}
+  data-g-merek={t("pub.cari.merek")}
+  data-g-halaman={t("pub.cari.halaman")}
+  data-jelajahi={t("pub.jelajahi")}
+>
+  <div class="cari-latar" data-cari-tutup aria-hidden="true"></div>
+  <div class="cari-kotak" role="dialog" aria-modal="true" aria-label={t("pub.cari.buka")}>
+    <div class="cari-bar">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+        <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm8 16-4-4" />
+      </svg>
+      <input
+        id="cariMasukan"
+        class="cari-masukan"
+        type="search"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder={t("pub.cari.ph")}
+        role="combobox"
+        aria-expanded="false"
+        aria-controls="cariHasil"
+        aria-autocomplete="list"
+      />
+      <button class="cari-x" data-cari-tutup type="button" aria-label={t("pub.cari.tutup")}>✕</button>
+    </div>
+    <div class="cari-hasil" id="cariHasil" role="listbox" aria-label={t("pub.cari.buka")}></div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var akar = document.getElementById("siteCari");
+    if (!akar) return;
+    var masukan = document.getElementById("cariMasukan");
+    var hasil = document.getElementById("cariHasil");
+    if (!masukan || !hasil) return;
+
+    var TEKS = {
+      kosong: akar.getAttribute("data-kosong") || "",
+      kendaraan: akar.getAttribute("data-g-kendaraan") || "",
+      merek: akar.getAttribute("data-g-merek") || "",
+      halaman: akar.getAttribute("data-g-halaman") || "",
+      jelajahi: akar.getAttribute("data-jelajahi") || "",
+    };
+
+    var indeks = null;
+    var memuat = false;
+    var tautan = [];
+    var aktif = -1;
+    var pembuka = null;
+
+    /* Huruf beraksen diluruskan supaya "citroen" ketemu "Citroën". */
+    function baku(s) {
+      return String(s || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function esc(s) {
+      return String(s || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    /* Tandai kata yang cocok di dalam teks asli — rentangnya dicari dulu di
+       teks mentah, baru tiap potongannya di-escape. */
+    function sorot(teks, kata) {
+      var asli = String(teks || "");
+      var rendah = asli.toLowerCase();
+      var rentang = [];
+      for (var i = 0; i < kata.length; i++) {
+        var w = kata[i].toLowerCase();
+        if (!w) continue;
+        var dari = 0;
+        for (;;) {
+          var pos = rendah.indexOf(w, dari);
+          if (pos < 0) break;
+          rentang.push([pos, pos + w.length]);
+          dari = pos + w.length;
+        }
+      }
+      if (!rentang.length) return esc(asli);
+      rentang.sort(function (a, b) { return a[0] - b[0]; });
+      var gabung = [];
+      for (var j = 0; j < rentang.length; j++) {
+        var r = rentang[j];
+        var akhir = gabung[gabung.length - 1];
+        if (akhir && r[0] <= akhir[1]) akhir[1] = Math.max(akhir[1], r[1]);
+        else gabung.push([r[0], r[1]]);
+      }
+      var keluar = "";
+      var potong = 0;
+      for (var k = 0; k < gabung.length; k++) {
+        keluar += esc(asli.slice(potong, gabung[k][0]));
+        keluar += "<mark>" + esc(asli.slice(gabung[k][0], gabung[k][1])) + "</mark>";
+        potong = gabung[k][1];
+      }
+      return keluar + esc(asli.slice(potong));
+    }
+
+    /* Semua kata harus ada (AND): "byd seal" tidak boleh mengembalikan
+       semua yang mengandung "byd" saja. */
+    function skor(hay, kata) {
+      var h = baku(hay);
+      var posisi = -1;
+      for (var i = 0; i < kata.length; i++) {
+        var p = h.indexOf(kata[i]);
+        if (p < 0) return -1;
+        if (posisi < 0 || p < posisi) posisi = p;
+      }
+      if (h.indexOf(kata.join(" ")) === 0) return 0;
+      var awal = null;
+      try {
+        awal = new RegExp("(^|[\\s-])" + kata[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+      } catch (e) { awal = null; }
+      if (awal && awal.test(h)) return 1 + posisi / 1000;
+      return 2 + posisi / 1000;
+    }
+
+    function saringKendaraan(kata, batas) {
+      var cocok = [];
+      var daftar = (indeks && indeks.kendaraan) || [];
+      for (var i = 0; i < daftar.length; i++) {
+        var v = daftar[i];
+        var s = skor(v.brand + " " + v.name + " " + (v.body || ""), kata);
+        if (s >= 0) cocok.push({ v: v, s: s });
+      }
+      cocok.sort(function (a, b) {
+        return a.s - b.s || String(a.v.brand).localeCompare(String(b.v.brand)) || String(a.v.name).localeCompare(String(b.v.name));
+      });
+      return cocok.slice(0, batas).map(function (c) { return c.v; });
+    }
+
+    function saringBiasa(daftar, ambil, kata, batas) {
+      var cocok = [];
+      for (var i = 0; i < daftar.length; i++) {
+        var s = skor(ambil(daftar[i]), kata);
+        if (s >= 0) cocok.push({ v: daftar[i], s: s });
+      }
+      cocok.sort(function (a, b) { return a.s - b.s; });
+      return cocok.slice(0, batas).map(function (c) { return c.v; });
+    }
+
+    function fotoKendaraan(v) {
+      if (!v.image) return "";
+      return '<span class="cari-foto"><img src="' + esc(v.image) + '" alt="" loading="lazy" decoding="async" /></span>';
+    }
+
+    function fotoMerek(label) {
+      var huruf = String(label || "?").trim().charAt(0).toUpperCase() || "?";
+      return '<span class="cari-foto cari-huruf" aria-hidden="true">' + esc(huruf) + "</span>";
+    }
+
+    function fotoHalaman() {
+      return '<span class="cari-foto cari-huruf" aria-hidden="true">›</span>';
+    }
+
+    function panah() {
+      return '<span class="cari-panah" aria-hidden="true">→</span>';
+    }
+
+    function butirKendaraan(v, kata) {
+      return (
+        '<a class="cari-item" role="option" id="cari-op-__NOMOR__" href="' + esc(v.url) + '">' +
+        fotoKendaraan(v) +
+        '<span class="cari-teks"><span class="cari-merek">' + esc(v.brand) + "</span>" +
+        '<span class="cari-nama">' + sorot(v.name, kata) + "</span>" +
+        (v.meta ? '<span class="cari-meta">' + esc(v.meta) + "</span>" : "") +
+        "</span>" + panah() + "</a>"
+      );
+    }
+
+    function butirBiasa(x, kata, ikon) {
+      return (
+        '<a class="cari-item" role="option" id="cari-op-__NOMOR__" href="' + esc(x.url) + '">' +
+        ikon +
+        '<span class="cari-teks"><span class="cari-nama">' + sorot(x.label, kata) + "</span>" +
+        (x.meta ? '<span class="cari-meta">' + esc(x.meta) + "</span>" : "") +
+        "</span>" + panah() + "</a>"
+      );
+    }
+
+    function rakitHtml(kelompok) {
+      var keluar = "";
+      var nomor = 0;
+      for (var g = 0; g < kelompok.length; g++) {
+        if (!kelompok[g].butir.length) continue;
+        keluar += '<p class="cari-grup">' + esc(kelompok[g].judul) + "</p>";
+        for (var i = 0; i < kelompok[g].butir.length; i++) {
+          keluar += kelompok[g].butir[i].split("__NOMOR__").join(String(nomor));
+          nomor++;
+        }
+      }
+      return keluar;
+    }
+
+    function gambarUlang() {
+      var q = baku(masukan.value);
+      var kata = q.split(/\s+/).filter(Boolean);
+      var kelompok;
+      if (!kata.length) {
+        /* Belum mengetik: tawarkan jalan pintas, bukan kekosongan. */
+        var semua = ((indeks && indeks.halaman) || []).filter(function (x) { return !x.meta; });
+        kelompok = [{ judul: TEKS.jelajahi, butir: semua.map(function (x) { return butirBiasa(x, [], fotoHalaman()); }) }];
+      } else {
+        var ken = saringKendaraan(kata, 6).map(function (v) { return butirKendaraan(v, kata); });
+        var mer = saringBiasa((indeks && indeks.merek) || [], function (x) { return x.label; }, kata, 3).map(function (x) {
+          return butirBiasa(x, kata, fotoMerek(x.label));
+        });
+        var hal = saringBiasa((indeks && indeks.halaman) || [], function (x) { return x.label + " " + (x.kunci || ""); }, kata, 4).map(function (x) {
+          return butirBiasa(x, kata, fotoHalaman());
+        });
+        kelompok = [
+          { judul: TEKS.kendaraan, butir: ken },
+          { judul: TEKS.merek, butir: mer },
+          { judul: TEKS.halaman, butir: hal },
+        ];
+      }
+      var html = rakitHtml(kelompok);
+      if (!html) {
+        hasil.innerHTML = '<p class="cari-kosong">' + esc(TEKS.kosong) + "</p>";
+      } else {
+        hasil.innerHTML = html;
+      }
+      masukan.setAttribute("aria-expanded", html ? "true" : "false");
+      tautan = Array.prototype.slice.call(hasil.querySelectorAll(".cari-item"));
+      tandai(-1);
+    }
+
+    function tandai(i) {
+      for (var k = 0; k < tautan.length; k++) {
+        var nyala = k === i;
+        tautan[k].classList.toggle("is-active", nyala);
+        tautan[k].setAttribute("aria-selected", nyala ? "true" : "false");
+      }
+      aktif = i;
+      if (tautan[i]) {
+        try { tautan[i].scrollIntoView({ block: "nearest" }); } catch (e) {}
+        masukan.setAttribute("aria-activedescendant", tautan[i].id);
+      } else {
+        masukan.removeAttribute("aria-activedescendant");
+      }
+    }
+
+    function buka(pemicu) {
+      pembuka = pemicu || null;
+      akar.hidden = false;
+      document.documentElement.classList.add("modal-open");
+      if (!indeks && !memuat) {
+        memuat = true;
+        var lang = (document.documentElement.getAttribute("lang") || "id").slice(0, 2);
+        fetch("/api/cari?lang=" + encodeURIComponent(lang), { headers: { Accept: "application/json" } })
+          .then(function (r) { return r.json(); })
+          .then(function (b) {
+            indeks = b && typeof b === "object" ? b : { kendaraan: [], merek: [], halaman: [] };
+            gambarUlang();
+          })
+          .catch(function () {
+            indeks = { kendaraan: [], merek: [], halaman: [] };
+            gambarUlang();
+          });
+      } else {
+        gambarUlang();
+      }
+      if (masukan.value) masukan.select();
+      masukan.focus();
+    }
+
+    function tutup(kembali) {
+      document.documentElement.classList.remove("modal-open");
+      akar.hidden = true;
+      if (kembali !== false && pembuka && pembuka.focus) {
+        try { pembuka.focus(); } catch (e) {}
+      }
+      pembuka = null;
+    }
+
+    document.addEventListener("click", function (e) {
+      var pemicu = e.target && e.target.closest ? e.target.closest("[data-cari-buka]") : null;
+      if (pemicu) {
+        var laciTutup = document.getElementById("navClose");
+        if (laciTutup && document.body.classList.contains("nav-open")) laciTutup.click();
+        buka(pemicu);
+        return;
+      }
+      if (!akar.hidden && e.target && e.target.closest && e.target.closest("[data-cari-tutup]")) tutup();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (akar.hidden) return;
+      if (e.key === "Escape") { tutup(); return; }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        if (!tautan.length) return;
+        e.preventDefault();
+        var i = e.key === "ArrowDown" ? aktif + 1 : aktif - 1;
+        if (i < 0) i = tautan.length - 1;
+        if (i >= tautan.length) i = 0;
+        tandai(i);
+        return;
+      }
+      if (e.key === "Enter" && aktif >= 0 && tautan[aktif]) {
+        e.preventDefault();
+        tautan[aktif].click();
+      }
+    });
+
+    var jeda = null;
+    masukan.addEventListener("input", function () {
+      if (jeda) clearTimeout(jeda);
+      jeda = setTimeout(gambarUlang, 60);
+    });
+  })();
+</script>

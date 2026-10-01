@@ -5,7 +5,7 @@
  * disimpan pemilik lewat panel — judul dan deskripsi kendaraan, isi halaman
  * Markdown, judul berita, alamat dan jam buka SPKLU — tetap berbahasa
  * Indonesia di `data/content.json`. Berkas ini yang menerjemahkannya, di
- * saat halaman dirender, memakai DeepSeek (`src/lib/deepseek.ts`).
+ * saat halaman dirender, lewat mesin AI aktif (`src/lib/ai-mesin.ts`).
  *
  * Tiga aturan menentukan seluruh isi berkas ini:
  *
@@ -33,13 +33,14 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { normalizePubLocale } from "./i18n/pub.js";
 import { readJson, writeJsonAtomic } from "./jsonfile";
-import { terjemahkanBerteks, GalatTerjemahan } from "./deepseek";
+import { terjemahkanBerteks } from "./ai-mesin";
+import { GalatTerjemahan } from "./deepseek";
 import { APPEARANCE_DEFAULTS } from "./theme.js";
 
 /** Bahasa tujuan yang didukung — masing-masing punya berkas cache sendiri. */
 const BAHASA_TUJUAN = new Set(["en", "zh"]);
 
-/** Jumlah teks maksimal dalam satu permintaan DeepSeek. */
+/** Jumlah teks maksimal dalam satu permintaan terjemahan. */
 const BATAS_BATCH_JUMLAH = 60;
 /** Jumlah karakter maksimal dalam satu permintaan DeepSeek. */
 const BATAS_BATCH_KARAKTER = 8000;

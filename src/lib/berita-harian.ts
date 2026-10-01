@@ -109,7 +109,19 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
     const baru = hasil.flat();
     const content = readContent();
     const { daftar, ditambah } = gabungBerita(content.berita || [], baru, MAKS_BERITA);
-    if (ditambah > 0) writeContent({ ...content, berita: daftar });
+    if (ditambah > 0) {
+      const segar = { ...content, berita: daftar };
+      writeContent(segar);
+      /* Sama seperti auto-update kendaraan: siapkan terjemahan EN/ZH sekarang
+         supaya pembaca asing tidak menunggu batch pertama. Best-effort. */
+      try {
+        const { terjemahContent } = await import("./terjemahan.js");
+        await terjemahContent(segar, "en");
+        await terjemahContent(segar, "zh");
+      } catch {
+        /* abaikan */
+      }
+    }
 
     const ringkas = {
       dilewati: false,

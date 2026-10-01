@@ -59,6 +59,7 @@ export const SLUG_TERPAKAI = [
   "api",
   "install",
   "katalog",
+  "katalog-motor",
   "spklu",
   "bengkel",
   "berita",

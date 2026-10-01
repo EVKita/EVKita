@@ -52,6 +52,8 @@ const ID = {
   "pub.empty.title": "Tidak ada model yang cocok",
   "pub.empty.text": "Coba longgarkan filter atau ubah kata kunci pencarian.",
   "pub.empty.reset": "Reset semua filter",
+  "pub.empty.saran": "Kata kunci ini juga cocok dengan {n} {noun} di tab {tab}.",
+  "pub.empty.lihatTab": "Lihat di tab {tab}",
   "pub.catalog.all": "Buka katalog lengkap",
 
   // — Panel "Mobil/Motor Kita": 5 penjualan terbanyak 2026 —
@@ -89,6 +91,7 @@ const ID = {
 
   // — Masuk pengunjung (MemberGate): muncul pada klik kedua —
   "pub.member.title": "Selamat datang di EVKita.com",
+  "pub.member.open": "Masuk",
   "pub.member.email": "Email",
   "pub.member.password": "Kata sandi",
   "pub.member.remember": "Ingat saya",
@@ -100,6 +103,15 @@ const ID = {
   "pub.member.shortPass": "Kata sandi minimal 6 karakter.",
   "pub.member.errNet": "Tidak bisa masuk sekarang. Coba lagi.",
   "pub.member.googleOff": "Login Google belum diaktifkan. Masuk dengan email.",
+
+  // — Kotak cari situs (SiteSearch): tombol di header + autocomplete —
+  "pub.cari.buka": "Cari",
+  "pub.cari.ph": "Ketik merek atau model…",
+  "pub.cari.kosong": "Tidak ada yang cocok — coba kata lain.",
+  "pub.cari.kendaraan": "Kendaraan",
+  "pub.cari.merek": "Merek",
+  "pub.cari.halaman": "Halaman & panduan",
+  "pub.cari.tutup": "Tutup pencarian",
 
   "pub.sort.brand": "Merek (A–Z)",
   "pub.sort.priceAsc": "Harga terendah",
@@ -580,6 +592,18 @@ const ID = {
     "Menampilkan <strong>{dari}–{sampai}</strong> dari <strong>{total}</strong> model. Urutannya dari jarak tempuh terjauh.",
   "pub.katalog.leadLink": "Cari dan saring di beranda →",
 
+  // — src/pages/katalog-motor/[...hal].astro —
+  "pub.katalogMotor.judul": "Katalog motor listrik di Indonesia",
+  "pub.katalogMotor.pageTitle1": "Katalog Motor Listrik di Indonesia — {brand}",
+  "pub.katalogMotor.pageTitleN": "Katalog Motor Listrik — Halaman {nomor} dari {jumlahHalaman} — {brand}",
+  "pub.katalogMotor.halamanJudul": "Katalog motor listrik — halaman {nomor}",
+  "pub.katalogMotor.meta1":
+    "Daftar lengkap {total} motor listrik yang dijual di Indonesia beserta jarak tempuh, kapasitas baterai, tenaga, dan harganya.",
+  "pub.katalogMotor.metaN":
+    "Motor listrik ke-{dari} sampai ke-{sampai} dari {total} model yang dijual di Indonesia, lengkap dengan spesifikasi dan harganya.",
+  "pub.katalogMotor.lead":
+    "Menampilkan <strong>{dari}–{sampai}</strong> dari <strong>{total}</strong> model. Urutannya dari jarak tempuh terjauh.",
+
   // — src/pages/artikel/index.astro —
   "pub.artikel.pageTitle": "Artikel & Panduan Kendaraan Listrik",
   "pub.artikel.metaDesc":
@@ -631,6 +655,8 @@ const EN = {
   "pub.empty.title": "No matching models",
   "pub.empty.text": "Try relaxing the filters or changing your search.",
   "pub.empty.reset": "Reset all filters",
+  "pub.empty.saran": "This keyword also matches {n} {noun} under the {tab} tab.",
+  "pub.empty.lihatTab": "View in the {tab} tab",
   "pub.catalog.all": "Open full catalogue",
 
   // — "Our Cars/Bikes" panels: top 5 sellers of 2026 —
@@ -668,6 +694,7 @@ const EN = {
 
   // — Visitor sign-in (MemberGate): shown on the second click —
   "pub.member.title": "Welcome to EVKita",
+  "pub.member.open": "Sign in",
   "pub.member.email": "Email",
   "pub.member.password": "Password",
   "pub.member.remember": "Remember Me",
@@ -679,6 +706,15 @@ const EN = {
   "pub.member.shortPass": "Password must be at least 6 characters.",
   "pub.member.errNet": "Could not sign you in. Please try again.",
   "pub.member.googleOff": "Google sign-in is not enabled yet. Please use email.",
+
+  // — Site search box (SiteSearch): header button + autocomplete —
+  "pub.cari.buka": "Search",
+  "pub.cari.ph": "Type brand or model…",
+  "pub.cari.kosong": "No matches — try another word.",
+  "pub.cari.kendaraan": "Vehicles",
+  "pub.cari.merek": "Brands",
+  "pub.cari.halaman": "Pages & guides",
+  "pub.cari.tutup": "Close search",
 
   "pub.sort.brand": "Brand (A–Z)",
   "pub.sort.priceAsc": "Lowest price",
@@ -1159,6 +1195,18 @@ const EN = {
     "Showing <strong>{dari}–{sampai}</strong> of <strong>{total}</strong> models, sorted by longest range.",
   "pub.katalog.leadLink": "Search and filter on the home page →",
 
+  // — src/pages/katalog-motor/[...hal].astro —
+  "pub.katalogMotor.judul": "Electric motorbike catalogue for Indonesia",
+  "pub.katalogMotor.pageTitle1": "Electric Motorbike Catalogue for Indonesia — {brand}",
+  "pub.katalogMotor.pageTitleN": "Electric Motorbike Catalogue — Page {nomor} of {jumlahHalaman} — {brand}",
+  "pub.katalogMotor.halamanJudul": "Electric motorbike catalogue — page {nomor}",
+  "pub.katalogMotor.meta1":
+    "A complete list of the {total} electric motorbikes sold in Indonesia, with range, battery capacity, power, and prices.",
+  "pub.katalogMotor.metaN":
+    "Electric motorbikes {dari}–{sampai} of {total} models sold in Indonesia, complete with specifications and prices.",
+  "pub.katalogMotor.lead":
+    "Showing <strong>{dari}–{sampai}</strong> of <strong>{total}</strong> models, sorted by longest range.",
+
   // — src/pages/artikel/index.astro —
   "pub.artikel.pageTitle": "Electric Vehicle Articles & Guides",
   "pub.artikel.metaDesc":
@@ -1208,6 +1256,8 @@ const ZH = {
   "pub.empty.title": "没有符合条件的车型",
   "pub.empty.text": "请放宽筛选条件或更换搜索关键词。",
   "pub.empty.reset": "重置所有筛选",
+  "pub.empty.saran": "该关键词在{tab}中还有{n}款{noun}符合。",
+  "pub.empty.lihatTab": "在{tab}中查看",
   "pub.catalog.all": "打开完整目录",
 
   // — “我们的汽车/摩托车”榜单：2026年最畅销的5款 —
@@ -1240,6 +1290,7 @@ const ZH = {
   "pub.gate.cta": "继续访问EVKita",
   "pub.gate.ctaSub": "全站24小时访问",
   "pub.member.title": "欢迎来到EVKita.com",
+  "pub.member.open": "登录",
   "pub.member.email": "邮箱",
   "pub.member.password": "密码",
   "pub.member.remember": "记住我",
@@ -1251,6 +1302,15 @@ const ZH = {
   "pub.member.shortPass": "密码至少需要6个字符。",
   "pub.member.errNet": "目前无法登录，请重试。",
   "pub.member.googleOff": "Google登录尚未启用，请使用邮箱登录。",
+
+  // — 站内搜索框（SiteSearch）：页眉按钮 + 自动补全 —
+  "pub.cari.buka": "搜索",
+  "pub.cari.ph": "输入品牌或车型…",
+  "pub.cari.kosong": "没有匹配结果，换个词试试。",
+  "pub.cari.kendaraan": "车辆",
+  "pub.cari.merek": "品牌",
+  "pub.cari.halaman": "页面与指南",
+  "pub.cari.tutup": "关闭搜索",
   "pub.sort.brand": "品牌（A–Z）",
   "pub.sort.priceAsc": "价格最低",
   "pub.sort.priceDesc": "价格最高",
@@ -1664,6 +1724,13 @@ const ZH = {
   "pub.katalog.404Text": "该目录只有{jumlahHalaman}页，请从第一页重新开始。",
   "pub.katalog.lead": "显示<strong>{dari}–{sampai}</strong>款，共<strong>{total}</strong>款，按续航里程从长到短排序。",
   "pub.katalog.leadLink": "在首页搜索和筛选→",
+  "pub.katalogMotor.judul": "印度尼西亚电动摩托车目录",
+  "pub.katalogMotor.pageTitle1": "印度尼西亚电动摩托车目录——{brand}",
+  "pub.katalogMotor.pageTitleN": "电动摩托车目录——第{nomor}页，共{jumlahHalaman}页——{brand}",
+  "pub.katalogMotor.halamanJudul": "电动摩托车目录——第{nomor}页",
+  "pub.katalogMotor.meta1": "在印度尼西亚销售的{total}款电动摩托车完整名单，含续航里程、电池容量、动力和价格。",
+  "pub.katalogMotor.metaN": "在印度尼西亚销售的{total}款车型中的第{dari}至{sampai}款，含完整参数和价格。",
+  "pub.katalogMotor.lead": "显示<strong>{dari}–{sampai}</strong>款，共<strong>{total}</strong>款，按续航里程从长到短排序。",
   "pub.artikel.pageTitle": "电动车文章与指南",
   "pub.artikel.metaDesc": "{n}篇关于印度尼西亚电动车的原创文章：注明出处的指南、对比和评测。",
   "pub.artikel.metaDescEmpty": "来自{brand}的印度尼西亚电动车文章与指南。",

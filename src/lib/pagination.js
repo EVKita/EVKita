@@ -38,10 +38,13 @@ export function pageSlice(list, page, perPage = PER_PAGE) {
  * Halaman pertama TIDAK memakai "/1": satu halaman hanya boleh punya satu
  * alamat, dan "/katalog" adalah alamat itu. `[...hal].astro` mengalihkan
  * "/katalog/1" ke sini secara permanen.
+ *
+ * `basis` adalah alamat katalognya ("/katalog" atau "/katalog-motor") —
+ * aturannya sama untuk keduanya, jadi parameter ini yang membedakannya.
  */
-export function pageHref(page) {
+export function pageHref(page, basis = "/katalog") {
   const p = Math.floor(Number(page));
-  return p <= 1 ? "/katalog" : `/katalog/${p}`;
+  return p <= 1 ? basis : `${basis}/${p}`;
 }
 
 /**

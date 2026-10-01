@@ -54,12 +54,11 @@ const nounSatu = isMotor ? t("pub.tax.motorSatu") : t("pub.tax.mobilSatu");
 const nounCap = isMotor ? t("pub.detail.motorCap") : t("pub.detail.mobilCap");
 
 /**
- * Remah roti tingkat kedua. Mobil punya katalog berhalaman sendiri; motor
- * belum, jadi ia menunjuk katalog beranda dalam mode motor — alamat yang
- * memang menampilkan seluruh motor, bukan janji halaman yang tidak ada.
+ * Remah roti tingkat kedua. Mobil menunjuk katalog berhalamannya sendiri;
+ * motor kini punya yang sama di /katalog-motor.
  */
 const induk = isMotor
-  ? { label: t("pub.tax.titleMotor"), href: "/?mode=motor#daftar" }
+  ? { label: t("pub.tax.titleMotor"), href: "/katalog-motor" }
   : { label: t("pub.katalog"), href: "/katalog" };
 
 const lower = (s: any) => String(s || "").toLowerCase();

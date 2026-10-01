@@ -3,6 +3,8 @@ import ThemeToggle from "./ThemeToggle.astro";
 import LanguageToggle from "./LanguageToggle.astro";
 import LogoMark from "./LogoMark.astro";
 import { safeUrl } from "../lib/url.js";
+import { sessionUserId } from "../lib/auth";
+import { MEMBER_COOKIE } from "../lib/member.js";
 import { makePubT } from "../lib/i18n/pub.js";
 
 /**
@@ -31,6 +33,13 @@ const suffix = site.brandSuffix || "";
 const typed = String(site.logoMark || "").trim();
 const useInitials = typed !== "" && typed.toUpperCase() !== "EV";
 const mark = typed.slice(0, 3);
+
+/**
+ * Tombol akun pengunjung: dibuka hanya bila belum masuk sebagai anggota.
+ * Yang sudah masuk tidak melihatnya — sama seperti popup loginnya sendiri
+ * (MemberGate) yang memang tidak dirender untuk mereka.
+ */
+const anggotaMasuk = !!sessionUserId(Astro.cookies.get(MEMBER_COOKIE)?.value);
 
 const links = [
   { id: "beranda", label: t("pub.nav.beranda"), href: base || "/", mode: "", note: t("pub.nav.beranda.note") },
@@ -84,8 +93,26 @@ const ICONS: Record<string, string> = {
     </nav>
 
     <div class="masthead-actions">
+      <span class="header-theme">
+        <button class="cari-btn" data-cari-buka type="button" aria-label={t("pub.cari.buka")}>
+          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm8 16-4-4" />
+          </svg>
+          <span class="cari-btn-teks">{t("pub.cari.buka")}</span>
+        </button>
+      </span>
       <span class="header-theme"><LanguageToggle /></span>
       <span class="header-theme"><ThemeToggle /></span>
+      {!anggotaMasuk ? (
+        <span class="header-theme">
+          <button class="member-btn" data-member-buka type="button" aria-label={t("pub.member.open")}>
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 11.5a3.8 3.8 0 1 0 0-7.6 3.8 3.8 0 0 0 0 7.6Zm-6.8 8.2a6.8 6.8 0 0 1 13.6 0" />
+            </svg>
+            <span class="member-btn-teks">{t("pub.member.open")}</span>
+          </button>
+        </span>
+      ) : null}
 
       <button
         class="nav-toggle"
@@ -159,11 +186,35 @@ const ICONS: Record<string, string> = {
         </span>
       </a>
     ))}
+    <button
+      type="button"
+      class="nav-drawer-link nav-drawer-cari"
+      data-cari-buka
+      style={`--i:${links.length}`}
+    >
+      <span class="nav-drawer-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm8 16-4-4" />
+        </svg>
+      </span>
+      <span class="nav-drawer-text">
+        <span class="nav-drawer-label">{t("pub.cari.buka")}</span>
+        <span class="nav-drawer-note">{t("pub.cari.ph")}</span>
+      </span>
+    </button>
   </nav>
 
   <div class="nav-drawer-foot">
     <LanguageToggle />
     <ThemeToggle />
+    {!anggotaMasuk ? (
+      <button class="member-btn" data-member-buka type="button">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+          <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 11.5a3.8 3.8 0 1 0 0-7.6 3.8 3.8 0 0 0 0 7.6Zm-6.8 8.2a6.8 6.8 0 0 1 13.6 0" />
+        </svg>
+        <span class="member-btn-teks">{t("pub.member.open")}</span>
+      </button>
+    ) : null}
   </div>
 </aside>
 

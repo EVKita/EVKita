@@ -6,6 +6,7 @@ import { makePubT, cms, pubOgLocale } from "../lib/i18n/pub.js";
 import TagGoogle from "../components/TagGoogle.astro";
 import ContentGate from "../components/ContentGate.astro";
 import MemberGate from "../components/MemberGate.astro";
+import SiteSearch from "../components/SiteSearch.astro";
 
 interface Props {
   title?: string;
@@ -206,6 +207,7 @@ const tagPublik = !!site && !accentOnly;
     <slot />
     {tagPublik && <ContentGate site={site} lang={lang} />}
     {tagPublik && <MemberGate lang={lang} />}
+    {tagPublik && <SiteSearch lang={lang} />}
     {tagPublik && (
       <script is:inline>
         // Pintu konten (ContentGate): tampil saat kunjungan pertama, tutup
@@ -317,6 +319,23 @@ const tagPublik = !!site && !accentOnly;
 
           var x = document.getElementById("memberX");
           if (x) x.addEventListener("click", tunda);
+          /* Tombol akun di header: buka popup langsung tanpa menunggu klik
+             kedua. Penjaga yang sama dipakai: jangan menumpuk di atas pintu
+             konten, jangan dibuka dua kali. Dari laci mobile, lacinya
+             ditutup dulu supaya tidak mengganjal popup. */
+          var pemicu = document.querySelectorAll("[data-member-buka]");
+          for (var pi = 0; pi < pemicu.length; pi++) {
+            (function (btn) {
+              btn.addEventListener("click", function () {
+                if (selesai || dibuka) return;
+                var g = document.getElementById("contentGate");
+                if (g && !g.hidden) return;
+                var navTutup = document.getElementById("navClose");
+                if (navTutup && document.body.classList.contains("nav-open")) navTutup.click();
+                buka();
+              });
+            })(pemicu[pi]);
+          }
           var latar = gate.querySelector("[data-member-tutup]");
           if (latar) latar.addEventListener("click", tunda);
           document.addEventListener("keydown", function (e) {

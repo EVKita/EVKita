@@ -252,13 +252,29 @@ function bucketTest(list, id, value) {
   return b && b.test ? b.test(value) : true;
 }
 
+/*
+ * Pencocokan kata kunci dilonggarkan: spasi, tanda hubung, dan huruf
+ * beraksen diabaikan di kedua sisi, jadi "Ex 3000" tetap ketemu "EX3000"
+ * dan "citroen" ketemu "Citroën".
+ */
+function squash(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function cocokCari(c, q) {
+  const sq = squash(q);
+  if (!sq) return true;
+  const hay = squash([c.brand, c.name, c.bodyType, c.tagline, ...(c.tags || [])].join(" "));
+  return hay.includes(sq);
+}
+
 function getFiltered() {
-  const q = state.search.trim().toLowerCase();
   const list = dataset.filter((c) => {
-    if (q) {
-      const hay = [c.brand, c.name, c.bodyType, c.tagline, ...(c.tags || [])].join(" ").toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
+    if (!cocokCari(c, state.search)) return false;
     if (state.brand !== "all" && c.brand !== state.brand) return false;
     if (state.body !== "all" && c.bodyType !== state.body) return false;
     if (!bucketTest(PRICE_BUCKETS, state.price, c.price)) return false;
@@ -337,6 +353,31 @@ function render() {
 
   $("empty").hidden = list.length > 0;
   grid.hidden = list.length === 0;
+
+  /* Kata kunci yang zonk di tab ini mungkin cocok di tab sebelah ("Alessa"
+     diketik di tab Mobil). Tawarkan pindahnya eksplisit — satu ketukan —
+     daripada kotak kosong yang menyuruh menebak. */
+  const saran = $("emptySaran");
+  if (saran) {
+    const lain = state.mode === "motor" ? EV_CARS : MOTORS;
+    const n = state.search.trim() && list.length === 0 ? lain.filter((c) => cocokCari(c, state.search)).length : 0;
+    if (n > 0) {
+      const tab = state.mode === "motor" ? t("pub.mobil") : t("pub.motor");
+      const kata = state.mode === "motor" ? t("pub.tax.mobil") : t("pub.tax.motor");
+      saran.hidden = false;
+      saran.innerHTML =
+        `<p>${esc(t("pub.empty.saran", { n, noun: kata, tab }))}</p>` +
+        `<button type="button" class="btn btn-outline btn-sm" id="emptyTab">${esc(t("pub.empty.lihatTab", { tab }))}</button>`;
+    } else {
+      saran.hidden = true;
+      saran.innerHTML = "";
+    }
+  }
+
+  /* Tombol "Buka katalog lengkap" mengikuti tab yang sedang dibuka: tab Motor
+     mengarah ke /katalog-motor, tab Mobil ke /katalog. */
+  const catalogAll = $("catalogAll");
+  if (catalogAll) catalogAll.href = state.mode === "motor" ? "/katalog-motor" : "/katalog";
 
   updateCompareUI();
   observeReveals();
@@ -526,6 +567,22 @@ function resetFilters() {
   render();
 }
 
+/*
+ * Pindah ke tab sebelah DENGAN kata kunci yang sama — dipakai tombol saran
+ * di kotak kosong ("Lihat di tab Motor"). Filter lain dikembalikan ke
+ * bawaan supaya hasilnya tidak tetap kosong gara-gara filter lama.
+ */
+function bukaTabLain() {
+  const other = state.mode === "motor" ? "mobil" : "motor";
+  if (other === "motor" && !MOTORS.length) return;
+  const q = state.search;
+  switchMode(other, false);
+  state.search = q;
+  const kotak = $("search");
+  if (kotak) kotak.value = q;
+  render();
+}
+
 function bindEvents() {
   const on = (id, ev, fn) => {
     const el = $(id);
@@ -560,6 +617,9 @@ function bindEvents() {
 
   on("resetFilters", "click", resetFilters);
   on("emptyReset", "click", resetFilters);
+  on("empty", "click", (e) => {
+    if (e.target.closest("#emptyTab")) bukaTabLain();
+  });
 
   on("bodyChips", "click", (e) => {
     const chip = e.target.closest(".chip");

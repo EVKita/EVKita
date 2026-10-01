@@ -446,6 +446,7 @@ const jsonLd = {
         <div class="empty" id="empty" hidden>
           <p class="empty-title">{t("pub.empty.title")}</p>
           <p>{t("pub.empty.text")}</p>
+          <div id="emptySaran" hidden></div>
           <button id="emptyReset" class="btn btn-outline btn-sm" type="button">{t("pub.empty.reset")}</button>
         </div>
 
@@ -455,9 +456,9 @@ const jsonLd = {
             Sengaja tanpa nomor halaman: begitu app.js jalan, daftar di atas
             tetap empat kartu dalam keadaan bawaan, dan "halaman 1 dari 3" di
             bawahnya akan berbohong. */}
-        {cars.length > HOME_CARDS ? (
+        {cars.length > HOME_CARDS || motors.length > HOME_CARDS ? (
           <p class="catalog-all">
-            <a class="btn btn-outline" href="/katalog">{t("pub.catalog.all")} →</a>
+            <a class="btn btn-outline" id="catalogAll" href="/katalog">{t("pub.catalog.all")} →</a>
           </p>
         ) : null}
       </div>

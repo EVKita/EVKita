@@ -76,6 +76,14 @@ export const GET: APIRoute = ({ url }) => {
     entries.push({ loc: `${origin}${pageHref(hal)}`, priority: hal === 1 ? "0.9" : "0.6" });
   }
 
+  /* Katalog motor diumumkan hanya bila saklarnya menyala — tanpanya
+     /katalog-motor menjawab 404 dan tidak boleh dijanjikan ke perayap. */
+  if (content.site.showMotor) {
+    for (let hal = 1; hal <= pageCount(liveMotors.length, PER_PAGE); hal++) {
+      entries.push({ loc: `${origin}${pageHref(hal, "/katalog-motor")}`, priority: hal === 1 ? "0.9" : "0.6" });
+    }
+  }
+
   // Alamat halaman detail berasal dari `vehicleHref()`, satu-satunya tempat
   // yang tahu bahwa motor tinggal di `/motor/`. Menyusunnya sendiri di sini
   // berarti peta situs bisa berselisih dengan tautan di halamannya.

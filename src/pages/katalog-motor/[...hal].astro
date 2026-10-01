@@ -1,0 +1,206 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { cardHTML, defaultSort, vehicleHref } from "../../lib/card-html.js";
+import { PER_PAGE, pageCount, pageSlice, pageHref, pageWindow } from "../../lib/pagination.js";
+import { siteOrigin, canonicalUrl, absoluteUrl } from "../../lib/site-url";
+import { hanyaTayang } from "../../lib/tayang.js";
+import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
+import { terjemahContent } from "../../lib/terjemahan.js";
+
+/**
+ * Katalog motor yang dirender server, berhalaman, dan setiap halamannya punya
+ * alamat — cerminan `/katalog` yang hanya memuat mobil.
+ *
+ * Sebelum halaman ini ada, tombol "Buka katalog lengkap" di tab Motor beranda
+ * mendarat di `/katalog` yang isinya mobil: pembaca yang sedang melihat motor
+ * tiba-tiba disodori mobil. Aturannya sama persis dengan katalog mobil
+ * (12 kartu per halaman dari `pagination.js`, halaman pertama tanpa "/1"),
+ * hanya basis alamatnya `/katalog-motor` dan isinya motor.
+ */
+
+const BASIS = "/katalog-motor";
+
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+
+const content = await terjemahContent(readContent(), lang);
+const site = cmsSite(content.site, lang);
+
+/* Saklar "tampilkan motor" mematikan seluruh sisi publik motor — katalognya
+   ikut 404, sama seperti halaman detail motor. */
+const motors = site.showMotor ? defaultSort((content.motors || []).filter(hanyaTayang())) : [];
+
+const total = motors.length;
+const jumlahHalaman = pageCount(total, PER_PAGE);
+
+const raw = Astro.params.hal;
+
+/**
+ * `[...hal]` juga cocok untuk "/katalog-motor/2/3". Yang seperti itu bukan
+ * halaman yang salah nomor, melainkan alamat yang tidak pernah ada — 404,
+ * bukan dialihkan ke halaman pertama.
+ */
+const segmen = raw === undefined || raw === "" ? [] : String(raw).split("/");
+let halaman: number | null = null;
+if (segmen.length === 0) {
+  halaman = 1;
+} else if (segmen.length === 1 && /^[1-9]\d*$/.test(segmen[0])) {
+  halaman = Number(segmen[0]);
+}
+
+/* Satu halaman, satu alamat: "/katalog-motor/1" adalah "/katalog-motor". */
+if (halaman === 1 && segmen.length === 1) {
+  return Astro.redirect(BASIS, 301);
+}
+
+const adaHalaman = site.showMotor && halaman !== null && halaman >= 1 && halaman <= jumlahHalaman;
+if (!adaHalaman) {
+  Astro.response.status = 404;
+}
+
+const nomor = adaHalaman ? (halaman as number) : 1;
+const daftar = adaHalaman ? pageSlice(motors, nomor, PER_PAGE) : [];
+const gridHtml = daftar.map((c: any) => cardHTML(c, { linkable: true, media: content.media, t, lang })).join("");
+
+const origin = siteOrigin(Astro.url);
+const canonical = canonicalUrl(Astro.url);
+
+const prevHref = adaHalaman && nomor > 1 ? pageHref(nomor - 1, BASIS) : "";
+const nextHref = adaHalaman && nomor < jumlahHalaman ? pageHref(nomor + 1, BASIS) : "";
+const window = adaHalaman ? pageWindow(nomor, jumlahHalaman) : [];
+
+/** Nomor urut kartu pertama dan terakhir di halaman ini, untuk "1–12 dari 19". */
+const dari = (nomor - 1) * PER_PAGE + 1;
+const sampai = Math.min(nomor * PER_PAGE, total);
+
+const brand = site.brandText || "EVKita";
+const judul = t("pub.katalogMotor.judul");
+const pageTitle = adaHalaman
+  ? nomor === 1
+    ? t("pub.katalogMotor.pageTitle1", { brand })
+    : t("pub.katalogMotor.pageTitleN", { nomor, jumlahHalaman, brand })
+  : `${t("pub.koleksi.notFound")} — ${brand}`;
+
+const metaDesc = adaHalaman
+  ? nomor === 1
+    ? t("pub.katalogMotor.meta1", { total })
+    : t("pub.katalogMotor.metaN", { dari, sampai, total })
+  : t("pub.notFound.desc");
+
+const jsonLd = adaHalaman
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "ItemList",
+          name: t("pub.katalogMotor.halamanJudul", { nomor }),
+          url: canonical,
+          numberOfItems: daftar.length,
+          itemListElement: daftar.map((c: any, i: number) => ({
+            "@type": "ListItem",
+            // Posisi dihitung dari seluruh katalog, bukan dari halaman ini:
+            // motor ke-13 tetap ke-13 walau ia yang pertama di halaman dua.
+            position: dari + i,
+            name: `${c.brand} ${c.name}`,
+            url: absoluteUrl(Astro.url, vehicleHref(c)),
+          })),
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: judul, item: `${origin}${BASIS}` },
+            ...(nomor > 1
+              ? [{ "@type": "ListItem", position: 3, name: t("pub.katalog.crumbHalaman", { nomor }) }]
+              : []),
+          ],
+        },
+      ],
+    }
+  : null;
+
+---
+
+<Base title={pageTitle} description={metaDesc} keywords={site.seoKeywords} ogImage={site.seoOgImage} site={site}>
+  {/* rel prev/next memberi tahu mesin pencari bahwa halaman-halaman ini satu
+      rangkaian, bukan tumpukan halaman berisi daftar yang mirip-mirip. */}
+  {prevHref ? <link slot="head" rel="prev" href={absoluteUrl(Astro.url, prevHref)} /> : null}
+  {nextHref ? <link slot="head" rel="next" href={absoluteUrl(Astro.url, nextHref)} /> : null}
+  {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+
+  <SiteHeader site={site} base="/" active="motor" />
+
+  {!adaHalaman ? (
+    <main class="container notfound" id="konten">
+      <p class="notfound-code">404</p>
+      <h1>{t("pub.katalog.404Title")}</h1>
+      <p class="notfound-text">
+        {t("pub.katalog.404Text", { jumlahHalaman })}
+      </p>
+      <a class="btn btn-primary" href={BASIS}>{t("pub.detail.bukaKatalog")}</a>
+    </main>
+  ) : (
+    <main class="container katalog" id="konten">
+      <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+        <a href="/">{t("pub.nav.beranda")}</a>
+        <span aria-hidden="true">/</span>
+        {nomor === 1 ? (
+          <span class="breadcrumb-current">{judul}</span>
+        ) : (
+          <>
+            <a href={BASIS}>{judul}</a>
+            <span aria-hidden="true">/</span>
+            <span class="breadcrumb-current">{t("pub.katalog.crumbHalaman", { nomor })}</span>
+          </>
+        )}
+      </nav>
+
+      <header class="katalog-head">
+        <h1>{nomor === 1 ? judul : t("pub.katalogMotor.halamanJudul", { nomor })}</h1>
+        <p class="katalog-lead">
+          <Fragment set:html={t("pub.katalogMotor.lead", { dari, sampai, total })} />
+          {" "}<a href="/#daftar">{t("pub.katalog.leadLink")}</a>
+        </p>
+      </header>
+
+      <div class="grid" set:html={gridHtml} />
+
+      {jumlahHalaman > 1 ? (
+        <nav class="pager" aria-label={t("pub.katalog.halaman")}>
+          {prevHref ? (
+            <a class="pager-arrow" href={prevHref} rel="prev">← {t("pub.lb.prev")}</a>
+          ) : (
+            <span class="pager-arrow is-off" aria-hidden="true">← {t("pub.lb.prev")}</span>
+          )}
+
+          <ol class="pager-nums">
+            {window.map((n) =>
+              n === "…" ? (
+                <li class="pager-gap" aria-hidden="true">…</li>
+              ) : (
+                <li>
+                  {n === nomor ? (
+                    <span class="pager-num is-current" aria-current="page">{n}</span>
+                  ) : (
+                    <a class="pager-num" href={pageHref(n as number, BASIS)}>{n}</a>
+                  )}
+                </li>
+              )
+            )}
+          </ol>
+
+          {nextHref ? (
+            <a class="pager-arrow" href={nextHref} rel="next">{t("pub.lb.next")} →</a>
+          ) : (
+            <span class="pager-arrow is-off" aria-hidden="true">{t("pub.lb.next")} →</span>
+          )}
+        </nav>
+      ) : null}
+    </main>
+  )}
+
+  <SiteFooter site={site} base="/" />
+</Base>

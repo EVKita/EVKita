@@ -1,13 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { getEnv } from "./env";
 import {
   mesinAktif,
   kunciMesin,
   jalankanRiset,
   rapikanJadiJson,
   biayaDariUsage,
+  galatBermasalah,
+  galatTidakTerhubung,
   BISA_DIRAPIKAN,
 } from "./ai-mesin";
 import { buildSchema, buildInstructions } from "./ai-prompt.js";
@@ -27,9 +28,10 @@ import {
 /**
  * Mesin pembaruan data kendaraan otomatis.
  *
- * Fitur "auto update": server meriset kendaraan lewat DeepSeek (sumber web
- * resmi) sekali sehari dan menerapkan hasilnya langsung, TANPA persetujuan
- * manusia. Ini sengaja BERBEDA dari riset manual di editor — yang tetap
+ * Fitur "auto update": server meriset kendaraan dari sumber web resmi lewat
+ * mesin AI aktif (DeepSeek berbayar atau Gemini gratis, dipilih di
+ * Admin → AI) sekali sehari dan menerapkan hasilnya langsung, TANPA
+ * persetujuan manusia. Ini sengaja BERBEDA dari riset manual di editor — yang tetap
  * "AI mengusulkan, manusia menyetujui" — dan karena itu jalurnya terpisah
  * serta pagarnya lebih ketat (lihat `src/lib/pembaruan.js`).
  *
@@ -198,6 +200,23 @@ async function risetSatu(
 const UPLOAD_DIR = () => path.resolve(process.cwd(), "data", "uploads");
 
 /**
+ * Mengisi cache terjemahan EN/ZH untuk konten yang baru ditulis.
+ *
+ * `terjemahContent()` hanya menerjemahkan teks yang belum ada di cache,
+ * jadi pemanggilan ini murah setelah putaran kecil. Impor dinamis supaya
+ * tumpukan terjemahan tidak ikut dimuat saat tidak ada yang berubah.
+ */
+async function hangatkanTerjemahan(content: any): Promise<void> {
+  try {
+    const { terjemahContent } = await import("./terjemahan.js");
+    await terjemahContent(content, "en");
+    await terjemahContent(content, "zh");
+  } catch {
+    /* best-effort: kegagalan pemanasan tidak menggagalkan putaran */
+  }
+}
+
+/**
  * Mengambil media (video & gambar) dari halaman resmi kendaraan, kalau punya.
  *
  * Hanya mengisi yang masih KOSONG — media yang sudah diunggah penyunting tidak
@@ -257,7 +276,10 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
   if (!siapRiset()) {
     return { dilewati: true, alasan: "tanpaKunci" };
   }
-  const apiKey = getEnv("DEEPSEEK_API_KEY", "");
+  /* Kunci mengikuti mesin aktif (pola yang sama dengan riset manual di
+     `ai-jobs.ts`): mematok kunci DeepSeek di sini membuat seluruh putaran
+     gagal otentikasi begitu pemilik memilih Gemini di Admin → AI. */
+  const apiKey = kunciMesin(mesinAktif());
 
   status.jalan = true;
   status.terakhir = {
@@ -332,7 +354,15 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
         item.updatedBy = "auto";
         diubah++;
       }
-      if (diubah > 0) writeContent(segar);
+      if (diubah > 0) {
+        writeContent(segar);
+        /* Terjemahan Inggris & Mandarin disiapkan SEKARANG, bukan menunggu
+           pengunjung pertama: cache terjemahan hanya menyimpan teks yang
+           belum ada, jadi yang diterjemahkan hanyalah kalimat yang baru
+           berubah. Gagal di sini tidak menggagalkan putaran — halaman tetap
+           tampil Indonesia seperti sediakala. */
+        await hangatkanTerjemahan(segar);
+      }
     }
 
     status.terakhir.selesaiPada = Date.now();
