@@ -10,6 +10,7 @@ import { normalizePubLocale } from "../../../lib/i18n/pub.js";
 import {
   tanyaGemini,
   pilihKonteks,
+  pilihTampil,
   ringkasKonteks,
   susunInstruksi,
   MODEL_BAWAAN_GEMINI,
@@ -34,24 +35,35 @@ import {
  *   mengirim pertanyaan dan menerima jawaban.
  * - Tanpa riwayat: tiap pertanyaan berdiri sendiri. Tidak ada state
  *   percakapan di server, tidak ada yang perlu disimpan.
- * - Konteks katalog (maksimal 8 kendaraan yang cocok kata) diselipkan ke
- *   instruksi supaya angka situs sendiri lebih diutamakan daripada ingatan
- *   model. Di luar itu model boleh menjawab umum — dan wajib mengaku kalau
- *   tidak tahu (lihat `susunInstruksi()` di `gemini.ts`).
+ * - Katalog dicari DULU di situs sendiri: yang cocok (maksimal 4) dikirim
+ *   sebagai kartu pilihan di atas jawaban AI; kalau tidak ada yang cocok,
+ *   hanya jawaban AI yang tampil. Konteks katalog (maksimal 8 kendaraan yang
+ *   cocok kata) juga diselipkan ke instruksi supaya angka situs sendiri lebih
+ *   diutamakan daripada ingatan model. Di luar itu model boleh menjawab umum
+ *   — dan wajib mengaku kalau tidak tahu (lihat `susunInstruksi()`).
  */
 
 function konteksDari(content: any, pertanyaan: string) {
-  const semua = [...(content.cars || []), ...(content.motors || [])].filter(hanyaTayang());
-  const ringkas = semua.map((v: any) => ({
-    brand: v.brand || "",
-    name: v.name || "",
-    bodyType: v.bodyType || "",
-    rangeKm: v.rangeKm ?? null,
-    batteryKwh: v.batteryKwh ?? null,
-    price: v.price ?? null,
-    priceText: v.priceText || "",
-  }));
-  return ringkasKonteks(pilihKonteks(ringkas, pertanyaan));
+  /* `kind` ditempel per koleksi di sini (bukan mengandalkan hasil baca) —
+     salah koleksi berarti tautan kartu mengarah ke halaman yang salah. */
+  const rakit = (daftar: any, kind: string) =>
+    (daftar || []).filter(hanyaTayang()).map((v: any) => ({
+      id: String(v.id || ""),
+      kind,
+      brand: v.brand || "",
+      name: v.name || "",
+      bodyType: v.bodyType || "",
+      rangeKm: v.rangeKm ?? null,
+      batteryKwh: v.batteryKwh ?? null,
+      price: v.price ?? null,
+      priceText: v.priceText || "",
+      image: v.image || "",
+    }));
+  const ringkas = [...rakit(content.cars, "mobil"), ...rakit(content.motors, "motor")];
+  return {
+    teks: ringkasKonteks(pilihKonteks(ringkas, pertanyaan)),
+    kandidat: pilihTampil(ringkas, pertanyaan),
+  };
 }
 
 export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
@@ -97,7 +109,8 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     badan?.lang || cookies.get("evkita_lang")?.value || "id"
   );
   const content = readContent();
-  const instruksi = susunInstruksi(lang, konteksDari(content, pertanyaan));
+  const konteks = konteksDari(content, pertanyaan);
+  const instruksi = susunInstruksi(lang, konteks.teks);
 
   const hasil = await tanyaGemini({
     apiKey: kunciApi,
@@ -111,5 +124,5 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     return json({ ok: false, errorKey: hasil.errorKey, sisa: kuota.sisa }, 502);
   }
 
-  return json({ ok: true, jawaban: hasil.teks, sisa: kuota.sisa, kuota: TANYA_KUOTA_HARIAN });
+  return json({ ok: true, jawaban: hasil.teks, kandidat: konteks.kandidat, sisa: kuota.sisa, kuota: TANYA_KUOTA_HARIAN });
 };

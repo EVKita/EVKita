@@ -337,6 +337,8 @@ const jsonLd = {
         id="tanyaEvkita"
         data-menjawab={t("pub.tanya.menjawab")}
         data-sisa-tpl={t("pub.tanya.sisa")}
+        data-judul-katalog={t("pub.tanya.dariKatalog")}
+        data-judul-ai={t("pub.tanya.jawabanAi")}
         data-err-umum={t("pub.tanya.err.umum")}
         data-err-kuota-habis={t("pub.tanya.err.kuotaHabis")}
         data-err-terlalu-sering={t("pub.tanya.err.terlaluSering")}
@@ -384,7 +386,7 @@ const jsonLd = {
           <button type="button" data-tanya-contoh={t("pub.tanya.contoh2")}>{t("pub.tanya.contoh2")}</button>
           <button type="button" data-tanya-contoh={t("pub.tanya.contoh3")}>{t("pub.tanya.contoh3")}</button>
         </div>
-        <p class="tanya-jawab" id="tanyaJawab" hidden></p>
+        <div class="tanya-jawab" id="tanyaJawab" hidden></div>
         <p class="tanya-meta">
           <span class="tanya-sisa" id="tanyaSisa" hidden></span>
           <span class="tanya-catatan">{t("pub.tanya.catatan")}</span>
@@ -1186,9 +1188,10 @@ const jsonLd = {
   <script>
     /*
      * Tanya EVKita: kirim pertanyaan ke /api/ai/tanya, tampilkan jawabannya.
-     * Terbuka untuk umum — tanpa wajib masuk. Jawaban dirender sebagai TEKS
-     * — tidak pernah HTML — karena isinya datang dari model dan tidak boleh
-     * membawa markup.
+     * Terbuka untuk umum — tanpa wajib masuk. Katalog dicari DULU: yang cocok
+     * tampil sebagai kartu pilihan di atas, alternatif AI menyusul di bawahnya.
+     * Semua teks luar (jawaban model, nama, URL) dirender sebagai TEKS yang
+     * di-escape — tidak pernah HTML mentah.
      */
     (function () {
       var akar = document.getElementById("tanyaEvkita");
@@ -1232,10 +1235,46 @@ const jsonLd = {
         else tombol.classList.remove("is-loading");
       }
 
+      /* Tautan kartu hanya yang berupa path situs sendiri. */
+      function hrefAman(h) {
+        var s = String(h || "");
+        return s.charAt(0) === "/" ? s : "#";
+      }
+
+      function kartuCocok(k) {
+        var nama = esc(k && k.nama);
+        var href = esc(hrefAman(k && k.href));
+        var meta = esc(k && k.meta);
+        var harga = esc(k && k.harga);
+        var img = String((k && k.image) || "");
+        var thumb = /^(\/|https?:)/i.test(img)
+          ? '<img class="tanya-cocok-thumb" src="' + esc(img) + '" alt="" loading="lazy" decoding="async" />'
+          : '<span class="tanya-cocok-thumb tanya-cocok-kosong" aria-hidden="true">⚡</span>';
+        var sub = [meta, harga].filter(function (x) { return x; }).join(" · ");
+        return '<a class="tanya-cocok" href="' + href + '">' + thumb +
+          '<span class="tanya-cocok-info"><span class="tanya-cocok-nama">' + nama + "</span>" +
+          (sub ? '<span class="tanya-cocok-sub">' + sub + "</span>" : "") + "</span></a>";
+      }
+
+      function tampilHasil(data) {
+        var out = "";
+        var daftar = data && Array.isArray(data.kandidat) ? data.kandidat : [];
+        if (daftar.length) {
+          out += '<p class="tanya-judul-blok">' + esc(akar.getAttribute("data-judul-katalog")) + "</p>";
+          out += '<div class="tanya-cocok-daftar">';
+          for (var i = 0; i < daftar.length; i++) out += kartuCocok(daftar[i]);
+          out += "</div>";
+          out += '<p class="tanya-judul-blok">' + esc(akar.getAttribute("data-judul-ai")) + "</p>";
+        }
+        out += '<p class="tanya-teks">' + esc(data.jawaban).replace(/\n/g, "<br />") + "</p>";
+        jawab.innerHTML = out;
+        jawab.hidden = false;
+      }
+
       async function tanya(pertanyaan) {
         var q = String(pertanyaan || "").trim();
         if (!q) {
-          jawab.innerHTML = esc(pesanGalat("err.tanya.kosong"));
+          jawab.innerHTML = '<p class="tanya-teks">' + esc(pesanGalat("err.tanya.kosong")) + "</p>";
           jawab.hidden = false;
           return;
         }
@@ -1252,11 +1291,10 @@ const jsonLd = {
           var data = null;
           try { data = await res.json(); } catch (e) { data = null; }
           if (!data || !data.ok) throw new Error((data && data.errorKey) || "err.tanya.umum");
-          /* Teks dulu, baris baru jadi <br> — tidak ada markdown, tidak ada HTML. */
-          jawab.innerHTML = esc(data.jawaban).replace(/\n/g, "<br />");
+          tampilHasil(data);
           tampilSisa(data.sisa, data.kuota);
         } catch (err) {
-          jawab.innerHTML = esc(pesanGalat(err && err.message));
+          jawab.innerHTML = '<p class="tanya-teks">' + esc(pesanGalat(err && err.message)) + "</p>";
         } finally {
           kunci(false);
         }

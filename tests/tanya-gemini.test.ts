@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   pilihKonteks,
+  pilihTampil,
   ringkasKonteks,
   susunInstruksi,
   kunciGeminiTampakSah,
@@ -42,6 +43,34 @@ describe("pilihKonteks", () => {
     assert.match(s, /BYD Seal/);
     assert.match(s, /520 km/);
     assert.match(s, /82 kWh/);
+  });
+});
+
+describe("pilihTampil", () => {
+  const KAYA = [
+    { id: "byd-seal", kind: "mobil", brand: "BYD", name: "Seal", bodyType: "Sedan", rangeKm: 520, batteryKwh: 82, price: 700000000, priceText: "", image: "/api/uploads/a.avif" },
+    { id: "", kind: "mobil", brand: "Tanpa", name: "ID", bodyType: "", rangeKm: null, batteryKwh: null, price: null, priceText: "", image: "" },
+  ];
+
+  it("kartu menaut ke koleksi yang benar dengan angka katalog", () => {
+    const dapat = pilihTampil(KAYA, "byd seal");
+    assert.equal(dapat.length, 1);
+    assert.equal(dapat[0].href, "/mobil/byd-seal");
+    assert.equal(dapat[0].nama, "BYD Seal");
+    assert.match(dapat[0].meta, /520 km/);
+    assert.match(dapat[0].harga, /Rp/);
+  });
+
+  it("motor menaut ke /motor/, tanpa id dibuang", () => {
+    const motor = [{ ...KAYA[0], id: "m1", kind: "motor", brand: "Voltz", name: "R1", bodyType: "", rangeKm: null, batteryKwh: null, price: null, priceText: "Rp 30 jt", image: "" }];
+    const dapat = pilihTampil(motor, "voltz r1");
+    assert.equal(dapat[0].href, "/motor/m1");
+    assert.equal(dapat[0].meta, "");
+    assert.equal(dapat[0].harga, "Rp 30 jt");
+  });
+
+  it("tanpa kecocokan tidak ada kartu — hanya jawaban AI", () => {
+    assert.deepEqual(pilihTampil(KAYA, "biaya cas 100 km berapa"), []);
   });
 });
 

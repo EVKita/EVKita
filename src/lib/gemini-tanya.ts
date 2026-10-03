@@ -68,6 +68,8 @@ export function modelGemini(): string {
 
 /** Satu baris katalog yang dikirim sebagai konteks. Murni, bisa diuji tanpa jaringan. */
 export interface KonteksKendaraan {
+  id?: string;
+  kind?: string;
   brand: string;
   name: string;
   bodyType: string;
@@ -75,6 +77,16 @@ export interface KonteksKendaraan {
   batteryKwh: number | null;
   price: number | null;
   priceText: string;
+  image?: string;
+}
+
+/** Satu kartu hasil katalog untuk ditampilkan di atas jawaban AI. Murni. */
+export interface KandidatTampil {
+  nama: string;
+  href: string;
+  meta: string;
+  harga: string;
+  image: string;
 }
 
 function kataKunci(s: string): string[] {
@@ -127,6 +139,34 @@ export function ringkasKonteks(daftar: KonteksKendaraan[]): string {
     return `- ${bagian.join(" · ")}`;
   });
   return baris.join("\n");
+}
+
+/**
+ * Kandidat untuk ditampilkan sebagai kartu di atas jawaban AI: yang cocok
+ * katalog dicari dulu di situs sendiri, alternatif AI menyusul di bawahnya.
+ * Maksimal `batas` butir supaya muat satu layar. Murni, bisa diuji.
+ */
+export function pilihTampil(
+  semua: KonteksKendaraan[],
+  pertanyaan: string,
+  batas = 4
+): KandidatTampil[] {
+  return pilihKonteks(semua, pertanyaan, batas)
+    .filter((v) => v && v.id)
+    .map((v) => {
+      const meta = [
+        v.bodyType || "",
+        v.rangeKm !== null && v.rangeKm !== undefined ? `${v.rangeKm} km` : "",
+        v.batteryKwh !== null && v.batteryKwh !== undefined ? `${v.batteryKwh} kWh` : "",
+      ].filter(Boolean).join(" · ");
+      return {
+        nama: `${v.brand} ${v.name}`.trim(),
+        href: `${v.kind === "motor" ? "/motor/" : "/mobil/"}${v.id}`,
+        meta,
+        harga: v.priceText || rupiahSingkat(v.price),
+        image: String(v.image || ""),
+      };
+    });
 }
 
 /**
