@@ -104,11 +104,16 @@ const komunitasList = byFeatured(komunitas);
 const TEASER_DIR = 3;
 
 /**
- * Panel "Mobil & Motor Kita": tiga isi — 5 penjualan mobil terbanyak 2026,
- * 5 mobil terbaru, 5 motor terbaru — dengan foto asli katalog. "Terbaru"
- * berarti tahun model terbesar, lalu yang paling baru diubah (katalog tidak
- * punya tanggal launching). Tanpa angka penjualan tidak ada peringkat laris;
- * yang datanya kosong disembunyikan, bukan diisi tebakan.
+ * Panel "Mobil&Motor Kita": tiga isi — Laris Mobil Kita, Mobil Terbaru Kita,
+ * Motor Terbaru Kita — dengan foto asli katalog. "Terbaru" berarti tahun
+ * model terbesar, lalu yang paling baru diubah (katalog tidak punya tanggal
+ * launching).
+ *
+ * Laris selalu bisa dibuka sampai 10 baris: yang berangka penjualan tampil
+ * sebagai peringkat ("N unit"); kalau angkanya belum ada, slotnya diisi
+ * mobil terbaru yang sudah ada di katalog (tampil tahunnya, BUKAN angka
+ * unit) sampai auto-update melengkapi angka Gaikindo yang sebenarnya —
+ * tidak ada satu pun angka yang dikarang.
  *
  * Angkanya mengejar data Gaikindo tiap bulan lewat jalur yang sudah ada:
  * pemantau menandai kendaraan yang tersangkut sinyal penjualan tiap jam,
@@ -130,6 +135,15 @@ const byTerbaru = (list: any[]) =>
     )
     .slice(0, 10);
 const mobilBaru = byTerbaru(cars);
+/* Slot Laris yang belum berangka diisi data lama (mobil terbaru di luar
+   peringkat) — barisnya tampil tahun, bukan unit, sampai angkanya datang. */
+const larisAdaAngka = mobilKita.length;
+const larisIsi = [
+  ...mobilKita,
+  ...byTerbaru(cars)
+    .filter((v: any) => !mobilKita.some((m: any) => m.id === v.id))
+    .slice(0, Math.max(0, 10 - mobilKita.length)),
+];
 const motorBaru = site.showMotor ? byTerbaru(motors) : [];
 /** Baris kedua tiap model terbaru: tahunnya, atau tipenya kalau belum ada. */
 const metaBaru = (v: any) => (v.year ? String(v.year) : String(v.bodyType || ""));
@@ -1012,7 +1026,7 @@ const jsonLd = {
                   <h3 class="kita-sub-judul">{t("pub.kita.laris")}</h3>
                   <p class="kita-sub">{t("pub.kita.sub")}</p>
                   <ol class="kita-list">
-                    {mobilKita.map((v: any, i: number) => (
+                    {larisIsi.map((v: any, i: number) => (
                       <li hidden={i >= 5} data-kita-lebih={i >= 5 ? "true" : undefined}>
                         <a class="kita-row" href={vehicleHref(v)}>
                           <span class="kita-rank" aria-hidden="true">{i + 1}</span>
@@ -1023,13 +1037,13 @@ const jsonLd = {
                           )}
                           <span class="kita-info">
                             <span class="kita-name">{v.brand} {v.name}</span>
-                            <span class="kita-unit">{t("pub.kita.unit", { n: fmtUnit(v.penjualan2026) })}</span>
+                            <span class="kita-unit">{i < larisAdaAngka ? t("pub.kita.unit", { n: fmtUnit(v.penjualan2026) }) : metaBaru(v)}</span>
                           </span>
                         </a>
                       </li>
                     ))}
                   </ol>
-                  {mobilKita.length > 5 ? (
+                  {larisIsi.length > 5 ? (
                     <button type="button" class="vote-more" data-kita-more aria-expanded="false" data-teks-buka={t("pub.vote.lainnya")} data-teks-tutup={t("pub.vote.ciutkan")}><span data-kita-more-teks>{t("pub.vote.lainnya")}</span><span data-kita-more-panah aria-hidden="true"> ↓</span></button>
                   ) : null}
                 </div>
