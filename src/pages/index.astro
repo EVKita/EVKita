@@ -119,7 +119,7 @@ const byLaris = (list: any[]) =>
   list
     .filter((v: any) => v.penjualan2026 !== null && v.penjualan2026 !== undefined && Number(v.penjualan2026) > 0)
     .sort((a: any, b: any) => b.penjualan2026 - a.penjualan2026)
-    .slice(0, 5);
+    .slice(0, 10);
 const mobilKita = byLaris(cars);
 const byTerbaru = (list: any[]) =>
   [...list]
@@ -128,7 +128,7 @@ const byTerbaru = (list: any[]) =>
         Number(b.year || 0) - Number(a.year || 0) ||
         String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""))
     )
-    .slice(0, 5);
+    .slice(0, 10);
 const mobilBaru = byTerbaru(cars);
 const motorBaru = site.showMotor ? byTerbaru(motors) : [];
 /** Baris kedua tiap model terbaru: tahunnya, atau tipenya kalau belum ada. */
@@ -1013,7 +1013,7 @@ const jsonLd = {
                   <p class="kita-sub">{t("pub.kita.sub")}</p>
                   <ol class="kita-list">
                     {mobilKita.map((v: any, i: number) => (
-                      <li>
+                      <li hidden={i >= 5} data-kita-lebih={i >= 5 ? "true" : undefined}>
                         <a class="kita-row" href={vehicleHref(v)}>
                           <span class="kita-rank" aria-hidden="true">{i + 1}</span>
                           {v.image ? (
@@ -1029,6 +1029,9 @@ const jsonLd = {
                       </li>
                     ))}
                   </ol>
+                  {mobilKita.length > 5 ? (
+                    <button type="button" class="vote-more" data-kita-more aria-expanded="false" data-teks-buka={t("pub.vote.lainnya")} data-teks-tutup={t("pub.vote.ciutkan")}><span data-kita-more-teks>{t("pub.vote.lainnya")}</span><span data-kita-more-panah aria-hidden="true"> ↓</span></button>
+                  ) : null}
                 </div>
               ) : null}
               {mobilBaru.length ? (
@@ -1036,7 +1039,7 @@ const jsonLd = {
                   <h3 class="kita-sub-judul">{t("pub.kita.mobilBaru")}</h3>
                   <ol class="kita-list">
                     {mobilBaru.map((v: any, i: number) => (
-                      <li>
+                      <li hidden={i >= 5} data-kita-lebih={i >= 5 ? "true" : undefined}>
                         <a class="kita-row" href={vehicleHref(v)}>
                           <span class="kita-rank" aria-hidden="true">{i + 1}</span>
                           {v.image ? (
@@ -1052,6 +1055,9 @@ const jsonLd = {
                       </li>
                     ))}
                   </ol>
+                  {mobilBaru.length > 5 ? (
+                    <button type="button" class="vote-more" data-kita-more aria-expanded="false" data-teks-buka={t("pub.vote.lainnya")} data-teks-tutup={t("pub.vote.ciutkan")}><span data-kita-more-teks>{t("pub.vote.lainnya")}</span><span data-kita-more-panah aria-hidden="true"> ↓</span></button>
+                  ) : null}
                 </div>
               ) : null}
               {motorBaru.length ? (
@@ -1059,7 +1065,7 @@ const jsonLd = {
                   <h3 class="kita-sub-judul">{t("pub.kita.motor")}</h3>
                   <ol class="kita-list">
                     {motorBaru.map((v: any, i: number) => (
-                      <li>
+                      <li hidden={i >= 5} data-kita-lebih={i >= 5 ? "true" : undefined}>
                         <a class="kita-row" href={vehicleHref(v)}>
                           <span class="kita-rank" aria-hidden="true">{i + 1}</span>
                           {v.image ? (
@@ -1075,6 +1081,9 @@ const jsonLd = {
                       </li>
                     ))}
                   </ol>
+                  {motorBaru.length > 5 ? (
+                    <button type="button" class="vote-more" data-kita-more aria-expanded="false" data-teks-buka={t("pub.vote.lainnya")} data-teks-tutup={t("pub.vote.ciutkan")}><span data-kita-more-teks>{t("pub.vote.lainnya")}</span><span data-kita-more-panah aria-hidden="true"> ↓</span></button>
+                  ) : null}
                 </div>
               ) : null}
             </section>
@@ -1165,6 +1174,30 @@ const jsonLd = {
   </div>
 
   <SiteFooter site={site} />
+
+  <script>
+    /*
+     * Panel Mobil&Motor Kita: tiap grup menampilkan 5, tombol "Pilihan lain"
+     * membuka 10. Tanpa JavaScript, 5 pertama tetap tampil (atribut `hidden`
+     * hanya dibuka oleh skrip ini) — tidak ada konten yang hilang.
+     */
+    (function () {
+      document.addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-kita-more]") : null;
+        if (!b) return;
+        var grup = b.closest(".kita-grup");
+        if (!grup) return;
+        var buka = b.getAttribute("aria-expanded") !== "true";
+        var items = grup.querySelectorAll("[data-kita-lebih]");
+        for (var i = 0; i < items.length; i++) items[i].hidden = !buka;
+        b.setAttribute("aria-expanded", buka ? "true" : "false");
+        var teks = b.querySelector("[data-kita-more-teks]");
+        if (teks) teks.textContent = buka ? b.getAttribute("data-teks-tutup") : b.getAttribute("data-teks-buka");
+        var panah = b.querySelector("[data-kita-more-panah]");
+        if (panah) panah.textContent = buka ? " ↑" : " ↓";
+      });
+    })();
+  </script>
 
   <script>
     /*

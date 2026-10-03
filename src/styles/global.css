@@ -6279,6 +6279,10 @@ html {
   margin: 0;
   font-size: 1.15rem;
 }
+/* Satu baris kosong di bawah judul panel sebelum grup pertama. */
+.kita-title + .kita-grup {
+  margin-top: 14px;
+}
 .kita-sub {
   margin: 4px 0 14px;
   color: var(--text-muted);

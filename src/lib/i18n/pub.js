@@ -57,10 +57,10 @@ const ID = {
   "pub.catalog.all": "Buka katalog lengkap",
 
   // — Panel "Mobil/Motor Kita": 5 penjualan terbanyak 2026 —
-  "pub.kita.mobil": "Mobil & Motor Kita",
-  "pub.kita.laris": "Laris MobilKita",
-  "pub.kita.mobilBaru": "Mobil TerbaruKita",
-  "pub.kita.motor": "Motor TerbaruKita",
+  "pub.kita.mobil": "Mobil&Motor Kita",
+  "pub.kita.laris": "Laris Mobil Kita",
+  "pub.kita.mobilBaru": "Mobil Terbaru Kita",
+  "pub.kita.motor": "Motor Terbaru Kita",
   "pub.kita.sub": "5 penjualan terbanyak 2026",
   "pub.kita.unit": "{n} unit",
   "pub.kita.beritaSub": "5 berita EV paling menarik",
@@ -690,10 +690,10 @@ const EN = {
   "pub.catalog.all": "Open full catalogue",
 
   // — "Our Cars/Bikes" panels: top 5 sellers of 2026 —
-  "pub.kita.mobil": "Our Cars & Bikes",
-  "pub.kita.laris": "Laris MobilKita",
-  "pub.kita.mobilBaru": "Mobil TerbaruKita",
-  "pub.kita.motor": "Motor TerbaruKita",
+  "pub.kita.mobil": "Mobil&Motor Kita",
+  "pub.kita.laris": "Laris Mobil Kita",
+  "pub.kita.mobilBaru": "Mobil Terbaru Kita",
+  "pub.kita.motor": "Motor Terbaru Kita",
   "pub.kita.sub": "Top 5 best sellers of 2026",
   "pub.kita.unit": "{n} units",
   "pub.kita.beritaSub": "Top 5 most interesting EV news",
@@ -1321,10 +1321,10 @@ const ZH = {
   "pub.catalog.all": "打开完整目录",
 
   // — “我们的汽车/摩托车”榜单：2026年最畅销的5款 —
-  "pub.kita.mobil": "我们的汽车和摩托车",
-  "pub.kita.laris": "Laris MobilKita",
-  "pub.kita.mobilBaru": "Mobil TerbaruKita",
-  "pub.kita.motor": "Motor TerbaruKita",
+  "pub.kita.mobil": "Mobil&Motor Kita",
+  "pub.kita.laris": "Laris Mobil Kita",
+  "pub.kita.mobilBaru": "Mobil Terbaru Kita",
+  "pub.kita.motor": "Motor Terbaru Kita",
   "pub.kita.sub": "2026年最畅销的5款",
   "pub.kita.unit": "{n}辆",
   "pub.kita.beritaSub": "最值得关注的5条电动车新闻",
