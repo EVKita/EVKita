@@ -64,10 +64,11 @@ const bengkelList = byFeatured((content.bengkel || []).filter(hanyaTayang()));
 /**
  * Bengkel dipisah menjadi dua kelompok supaya pembaca tidak mencampur servis
  * motor dengan servis mobil. Entri bertipe "Mobil & Motor" tampil di keduanya.
+ * Mobil di atas, motor di bawahnya.
  */
 const bengkelGroups = [
-  { title: t("pub.index.grupMotor"), items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
   { title: t("pub.index.grupMobil"), items: bengkelList.filter((b: any) => b.type.includes("Mobil")) },
+  { title: t("pub.index.grupMotor"), items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
 ].filter((g) => g.items.length);
 
 const judulHalaman = site.bengkelTitle || t("pub.dir.pageBengkel");

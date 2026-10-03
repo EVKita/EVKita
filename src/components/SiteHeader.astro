@@ -2,7 +2,7 @@
 import ThemeToggle from "./ThemeToggle.astro";
 import LanguageToggle from "./LanguageToggle.astro";
 import LogoMark from "./LogoMark.astro";
-import { safeUrl } from "../lib/url.js";
+import { safeUrl, denganBase } from "../lib/url.js";
 import { sessionUserId } from "../lib/auth";
 import { MEMBER_COOKIE } from "../lib/member.js";
 import { makePubT } from "../lib/i18n/pub.js";
@@ -43,12 +43,12 @@ const anggotaMasuk = !!sessionUserId(Astro.cookies.get(MEMBER_COOKIE)?.value);
 
 const links = [
   { id: "beranda", label: t("pub.nav.beranda"), href: base || "/", mode: "", note: t("pub.nav.beranda.note") },
-  { id: "mobil", label: t("pub.nav.mobil"), href: `${base}#daftar`, mode: "mobil", note: t("pub.nav.mobil.note") },
+  { id: "mobil", label: t("pub.nav.mobil"), href: denganBase(base, "#daftar"), mode: "mobil", note: t("pub.nav.mobil.note") },
   site.showSpklu ? { id: "spklu", label: t("pub.nav.spklu"), href: "/spklu", mode: "", note: t("pub.nav.spklu.note") } : null,
   site.showBengkel ? { id: "bengkel", label: t("pub.nav.bengkel"), href: "/bengkel", mode: "", note: t("pub.nav.bengkel.note") } : null,
   site.showBerita ? { id: "berita", label: t("pub.nav.berita"), href: "/berita", mode: "", note: t("pub.nav.berita.note") } : null,
-  { id: "artikel", label: t("pub.nav.artikel"), href: `${base}/artikel`, mode: "", note: t("pub.nav.artikel.note") },
-  site.showAbout ? { id: "tentang", label: t("pub.nav.tentang"), href: `${base}#tentang`, mode: "", note: t("pub.nav.tentang.note") } : null,
+  { id: "artikel", label: t("pub.nav.artikel"), href: denganBase(base, "artikel"), mode: "", note: t("pub.nav.artikel.note") },
+  site.showAbout ? { id: "tentang", label: t("pub.nav.tentang"), href: denganBase(base, "#tentang"), mode: "", note: t("pub.nav.tentang.note") } : null,
 ].filter(Boolean) as { id: string; label: string; href: string; mode: string; note: string }[];
 
 /**

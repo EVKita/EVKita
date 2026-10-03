@@ -6,6 +6,7 @@ import { logActivity } from "../../../lib/activity";
 import { json, apiError, unauthorized, forbidden } from "../../../lib/api";
 import { checkLimit, clearLimit, clientKey, recordFailure } from "../../../lib/ratelimit";
 import { fetchBalance, keyLooksValid, keyTail, type BalanceResult } from "../../../lib/deepseek";
+import { kunciGeminiTampakSah, ekorKunci, ujiKunciGemini, MODEL_BAWAAN_GEMINI } from "../../../lib/gemini-tanya";
 import { modelBawaan } from "../../../lib/ai-jobs";
 import { MODEL_PILIHAN } from "../../../lib/ai-biaya.js";
 
@@ -31,6 +32,8 @@ import { MODEL_PILIHAN } from "../../../lib/ai-biaya.js";
 
 const KEY_NAME = "DEEPSEEK_API_KEY";
 const MODEL_NAME = "DEEPSEEK_MODEL";
+/** Kunci Gemini untuk chatbot publik "Tanya EVKita" di hero beranda. */
+const GEMINI_KEY_NAME = "GEMINI_API_KEY";
 
 /**
  * Saldo yang sudah dibaca, disimpan sebentar.
@@ -75,6 +78,10 @@ function statePayload(key: string, balance: BalanceResult | null) {
         }
       : null;
 
+  /* Kunci Gemini ikut dalam jawaban yang sama — tapi sebagai status saja,
+     tidak pernah nilainya. Chatbot publik mati selama ini kosong. */
+  const kunciGemini = getEnv(GEMINI_KEY_NAME, "");
+
   return {
     ok: true,
     terpasang,
@@ -84,6 +91,9 @@ function statePayload(key: string, balance: BalanceResult | null) {
     saldo,
     saldoErrorKey: balance && !balance.ok ? balance.errorKey : "",
     diperiksaPada: balance ? new Date().toISOString() : "",
+    geminiTerpasang: !!kunciGemini,
+    geminiEkor: kunciGemini ? ekorKunci(kunciGemini) : "",
+    geminiModel: MODEL_BAWAAN_GEMINI,
   };
 }
 
@@ -121,6 +131,36 @@ export const PUT: APIRoute = async ({ request, cookies, clientAddress }) => {
     body = await request.json();
   } catch {
     return apiError("err.badJson");
+  }
+
+  /*
+   * Kunci Gemini (chatbot publik). Jalur yang sama dengan kunci DeepSeek:
+   * diuji ke Google LEBIH DULU, baru disimpan. Kunci yang salah ketik gagal
+   * sekarang, bukan saat pengunjung pertama bertanya.
+   */
+  if (body?.geminiHapus === true) {
+    writeEnvFile({ [GEMINI_KEY_NAME]: null });
+    logActivity(me, "ai.geminiRemoved");
+    const key = getEnv(KEY_NAME, "");
+    return json(statePayload(key, key ? await readBalance(key, false) : null));
+  }
+
+  const kunciGemini = String(body?.geminiKey || "").trim();
+  if (kunciGemini) {
+    if (!kunciGeminiTampakSah(kunciGemini)) {
+      recordFailure(limitKeys);
+      return apiError("err.ai.geminiBentuk");
+    }
+    const uji = await ujiKunciGemini(kunciGemini, getEnv("GEMINI_MODEL", "") || MODEL_BAWAAN_GEMINI);
+    if (!uji.ok) {
+      if (uji.errorKey === "err.tanya.kunciSalah") recordFailure(limitKeys);
+      return apiError(uji.errorKey === "err.tanya.kunciSalah" ? "err.ai.geminiSalah" : uji.errorKey, uji.errorKey === "err.tanya.kunciSalah" ? 400 : 502);
+    }
+    writeEnvFile({ [GEMINI_KEY_NAME]: kunciGemini });
+    clearLimit(limitKeys);
+    logActivity(me, "ai.geminiSet");
+    const key = getEnv(KEY_NAME, "");
+    return json(statePayload(key, key ? await readBalance(key, false) : null));
   }
 
   /*

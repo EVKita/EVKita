@@ -17,6 +17,9 @@ import { makePubT, normalizePubLocale, cms, cmsSite, pubIntl } from "../lib/i18n
 import { terjemahContent } from "../lib/terjemahan.js";
 import { bacaVotes } from "../lib/vote-store.js";
 import { rankVotes, voteRowHtml } from "../lib/vote-html.js";
+import { gambarBerita } from "../lib/berita-gambar";
+import { sessionUserId } from "../lib/auth";
+import { MEMBER_COOKIE } from "../lib/member.js";
 
 const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 
@@ -84,6 +87,14 @@ function fmtPrice(v: any) {
 const heroTitle = site.heroTitle || t("pub.hero.titleFallback", { brand: site.brandText || "" }).trim();
 const heroSub = site.heroSub || t("pub.hero.subFallback");
 
+/**
+ * Kotak "Tanya EVKita" hanya untuk anggota yang sudah masuk — tiap pertanyaan
+ * memotong saldo Gemini pemilik situs, jadi pengunjung anonim tidak diberi
+ * formulirnya sama sekali. Yang belum masuk melihat ajakan masuk (membuka
+ * MemberGate yang sama dengan tombol Masuk di header).
+ */
+const anggotaMasuk = !!sessionUserId(Astro.cookies.get(MEMBER_COOKIE)?.value);
+
 const seoTitle = site.seoTitle || `${site.brandText || "EVKita"} — ${heroTitle}`;
 const seoDesc = site.seoDescription || heroSub;
 
@@ -97,7 +108,7 @@ const komunitasList = byFeatured(komunitas);
 const TEASER_DIR = 3;
 
 /**
- * Panel "Mobil/Motor Kita": 5 penjualan terbanyak 2026 dengan foto asli
+ * Panel "Mobil/Motor Kita": 10 penjualan terbanyak 2026 dengan foto asli
  * katalog. Tanpa angka penjualan tidak ada peringkat — panel yang datanya
  * kosong disembunyikan, bukan diisi tebakan.
  */
@@ -105,12 +116,23 @@ const byLaris = (list: any[]) =>
   list
     .filter((v: any) => v.penjualan2026 !== null && v.penjualan2026 !== undefined && Number(v.penjualan2026) > 0)
     .sort((a: any, b: any) => b.penjualan2026 - a.penjualan2026)
-    .slice(0, 5);
+    .slice(0, 10);
 const mobilKita = byLaris(cars);
 const fmtUnit = (n: any) => Number(n).toLocaleString(pubIntl(lang));
 
 /** Panel berita: 5 berita pertama kurasi pemilik, lengkap dengan fotonya. */
 const beritaKita = beritaList.slice(0, 5);
+
+/**
+ * Foto kecil tiap baris "Berita Terkini": diambil dari situs sumbernya
+ * sendiri (og:image halaman yang ditautkan), sekali lalu di-cache di
+ * `data/berita-gambar.json`. Pararel dan berbatas waktu per situs — satu
+ * penerbit yang lambat tidak menahan beranda. Yang gagal tetap tampil tanpa
+ * foto, sama seperti sebelumnya.
+ */
+const thumbBerita: string[] = await Promise.all(
+  beritaKita.map((n: any) => gambarBerita(String(n?.url || "")))
+);
 
 /**
  * Panel VoteKita: 10 terfavorit pilihan pengunjung per jenis. Peringkat
@@ -144,10 +166,11 @@ const jelajahi = site.showFooterMenu
 /**
  * Bengkel dipisah menjadi dua kelompok supaya pembaca tidak mencampur servis
  * motor dengan servis mobil. Entri bertipe "Mobil & Motor" tampil di keduanya.
+ * Mobil di atas, motor di bawahnya — sama seperti halaman /bengkel.
  */
 const bengkelGroups = [
-  { title: t("pub.index.grupMotor"), items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
   { title: t("pub.index.grupMobil"), items: bengkelList.filter((b: any) => b.type.includes("Mobil")) },
+  { title: t("pub.index.grupMotor"), items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
 ].filter((g) => g.items.length);
 
 /** Baris meta kartu direktori: hanya yang terisi, supaya kartu tidak bolong. */
@@ -287,6 +310,96 @@ const jsonLd = {
       <h1 class="hero-title enter">{heroTitle}</h1>
       <p class="hero-sub enter">{heroSub}</p>
 
+      {/*
+        Tanya Evie: chatbot hero, tengah full-width. Di desktop maupun HP
+        posisinya sama — di bawah subjudul, di atas statistik — supaya tidak
+        ada tata letak khusus per lebar layar. Teks dinamis lewat atribut
+        `data-*` (pola yang sama dengan SiteSearch): skrip klien tidak boleh
+        tahu bahasa.
+      */}
+      <div
+        class="tanya enter"
+        id="tanyaEvkita"
+        data-menjawab={t("pub.tanya.menjawab")}
+        data-sisa-tpl={t("pub.tanya.sisa")}
+        data-err-umum={t("pub.tanya.err.umum")}
+        data-err-perlu-masuk={t("pub.tanya.err.perluMasuk")}
+        data-err-kuota-habis={t("pub.tanya.err.kuotaHabis")}
+        data-err-terlalu-sering={t("pub.tanya.err.terlaluSering")}
+        data-err-belum-siap={t("pub.tanya.err.belumSiap")}
+        data-err-kosong={t("pub.tanya.err.kosong")}
+        data-err-pendek={t("pub.tanya.err.pendek")}
+        data-err-panjang={t("pub.tanya.err.panjang")}
+        data-err-sibuk={t("pub.tanya.err.sibuk")}
+        data-err-tidak-terhubung={t("pub.tanya.err.tidakTerhubung")}
+        data-err-ditolak={t("pub.tanya.err.ditolak")}
+        data-err-tanpa-jawaban={t("pub.tanya.err.tanpaJawaban")}
+        data-err-jawaban-tidak-terbaca={t("pub.tanya.err.jawabanTidakTerbaca")}
+        data-err-ai-bermasalah={t("pub.tanya.err.aiBermasalah")}
+      >
+        <div class="tanya-head">
+          <span class="tanya-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" focusable="false">
+              <path fill="currentColor" d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z" />
+            </svg>
+            <span class="tanya-dot"></span>
+          </span>
+          <span class="tanya-head-teks">
+            <span class="tanya-title">{t("pub.tanya.title")} <em class="tanya-ai">AI</em></span>
+            <span class="tanya-tagline">{t("pub.tanya.tagline")}</span>
+          </span>
+        </div>
+        {anggotaMasuk ? (
+          <form class="tanya-bar" id="tanyaForm" autocomplete="off">
+            <input
+              id="tanyaInput"
+              class="tanya-input"
+              type="text"
+              maxlength="500"
+              autocomplete="off"
+              placeholder={t("pub.tanya.ph")}
+              aria-label={t("pub.tanya.title")}
+            />
+            <button class="tanya-kirim" type="submit" id="tanyaKirim" aria-label={t("pub.tanya.kirim")}>
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h13m-6-6 6 6-6 6" />
+              </svg>
+            </button>
+          </form>
+          <div class="tanya-chips" id="tanyaChips">
+            <button type="button" data-tanya-contoh={t("pub.tanya.contoh1")}>{t("pub.tanya.contoh1")}</button>
+            <button type="button" data-tanya-contoh={t("pub.tanya.contoh2")}>{t("pub.tanya.contoh2")}</button>
+            <button type="button" data-tanya-contoh={t("pub.tanya.contoh3")}>{t("pub.tanya.contoh3")}</button>
+          </div>
+          <p class="tanya-jawab" id="tanyaJawab" hidden></p>
+        ) : (
+          <>
+            <button class="tanya-teaser" type="button" data-member-buka>
+              <span class="tanya-bubble-q">{t("pub.tanya.contoh1")}</span>
+              <span class="tanya-bubble-a">
+                <span class="tanya-mengetik">{t("pub.tanya.mengetik")}</span>
+                <span class="tanya-titik" aria-hidden="true"><i></i><i></i><i></i></span>
+              </span>
+            </button>
+            <ul class="tanya-manfaat">
+              <li>{t("pub.tanya.manfaat1")}</li>
+              <li>{t("pub.tanya.manfaat2")}</li>
+              <li>{t("pub.tanya.manfaat3")}</li>
+            </ul>
+            <button class="tanya-cta" type="button" data-member-buka>
+              {t("pub.tanya.cta")}
+              <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
+                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h13m-6-6 6 6-6 6" />
+              </svg>
+            </button>
+          </>
+        )}
+        <p class="tanya-meta">
+          {anggotaMasuk ? <span class="tanya-sisa" id="tanyaSisa" hidden></span> : null}
+          <span class="tanya-catatan">{t("pub.tanya.catatan")}</span>
+        </p>
+      </div>
+
       {site.heroCtaText || site.heroCtaAltText ? (
         <div class="hero-cta enter">
           {site.heroCtaText ? (
@@ -301,6 +414,45 @@ const jsonLd = {
       {site.showHeroStats ? <div class="hero-stats enter" id="heroStats"></div> : null}
     </div>
   </section>
+
+  {/*
+    Pita berita berjalan: tepat di bawah hero, di atas Jelajahi. Isinya
+    sepuluh berita teratas yang sama dengan seksi berita — dirender server,
+    jadi tanpa JavaScript pun tautannya tetap bisa diklik. Daftarnya digandakan
+    dua kali supaya putarannya mulus; salinan kedua disembunyikan dari pembaca
+    layar dan keyboard. Animasinya murni CSS: berhenti saat disentuh/difokus,
+    dan mati total kalau pengunjung meminta gerak minimal.
+  */}
+  {beritaList.length ? (
+    <div class="ticker" role="region" aria-label={t("pub.beritaTerkini")}>
+      <div class="container ticker-inner">
+        <span class="ticker-label">
+          <span class="ticker-live" aria-hidden="true"></span>
+          {t("pub.ticker.label")}
+        </span>
+        <div class="ticker-viewport">
+          <div class="ticker-track">
+            {[0, 1].map((salin) => (
+              <div class="ticker-grup" aria-hidden={salin === 1 ? "true" : undefined}>
+                {beritaList.slice(0, 10).map((n: any) => (
+                  <a
+                    class="ticker-item"
+                    href={safeUrl(n.url) || "#"}
+                    target={safeUrl(n.url) ? "_blank" : undefined}
+                    rel={safeUrl(n.url) ? "noopener" : undefined}
+                    tabindex={salin === 1 ? "-1" : undefined}
+                  >
+                    {n.source ? <span class="ticker-source">{n.source}</span> : null}
+                    <span class="ticker-judul">{n.title}</span>
+                  </a>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null}
 
   <main id="konten">
     {featured.length ? (
@@ -892,8 +1044,8 @@ const jsonLd = {
                   <li>
                     <a class="kita-row" href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
                       <span class="kita-rank" aria-hidden="true">{i + 1}</span>
-                      {n.image ? (
-                        <img class="kita-thumb" src={safeUrl(n.image)} alt="" loading="lazy" decoding="async" />
+                      {safeUrl(n.image) || thumbBerita[i] ? (
+                        <img class="kita-thumb" data-thumb-berita src={safeUrl(n.image) || thumbBerita[i]} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                       ) : null}
                       <span class="kita-info">
                         <span class="kita-name">{n.title}</span>
@@ -969,6 +1121,120 @@ const jsonLd = {
   </div>
 
   <SiteFooter site={site} />
+
+  <script>
+    /*
+     * Foto berita adalah hotlink ke situs penerbit — kalau penerbitnya
+     * memblokir atau gambarnya sudah dipindah, sembunyikan kotaknya supaya
+     * baris kembali seperti sebelum ada foto. Tanpa inline handler (CSP):
+     * galat dim dengarkan di fase capture.
+     */
+    (function () {
+      document.addEventListener(
+        "error",
+        function (e) {
+          var t = e.target;
+          if (t && t.hasAttribute && t.hasAttribute("data-thumb-berita")) t.remove();
+        },
+        true
+      );
+    })();
+  </script>
+
+  <script>
+    /*
+     * Tanya EVKita: kirim pertanyaan ke /api/ai/tanya, tampilkan jawabannya.
+     * Hanya ada kalau pengunjung sudah masuk (formulirnya tidak dirender
+     * untuk anonim). Jawaban dirender sebagai TEKS — tidak pernah HTML —
+     * karena isinya datang dari model dan tidak boleh membawa markup.
+     */
+    (function () {
+      var akar = document.getElementById("tanyaEvkita");
+      if (!akar) return;
+      var form = document.getElementById("tanyaForm");
+      if (!form) return;
+      var masukan = document.getElementById("tanyaInput");
+      var tombol = document.getElementById("tanyaKirim");
+      var jawab = document.getElementById("tanyaJawab");
+      var sisa = document.getElementById("tanyaSisa");
+      var chips = document.getElementById("tanyaChips");
+      if (!masukan || !tombol || !jawab) return;
+
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      /* err.tanya.kuotaHabis → data-err-kuota-habis. */
+      function pesanGalat(errorKey) {
+        var akhir = String(errorKey || "").split(".").pop() || "";
+        var kebab = akhir.replace(/([A-Z])/g, "-$1").toLowerCase();
+        return akar.getAttribute("data-err-" + kebab) || akar.getAttribute("data-err-umum") || "";
+      }
+
+      function tampilSisa(n, kuota) {
+        if (!sisa) return;
+        if (n === undefined || n === null || kuota === undefined || kuota === null) return;
+        var tpl = akar.getAttribute("data-sisa-tpl") || "";
+        sisa.textContent = tpl.split("{n}").join(String(n)).split("{kuota}").join(String(kuota));
+        sisa.hidden = false;
+      }
+
+      function kunci(mengunci) {
+        masukan.disabled = mengunci;
+        tombol.disabled = mengunci;
+        if (mengunci) tombol.classList.add("is-loading");
+        else tombol.classList.remove("is-loading");
+      }
+
+      async function tanya(pertanyaan) {
+        var q = String(pertanyaan || "").trim();
+        if (!q) {
+          jawab.innerHTML = esc(pesanGalat("err.tanya.kosong"));
+          jawab.hidden = false;
+          return;
+        }
+        kunci(true);
+        jawab.textContent = akar.getAttribute("data-menjawab") || "";
+        jawab.hidden = false;
+        try {
+          var lang = (document.documentElement.getAttribute("lang") || "id").slice(0, 2);
+          var res = await fetch("/api/ai/tanya", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify({ pertanyaan: q.slice(0, 500), lang: lang }),
+          });
+          var data = null;
+          try { data = await res.json(); } catch (e) { data = null; }
+          if (!data || !data.ok) throw new Error((data && data.errorKey) || "err.tanya.umum");
+          /* Teks dulu, baris baru jadi <br> — tidak ada markdown, tidak ada HTML. */
+          jawab.innerHTML = esc(data.jawaban).replace(/\n/g, "<br />");
+          tampilSisa(data.sisa, data.kuota);
+        } catch (err) {
+          jawab.innerHTML = esc(pesanGalat(err && err.message));
+        } finally {
+          kunci(false);
+        }
+      }
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        tanya(masukan.value);
+      });
+
+      if (chips) {
+        chips.addEventListener("click", function (e) {
+          var b = e.target && e.target.closest ? e.target.closest("[data-tanya-contoh]") : null;
+          if (!b) return;
+          masukan.value = b.getAttribute("data-tanya-contoh") || "";
+          tanya(masukan.value);
+        });
+      }
+    })();
+  </script>
 
   <script define:vars={{ carsLite, motorsLite, mediaAltLite }}>
     window.__EV_CARS__ = carsLite;

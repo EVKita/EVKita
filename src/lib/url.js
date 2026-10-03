@@ -39,3 +39,28 @@ export function safeUrl(value) {
 
   return ALLOWED.test(clean) ? clean : "";
 }
+
+/**
+ * Menyambung `base` header/footer dengan tujuan tautan.
+ *
+ * `base` diisi "" di beranda dan "/" di semua subhalaman. Tanpa fungsi ini,
+ * `${base}/artikel` di subhalaman menjadi `//artikel` — bentuk
+ * protokol-relatif yang dibaca peramban sebagai host bernama "artikel" di
+ * internet, bukan halaman situs ini (gejalanya persis "This site can't be
+ * reached" + address bar bertuliskan `artikel/`). Jangkar (`#daftar`) di
+ * beranda dipakai apa adanya supaya tidak memuat ulang halaman.
+ *
+ * @param {unknown} base "" atau "/"
+ * @param {unknown} tujuan "artikel", "/artikel", atau "#daftar"
+ * @returns {string} Tidak pernah diawali `//`.
+ */
+export function denganBase(base, tujuan) {
+  const t = String(tujuan === null || tujuan === undefined ? "" : tujuan).trim();
+  if (!t) return "";
+  if (!base) {
+    if (t.startsWith("#")) return t;
+    return `/${t.replace(/^\/+/, "")}`;
+  }
+  if (t.startsWith("#")) return `/${t}`;
+  return `/${t.replace(/^\/+/, "")}`;
+}

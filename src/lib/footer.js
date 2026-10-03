@@ -10,6 +10,8 @@
  * `AdminSidebar.astro`: pembungkusnya ditentukan pemakainya, isinya satu sumber.
  */
 
+import { denganBase } from "./url.js";
+
 /** Batas kewarasan, bukan desain: menu yang lebih panjang dari ini tidak terbaca. */
 export const MAX_MENU_COLS = 4;
 export const MAX_MENU_LINKS = 12;
@@ -192,7 +194,7 @@ export function menuBawaan(site, lamanMenu = [], base = "") {
     site.showSpklu ? { label: "SPKLU", i18n: "pub.nav.spklu", href: "/spklu" } : null,
     site.showBengkel ? { label: "Bengkel", i18n: "pub.nav.bengkel", href: "/bengkel" } : null,
     site.showBerita ? { label: "Berita & Komunitas", i18n: "pub.nav.berita", href: "/berita" } : null,
-    site.showAbout ? { label: "Tentang", i18n: "pub.nav.tentang", href: `${base}#tentang` } : null,
+    site.showAbout ? { label: "Tentang", i18n: "pub.nav.tentang", href: denganBase(base, "#tentang") } : null,
     ...(Array.isArray(lamanMenu) ? lamanMenu : []),
   ].filter(Boolean);
 }

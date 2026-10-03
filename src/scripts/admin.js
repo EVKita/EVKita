@@ -5212,6 +5212,9 @@ function bindEvents() {
     if (e.target.closest("#ai-key-change")) { aiEditing = true; renderAi(); return; }
     if (e.target.closest("#ai-key-cancel")) { aiEditing = false; renderAi(); return; }
     if (e.target.closest("#ai-key-remove")) { removeAiKey(); return; }
+    if (e.target.closest("#ai-gemini-change")) { aiGeminiEditing = true; renderAi(); return; }
+    if (e.target.closest("#ai-gemini-cancel")) { aiGeminiEditing = false; renderAi(); return; }
+    if (e.target.closest("#ai-gemini-remove")) { removeAiGeminiKey(); return; }
     if (e.target.closest("#ai-balance-refresh")) { loadAi({ segar: true }); return; }
 
     /* --- Palette --- */
@@ -5744,6 +5747,7 @@ function bindEvents() {
     if (form.id === "profile-password") { e.preventDefault(); saveProfilePassword(form); return; }
     if (form.id === "profile-prefs") { e.preventDefault(); saveProfilePrefs(form); return; }
     if (form.id === "ai-key-form") { e.preventDefault(); saveAiKey(form); return; }
+    if (form.id === "ai-gemini-form") { e.preventDefault(); saveAiGeminiKey(form); return; }
     if (SITE_FORMS.includes(form.id)) {
       e.preventDefault();
       collectSiteForm();
@@ -6810,6 +6814,8 @@ async function deleteUserById(id) {
 let aiState = null;
 /* Formulir kunci sedang dibuka meski kunci lama masih terpasang ("Ganti kunci"). */
 let aiEditing = false;
+/* Sama, untuk kunci Gemini (chatbot publik) — dibuka-tutup independen dari kunci DeepSeek. */
+let aiGeminiEditing = false;
 /* Auto-update katalog: pengaturan + status putaran terakhir, dari /api/pembaruan. */
 let pembaruan = null;
 let pembaruanTimer = null;
@@ -6936,6 +6942,52 @@ function aiKeyFormHtml() {
   </form>`;
 }
 
+function aiGeminiFormHtml() {
+  return `<form id="ai-gemini-form" autocomplete="off">
+    <div class="field-grid">
+      <div class="field full">
+        <label for="ai-gemini-key">${esc(t("ai.gemini.label"))}</label>
+        <input
+          id="ai-gemini-key"
+          name="geminiKey"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          autocapitalize="none"
+          placeholder="AIza…"
+          required
+        />
+        <span class="hint">${esc(t("ai.gemini.hint"))}</span>
+      </div>
+    </div>
+    <div class="form-actions">
+      ${aiState.geminiTerpasang ? `<button type="button" class="btn btn-ghost" id="ai-gemini-cancel">${esc(t("common.cancel"))}</button>` : ""}
+      <button type="submit" class="btn btn-primary" id="ai-gemini-save">${esc(t("ai.gemini.save"))}</button>
+    </div>
+  </form>`;
+}
+
+function aiGeminiHtml() {
+  const terpasang = !!aiState.geminiTerpasang;
+  const showForm = !terpasang || aiGeminiEditing;
+  return `<section class="panel form-section">
+      <div class="form-section-head">
+        <h2>${esc(t("ai.gemini.title"))}</h2>
+        <p>${esc(t("ai.gemini.desc"))}</p>
+      </div>
+      <div class="ai-key-state">
+        <span class="badge ${terpasang ? "badge-ok" : "badge-muted"}">${esc(terpasang ? t("ai.state.on") : t("ai.state.off"))}</span>
+        ${terpasang ? `<code class="ai-key-mask">AIza${"•".repeat(24)}${esc(aiState.geminiEkor || "")}</code>` : ""}
+      </div>
+      ${showForm
+        ? aiGeminiFormHtml()
+        : `<div class="form-actions">
+            <button type="button" class="btn btn-outline" id="ai-gemini-change">${esc(t("ai.gemini.change"))}</button>
+            <button type="button" class="btn btn-danger" id="ai-gemini-remove">${esc(t("ai.gemini.remove"))}</button>
+          </div>`}
+    </section>`;
+}
+
 function renderAi() {
   const root = $("ai-root");
   if (!root || !aiState) return;
@@ -6962,11 +7014,15 @@ function renderAi() {
     </section>
     ${terpasang ? aiModelHtml() : ""}
     ${terpasang ? aiBalanceHtml() : ""}
+    ${aiGeminiHtml()}
     <section class="panel form-section" id="pembaruan-root"></section>`;
 
   if (showForm) {
     const input = $("ai-key");
     if (input && aiEditing) setTimeout(() => input.focus(), 40);
+  }
+  if ((!aiState.geminiTerpasang || aiGeminiEditing) && $("ai-gemini-key") && aiGeminiEditing) {
+    setTimeout(() => $("ai-gemini-key").focus(), 40);
   }
 
   renderPembaruan();
@@ -7048,6 +7104,64 @@ async function removeAiKey() {
     aiSiap = false;
     renderAi();
     toast(t("ai.removed"), "success");
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+async function saveAiGeminiKey(form) {
+  const geminiKey = String(form.elements.geminiKey.value || "").trim();
+  if (!geminiKey) return;
+
+  const btn = $("ai-gemini-save");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = t("ai.gemini.testing");
+  }
+
+  try {
+    const res = await fetch("/api/ai/pengaturan", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ geminiKey }),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    form.reset();
+    aiState = data;
+    aiGeminiEditing = false;
+    renderAi();
+    toast(t("ai.gemini.saved"), "success");
+  } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = t("ai.gemini.save");
+    }
+    toast(err.message, "error");
+  }
+}
+
+async function removeAiGeminiKey() {
+  const setuju = await confirmDialog({
+    title: t("ai.gemini.removeTitle"),
+    text: t("ai.gemini.removeText"),
+    okText: t("ai.gemini.remove"),
+    danger: true,
+  });
+  if (!setuju) return;
+
+  try {
+    const res = await fetch("/api/ai/pengaturan", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ geminiHapus: true }),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    aiState = data;
+    aiGeminiEditing = false;
+    renderAi();
+    toast(t("ai.gemini.removed"), "success");
   } catch (err) {
     toast(err.message, "error");
   }

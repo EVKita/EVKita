@@ -83,6 +83,9 @@ export type ActivityAction =
    */
   | "ai.keySet"
   | "ai.keyRemoved"
+  /** Kunci Gemini untuk chatbot publik dipasang atau dihapus. */
+  | "ai.geminiSet"
+  | "ai.geminiRemoved"
   /** Model bawaan diganti — ia menentukan berapa mahal setiap riset. */
   | "ai.modelSet"
   /** Riset AI dijalankan, dan usulannya diterapkan ke formulir. */
