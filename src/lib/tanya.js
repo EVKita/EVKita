@@ -1,10 +1,11 @@
 /**
- * Kuota Tanya EVKita: berapa kali satu anggota boleh bertanya per hari.
+ * Kuota Tanya EVKita: berapa kali satu pengunjung boleh bertanya per hari.
  *
  * Chatbot publik dibayar per pertanyaan dari kantong pemilik situs, jadi tanpa
  * rem satu orang bisa menghabiskan saldo. Remnya di sini ada dua lapis:
  * pembatasan laju sesaat di endpoint (lihat `ratelimit.ts`) dan kuota harian
- * per anggota di berkas ini.
+ * per identitas di berkas ini — id anggota kalau sudah masuk, alamat IP kalau
+ * anonim.
  *
  * Sengaja JavaScript polos tanpa API Node: aturannya diuji langsung di
  * `tests/tanya-gemini.test.ts` terhadap kode yang sama persis dengan yang
@@ -12,7 +13,7 @@
  * jadi peta di memori sudah cukup.
  */
 
-/** Pertanyaan per anggota per hari kalender WIB. */
+/** Pertanyaan per identitas per hari kalender WIB. */
 export const TANYA_KUOTA_HARIAN = 20;
 
 /** Panjang pertanyaan yang diterima, dalam karakter. */
@@ -38,8 +39,8 @@ function nowMs(sekarang) {
   return sekarang instanceof Date ? sekarang.getTime() : Date.now();
 }
 
-function kunciUntuk(anggotaId, sekarang) {
-  return `${String(anggotaId || "")}|${tanggalWib(sekarang)}`;
+function kunciUntuk(identitas, sekarang) {
+  return `${String(identitas || "")}|${tanggalWib(sekarang)}`;
 }
 
 function pangkas() {

@@ -18,8 +18,6 @@ import { terjemahContent } from "../lib/terjemahan.js";
 import { bacaVotes } from "../lib/vote-store.js";
 import { rankVotes, voteRowHtml } from "../lib/vote-html.js";
 import { gambarBerita } from "../lib/berita-gambar";
-import { sessionUserId } from "../lib/auth";
-import { MEMBER_COOKIE } from "../lib/member.js";
 
 const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 
@@ -88,12 +86,10 @@ const heroTitle = site.heroTitle || t("pub.hero.titleFallback", { brand: site.br
 const heroSub = site.heroSub || t("pub.hero.subFallback");
 
 /**
- * Kotak "Tanya EVKita" hanya untuk anggota yang sudah masuk — tiap pertanyaan
- * memotong saldo Gemini pemilik situs, jadi pengunjung anonim tidak diberi
- * formulirnya sama sekali. Yang belum masuk melihat ajakan masuk (membuka
- * MemberGate yang sama dengan tombol Masuk di header).
+ * Kotak "Tanya EVKita" terbuka untuk umum — siapa pun bisa langsung bertanya
+ * tanpa masuk. Pintu masuk anggota (MemberGate) tetap ada sendiri: muncul
+ * saat pertama masuk situs dan lewat tombol Masuk di header.
  */
-const anggotaMasuk = !!sessionUserId(Astro.cookies.get(MEMBER_COOKIE)?.value);
 
 const seoTitle = site.seoTitle || `${site.brandText || "EVKita"} — ${heroTitle}`;
 const seoDesc = site.seoDescription || heroSub;
@@ -108,16 +104,35 @@ const komunitasList = byFeatured(komunitas);
 const TEASER_DIR = 3;
 
 /**
- * Panel "Mobil/Motor Kita": 10 penjualan terbanyak 2026 dengan foto asli
- * katalog. Tanpa angka penjualan tidak ada peringkat — panel yang datanya
- * kosong disembunyikan, bukan diisi tebakan.
+ * Panel "Mobil & Motor Kita": tiga isi — 5 penjualan mobil terbanyak 2026,
+ * 5 mobil terbaru, 5 motor terbaru — dengan foto asli katalog. "Terbaru"
+ * berarti tahun model terbesar, lalu yang paling baru diubah (katalog tidak
+ * punya tanggal launching). Tanpa angka penjualan tidak ada peringkat laris;
+ * yang datanya kosong disembunyikan, bukan diisi tebakan.
+ *
+ * Angkanya mengejar data Gaikindo tiap bulan lewat jalur yang sudah ada:
+ * pemantau menandai kendaraan yang tersangkut sinyal penjualan tiap jam,
+ * lalu auto-update katalog meriset ulang yang basi dan menerapkan angka
+ * berkeyakinan tinggi langsung — tanpa menunggu klik.
  */
 const byLaris = (list: any[]) =>
   list
     .filter((v: any) => v.penjualan2026 !== null && v.penjualan2026 !== undefined && Number(v.penjualan2026) > 0)
     .sort((a: any, b: any) => b.penjualan2026 - a.penjualan2026)
-    .slice(0, 10);
+    .slice(0, 5);
 const mobilKita = byLaris(cars);
+const byTerbaru = (list: any[]) =>
+  [...list]
+    .sort(
+      (a: any, b: any) =>
+        Number(b.year || 0) - Number(a.year || 0) ||
+        String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""))
+    )
+    .slice(0, 5);
+const mobilBaru = byTerbaru(cars);
+const motorBaru = site.showMotor ? byTerbaru(motors) : [];
+/** Baris kedua tiap model terbaru: tahunnya, atau tipenya kalau belum ada. */
+const metaBaru = (v: any) => (v.year ? String(v.year) : String(v.bodyType || ""));
 const fmtUnit = (n: any) => Number(n).toLocaleString(pubIntl(lang));
 
 /** Panel berita: 5 berita pertama kurasi pemilik, lengkap dengan fotonya. */
@@ -311,19 +326,18 @@ const jsonLd = {
       <p class="hero-sub enter">{heroSub}</p>
 
       {/*
-        Tanya Evie: chatbot hero, tengah full-width. Di desktop maupun HP
-        posisinya sama — di bawah subjudul, di atas statistik — supaya tidak
-        ada tata letak khusus per lebar layar. Teks dinamis lewat atribut
-        `data-*` (pola yang sama dengan SiteSearch): skrip klien tidak boleh
-        tahu bahasa.
+        Tanya EVKita: chatbot hero, terbuka untuk umum — formulirnya selalu
+        dirender, tanpa wajib masuk. Di HP tampil vertikal seperti biasa;
+        di desktop kotak memanjang selebar wadah hero (lihat .tanya-wide di
+        global.css). Teks dinamis lewat atribut `data-*` (pola yang sama
+        dengan SiteSearch): skrip klien tidak boleh tahu bahasa.
       */}
       <div
-        class="tanya enter"
+        class="tanya tanya-wide enter"
         id="tanyaEvkita"
         data-menjawab={t("pub.tanya.menjawab")}
         data-sisa-tpl={t("pub.tanya.sisa")}
         data-err-umum={t("pub.tanya.err.umum")}
-        data-err-perlu-masuk={t("pub.tanya.err.perluMasuk")}
         data-err-kuota-habis={t("pub.tanya.err.kuotaHabis")}
         data-err-terlalu-sering={t("pub.tanya.err.terlaluSering")}
         data-err-belum-siap={t("pub.tanya.err.belumSiap")}
@@ -349,53 +363,30 @@ const jsonLd = {
             <span class="tanya-tagline">{t("pub.tanya.tagline")}</span>
           </span>
         </div>
-        {anggotaMasuk ? (
-          <form class="tanya-bar" id="tanyaForm" autocomplete="off">
-            <input
-              id="tanyaInput"
-              class="tanya-input"
-              type="text"
-              maxlength="500"
-              autocomplete="off"
-              placeholder={t("pub.tanya.ph")}
-              aria-label={t("pub.tanya.title")}
-            />
-            <button class="tanya-kirim" type="submit" id="tanyaKirim" aria-label={t("pub.tanya.kirim")}>
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
-                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h13m-6-6 6 6-6 6" />
-              </svg>
-            </button>
-          </form>
-          <div class="tanya-chips" id="tanyaChips">
-            <button type="button" data-tanya-contoh={t("pub.tanya.contoh1")}>{t("pub.tanya.contoh1")}</button>
-            <button type="button" data-tanya-contoh={t("pub.tanya.contoh2")}>{t("pub.tanya.contoh2")}</button>
-            <button type="button" data-tanya-contoh={t("pub.tanya.contoh3")}>{t("pub.tanya.contoh3")}</button>
-          </div>
-          <p class="tanya-jawab" id="tanyaJawab" hidden></p>
-        ) : (
-          <>
-            <button class="tanya-teaser" type="button" data-member-buka>
-              <span class="tanya-bubble-q">{t("pub.tanya.contoh1")}</span>
-              <span class="tanya-bubble-a">
-                <span class="tanya-mengetik">{t("pub.tanya.mengetik")}</span>
-                <span class="tanya-titik" aria-hidden="true"><i></i><i></i><i></i></span>
-              </span>
-            </button>
-            <ul class="tanya-manfaat">
-              <li>{t("pub.tanya.manfaat1")}</li>
-              <li>{t("pub.tanya.manfaat2")}</li>
-              <li>{t("pub.tanya.manfaat3")}</li>
-            </ul>
-            <button class="tanya-cta" type="button" data-member-buka>
-              {t("pub.tanya.cta")}
-              <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
-                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h13m-6-6 6 6-6 6" />
-              </svg>
-            </button>
-          </>
-        )}
+        <form class="tanya-bar" id="tanyaForm" autocomplete="off">
+          <input
+            id="tanyaInput"
+            class="tanya-input"
+            type="text"
+            maxlength="500"
+            autocomplete="off"
+            placeholder={t("pub.tanya.ph")}
+            aria-label={t("pub.tanya.title")}
+          />
+          <button class="tanya-kirim" type="submit" id="tanyaKirim" aria-label={t("pub.tanya.kirim")}>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h13m-6-6 6 6-6 6" />
+            </svg>
+          </button>
+        </form>
+        <div class="tanya-chips" id="tanyaChips">
+          <button type="button" data-tanya-contoh={t("pub.tanya.contoh1")}>{t("pub.tanya.contoh1")}</button>
+          <button type="button" data-tanya-contoh={t("pub.tanya.contoh2")}>{t("pub.tanya.contoh2")}</button>
+          <button type="button" data-tanya-contoh={t("pub.tanya.contoh3")}>{t("pub.tanya.contoh3")}</button>
+        </div>
+        <p class="tanya-jawab" id="tanyaJawab" hidden></p>
         <p class="tanya-meta">
-          {anggotaMasuk ? <span class="tanya-sisa" id="tanyaSisa" hidden></span> : null}
+          <span class="tanya-sisa" id="tanyaSisa" hidden></span>
           <span class="tanya-catatan">{t("pub.tanya.catatan")}</span>
         </p>
       </div>
@@ -1009,30 +1000,81 @@ const jsonLd = {
       </section>
     ) : null}
       </div>
-      {(mobilKita.length || beritaKita.length) ? (
-        <aside class="home-side" aria-label={t("pub.kita.sub")}>
-          {mobilKita.length ? (
+      {(mobilKita.length || mobilBaru.length || motorBaru.length || beritaKita.length) ? (
+        <aside class="home-side" aria-label={t("pub.kita.mobil")}>
+          {(mobilKita.length || mobilBaru.length || motorBaru.length) ? (
             <section class="kita-card">
               <h2 class="kita-title">{t("pub.kita.mobil")}</h2>
-              <p class="kita-sub">{t("pub.kita.sub")}</p>
-              <ol class="kita-list">
-                {mobilKita.map((v: any, i: number) => (
-                  <li>
-                    <a class="kita-row" href={vehicleHref(v)}>
-                      <span class="kita-rank" aria-hidden="true">{i + 1}</span>
-                      {v.image ? (
-                        <img class="kita-thumb" src={safeUrl(v.image)} alt="" loading="lazy" decoding="async" />
-                      ) : (
-                        <span class="kita-thumb kita-svg" aria-hidden="true" set:html={carSVG(v, defaultColor(v), t)} />
-                      )}
-                      <span class="kita-info">
-                        <span class="kita-name">{v.brand} {v.name}</span>
-                        <span class="kita-unit">{t("pub.kita.unit", { n: fmtUnit(v.penjualan2026) })}</span>
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ol>
+              {mobilKita.length ? (
+                <div class="kita-grup">
+                  <h3 class="kita-sub-judul">{t("pub.kita.laris")}</h3>
+                  <p class="kita-sub">{t("pub.kita.sub")}</p>
+                  <ol class="kita-list">
+                    {mobilKita.map((v: any, i: number) => (
+                      <li>
+                        <a class="kita-row" href={vehicleHref(v)}>
+                          <span class="kita-rank" aria-hidden="true">{i + 1}</span>
+                          {v.image ? (
+                            <img class="kita-thumb" src={safeUrl(v.image)} alt="" loading="lazy" decoding="async" />
+                          ) : (
+                            <span class="kita-thumb kita-svg" aria-hidden="true" set:html={carSVG(v, defaultColor(v), t)} />
+                          )}
+                          <span class="kita-info">
+                            <span class="kita-name">{v.brand} {v.name}</span>
+                            <span class="kita-unit">{t("pub.kita.unit", { n: fmtUnit(v.penjualan2026) })}</span>
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
+              {mobilBaru.length ? (
+                <div class="kita-grup">
+                  <h3 class="kita-sub-judul">{t("pub.kita.mobilBaru")}</h3>
+                  <ol class="kita-list">
+                    {mobilBaru.map((v: any, i: number) => (
+                      <li>
+                        <a class="kita-row" href={vehicleHref(v)}>
+                          <span class="kita-rank" aria-hidden="true">{i + 1}</span>
+                          {v.image ? (
+                            <img class="kita-thumb" src={safeUrl(v.image)} alt="" loading="lazy" decoding="async" />
+                          ) : (
+                            <span class="kita-thumb kita-svg" aria-hidden="true" set:html={carSVG(v, defaultColor(v), t)} />
+                          )}
+                          <span class="kita-info">
+                            <span class="kita-name">{v.brand} {v.name}</span>
+                            <span class="kita-unit">{metaBaru(v)}</span>
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
+              {motorBaru.length ? (
+                <div class="kita-grup">
+                  <h3 class="kita-sub-judul">{t("pub.kita.motor")}</h3>
+                  <ol class="kita-list">
+                    {motorBaru.map((v: any, i: number) => (
+                      <li>
+                        <a class="kita-row" href={vehicleHref(v)}>
+                          <span class="kita-rank" aria-hidden="true">{i + 1}</span>
+                          {v.image ? (
+                            <img class="kita-thumb" src={safeUrl(v.image)} alt="" loading="lazy" decoding="async" />
+                          ) : (
+                            <span class="kita-thumb kita-svg" aria-hidden="true" set:html={carSVG(v, defaultColor(v), t)} />
+                          )}
+                          <span class="kita-info">
+                            <span class="kita-name">{v.brand} {v.name}</span>
+                            <span class="kita-unit">{metaBaru(v)}</span>
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
             </section>
           ) : null}
           {beritaKita.length ? (
@@ -1144,9 +1186,9 @@ const jsonLd = {
   <script>
     /*
      * Tanya EVKita: kirim pertanyaan ke /api/ai/tanya, tampilkan jawabannya.
-     * Hanya ada kalau pengunjung sudah masuk (formulirnya tidak dirender
-     * untuk anonim). Jawaban dirender sebagai TEKS — tidak pernah HTML —
-     * karena isinya datang dari model dan tidak boleh membawa markup.
+     * Terbuka untuk umum — tanpa wajib masuk. Jawaban dirender sebagai TEKS
+     * — tidak pernah HTML — karena isinya datang dari model dan tidak boleh
+     * membawa markup.
      */
     (function () {
       var akar = document.getElementById("tanyaEvkita");

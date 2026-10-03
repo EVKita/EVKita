@@ -23,13 +23,13 @@ import {
 /**
  * Tanya EVKita: chatbot publik di hero beranda, dijawab Gemini.
  *
- * Aturan yang memegang berkas ini — semuanya lahir dari satu fakta: setiap
- * pertanyaan memotong saldo pemilik situs.
+ * Terbuka untuk umum — tanpa wajib masuk. Remnya berlapis karena setiap
+ * pertanyaan memotong saldo Gemini pemilik situs:
  *
- * - HANYA anggota yang sudah masuk boleh bertanya. Tanpa cookie anggota yang
- *   sah, jawabannya 401 sebelum satu pun token dibeli.
- * - Kuota harian per anggota (`tanya.js`), ditambah pembatas laju sesaat
- *   (`ratelimit.ts`) supaya skrip tidak bisa memborong dalam semenit.
+ * - Kuota harian per identitas (`tanya.js`): anggota yang masuk memakai id-nya,
+ *   pengunjung anonim memakai alamat IP-nya.
+ * - Pembatas laju sesaat (`ratelimit.ts`) supaya skrip tidak bisa memborong
+ *   dalam semenit.
  * - Kunci Gemini TIDAK PERNAH keluar dari endpoint ini. Peramban hanya
  *   mengirim pertanyaan dan menerima jawaban.
  * - Tanpa riwayat: tiap pertanyaan berdiri sendiri. Tidak ada state
@@ -55,12 +55,15 @@ function konteksDari(content: any, pertanyaan: string) {
 }
 
 export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
+  /* Tanpa wajib masuk: anggota memakai id-nya, anonim memakai alamat IP.
+     Keduanya berbagi kuota harian yang sama besar. */
   const anggotaId = sessionUserId(cookies.get(MEMBER_COOKIE)?.value);
-  if (!anggotaId) return json({ ok: false, errorKey: "err.tanya.perluMasuk" }, 401);
+  const kunciIp = clientKey(request, clientAddress);
+  const identitas = anggotaId ? `anggota:${anggotaId}` : kunciIp;
 
-  /* Rem sesaat: alamat DAN anggota sekaligus, supaya memalsukan alamat saja
-     tidak cukup untuk lewat. Pola yang sama dengan login panel. */
-  const kunciLaju = [clientKey(request, clientAddress), `tanya:${anggotaId}`];
+  /* Rem sesaat: alamat DAN anggota sekaligus kalau masuk, supaya memalsukan
+     alamat saja tidak cukup untuk lewat. Pola yang sama dengan login panel. */
+  const kunciLaju = anggotaId ? [kunciIp, `tanya:${anggotaId}`] : [kunciIp];
   const laju = checkLimit(kunciLaju);
   if (laju.blocked) {
     return json({ ok: false, errorKey: "err.tanya.terlaluSering", detik: laju.retryAfter }, 429);
@@ -79,7 +82,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     return json({ ok: false, errorKey: galat }, 400);
   }
 
-  const kuota = catatPertanyaan(anggotaId, new Date());
+  const kuota = catatPertanyaan(identitas, new Date());
   if (!kuota.boleh) {
     return json(
       { ok: false, errorKey: "err.tanya.kuotaHabis", sisa: 0, kuota: TANYA_KUOTA_HARIAN },

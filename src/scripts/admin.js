@@ -7350,6 +7350,8 @@ function renderPembaruan() {
 
 let artikelAuto = null;
 let artikelAutoTimer = null;
+let artikelSegar = null;
+let artikelSegarTimer = null;
 
 async function loadArtikelAuto() {
   try {
@@ -7359,6 +7361,14 @@ async function loadArtikelAuto() {
     artikelAuto = data;
   } catch {
     artikelAuto = null;
+  }
+  try {
+    const res = await fetch("/api/artikel-segar");
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    artikelSegar = data;
+  } catch {
+    artikelSegar = null;
   }
   renderArtikelAuto();
 }
@@ -7424,12 +7434,14 @@ function renderArtikelAuto() {
 
   /* Tanpa kemampuan "ai" (Editor) endpoint 403 → wadah kosong, bukan gembok:
      menulis draf memakai kuota AI sehingga pengaturannya bukan urusan Editor,
-     tapi daftar artikelnya sendiri tetap bisa dibuka. */
-  if (!artikelAuto) {
+     tapi daftar artikelnya sendiri tetap bisa dibuka. Aturan yang sama berlaku
+     untuk blok penyegar di bawah — keduanya sembunyi kalau keduanya 403. */
+  if (!artikelAuto && !artikelSegar) {
     root.innerHTML = "";
     return;
   }
 
+  if (artikelAuto) {
   const p = artikelAuto.pengaturan || {};
   const terakhir = artikelAuto.terakhir || {};
   const siap = !!artikelAuto.siap;
@@ -7475,6 +7487,130 @@ function renderArtikelAuto() {
   if (btn) btn.addEventListener("click", tulisArtikelSekarang);
 
   if (artikelAuto.jalan) mulaiPollArtikelAuto();
+  }
+
+  renderArtikelSegar();
+}
+
+/* ------------------------------------------------------------------ *
+ * 25b4. Penyegar artikel tayang harian
+ *
+ * Blok kedua di `#artikel-auto-root`: saklar + status penyegaran seluruh
+ * artikel tayang sekali sehari lewat `/api/artikel-segar`. Pola yang sama
+ * dengan draf otomatis di atas — Editor (tanpa kemampuan "ai") mendapat
+ * wadah kosong, bukan gembok.
+ * ------------------------------------------------------------------ */
+
+async function simpanArtikelSegar(parsial) {
+  try {
+    const res = await fetch("/api/artikel-segar", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsial),
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    artikelSegar = data;
+    renderArtikelSegar();
+    toast(t("segar.saved"), "success");
+  } catch (err) {
+    toast(err.message, "error");
+    loadArtikelAuto();
+  }
+}
+
+async function segarkanArtikelSekarang() {
+  try {
+    const res = await fetch("/api/artikel-segar", { method: "POST" });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    toast(t("segar.running"), "success");
+    artikelSegar = { ...(artikelSegar || {}), jalan: true };
+    renderArtikelSegar();
+    mulaiPollArtikelSegar();
+  } catch (err) {
+    toast(err.message, "error");
+  }
+}
+
+/** Menanyakan kabar ke server selama penyegaran masih berjalan. */
+function mulaiPollArtikelSegar() {
+  if (artikelSegarTimer) return;
+  artikelSegarTimer = setInterval(async () => {
+    const masihJalan = artikelSegar && artikelSegar.jalan;
+    if (!masihJalan) {
+      clearInterval(artikelSegarTimer);
+      artikelSegarTimer = null;
+      return;
+    }
+    try {
+      const res = await fetch("/api/artikel-segar");
+      const data = await res.json();
+      if (data && data.ok) {
+        artikelSegar = data;
+        renderArtikelSegar();
+      }
+    } catch {
+      /* gangguan jaringan — coba lagi di giliran berikutnya */
+    }
+  }, 4000);
+}
+
+function renderArtikelSegar() {
+  const root = $("artikel-auto-root");
+  if (!root || !artikelSegar) return;
+  let wadah = $("artikel-segar-blok");
+  if (!wadah) {
+    wadah = document.createElement("div");
+    wadah.id = "artikel-segar-blok";
+    root.appendChild(wadah);
+  }
+
+  const p = artikelSegar.pengaturan || {};
+  const terakhir = artikelSegar.terakhir || {};
+  const siap = !!artikelSegar.siap;
+  const tayang = artikelSegar.tayang || 0;
+
+  const statusHtml = artikelSegar.jalan
+    ? `<p class="ai-note ai-note-info">${esc(t("segar.running"))}</p>`
+    : terakhir.tanggal
+      ? `<p class="hint">${esc(t("segar.lastSummary", { diperbarui: (terakhir.diperbarui || []).length, tetap: terakhir.tetap || 0, tanggal: terakhir.tanggal }))}</p>`
+      : `<p class="hint">${esc(t("segar.lastEmpty"))}</p>`;
+
+  wadah.innerHTML = `
+    <div class="form-section-head">
+      <h2>${esc(t("segar.title"))}</h2>
+      <p>${esc(t("segar.desc"))}</p>
+    </div>
+
+    <div class="field-grid">
+      <div class="field">
+        <label class="switch-row">
+          <input type="checkbox" id="segar-aktif"${p.aktif ? " checked" : ""} />
+          <span class="switch" aria-hidden="true"></span>
+          <span>${esc(t("segar.aktif"))}</span>
+        </label>
+        <div class="hint">${esc(t("segar.aktifHint"))}</div>
+      </div>
+    </div>
+
+    <div class="ai-pembaruan-status">
+      <h3>${esc(t("segar.lastTitle"))}</h3>
+      ${statusHtml}
+      <p class="hint">${esc(t("segar.pending", { n: tayang }))}</p>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" id="segar-tulis"${siap ? "" : " disabled"}>${esc(t("segar.tulis"))}</button>
+      ${siap ? "" : `<p class="hint">${esc(t("segar.tanpaKunci"))}</p>`}
+    </div>`;
+
+  const el = $("segar-aktif");
+  if (el) el.addEventListener("change", (e) => simpanArtikelSegar({ aktif: !!e.target.checked }));
+  const btn = $("segar-tulis");
+  if (btn) btn.addEventListener("click", segarkanArtikelSekarang);
+
+  if (artikelSegar.jalan) mulaiPollArtikelSegar();
 }
 
 /* ------------------------------------------------------------------ *

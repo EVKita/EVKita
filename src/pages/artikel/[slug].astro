@@ -155,6 +155,14 @@ const jsonLd =
   noindex={!artikel || pratinjau || !!artikel.noindex}
 >
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
+  {/*
+    Gambar utama di-pramuat: ia LCP halaman ini. `fetchpriority` + preload
+    membuat peramban memintanya sebelum CSS selesai diurai — klik dari daftar
+    artikel terasa membuka lebih cepat tanpa mengubah apa pun yang tampil.
+  */}
+  {artikel && artikel.image && safeUrl(artikel.image) ? (
+    <link slot="head" rel="preload" as="image" href={safeUrl(artikel.image)} fetchpriority="high" />
+  ) : null}
 
   <SiteHeader site={site} base="/" active="artikel" />
 
@@ -196,7 +204,7 @@ const jsonLd =
 
         {artikel.image ? (
           <figure class="artikel-gambar">
-            <img src={safeUrl(artikel.image)} alt={judul} loading="eager" decoding="async" />
+            <img src={safeUrl(artikel.image)} alt={judul} loading="eager" fetchpriority="high" decoding="async" />
           </figure>
         ) : null}
 

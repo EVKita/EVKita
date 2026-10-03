@@ -260,6 +260,14 @@ normalisasi, slug, daftar sumber, waktu baca, dan tanggal terbit.
   sinyal SEO, dan tidak pernah ditampilkan di situs publik.
 - Draf bisa dipratinjau lewat `/api/pratinjau` seperti kendaraan dan halaman;
   tokennya menandatangani `id`, alamatnya memakai `slug`.
+- **Penyegar artikel tayang (`src/lib/artikel-segar.ts`).** Sekali sehari (jam
+  06.00 WIB, sesudah draf otomatis) membaca ulang artikel yang TAYANG dan
+  memperbarui fakta usang dari katalog + berita terbaru lewat AI, maksimal
+  `BATAS_SEHARI` (10) per hari. Judul, slug, kategori, tag, gambar, tanggal
+  terbit, dan draf tidak pernah disentuh; sumber lama tidak pernah dibuang;
+  `updatedAt`/`updatedBy` hanya dicap kalau isi benar-benar berubah. Saklarnya
+  di Admin → Artikel (`segar.*`, endpoint `/api/artikel-segar`), bawaannya
+  menyala tapi tanpa kunci AI ia diam sendiri.
 
 ### Fitur AI (DeepSeek)
 
@@ -331,6 +339,18 @@ baru Tahap 0a: halaman **Admin → AI** untuk memasang kunci API DeepSeek.
 - Tarif dan jam sibuk DeepSeek ada di `src/lib/ai-biaya.js`, dan **hanya di
   sana**. Jam sibuknya jatuh persis di jam kerja WIB, jadi angka biaya yang
   ditampilkan selalu menghitung tarif yang berlaku saat itu.
+
+**Penemuan model baru otomatis (`src/lib/model-baru.ts`).** Kabar peluncuran
+yang tidak cocok satu pun kendaraan katalog (cek `cocokModel()` di
+`pemantau.ts`) diekstrak merek+modelnya lewat AI, lalu yang disebut ≥2 host
+berbeda diriset spesifikasinya memakai pipa auto-update katalog yang sama.
+Entri baru langsung TERBIT (tanpa klik panel) hanya kalau minimal satu fakta
+keras (harga/jarak/baterai) berkeyakinan `tinggi`; tanpa jangkar ia dilewati
+dan dicoba lagi lain hari. Maksimal 2/hari, berbagi saklar Auto-update
+Katalog, berjalan jam 07.00 WIB. Angka penjualan (`penjualan2026`, sumber
+Gaikindo bulanan) tidak punya jalur sendiri — ia ikut putaran auto-update
+katalog: pemantau menandai yang tersangkut sinyal penjualan tiap jam, riset
+mendahulukan yang basi, dan nilai berkeyakinan tinggi langsung rilis.
 
 ### Yang tidak boleh dilanggar di subsistem baru
 

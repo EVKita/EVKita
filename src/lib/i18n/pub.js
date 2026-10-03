@@ -57,9 +57,11 @@ const ID = {
   "pub.catalog.all": "Buka katalog lengkap",
 
   // — Panel "Mobil/Motor Kita": 5 penjualan terbanyak 2026 —
-  "pub.kita.mobil": "Mobil Kita",
-  "pub.kita.motor": "Motor Kita",
-  "pub.kita.sub": "10 penjualan terbanyak 2026",
+  "pub.kita.mobil": "Mobil & Motor Kita",
+  "pub.kita.laris": "Laris MobilKita",
+  "pub.kita.mobilBaru": "Mobil TerbaruKita",
+  "pub.kita.motor": "Motor TerbaruKita",
+  "pub.kita.sub": "5 penjualan terbanyak 2026",
   "pub.kita.unit": "{n} unit",
   "pub.kita.beritaSub": "5 berita EV paling menarik",
 
@@ -113,14 +115,9 @@ const ID = {
   "pub.cari.halaman": "Halaman & panduan",
   "pub.cari.tutup": "Tutup pencarian",
 
-  // — Tanya EVKita: chatbot hero, dijawab Gemini, khusus anggota —
+  // — Tanya EVKita: chatbot hero, dijawab Gemini, terbuka untuk umum —
   "pub.tanya.title": "Tanya EVKita",
   "pub.tanya.tagline": "Asisten AI kendaraan listrik Indonesia",
-  "pub.tanya.cta": "Masuk & Tanya Gratis",
-  "pub.tanya.manfaat1": "Jawab apa saja soal EV",
-  "pub.tanya.manfaat2": "Gratis 20x sehari",
-  "pub.tanya.manfaat3": "Berbasis data katalog EVKita",
-  "pub.tanya.mengetik": "Sedang mengetik…",
   "pub.tanya.ph": "Tanya apa saja soal kendaraan listrik…",
   "pub.tanya.kirim": "Kirim pertanyaan",
   "pub.tanya.menjawab": "Sedang menjawab…",
@@ -129,8 +126,7 @@ const ID = {
   "pub.tanya.contoh2": "Motor listrik jarak terjauh",
   "pub.tanya.contoh3": "Biaya cas 100 km berapa?",
   "pub.tanya.catatan": "Jawaban AI bisa keliru. Angka resmi tetap di katalog.",
-  "pub.tanya.err.perluMasuk": "Masuk dulu sebagai anggota untuk bertanya.",
-  "pub.tanya.err.kuotaHabis": "Kuota harianmu habis. Coba lagi besok.",
+  "pub.tanya.err.kuotaHabis": "Kuota harian habis. Coba lagi besok.",
   "pub.tanya.err.terlaluSering": "Terlalu cepat. Tunggu sebentar lalu coba lagi.",
   "pub.tanya.err.belumSiap": "Chatbot belum aktif. Coba lagi nanti.",
   "pub.tanya.err.kosong": "Tulis dulu pertanyaannya.",
@@ -692,9 +688,11 @@ const EN = {
   "pub.catalog.all": "Open full catalogue",
 
   // — "Our Cars/Bikes" panels: top 5 sellers of 2026 —
-  "pub.kita.mobil": "Our Cars",
-  "pub.kita.motor": "Our Motorbikes",
-  "pub.kita.sub": "Top 10 best sellers of 2026",
+  "pub.kita.mobil": "Our Cars & Bikes",
+  "pub.kita.laris": "Laris MobilKita",
+  "pub.kita.mobilBaru": "Mobil TerbaruKita",
+  "pub.kita.motor": "Motor TerbaruKita",
+  "pub.kita.sub": "Top 5 best sellers of 2026",
   "pub.kita.unit": "{n} units",
   "pub.kita.beritaSub": "Top 5 most interesting EV news",
 
@@ -748,14 +746,9 @@ const EN = {
   "pub.cari.halaman": "Pages & guides",
   "pub.cari.tutup": "Close search",
 
-  // — Ask EVKita: hero chatbot, answered by Gemini, members only —
+  // — Ask EVKita: hero chatbot, answered by Gemini, open to everyone —
   "pub.tanya.title": "Ask EVKita",
   "pub.tanya.tagline": "Your Indonesian EV assistant",
-  "pub.tanya.cta": "Sign In & Ask Free",
-  "pub.tanya.manfaat1": "Answers anything about EVs",
-  "pub.tanya.manfaat2": "Free, 20x a day",
-  "pub.tanya.manfaat3": "Grounded in the EVKita catalog",
-  "pub.tanya.mengetik": "Typing…",
   "pub.tanya.ph": "Ask anything about electric vehicles…",
   "pub.tanya.kirim": "Send question",
   "pub.tanya.menjawab": "Answering…",
@@ -764,8 +757,7 @@ const EN = {
   "pub.tanya.contoh2": "Longest-range electric motorbike",
   "pub.tanya.contoh3": "How much to charge 100 km?",
   "pub.tanya.catatan": "AI answers can be wrong. Official figures stay in the catalog.",
-  "pub.tanya.err.perluMasuk": "Please sign in as a member first.",
-  "pub.tanya.err.kuotaHabis": "Your daily quota is used up. Try again tomorrow.",
+  "pub.tanya.err.kuotaHabis": "The daily quota is used up. Try again tomorrow.",
   "pub.tanya.err.terlaluSering": "Too fast. Wait a moment and try again.",
   "pub.tanya.err.belumSiap": "The chatbot is not active yet. Try again later.",
   "pub.tanya.err.kosong": "Type your question first.",
@@ -1325,9 +1317,11 @@ const ZH = {
   "pub.catalog.all": "打开完整目录",
 
   // — “我们的汽车/摩托车”榜单：2026年最畅销的5款 —
-  "pub.kita.mobil": "我们的汽车",
-  "pub.kita.motor": "我们的摩托车",
-  "pub.kita.sub": "2026年最畅销的10款",
+  "pub.kita.mobil": "我们的汽车和摩托车",
+  "pub.kita.laris": "Laris MobilKita",
+  "pub.kita.mobilBaru": "Mobil TerbaruKita",
+  "pub.kita.motor": "Motor TerbaruKita",
+  "pub.kita.sub": "2026年最畅销的5款",
   "pub.kita.unit": "{n}辆",
   "pub.kita.beritaSub": "最值得关注的5条电动车新闻",
 
@@ -1375,14 +1369,9 @@ const ZH = {
   "pub.cari.merek": "品牌",
   "pub.cari.halaman": "页面与指南",
   "pub.cari.tutup": "关闭搜索",
-  // — 问问 EVKita：hero 聊天机器人，由 Gemini 回答，仅限会员 —
+  // — 问问 EVKita：hero 聊天机器人，由 Gemini 回答，人人可用 —
   "pub.tanya.title": "问问 EVKita",
   "pub.tanya.tagline": "你的印尼电动车 AI 助手",
-  "pub.tanya.cta": "登录免费提问",
-  "pub.tanya.manfaat1": "有问必答，关于电动车",
-  "pub.tanya.manfaat2": "免费，每天20次",
-  "pub.tanya.manfaat3": "基于 EVKita 目录数据",
-  "pub.tanya.mengetik": "正在输入…",
   "pub.tanya.ph": "询问任何电动车问题…",
   "pub.tanya.kirim": "发送问题",
   "pub.tanya.menjawab": "正在回答…",
@@ -1391,7 +1380,6 @@ const ZH = {
   "pub.tanya.contoh2": "续航最长的电动摩托",
   "pub.tanya.contoh3": "充电100公里要多少钱？",
   "pub.tanya.catatan": "AI 回答可能有误，官方数据以目录为准。",
-  "pub.tanya.err.perluMasuk": "请先登录会员再提问。",
   "pub.tanya.err.kuotaHabis": "今日配额已用完，明天再试。",
   "pub.tanya.err.terlaluSering": "太快了，稍候再试。",
   "pub.tanya.err.belumSiap": "聊天机器人尚未启用，请稍后再试。",
