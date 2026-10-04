@@ -93,7 +93,7 @@ function statePayload(key: string, balance: BalanceResult | null) {
     diperiksaPada: balance ? new Date().toISOString() : "",
     geminiTerpasang: !!kunciGemini,
     geminiEkor: kunciGemini ? ekorKunci(kunciGemini) : "",
-    geminiModel: MODEL_BAWAAN_GEMINI,
+    geminiModel: getEnv("GEMINI_MODEL", "") || MODEL_BAWAAN_GEMINI,
   };
 }
 
@@ -153,10 +153,24 @@ export const PUT: APIRoute = async ({ request, cookies, clientAddress }) => {
     }
     const uji = await ujiKunciGemini(kunciGemini, getEnv("GEMINI_MODEL", "") || MODEL_BAWAAN_GEMINI);
     if (!uji.ok) {
-      if (uji.errorKey === "err.tanya.kunciSalah") recordFailure(limitKeys);
-      return apiError(uji.errorKey === "err.tanya.kunciSalah" ? "err.ai.geminiSalah" : uji.errorKey, uji.errorKey === "err.tanya.kunciSalah" ? 400 : 502);
+      const kunciSalah = uji.errorKey === "err.tanya.kunciSalah";
+      if (kunciSalah) recordFailure(limitKeys);
+      // Kunci galat chatbot publik (`err.tanya.*`) tidak ada di kamus panel —
+      // diterjemahkan ke padanan `err.ai.gemini*` supaya admin membaca kalimat, bukan kode.
+      const PADANAN: Record<string, string> = {
+        "err.tanya.kunciSalah": "err.ai.geminiSalah",
+        "err.tanya.sibuk": "err.ai.geminiSibuk",
+        "err.tanya.tidakTerhubung": "err.ai.geminiTidakTerhubung",
+        "err.tanya.modelTakTersedia": "err.ai.geminiModelTakTersedia",
+      };
+      const res = apiError(PADANAN[uji.errorKey] || "err.ai.geminiBermasalah", kunciSalah ? 400 : 502);
+      if (!uji.detail) return res;
+      // Kalimat asli Google ikut dikirim (tanpa kunci) — itu yang paling cepat menjelaskan penyebabnya.
+      const isi = await res.json();
+      return json({ ...isi, detail: uji.detail }, res.status);
     }
-    writeEnvFile({ [GEMINI_KEY_NAME]: kunciGemini });
+    // Model yang terbukti menjawab ikut disimpan: chatbot dan riset memakai yang sama.
+    writeEnvFile({ [GEMINI_KEY_NAME]: kunciGemini, ...(uji.model ? { GEMINI_MODEL: uji.model } : {}) });
     clearLimit(limitKeys);
     logActivity(me, "ai.geminiSet");
     const key = getEnv(KEY_NAME, "");

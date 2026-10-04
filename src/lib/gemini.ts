@@ -22,8 +22,9 @@
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 import { getEnv } from "./env";
-/** Model bawaan: varian hemat yang masuk paket gratis. */
-export const GEMINI_MODEL_BAWAAN = "gemini-2.5-flash";
+import { MODEL_BAWAAN_GEMINI, urutkanModelFlash } from "./gemini-tanya";
+/** Model bawaan: varian hemat yang masuk paket gratis. Sama dengan bawaan chatbot — lihat alasannya di `gemini-tanya.ts`. */
+export const GEMINI_MODEL_BAWAAN = MODEL_BAWAAN_GEMINI;
 
 /**
  * Bentuk kunci Gemini: kunci lama berawalan `AIza`, kunci otorisasi baru
@@ -134,12 +135,7 @@ export async function daftarModel(key: string): Promise<{
  * (varian hemat yang masuk paket gratis), bukan gambar/suara/embedding.
  */
 export function pilihModelFlash(daftar: string[]): string | null {
-  const list = (Array.isArray(daftar) ? daftar : []).map((n) => String(n || "")).filter(Boolean);
-  const flash = list.filter((n) => /flash/i.test(n) && !/image|tts|embed|aqa|robotics/i.test(n));
-  if (!flash.length) return null;
-  const skor = (n: string) => (/2\.5/i.test(n) ? 0 : /3(\.|$)/i.test(n) ? 1 : 2);
-  flash.sort((a, b) => skor(a) - skor(b) || a.localeCompare(b));
-  return flash[0];
+  return urutkanModelFlash(daftar)[0] || null;
 }
 
 /* ------------------------------------------------------------------ *
@@ -478,7 +474,7 @@ export async function terjemahkanBerteks(
   let res: Response;
   try {
     res = await fetch(
-      `${BASE_URL}/models/${encodeURIComponent(GEMINI_MODEL_BAWAAN)}:generateContent?key=${encodeURIComponent(kunci)}`,
+      `${BASE_URL}/models/${encodeURIComponent(String(getEnv("GEMINI_MODEL", "") || "").trim() || GEMINI_MODEL_BAWAAN)}:generateContent?key=${encodeURIComponent(kunci)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

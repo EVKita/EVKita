@@ -18,8 +18,37 @@
 
 const DASAR_URL = "https://generativelanguage.googleapis.com";
 
-/** Model bawaan. Bisa ditimpa lewat `GEMINI_MODEL` di `.env` tanpa menyentuh kode. */
-export const MODEL_BAWAAN_GEMINI = "gemini-2.5-flash";
+/**
+ * Model bawaan. Bisa ditimpa lewat `GEMINI_MODEL` di `.env` tanpa menyentuh kode
+ * — dan memang ditimpa otomatis saat kunci diuji (lihat `ujiKunciGemini`).
+ *
+ * Bukan `gemini-2.5-flash` lagi: sejak 2026 Google membatasi model 2.5 hanya
+ * untuk akun yang pernah memakainya, jadi kunci baru (termasuk kunci `AQ.`)
+ * ditolak di model itu walaupun kuncinya sendiri sah. Alias `-latest` selalu
+ * menunjuk Flash terbaru yang terbuka untuk semua akun.
+ */
+export const MODEL_BAWAAN_GEMINI = "gemini-flash-latest";
+
+/**
+ * Mengurutkan nama model dari yang paling layak dipakai: Flash stabil versi
+ * tertinggi dulu, lalu alias `-latest`, lalu Flash-Lite, lalu pratinjau.
+ * Model 2.x otomatis jatuh ke belakang karena versinya paling rendah. Varian
+ * gambar/suara/embedding dibuang — mereka tidak bisa menjawab teks.
+ */
+export function urutkanModelFlash(daftar: string[]): string[] {
+  const list = (Array.isArray(daftar) ? daftar : [])
+    .map((n) => String(n || "").replace(/^models\//, "").trim())
+    .filter((n) => /flash/i.test(n) && !/image|tts|embed|aqa|robotics|live|audio|native|computer/i.test(n));
+  const versi = (n: string): number => {
+    const m = n.match(/gemini-(\d+)(?:\.(\d+))?/i);
+    return m ? Number(m[1]) * 1000 + Number(m[2] || 0) : -1;
+  };
+  const kelas = (n: string): number =>
+    /preview|exp/i.test(n) ? 3 : /lite/i.test(n) ? 2 : /latest/i.test(n) ? 1 : 0;
+  return [...new Set(list)].sort(
+    (a, b) => kelas(a) - kelas(b) || versi(b) - versi(a) || a.localeCompare(b)
+  );
+}
 
 /**
  * Batas tunggu satu pertanyaan. Jauh lebih panjang daripada pembacaan saldo
@@ -210,10 +239,16 @@ export interface HasilTanya {
   errorKey: string;
   /** Pemakaian token dari `usageMetadata`, untuk pencatatan. */
   pemakaian: { masuk: number; keluar: number } | null;
+  /** Kalimat galat apa adanya dari Google (maks. 300 karakter), untuk panel admin. */
+  detail?: string;
 }
 
-function gagal(errorKey: string): HasilTanya {
-  return { ok: false, teks: "", errorKey, pemakaian: null };
+function gagal(errorKey: string, detail = ""): HasilTanya {
+  return { ok: false, teks: "", errorKey, pemakaian: null, ...(detail ? { detail } : {}) };
+}
+
+function detailGalat(data: any): string {
+  return String(data?.error?.message || "").slice(0, 300);
 }
 
 /** Kode HTTP Gemini → kunci terjemahan panel/publik. */
@@ -292,7 +327,7 @@ export async function tanyaGemini(opts: {
     return gagal("err.tanya.jawabanTidakTerbaca");
   }
 
-  if (!res.ok) return gagal(kunciGalatUntukStatus(res.status));
+  if (!res.ok) return gagal(kunciGalatUntukStatus(res.status), detailGalat(data));
 
   const teks = teksDari(data);
   if (!teks) return gagal("err.tanya.tanpaJawaban");
@@ -309,20 +344,102 @@ export async function tanyaGemini(opts: {
   };
 }
 
+/** Batas model yang dicoba saat menguji kunci — tiap percobaan satu inferensi kecil. */
+const MAKS_MODEL_DICOBA = 4;
+
 /**
- * Uji kunci: pertanyaan termurah yang mungkin ("jawab dengan OK").
- * Dipakai halaman Pengaturan AI sebelum menyimpan — kunci yang salah ketik
- * harus gagal di detik itu, bukan saat pengunjung pertama bertanya.
+ * Daftar model yang boleh dipakai kunci ini (GET /models — gratis, tanpa
+ * inferensi). Sekaligus membuktikan kuncinya sah: kunci yang salah sudah
+ * ditolak di sini, sebelum satu pun model dicoba.
+ */
+async function daftarModelKunci(kunci: string): Promise<{ ok: boolean; model: string[]; errorKey: string; detail?: string }> {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 15_000);
+  let res: Response;
+  try {
+    res = await fetch(`${DASAR_URL}/v1beta/models?pageSize=1000`, {
+      headers: { Accept: "application/json", "x-goog-api-key": kunci },
+      signal: ac.signal,
+    });
+  } catch {
+    return { ok: false, model: [], errorKey: "err.tanya.tidakTerhubung" };
+  } finally {
+    clearTimeout(timer);
+  }
+  let data: any = null;
+  try {
+    const mentah = (await res.text()).trim();
+    data = mentah ? JSON.parse(mentah) : null;
+  } catch {
+    data = null;
+  }
+  if (!res.ok) {
+    // 400 (API_KEY_INVALID), 401, dan 403 di daftar model = kuncinya yang bermasalah.
+    const errorKey = res.status === 429 ? "err.tanya.sibuk" : res.status >= 500 ? "err.tanya.aiBermasalah" : "err.tanya.kunciSalah";
+    return { ok: false, model: [], errorKey, detail: detailGalat(data) };
+  }
+  const daftar = Array.isArray(data?.models) ? data.models : [];
+  return {
+    ok: true,
+    errorKey: "",
+    model: daftar
+      .filter((m: any) => {
+        const cara = m?.supportedGenerationMethods;
+        return !Array.isArray(cara) || cara.includes("generateContent");
+      })
+      .map((m: any) => String(m?.name || "").replace(/^models\//, ""))
+      .filter(Boolean),
+  };
+}
+
+/**
+ * Uji kunci, dipakai halaman Pengaturan AI sebelum menyimpan — kunci yang
+ * salah ketik harus gagal di detik itu, bukan saat pengunjung pertama bertanya.
+ *
+ * Dua langkah: (1) daftar model membuktikan kuncinya sah; (2) pertanyaan
+ * termurah ("jawab OK") dicoba ke model yang diminta lalu ke Flash terbaru
+ * dari daftar, sampai ada yang menjawab. Langkah 2 perlu karena kunci yang
+ * sah tetap bisa ditolak di model tertentu — Google menutup model 2.5 untuk
+ * akun baru, dan kuota gratis dihitung per model. Model yang berhasil
+ * dikembalikan supaya disimpan sebagai `GEMINI_MODEL`.
  */
 export async function ujiKunciGemini(
   apiKey: string,
   model?: string
-): Promise<{ ok: boolean; errorKey: string }> {
-  const hasil = await tanyaGemini({
-    apiKey,
-    model,
-    pertanyaan: "Jawab dengan tepat satu kata: OK",
-    instruksi: "Jawablah dengan tepat satu kata: OK.",
-  });
-  return { ok: hasil.ok, errorKey: hasil.errorKey };
+): Promise<{ ok: boolean; errorKey: string; model?: string; detail?: string }> {
+  const kunci = String(apiKey || "").trim();
+  if (!kunci) return { ok: false, errorKey: "err.tanya.belumSiap" };
+
+  const daftar = await daftarModelKunci(kunci);
+  if (!daftar.ok) return { ok: false, errorKey: daftar.errorKey, detail: daftar.detail };
+
+  const diminta = String(model || "").trim();
+  const kandidat = [
+    ...new Set([
+      ...(diminta && (!daftar.model.length || daftar.model.includes(diminta)) ? [diminta] : []),
+      ...urutkanModelFlash(daftar.model),
+      ...(daftar.model.length ? [] : [MODEL_BAWAAN_GEMINI]),
+    ]),
+  ].slice(0, MAKS_MODEL_DICOBA);
+  if (!kandidat.length) return { ok: false, errorKey: "err.tanya.modelTakTersedia" };
+
+  let terakhir: HasilTanya | null = null;
+  for (const nama of kandidat) {
+    const hasil = await tanyaGemini({
+      apiKey: kunci,
+      model: nama,
+      pertanyaan: "Jawab dengan tepat satu kata: OK",
+      instruksi: "Jawablah dengan tepat satu kata: OK.",
+    });
+    if (hasil.ok) return { ok: true, errorKey: "", model: nama };
+    // Tanpa jaringan, model lain juga tidak akan terjangkau.
+    if (hasil.errorKey === "err.tanya.tidakTerhubung") return { ok: false, errorKey: hasil.errorKey };
+    terakhir = hasil;
+  }
+  // Kuncinya sah (daftar model terbaca), tapi tidak satu model pun mau menjawab.
+  return {
+    ok: false,
+    errorKey: terakhir?.errorKey === "err.tanya.sibuk" ? "err.tanya.sibuk" : "err.tanya.modelTakTersedia",
+    detail: terakhir?.detail,
+  };
 }

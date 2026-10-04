@@ -7126,7 +7126,10 @@ async function saveAiGeminiKey(form) {
       body: JSON.stringify({ geminiKey }),
     });
     const data = await res.json();
-    if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
+    if (!data || !data.ok) {
+      const pesan = apiMessage(data, "err.badJson");
+      throw new Error(data && data.detail ? `${pesan} (Google: ${data.detail})` : pesan);
+    }
     form.reset();
     aiState = data;
     aiGeminiEditing = false;

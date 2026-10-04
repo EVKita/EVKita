@@ -6,6 +6,8 @@ import {
   ringkasKonteks,
   susunInstruksi,
   kunciGeminiTampakSah,
+  urutkanModelFlash,
+  ujiKunciGemini,
 } from "../src/lib/gemini-tanya.ts";
 import {
   tanggalWib,
@@ -95,6 +97,92 @@ describe("kunciGeminiTampakSah", () => {
     assert.equal(kunciGeminiTampakSah("AIza1234567890abcdef1234567890ab"), true);
     assert.equal(kunciGeminiTampakSah("AQ.Ab8RN6IXKCausKIRKGQuRK-AL3ZOqIWQluAc3R_3CDpQk8nig"), true);
     assert.equal(kunciGeminiTampakSah("AQ.Ab8RN6IXKCausKIRKGQuRK AL3ZOqIWQluAc3R"), false);
+  });
+});
+
+describe("urutkanModelFlash", () => {
+  it("mendahulukan Flash stabil terbaru, menaruh 2.5 dan varian non-teks di belakang/dibuang", () => {
+    const urut = urutkanModelFlash([
+      "models/gemini-2.5-flash",
+      "models/gemini-3.6-flash",
+      "models/gemini-3.8-flash",
+      "models/gemini-flash-latest",
+      "models/gemini-3.5-flash-lite",
+      "models/gemini-3.9-flash-preview",
+      "models/gemini-2.5-flash-image",
+      "models/text-embedding-004",
+    ]);
+    assert.deepEqual(urut, [
+      "gemini-3.8-flash",
+      "gemini-3.6-flash",
+      "gemini-2.5-flash",
+      "gemini-flash-latest",
+      "gemini-3.5-flash-lite",
+      "gemini-3.9-flash-preview",
+    ]);
+  });
+});
+
+describe("ujiKunciGemini", () => {
+  const jawab = (status: number, body: any) =>
+    new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+
+  async function denganFetch(palsu: (url: string, init: any) => Response, fn: () => Promise<void>) {
+    const asli = globalThis.fetch;
+    globalThis.fetch = (async (url: any, init: any) => palsu(String(url), init)) as any;
+    try {
+      await fn();
+    } finally {
+      globalThis.fetch = asli;
+    }
+  }
+
+  it("kunci AQ. sah tapi model 2.5 tertutup → pindah ke Flash terbaru dan mengembalikan modelnya", async () => {
+    const dipanggil: string[] = [];
+    await denganFetch((url, init) => {
+      assert.equal(init.headers["x-goog-api-key"], "AQ.contohKunciYangPanjang123");
+      assert.ok(!url.includes("key="), "kunci tidak boleh masuk URL");
+      if (url.includes("/models?")) {
+        return jawab(200, { models: [
+          { name: "models/gemini-2.5-flash", supportedGenerationMethods: ["generateContent"] },
+          { name: "models/gemini-3.8-flash", supportedGenerationMethods: ["generateContent"] },
+        ] });
+      }
+      dipanggil.push(url);
+      if (url.includes("gemini-2.5-flash")) return jawab(404, { error: { message: "This model is no longer available to new users." } });
+      return jawab(200, { candidates: [{ content: { parts: [{ text: "OK" }] } }] });
+    }, async () => {
+      const hasil = await ujiKunciGemini("AQ.contohKunciYangPanjang123", "gemini-2.5-flash");
+      assert.equal(hasil.ok, true);
+      assert.equal(hasil.model, "gemini-3.8-flash");
+      assert.equal(dipanggil.length, 2);
+    });
+  });
+
+  it("kunci yang ditolak di daftar model → kunciSalah, tanpa mencoba model", async () => {
+    let generate = 0;
+    await denganFetch((url) => {
+      if (url.includes("/models?")) return jawab(400, { error: { message: "API key not valid." } });
+      generate++;
+      return jawab(200, {});
+    }, async () => {
+      const hasil = await ujiKunciGemini("AQ.salahSalahSalah12345");
+      assert.equal(hasil.ok, false);
+      assert.equal(hasil.errorKey, "err.tanya.kunciSalah");
+      assert.equal(hasil.detail, "API key not valid.");
+      assert.equal(generate, 0);
+    });
+  });
+
+  it("kunci sah tapi semua model menolak → modelTakTersedia, bukan kunciSalah", async () => {
+    await denganFetch((url) => {
+      if (url.includes("/models?")) return jawab(200, { models: [{ name: "models/gemini-3.8-flash" }] });
+      return jawab(403, { error: { message: "Permission denied for model." } });
+    }, async () => {
+      const hasil = await ujiKunciGemini("AQ.contohKunciYangPanjang123");
+      assert.equal(hasil.ok, false);
+      assert.equal(hasil.errorKey, "err.tanya.modelTakTersedia");
+    });
   });
 });
 
