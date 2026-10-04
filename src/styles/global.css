@@ -1343,6 +1343,19 @@ body.nav-open .nav-drawer-link {
   transform: translateY(-1px);
   border-color: #ff6a00;
 }
+/* Pergantian contoh: keluar memudar ke atas, masuk dari bawah. */
+.tanya-chips button.is-keluar {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+  transition: opacity 0.26s ease, transform 0.26s ease;
+}
+.tanya-chips button.is-masuk {
+  animation: tanya-chip-masuk 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes tanya-chip-masuk {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
 
 /* Percakapan: gelembung pertanyaan di kanan, jawaban AI di kiri dengan
    avatar, lalu kartu ber-foto kendaraan yang disebut. Latar jawaban selalu
@@ -1363,7 +1376,7 @@ body.nav-open .nav-drawer-link {
 .tanya-q {
   display: flex;
   justify-content: flex-end;
-  animation: tanya-muncul 0.25s ease-out both;
+  animation: tanya-muncul 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .tanya-q-isi {
   max-width: min(82%, 560px);
@@ -1382,7 +1395,7 @@ body.nav-open .nav-drawer-link {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  animation: tanya-muncul 0.3s ease-out both;
+  animation: tanya-muncul 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
 }
 .tanya-a-av {
   flex: none;
@@ -1413,13 +1426,65 @@ body.nav-open .nav-drawer-link {
 .tanya-a-isi > p {
   margin: 0;
 }
+/* Saat AI berpikir: avatar bercincin berputar, status bergilir, dan
+   kerangka baris berkilau seukuran jawaban yang akan datang. */
 .tanya-a.is-memuat .tanya-a-isi {
-  display: inline-flex;
-  flex: none;
+  max-width: 420px;
+}
+.tanya-a.is-memuat .tanya-a-av {
+  position: relative;
+}
+.tanya-a.is-memuat .tanya-a-av::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #ff6a00;
+  border-right-color: rgba(255, 106, 0, 0.35);
+  animation: tanya-putar 0.9s linear infinite;
+}
+.tanya-a.is-memuat .tanya-a-av svg {
+  animation: tanya-denyut 1.4s ease-in-out infinite;
+}
+@keyframes tanya-denyut {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.82); opacity: 0.7; }
+}
+.tanya-pikir {
+  display: flex;
   align-items: center;
   gap: 10px;
   color: var(--text-muted);
   font-size: 13.5px;
+  font-weight: 600;
+}
+.tanya-pikir-teks {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.tanya-pikir-teks.is-ganti {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+.tanya-kerangka {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.tanya-kerangka i {
+  display: block;
+  height: 10px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--bg-tint) 0%, var(--accent-soft) 40%, var(--bg-tint) 80%);
+  background-size: 250% 100%;
+  animation: tanya-kilau 1.4s ease-in-out infinite;
+}
+.tanya-kerangka i:nth-child(1) { width: 92%; }
+.tanya-kerangka i:nth-child(2) { width: 78%; animation-delay: 0.12s; }
+.tanya-kerangka i:nth-child(3) { width: 54%; animation-delay: 0.24s; }
+@keyframes tanya-kilau {
+  from { background-position: 100% 0; }
+  to { background-position: -150% 0; }
 }
 
 /* Titik mengetik. */
@@ -1441,8 +1506,13 @@ body.nav-open .nav-drawer-link {
   30% { transform: translateY(-5px); opacity: 1; }
 }
 @keyframes tanya-muncul {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
+}
+/* Jawaban muncul bertahap: paragraf, butir, lalu kartu, berjeda 70 ms. */
+.tanya-muncul-i {
+  animation: tanya-muncul 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
 }
 
 /* Isi Markdown jawaban. */
@@ -1525,7 +1595,7 @@ body.nav-open .nav-drawer-link {
   color: rgba(255, 255, 255, 0.8);
 }
 .tanya-kendaraan {
-  animation: tanya-muncul 0.35s ease-out both;
+  min-width: 0;
 }
 
 /* Kartu kendaraan ber-foto. Desktop: grid; HP: baris geser dengan snap. */
@@ -1636,22 +1706,29 @@ body.nav-open .nav-drawer-link {
 }
 
 @media (max-width: 560px) {
+  /* Baris geser TETAP di dalam bingkai kotak — dulu memakai margin negatif
+     dan kartunya menembus garis tepi. */
   .tanya-kartu-daftar {
     display: flex;
     gap: 10px;
-    margin: 0 -14px;
-    padding: 2px 14px 6px;
+    margin: 0;
+    padding: 2px 0 6px;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: 14px;
     scrollbar-width: none;
+    border-radius: calc(var(--radius) + 2px);
   }
   .tanya-kartu-daftar::-webkit-scrollbar {
     display: none;
   }
   .tanya-kartu {
-    flex: 0 0 72%;
+    flex: 0 0 82%;
     scroll-snap-align: start;
+  }
+  .tanya-kartu:hover,
+  .tanya-kartu:focus-visible {
+    transform: none;
   }
   .tanya-kartu-daftar.is-satu .tanya-kartu {
     flex-basis: 100%;
@@ -1671,9 +1748,15 @@ body.nav-open .nav-drawer-link {
 @media (prefers-reduced-motion: reduce) {
   .tanya-q,
   .tanya-a,
-  .tanya-kendaraan,
-  .tanya-ketik i {
+  .tanya-muncul-i,
+  .tanya-ketik i,
+  .tanya-kerangka i,
+  .tanya-chips button.is-masuk,
+  .tanya-a.is-memuat .tanya-a-av svg {
     animation: none;
+  }
+  .tanya-a.is-memuat .tanya-a-av::after {
+    animation-duration: 3s;
   }
   .tanya-kartu,
   .tanya-kartu-foto img {

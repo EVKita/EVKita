@@ -91,6 +91,9 @@ const heroSub = site.heroSub || t("pub.hero.subFallback");
  * saat pertama masuk situs dan lewat tombol Masuk di header.
  */
 
+/* Kumpulan contoh pertanyaan Tanya EVKita — diacak dan digilir di peramban. */
+const contohTanya = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => t(`pub.tanya.contoh${n}`));
+
 const seoTitle = site.seoTitle || `${site.brandText || "EVKita"} — ${heroTitle}`;
 const seoDesc = site.seoDescription || heroSub;
 
@@ -350,6 +353,7 @@ const jsonLd = {
         class="tanya tanya-wide enter"
         id="tanyaEvkita"
         data-menjawab={t("pub.tanya.menjawab")}
+        data-tahap={JSON.stringify([t("pub.tanya.tahap1"), t("pub.tanya.tahap2"), t("pub.tanya.tahap3")])}
         data-sisa-tpl={t("pub.tanya.sisa")}
         data-judul-katalog={t("pub.tanya.dariKatalog")}
         data-judul-ai={t("pub.tanya.jawabanAi")}
@@ -401,10 +405,12 @@ const jsonLd = {
             </svg>
           </button>
         </form>
-        <div class="tanya-chips" id="tanyaChips">
-          <button type="button" data-tanya-contoh={t("pub.tanya.contoh1")}>{t("pub.tanya.contoh1")}</button>
-          <button type="button" data-tanya-contoh={t("pub.tanya.contoh2")}>{t("pub.tanya.contoh2")}</button>
-          <button type="button" data-tanya-contoh={t("pub.tanya.contoh3")}>{t("pub.tanya.contoh3")}</button>
+        {/* Tiga contoh tampil dari server (tetap berfungsi tanpa JS); skrip
+            mengacak seluruh `data-tanya-pool` lalu menggilirnya bertiga. */}
+        <div class="tanya-chips" id="tanyaChips" data-tanya-pool={JSON.stringify(contohTanya)}>
+          {contohTanya.slice(0, 3).map((q) => (
+            <button type="button" data-tanya-contoh={q}>{q}</button>
+          ))}
         </div>
         <div class="tanya-jawab" id="tanyaJawab" aria-live="polite" hidden></div>
         <p class="tanya-meta">
@@ -1422,6 +1428,105 @@ const jsonLd = {
         jawab.hidden = false;
       }
 
+      function json(nama) {
+        try {
+          var v = JSON.parse(attr(nama) || "[]");
+          return Array.isArray(v) ? v.filter(function (x) { return typeof x === "string" && x; }) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      var gerakMinimal = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+      /* ---------- Tahap "berpikir": teks status bergilir selama menunggu ---------- */
+      var tahap = json("data-tahap");
+      var timerTahap = null;
+      function mulaiTahap() {
+        hentikanTahap();
+        var i = 0;
+        timerTahap = setInterval(function () {
+          var el = document.getElementById("tanyaTahap");
+          if (!el || i >= tahap.length - 1) return hentikanTahap();
+          i++;
+          el.classList.add("is-ganti");
+          setTimeout(function () {
+            el.textContent = tahap[i];
+            el.classList.remove("is-ganti");
+          }, 180);
+        }, 1600);
+      }
+      function hentikanTahap() {
+        if (timerTahap) clearInterval(timerTahap);
+        timerTahap = null;
+      }
+
+      /* Urutan muncul bertahap: tiap paragraf/butir/kartu diberi indeks untuk
+         jeda animasinya (lihat .tanya-muncul-i di global.css). */
+      function urutkanMuncul() {
+        var bagian = jawab.querySelectorAll(".tanya-md > *, .tanya-a-aksi, .tanya-judul-blok, .tanya-kartu");
+        for (var i = 0; i < bagian.length; i++) {
+          bagian[i].classList.add("tanya-muncul-i");
+          bagian[i].style.setProperty("--i", String(Math.min(i, 12)));
+        }
+      }
+
+      /* ---------- Contoh pertanyaan: diacak, lalu digilir bertiga ---------- */
+      var kumpulan = chips ? (function () {
+        try {
+          var v = JSON.parse(chips.getAttribute("data-tanya-pool") || "[]");
+          return Array.isArray(v) ? v.filter(function (x) { return typeof x === "string" && x; }) : [];
+        } catch (e) {
+          return [];
+        }
+      })() : [];
+      for (var k = kumpulan.length - 1; k > 0; k--) {
+        var j = Math.floor(Math.random() * (k + 1));
+        var tmp = kumpulan[k]; kumpulan[k] = kumpulan[j]; kumpulan[j] = tmp;
+      }
+      var posisiContoh = 0;
+      var timerContoh = null;
+
+      function isiContoh(animasi) {
+        if (!chips || kumpulan.length < 3) return;
+        var tombolContoh = chips.querySelectorAll("[data-tanya-contoh]");
+        for (var n = 0; n < tombolContoh.length; n++) {
+          (function (b, q, jeda) {
+            function ganti() {
+              b.setAttribute("data-tanya-contoh", q);
+              b.textContent = q;
+            }
+            if (!animasi) return ganti();
+            setTimeout(function () {
+              b.classList.add("is-keluar");
+              setTimeout(function () {
+                ganti();
+                b.classList.remove("is-keluar");
+                b.classList.add("is-masuk");
+                setTimeout(function () { b.classList.remove("is-masuk"); }, 420);
+              }, 260);
+            }, jeda);
+          })(tombolContoh[n], kumpulan[(posisiContoh + n) % kumpulan.length], n * 110);
+        }
+        posisiContoh = (posisiContoh + tombolContoh.length) % kumpulan.length;
+      }
+
+      /* Bergilir tiap 6 detik; berhenti saat disentuh/difokus, saat AI menjawab,
+         saat tab tersembunyi, dan untuk pengunjung yang meminta gerak minimal. */
+      function gilirContoh(jeda) {
+        if (timerContoh) clearInterval(timerContoh);
+        timerContoh = null;
+        if (jeda || gerakMinimal || !chips || kumpulan.length <= 3) return;
+        timerContoh = setInterval(function () {
+          if (document.hidden || akar.classList.contains("is-sibuk")) return;
+          if (chips.matches(":hover") || chips.contains(document.activeElement)) return;
+          isiContoh(true);
+        }, 6000);
+      }
+
+      isiContoh(false);
+      gilirContoh(false);
+
       /* Di HP jawaban bisa jatuh di bawah layar — gulir secukupnya. */
       function gulirKeJawaban() {
         var r = jawab.getBoundingClientRect();
@@ -1446,6 +1551,7 @@ const jsonLd = {
           out += "</div></div>";
         }
         tampil(out);
+        urutkanMuncul();
       }
 
       async function tanya(pertanyaan) {
@@ -1456,14 +1562,18 @@ const jsonLd = {
           return;
         }
         kunci(true);
+        gilirContoh(true);
         tampil(
           gelembungTanya(q) +
           gelembungJawab(
+            '<div class="tanya-pikir">' +
             '<span class="tanya-ketik" aria-hidden="true"><i></i><i></i><i></i></span>' +
-            '<span class="tanya-ketik-teks">' + esc(attr("data-menjawab")) + "</span>",
+            '<span class="tanya-pikir-teks" id="tanyaTahap">' + esc(tahap[0] || attr("data-menjawab")) + "</span></div>" +
+            '<div class="tanya-kerangka" aria-hidden="true"><i></i><i></i><i></i></div>',
             "is-memuat"
           )
         );
+        mulaiTahap();
         gulirKeJawaban();
         try {
           var lang = (document.documentElement.getAttribute("lang") || "id").slice(0, 2);
@@ -1484,7 +1594,9 @@ const jsonLd = {
         } catch (err) {
           tampil(gelembungTanya(q) + gelembungJawab("<p>" + esc(pesanGalat(err && err.message)) + "</p>", "is-galat"));
         } finally {
+          hentikanTahap();
           kunci(false);
+          gilirContoh(false);
         }
       }
 
