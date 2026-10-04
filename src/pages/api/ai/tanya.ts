@@ -11,6 +11,7 @@ import {
   tanyaGemini,
   pilihKonteks,
   pilihTampil,
+  cariDisebut,
   ringkasKonteks,
   susunInstruksi,
   MODEL_BAWAAN_GEMINI,
@@ -35,12 +36,15 @@ import {
  *   mengirim pertanyaan dan menerima jawaban.
  * - Tanpa riwayat: tiap pertanyaan berdiri sendiri. Tidak ada state
  *   percakapan di server, tidak ada yang perlu disimpan.
- * - Katalog dicari DULU di situs sendiri: yang cocok (maksimal 4) dikirim
- *   sebagai kartu pilihan di atas jawaban AI; kalau tidak ada yang cocok,
- *   hanya jawaban AI yang tampil. Konteks katalog (maksimal 8 kendaraan yang
- *   cocok kata) juga diselipkan ke instruksi supaya angka situs sendiri lebih
- *   diutamakan daripada ingatan model. Di luar itu model boleh menjawab umum
- *   — dan wajib mengaku kalau tidak tahu (lihat `susunInstruksi()`).
+ * - Seluruh katalog yang TAYANG diselipkan ke instruksi sebagai satu baris
+ *   ringkas per kendaraan (yang disebut/cocok dengan pertanyaan di urutan
+ *   teratas). Katalognya kecil — puluhan baris — jadi model bisa
+ *   merekomendasikan dari data situs sendiri walaupun pertanyaannya tidak
+ *   menyebut nama, mis. "SUV di bawah 500 juta". Di luar itu model boleh
+ *   menjawab umum — dan wajib mengaku kalau tidak tahu (`susunInstruksi()`).
+ * - Kartu ber-foto (maksimal 4) dipilih SETELAH jawaban datang: kendaraan yang
+ *   disebut di pertanyaan, yang cocok kata, lalu yang disebut di jawaban AI.
+ *   Hanya kendaraan katalog yang bisa jadi kartu (`pilihTampil()`).
  */
 
 function konteksDari(content: any, pertanyaan: string) {
@@ -58,13 +62,19 @@ function konteksDari(content: any, pertanyaan: string) {
       price: v.price ?? null,
       priceText: v.priceText || "",
       image: v.image || "",
+      year: Number.isFinite(Number(v.year)) && v.year ? Number(v.year) : null,
     }));
-  const ringkas = [...rakit(content.cars, "mobil"), ...rakit(content.motors, "motor")];
-  return {
-    teks: ringkasKonteks(pilihKonteks(ringkas, pertanyaan)),
-    kandidat: pilihTampil(ringkas, pertanyaan),
-  };
+  const semua = [...rakit(content.cars, "mobil"), ...rakit(content.motors, "motor")];
+  /* Yang relevan di urutan teratas, sisanya menyusul — model cenderung
+     memperhatikan baris awal lebih dulu. Dibatasi supaya katalog yang kelak
+     membesar tidak membengkakkan biaya per pertanyaan. */
+  const depan = [...cariDisebut(semua, pertanyaan, 12), ...pilihKonteks(semua, pertanyaan, 12)];
+  const urut = [...new Set([...depan, ...semua])].slice(0, MAKS_BARIS_KONTEKS);
+  return { teks: ringkasKonteks(urut), semua };
 }
+
+/** Batas baris katalog di instruksi — ±20 token per baris. */
+const MAKS_BARIS_KONTEKS = 120;
 
 export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
   /* Tanpa wajib masuk: anggota memakai id-nya, anonim memakai alamat IP.
@@ -124,5 +134,6 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     return json({ ok: false, errorKey: hasil.errorKey, sisa: kuota.sisa }, 502);
   }
 
-  return json({ ok: true, jawaban: hasil.teks, kandidat: konteks.kandidat, sisa: kuota.sisa, kuota: TANYA_KUOTA_HARIAN });
+  const kandidat = pilihTampil(konteks.semua, pertanyaan, 4, hasil.teks);
+  return json({ ok: true, jawaban: hasil.teks, kandidat, sisa: kuota.sisa, kuota: TANYA_KUOTA_HARIAN });
 };

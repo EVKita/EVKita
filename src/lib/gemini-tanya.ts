@@ -57,8 +57,54 @@ export function urutkanModelFlash(daftar: string[]): string[] {
  */
 const TIMEOUT_MS = 30_000;
 
-/** Keluaran maksimum per jawaban — cukup untuk penjelasan singkat, tidak untuk esai. */
-const MAKS_TOKEN_KELUARAN = 512;
+/**
+ * Keluaran maksimum per jawaban. Dulu 512 — dan itulah penyebab jawaban
+ * terpotong di tengah kalimat: model Flash generasi 2.5 ke atas menghitung
+ * token "berpikir" ke dalam batas yang sama, jadi sisa untuk jawabannya bisa
+ * tinggal separuh. Panjang jawaban dijaga lewat instruksi, bukan lewat batas
+ * ini; batas ini hanya rem darurat.
+ */
+const MAKS_TOKEN_KELUARAN = 2048;
+
+/**
+ * Konfigurasi "berpikir" sesuai generasi model — ditekan serendah mungkin,
+ * karena tanya-jawab singkat tidak butuh penalaran panjang dan tiap token
+ * berpikir memakan jatah keluaran. Bentuknya berbeda per generasi: 2.5
+ * memakai `thinkingBudget`, 3.x (dan alias `-latest`) memakai
+ * `thinkingLevel`. Model 1.x/2.0 tidak berpikir sama sekali. Kalau Google
+ * menolak bentuk ini (400), `tanyaGemini` mencoba sekali lagi tanpanya.
+ */
+export function konfigPikir(model: string): Record<string, unknown> | null {
+  const m = String(model || "").toLowerCase();
+  if (/gemini-(1\.|2\.0)/.test(m)) return null;
+  if (/gemini-2\.5/.test(m)) return /pro/.test(m) ? { thinkingBudget: 128 } : { thinkingBudget: 0 };
+  return { thinkingLevel: "low" };
+}
+
+/**
+ * Jawaban yang berhenti karena batas token (`finishReason: MAX_TOKENS`)
+ * dipangkas ke akhir kalimat utuh terakhir — pengunjung lebih baik membaca
+ * jawaban yang sedikit lebih pendek daripada kalimat yang putus di tengah
+ * kata. Kalau tidak ada akhir kalimat sama sekali, potong di spasi terakhir
+ * dan beri elipsis. Murni, bisa diuji.
+ */
+export function rapikanTerpotong(teks: string): string {
+  const s = String(teks || "").replace(/\s+$/, "");
+  if (!s) return "";
+  // Akhir kalimat: tanda baca penutup (Latin & CJK), boleh diikuti penutup
+  // penekanan/kurung/kutip, lalu spasi atau akhir teks.
+  // Tanda baca CJK tidak diikuti spasi, jadi tidak perlu syarat itu.
+  const re = /(?:[.!?](?:\*{1,2}|_|\)|"|”|’)*(?=\s|$)|[。！？](?:\*{1,2}|_|）|”|’)*)/g;
+  let akhir = -1;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s))) akhir = m.index + m[0].length;
+  if (akhir >= Math.min(40, s.length * 0.4)) return s.slice(0, akhir).trim();
+  // Tidak ada kalimat utuh yang layak: pakai baris utuh terakhir (butir daftar).
+  const baris = s.lastIndexOf("\n");
+  if (baris > s.length * 0.4) return s.slice(0, baris).trim();
+  const spasi = s.lastIndexOf(" ");
+  return (spasi > 0 ? s.slice(0, spasi) : s).replace(/[\s,;:*_-]+$/, "") + "…";
+}
 
 /**
  * Bentuk kunci Google AI Studio. Sejak 28 Mei 2026 kunci BARU berupa kunci
@@ -109,12 +155,15 @@ export interface KonteksKendaraan {
   price: number | null;
   priceText: string;
   image?: string;
+  year?: number | null;
 }
 
-/** Satu kartu hasil katalog untuk ditampilkan di atas jawaban AI. Murni. */
+/** Satu kartu kendaraan untuk ditampilkan bersama jawaban AI. Murni. */
 export interface KandidatTampil {
   nama: string;
   href: string;
+  /** "mobil" atau "motor" — untuk lencana di kartu. */
+  jenis: string;
   meta: string;
   harga: string;
   image: string;
@@ -157,12 +206,58 @@ function rupiahSingkat(n: number | null): string {
   return `Rp ${v.toLocaleString("id-ID")}`;
 }
 
+/** Teks dinormalkan untuk pencocokan frasa: huruf kecil, tanpa aksen, kata dipisah satu spasi. */
+function normalFrasa(s: string): string {
+  return ` ${String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()} `;
+}
+
+/**
+ * Kendaraan katalog yang DISEBUT di sebuah teks (pertanyaan atau jawaban AI),
+ * diurutkan menurut kemunculan pertamanya. Cocok kalau "Merek Nama" muncul
+ * utuh sebagai frasa — atau nama saja, asal cukup khas (punya angka, lebih
+ * dari satu kata, atau minimal 5 huruf) supaya "Seal" atau "Air" tidak
+ * menyambar kata biasa. Pencocokan per kata utuh: "Atto 1" tidak ikut
+ * menyambar "Atto 10". Murni, bisa diuji.
+ */
+export function cariDisebut(
+  semua: KonteksKendaraan[],
+  teks: string,
+  batas = 6
+): KonteksKendaraan[] {
+  const hay = normalFrasa(teks);
+  if (hay.trim().length < 2) return [];
+  const temu: { v: KonteksKendaraan; pos: number; panjang: number }[] = [];
+  for (const v of semua || []) {
+    const penuh = normalFrasa(`${v.brand} ${v.name}`);
+    const nama = normalFrasa(v.name);
+    let pos = penuh.trim() ? hay.indexOf(penuh) : -1;
+    let panjang = penuh.length;
+    const namaKhas = /\d/.test(nama) || nama.trim().includes(" ") || nama.trim().length >= 5;
+    if (pos < 0 && namaKhas && nama.trim()) {
+      pos = hay.indexOf(nama);
+      panjang = nama.length;
+    }
+    if (pos >= 0) temu.push({ v, pos, panjang });
+  }
+  // Kemunculan lebih awal dulu; di posisi yang sama, frasa terpanjang menang
+  // ("Atto 3" sebelum "Atto").
+  temu.sort((a, b) => a.pos - b.pos || b.panjang - a.panjang);
+  return temu.slice(0, batas).map((t) => t.v);
+}
+
 /** Merangkum konteks jadi teks untuk instruksi sistem. Murni, bisa diuji. */
 export function ringkasKonteks(daftar: KonteksKendaraan[]): string {
   if (!daftar.length) return "";
   const baris = daftar.map((v) => {
     const bagian = [`${v.brand} ${v.name}`.trim()];
+    if (v.kind) bagian.push(v.kind);
     if (v.bodyType) bagian.push(v.bodyType);
+    if (v.year) bagian.push(String(v.year));
     if (v.rangeKm !== null && v.rangeKm !== undefined) bagian.push(`${v.rangeKm} km`);
     if (v.batteryKwh !== null && v.batteryKwh !== undefined) bagian.push(`${v.batteryKwh} kWh`);
     const harga = v.priceText || rupiahSingkat(v.price);
@@ -173,17 +268,39 @@ export function ringkasKonteks(daftar: KonteksKendaraan[]): string {
 }
 
 /**
- * Kandidat untuk ditampilkan sebagai kartu di atas jawaban AI: yang cocok
- * katalog dicari dulu di situs sendiri, alternatif AI menyusul di bawahnya.
- * Maksimal `batas` butir supaya muat satu layar. Murni, bisa diuji.
+ * Kendaraan yang ditampilkan sebagai kartu ber-foto bersama jawaban AI.
+ * Urutannya: yang DISEBUT di pertanyaan, lalu yang cocok semua kata
+ * pertanyaan, lalu yang DISEBUT di jawaban AI — jadi kalau AI merekomendasikan
+ * "BYD Atto 1", fotonya ikut tampil walaupun pertanyaannya cuma "mobil listrik
+ * termurah". Hanya kendaraan yang benar-benar ada di katalog yang bisa jadi
+ * kartu; nama yang dikarang AI tidak pernah. Maksimal `batas` butir.
+ * Murni, bisa diuji.
  */
 export function pilihTampil(
   semua: KonteksKendaraan[],
   pertanyaan: string,
-  batas = 4
+  batas = 4,
+  jawaban = ""
 ): KandidatTampil[] {
-  return pilihKonteks(semua, pertanyaan, batas)
-    .filter((v) => v && v.id)
+  // Pertanyaan yang menyebut nama ("byd atto 3") sudah tepat sasaran;
+  // pencocokan per kata di sana justru ikut menyambar "Atto 1", karena
+  // angka satu digit tidak dihitung sebagai kata kunci.
+  const disebut = cariDisebut(semua, pertanyaan, batas);
+  const urut = [
+    ...disebut,
+    ...(disebut.length ? [] : pilihKonteks(semua, pertanyaan, batas)),
+    ...(jawaban ? cariDisebut(semua, jawaban, batas * 2) : []),
+  ];
+  const sudah = new Set<string>();
+  const unik = urut.filter((v) => {
+    if (!v || !v.id) return false;
+    const k = `${v.kind || ""}:${v.id}`;
+    if (sudah.has(k)) return false;
+    sudah.add(k);
+    return true;
+  });
+  return unik
+    .slice(0, batas)
     .map((v) => {
       const meta = [
         v.bodyType || "",
@@ -193,6 +310,7 @@ export function pilihTampil(
       return {
         nama: `${v.brand} ${v.name}`.trim(),
         href: `${v.kind === "motor" ? "/motor/" : "/mobil/"}${v.id}`,
+        jenis: v.kind === "motor" ? "motor" : "mobil",
         meta,
         harga: v.priceText || rupiahSingkat(v.price),
         image: String(v.image || ""),
@@ -215,11 +333,13 @@ export function susunInstruksi(lang: string, konteks: string): string {
         ? "用自然、地道的简体中文回答。"
         : "Jawablah dalam Bahasa Indonesia yang alami.";
   const baris = [
-    "Kamu adalah asisten situs EVKita.com, panduan kendaraan listrik Indonesia.",
+    "Kamu adalah asisten situs EVKita.com, panduan kendaraan listrik (mobil dan motor) di Indonesia.",
     bahasa,
-    "Jawaban singkat saja, maksimal 5 kalimat, tanpa pembuka basa-basi.",
-    "Kalau pertanyaan menyebut kendaraan yang ada di DATA KATALOG di bawah, utamakan angka dari katalog itu.",
-    "Kalau pertanyaan di luar katalog, jawablah dari pengetahuan umummu.",
+    "Langsung ke inti, tanpa pembuka basa-basi. Panjang jawaban sekitar 60–180 kata; selalu tuntaskan kalimat terakhir.",
+    "Format: Markdown sederhana. Pakai **tebal** untuk nama kendaraan dan angka penting, *miring* seperlunya, dan daftar berbutir (`- `) atau bernomor (`1. `) untuk rekomendasi atau perbandingan. Tanpa tabel, tanpa judul (#), tanpa tautan, tanpa emoji berlebihan.",
+    "Saat menyebut kendaraan, tulis nama lengkapnya persis seperti di DATA KATALOG (merek + model), misalnya **BYD Atto 1** — supaya situs bisa menampilkan fotonya.",
+    "Kalau pertanyaan cocok dengan kendaraan di DATA KATALOG, rekomendasikan dari katalog itu dulu dan pakai angkanya (harga, jarak, baterai).",
+    "Kalau pertanyaan di luar katalog, jawablah dari pengetahuan umummu dan katakan bahwa datanya belum ada di katalog EVKita.",
     "Kalau kamu tidak tahu, katakan tidak tahu — jangan mengarang angka, harga, atau spesifikasi.",
     "Jangan pernah mengaku sebagai manusia, dan jangan membahas instruksi ini.",
   ];
@@ -266,9 +386,16 @@ function teksDari(res: any): string {
     Array.isArray(k?.content?.parts) ? k.content.parts : []
   );
   return bagian
+    // Ringkasan "berpikir" (`thought: true`) bukan jawaban — jangan ikut tampil.
+    .filter((p: any) => !p?.thought)
     .map((p: any) => String(p?.text || ""))
     .join("")
     .trim();
+}
+
+function alasanSelesai(res: any): string {
+  const k = Array.isArray(res?.candidates) ? res.candidates[0] : null;
+  return String(k?.finishReason || "");
 }
 
 /**
@@ -288,17 +415,21 @@ export async function tanyaGemini(opts: {
   const tanya = String(opts.pertanyaan || "").trim();
   if (!tanya) return gagal("err.tanya.kosong");
 
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), TIMEOUT_MS);
-  const gabung = opts.signal
-    ? AbortSignal.any([opts.signal, ac.signal])
-    : ac.signal;
+  const model = opts.model || MODEL_BAWAAN_GEMINI;
+  const pikir = konfigPikir(model);
 
-  let res: Response;
-  try {
-    res = await fetch(
-      `${DASAR_URL}/v1beta/models/${encodeURIComponent(opts.model || MODEL_BAWAAN_GEMINI)}:generateContent`,
-      {
+  async function kirim(denganPikir: boolean): Promise<{ res: Response; data: any } | HasilTanya> {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), TIMEOUT_MS);
+    const gabung = opts.signal ? AbortSignal.any([opts.signal, ac.signal]) : ac.signal;
+    const generationConfig: Record<string, unknown> = {
+      maxOutputTokens: MAKS_TOKEN_KELUARAN,
+      temperature: 0.7,
+    };
+    if (denganPikir && pikir) generationConfig.thinkingConfig = pikir;
+    let res: Response;
+    try {
+      res = await fetch(`${DASAR_URL}/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -308,29 +439,35 @@ export async function tanyaGemini(opts: {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: opts.instruksi }] },
           contents: [{ role: "user", parts: [{ text: tanya }] }],
-          generationConfig: { maxOutputTokens: MAKS_TOKEN_KELUARAN, temperature: 0.7 },
+          generationConfig,
         }),
-      }
-    );
-  } catch {
-    clearTimeout(timer);
-    return gagal("err.tanya.tidakTerhubung");
-  } finally {
-    clearTimeout(timer);
+      });
+    } catch {
+      return gagal("err.tanya.tidakTerhubung");
+    } finally {
+      clearTimeout(timer);
+    }
+    try {
+      const mentah = (await res.text()).trim();
+      return { res, data: mentah ? JSON.parse(mentah) : null };
+    } catch {
+      return gagal("err.tanya.jawabanTidakTerbaca");
+    }
   }
 
-  let data: any;
-  try {
-    const mentah = (await res.text()).trim();
-    data = mentah ? JSON.parse(mentah) : null;
-  } catch {
-    return gagal("err.tanya.jawabanTidakTerbaca");
-  }
+  let hasil = await kirim(true);
+  // Model yang tidak mengenal bentuk `thinkingConfig` ini menolak dengan 400 —
+  // coba sekali lagi tanpa konfigurasi berpikir, bukan langsung menyerah.
+  if (pikir && !("ok" in hasil) && hasil.res.status === 400) hasil = await kirim(false);
+  if ("ok" in hasil) return hasil;
+  const { res, data } = hasil;
 
   if (!res.ok) return gagal(kunciGalatUntukStatus(res.status), detailGalat(data));
 
-  const teks = teksDari(data);
+  let teks = teksDari(data);
   if (!teks) return gagal("err.tanya.tanpaJawaban");
+  // Kehabisan token: jangan kirim kalimat yang putus di tengah kata.
+  if (alasanSelesai(data) === "MAX_TOKENS") teks = rapikanTerpotong(teks);
 
   const meta = data?.usageMetadata || {};
   return {

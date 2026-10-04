@@ -8,6 +8,10 @@ import {
   kunciGeminiTampakSah,
   urutkanModelFlash,
   ujiKunciGemini,
+  tanyaGemini,
+  cariDisebut,
+  rapikanTerpotong,
+  konfigPikir,
 } from "../src/lib/gemini-tanya.ts";
 import {
   tanggalWib,
@@ -76,12 +80,121 @@ describe("pilihTampil", () => {
   });
 });
 
+describe("cariDisebut — kartu ber-foto dari nama yang disebut", () => {
+  const ARMADA = [
+    { id: "atto-1", kind: "mobil", brand: "BYD", name: "Atto 1", bodyType: "Hatchback", rangeKm: 300, batteryKwh: 30, price: 195000000, priceText: "", image: "/a1.webp" },
+    { id: "atto-3", kind: "mobil", brand: "BYD", name: "Atto 3", bodyType: "SUV", rangeKm: 410, batteryKwh: 50, price: 390000000, priceText: "", image: "/a3.webp" },
+    { id: "seal", kind: "mobil", brand: "BYD", name: "Seal", bodyType: "Sedan", rangeKm: 520, batteryKwh: 82, price: 700000000, priceText: "", image: "" },
+    { id: "air", kind: "mobil", brand: "Wuling", name: "Air EV", bodyType: "Hatchback", rangeKm: 300, batteryKwh: 26, price: 250000000, priceText: "", image: "" },
+    { id: "s2", kind: "motor", brand: "Alva", name: "Cervo", bodyType: "Skuter", rangeKm: 125, batteryKwh: 3, price: 50000000, priceText: "", image: "" },
+  ];
+
+  it("urut menurut kemunculan, per kata utuh, nama khas boleh tanpa merek", () => {
+    const dapat = cariDisebut(ARMADA, "Pilihan hemat: **Air EV** lalu **BYD Atto 3**; Atto 10 tidak ada.");
+    assert.deepEqual(dapat.map((v) => v.id), ["air", "atto-3"]);
+  });
+
+  it("nama pendek generik ('Seal') tidak menyambar tanpa mereknya", () => {
+    assert.deepEqual(cariDisebut(ARMADA, "baterai harus seal rapat"), []);
+    assert.deepEqual(cariDisebut(ARMADA, "BYD Seal itu sedan").map((v) => v.id), ["seal"]);
+  });
+
+  it("pilihTampil menambahkan kendaraan yang disebut di jawaban AI", () => {
+    const dapat = pilihTampil(ARMADA, "mobil listrik termurah?", 4, "Yang termurah adalah **BYD Atto 1**, disusul **Wuling Air EV**.");
+    assert.deepEqual(dapat.map((k) => k.href), ["/mobil/atto-1", "/mobil/air"]);
+    assert.equal(dapat[0].image, "/a1.webp");
+    assert.equal(dapat[0].jenis, "mobil");
+  });
+
+  it("nama yang dikarang AI tidak pernah jadi kartu, dan tidak ada kembar", () => {
+    const dapat = pilihTampil(ARMADA, "byd atto 3", 4, "**BYD Atto 3** atau **Tesla Model Y**? Atto 3 lebih murah.");
+    assert.deepEqual(dapat.map((k) => k.href), ["/mobil/atto-3"]);
+  });
+});
+
+describe("rapikanTerpotong — jawaban tidak pernah putus di tengah kata", () => {
+  it("dipangkas ke akhir kalimat utuh terakhir", () => {
+    const t = "**BYD Atto 1** paling murah di katalog. Jaraknya 300 km dan baterainya 30 kWh. Selain itu ada Wul";
+    assert.equal(rapikanTerpotong(t), "**BYD Atto 1** paling murah di katalog. Jaraknya 300 km dan baterainya 30 kWh.");
+  });
+
+  it("penanda tebal setelah titik ikut dipertahankan", () => {
+    assert.equal(rapikanTerpotong("Pilihan terbaik adalah **BYD Seal yang irit.** Lalu ada mob"), "Pilihan terbaik adalah **BYD Seal yang irit.**");
+  });
+
+  it("tanpa kalimat utuh: potong di spasi terakhir + elipsis", () => {
+    assert.equal(rapikanTerpotong("Mobil listrik yang paling hemat untuk har"), "Mobil listrik yang paling hemat untuk…");
+  });
+
+  it("teks Mandarin memakai tanda baca CJK", () => {
+    assert.equal(rapikanTerpotong("比亚迪 Atto 1 是目录中最便宜的车型，续航三百公里。另外还有五菱"), "比亚迪 Atto 1 是目录中最便宜的车型，续航三百公里。");
+  });
+});
+
+describe("konfigPikir", () => {
+  it("bentuk konfigurasi berpikir mengikuti generasi model", () => {
+    assert.deepEqual(konfigPikir("gemini-2.5-flash"), { thinkingBudget: 0 });
+    assert.deepEqual(konfigPikir("gemini-flash-latest"), { thinkingLevel: "low" });
+    assert.deepEqual(konfigPikir("gemini-3.8-flash"), { thinkingLevel: "low" });
+    assert.equal(konfigPikir("gemini-2.0-flash"), null);
+  });
+});
+
+describe("tanyaGemini", () => {
+  const balas = (status: number, body: any) =>
+    new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+
+  async function denganFetch(palsu: (init: any) => Response, fn: () => Promise<void>) {
+    const asli = globalThis.fetch;
+    globalThis.fetch = (async (_url: any, init: any) => palsu(init)) as any;
+    try {
+      await fn();
+    } finally {
+      globalThis.fetch = asli;
+    }
+  }
+
+  it("MAX_TOKENS: kalimat yang putus dipangkas, bagian 'berpikir' dibuang", async () => {
+    await denganFetch(() => balas(200, {
+      candidates: [{
+        finishReason: "MAX_TOKENS",
+        content: { parts: [
+          { text: "rencana jawaban rahasia", thought: true },
+          { text: "Atto 1 paling murah. Jaraknya 300 km. Lalu ada Wul" },
+        ] },
+      }],
+    }), async () => {
+      const h = await tanyaGemini({ apiKey: "AIza1234567890abcdef", model: "gemini-flash-latest", pertanyaan: "termurah?", instruksi: "x" });
+      assert.equal(h.ok, true);
+      assert.equal(h.teks, "Atto 1 paling murah. Jaraknya 300 km.");
+    });
+  });
+
+  it("thinkingConfig ditolak (400) → dicoba ulang sekali tanpa konfigurasi itu", async () => {
+    const badan: any[] = [];
+    await denganFetch((init) => {
+      const b = JSON.parse(init.body);
+      badan.push(b);
+      if (b.generationConfig.thinkingConfig) return balas(400, { error: { message: "Unknown name thinkingLevel" } });
+      return balas(200, { candidates: [{ finishReason: "STOP", content: { parts: [{ text: "Jawaban utuh." }] } }] });
+    }, async () => {
+      const h = await tanyaGemini({ apiKey: "AIza1234567890abcdef", model: "gemini-flash-latest", pertanyaan: "halo?", instruksi: "x" });
+      assert.equal(h.ok, true);
+      assert.equal(h.teks, "Jawaban utuh.");
+      assert.equal(badan.length, 2);
+      assert.ok(badan[0].generationConfig.maxOutputTokens >= 1024, "batas token cukup longgar untuk jawaban utuh");
+    });
+  });
+});
+
 describe("susunInstruksi", () => {
   it("selalu memerintahkan kejujuran dan menjawab sesuai bahasa", () => {
     const id = susunInstruksi("id", "- BYD Seal · 520 km");
     assert.match(id, /tidak tahu/);
     assert.match(id, /Bahasa Indonesia/);
     assert.match(id, /DATA KATALOG/);
+    assert.match(id, /Markdown/);
+    assert.match(id, /tuntaskan kalimat terakhir/);
     assert.match(susunInstruksi("en", ""), /English/);
     assert.match(susunInstruksi("zh", ""), /简体中文/);
   });
