@@ -709,18 +709,18 @@ const EN = {
   "pub.catalog.all": "Open full catalogue",
 
   // — "Our Cars/Bikes" panels: top 5 sellers of 2026 —
-  "pub.kita.mobil": "Mobil&Motor Kita",
-  "pub.kita.laris": "Laris Mobil Kita",
-  "pub.kita.mobilBaru": "Mobil Terbaru Kita",
-  "pub.kita.motor": "Motor Terbaru Kita",
+  "pub.kita.mobil": "Our Cars & Bikes",
+  "pub.kita.laris": "Best-Selling Cars",
+  "pub.kita.mobilBaru": "Newest Cars",
+  "pub.kita.motor": "Newest Bikes",
   "pub.kita.sub": "Top 5 best sellers of 2026",
   "pub.kita.unit": "{n} units",
   "pub.kita.beritaSub": "Top 5 most interesting EV news",
 
   // — VoteKita: top 10 visitor favorites, star voting —
   "pub.vote.title": "VoteKita",
-  "pub.vote.mobil": "Mobil Kita",
-  "pub.vote.motor": "Motor Kita",
+  "pub.vote.mobil": "Our Cars",
+  "pub.vote.motor": "Our Bikes",
   "pub.vote.sub": "Top 10 visitor favorites — click a star to vote",
   "pub.vote.satu": "One visitor, one car + one bike — picking a new one moves your vote",
   "pub.vote.suara": "{n} votes",
@@ -1359,18 +1359,18 @@ const ZH = {
   "pub.catalog.all": "打开完整目录",
 
   // — “我们的汽车/摩托车”榜单：2026年最畅销的5款 —
-  "pub.kita.mobil": "Mobil&Motor Kita",
-  "pub.kita.laris": "Laris Mobil Kita",
-  "pub.kita.mobilBaru": "Mobil Terbaru Kita",
-  "pub.kita.motor": "Motor Terbaru Kita",
+  "pub.kita.mobil": "我们的汽车与摩托",
+  "pub.kita.laris": "畅销汽车",
+  "pub.kita.mobilBaru": "最新汽车",
+  "pub.kita.motor": "最新摩托车",
   "pub.kita.sub": "2026年最畅销的5款",
   "pub.kita.unit": "{n}辆",
   "pub.kita.beritaSub": "最值得关注的5条电动车新闻",
 
   // — VoteKita：访客最喜爱的10款，星级投票 —
   "pub.vote.title": "VoteKita",
-  "pub.vote.mobil": "Mobil Kita",
-  "pub.vote.motor": "Motor Kita",
+  "pub.vote.mobil": "我们的汽车",
+  "pub.vote.motor": "我们的摩托车",
   "pub.vote.sub": "访客最喜爱的10款——点击星星参与投票",
   "pub.vote.satu": "每位访客限选一辆汽车、一辆摩托——换选会自动转移你的投票",
   "pub.vote.suara": "{n}票",

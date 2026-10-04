@@ -8,6 +8,7 @@ import { safeUrl } from "../lib/url.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
+import { gambarBerita, kunciKanonik, petaGambarBerita } from "../lib/berita-gambar";
 
 /**
  * Daftar berita kurasi yang penuh.
@@ -40,6 +41,15 @@ const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured
 
 /** Draf dan yang belum tiba jadwalnya tidak boleh bocor ke halaman publik. */
 const beritaList = site.showBerita ? byFeatured((content.berita || []).filter(hanyaTayang())) : [];
+
+/**
+ * Foto tiap kartu: `n.image` (bawaan feed RSS) diutamakan; yang kosong
+ * dilengkapi dari og:image halaman sumbernya (cache 7 hari di
+ * `data/berita-gambar.json`). Baris yang tetap tanpa foto tampil teks saja.
+ */
+const thumbBerita = await petaGambarBerita(beritaList.map((n: any) => String(n?.url || "")));
+const fotoBerita = (n: any) =>
+  safeUrl(n.image) || thumbBerita[kunciKanonik(String(n?.url || ""))] || "";
 
 const judul = site.beritaTitle || t("pub.dir.pageBerita");
 const lead = site.beritaNote || t("pub.dir.leadBerita");
@@ -124,8 +134,8 @@ const jsonLd = site.showBerita
       <div class="news-grid">
         {beritaList.map((n: any) => (
           <a class={`news-card${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
-            {n.image ? (
-              <div class="news-thumb"><img src={safeUrl(n.image)} alt="" loading="lazy" /></div>
+            {fotoBerita(n) ? (
+              <div class="news-thumb"><img src={fotoBerita(n)} alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-berita /></div>
             ) : null}
             <div class="news-body">
               <div class="news-top">
@@ -146,4 +156,26 @@ const jsonLd = site.showBerita
   )}
 
   <SiteFooter site={site} base="/" />
+
+  <script>
+    /*
+     * Foto berita adalah hotlink ke situs penerbit — kalau gambarnya mati,
+     * sembunyikan kotaknya supaya kartu kembali tampil teks saja.
+     * Tanpa inline handler (CSP): galat didengarkan di fase capture.
+     */
+    (function () {
+      document.addEventListener(
+        "error",
+        function (e) {
+          var t = e.target;
+          if (t && t.hasAttribute && t.hasAttribute("data-thumb-berita")) {
+            var box = t.closest ? t.closest(".news-thumb") : null;
+            if (box) box.remove();
+            else t.remove();
+          }
+        },
+        true
+      );
+    })();
+  </script>
 </Base>

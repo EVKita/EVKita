@@ -17,7 +17,7 @@ import { makePubT, normalizePubLocale, cms, cmsSite, pubIntl } from "../lib/i18n
 import { terjemahContent } from "../lib/terjemahan.js";
 import { bacaVotes } from "../lib/vote-store.js";
 import { rankVotes, voteRowHtml } from "../lib/vote-html.js";
-import { gambarBerita } from "../lib/berita-gambar";
+import { gambarBerita, kunciKanonik, petaGambarBerita } from "../lib/berita-gambar";
 
 const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 
@@ -165,6 +165,16 @@ const beritaKita = beritaList.slice(0, 5);
 const thumbBerita: string[] = await Promise.all(
   beritaKita.map((n: any) => gambarBerita(String(n?.url || "")))
 );
+
+/**
+ * Foto seksi sorotan berita (3 kartu atas): `n.image` bawaan feed diutamakan,
+ * sisanya dilengkapi dari cache og:image yang sama dengan panel samping —
+ * supaya kartu /berita, sorotan beranda, panel samping, dan running text
+ * selalu memakai daftar berita harian yang sama dengan foto yang sama.
+ */
+const thumbSorotan = await petaGambarBerita(beritaList.slice(0, 3).map((n: any) => String(n?.url || "")));
+const fotoSorotan = (n: any) =>
+  safeUrl(n.image) || thumbSorotan[kunciKanonik(String(n?.url || ""))] || "";
 
 /**
  * Panel VoteKita: 10 terfavorit pilihan pengunjung per jenis. Peringkat
@@ -898,8 +908,8 @@ const jsonLd = {
               <div class="news-feat">
                 {beritaList.slice(0, 1).map((n: any) => (
                   <a class={`news-card news-card-feat${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
-                    {n.image ? (
-                      <div class="news-thumb"><img src={safeUrl(n.image)} alt="" loading="lazy" /></div>
+                    {fotoSorotan(n) ? (
+                      <div class="news-thumb"><img src={fotoSorotan(n)} alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-berita /></div>
                     ) : null}
                     <div class="news-body">
                       <div class="news-top">
@@ -918,8 +928,8 @@ const jsonLd = {
                 <div class="news-feat-side">
                   {beritaList.slice(1, TEASER_DIR).map((n: any) => (
                   <a class={`news-card${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
-                    {n.image ? (
-                      <div class="news-thumb"><img src={safeUrl(n.image)} alt="" loading="lazy" /></div>
+                    {fotoSorotan(n) ? (
+                      <div class="news-thumb"><img src={fotoSorotan(n)} alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-berita /></div>
                     ) : null}
                     <div class="news-body">
                       <div class="news-top">

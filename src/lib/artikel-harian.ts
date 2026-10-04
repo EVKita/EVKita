@@ -240,6 +240,54 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
   return null;
 }
 
+/**
+ * Sampul otomatis untuk draf harian.
+ *
+ * Kartu artikel tanpa gambar tampil sebagai kotak teks polos — di /artikel
+ * maupun sorotan beranda — sehingga draf otomatis yang lahir tanpa sampul
+ * hampir tidak pernah ditekan Terbitnya. Fungsinya memilih gambar milik
+ * sendiri yang paling nyambung dengan topik, tanpa jaringan dan tanpa
+ * menebak: perbandingan memakai foto salah satu kendaraannya, rangkuman
+ * berita memakai foto berita asalnya, panduan memakai foto katalog yang
+ * diputar per hari. Kosong kalau katalog memang belum punya satu pun foto.
+ * Murni: tidak membaca berkas, tidak memanggil model.
+ */
+export function sampulArtikel(content: any, topik: TopikArtikel, hari: string): string {
+  const gambarKendaraan = (id: string): string => {
+    const semua = [...((content && content.cars) || []), ...((content && content.motors) || [])];
+    const temu = semua.find((v: any) => v && String(v.id) === String(id));
+    const g = String((temu && temu.image) || "").trim();
+    return /^https?:\/\//i.test(g) || g.startsWith("/") ? g : "";
+  };
+  if (topik.strategi === "banding") {
+    const ids = String(topik.kunci || "")
+      .replace(/^banding:/, "")
+      .split("+")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const id of ids) {
+      const g = gambarKendaraan(id);
+      if (g) return g;
+    }
+    return "";
+  }
+  if (topik.strategi === "berita") {
+    const berita = ((content && content.berita) || []) as any[];
+    for (const u of topik.sumberBoleh || []) {
+      const temu = berita.find((b: any) => b && String(b.url) === String(u));
+      const g = String((temu && temu.image) || "").trim();
+      if (g) return g;
+    }
+    return "";
+  }
+  const semuaGambar = [...((content && content.cars) || []), ...((content && content.motors) || [])]
+    .map((v: any) => String((v && v.image) || "").trim())
+    .filter((g) => g && (/^https?:\/\//i.test(g) || g.startsWith("/")));
+  if (!semuaGambar.length) return "";
+  const indeks = [...String(hari || "")].reduce((n, c) => n + c.charCodeAt(0), 0);
+  return semuaGambar[indeks % semuaGambar.length];
+}
+
 const SKEMA_DRAF = {
   type: "object",
   properties: {
@@ -407,7 +455,10 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
             publishAt: "",
             aiAssisted: true,
             auto: true,
-            image: "",
+            /* Sampul relevan otomatis supaya kartu draf langsung terlihat
+               menarik di panel dan — setelah diterbitkan — di /artikel dan
+               beranda. Gambar milik sendiri, tanpa mengunduh apa pun. */
+            image: sampulArtikel(segar, topik, hasil.tanggal),
             updatedAt: kini,
             updatedBy: "auto",
           });
