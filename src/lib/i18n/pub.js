@@ -483,6 +483,10 @@ const ID = {
   "pub.dir.telepon": "Telepon",
   "pub.dir.bengkel": "Bengkel",
   "pub.dir.lokasiSpklu": "Lokasi SPKLU",
+  "pub.dir.semuaSpklu": "Lihat semua SPKLU",
+  "pub.dir.semuaBengkel": "Lihat semua bengkel",
+  "pub.dir.semuaBerita": "Lihat semua berita",
+  "pub.dir.semuaKomunitas": "Lihat semua komunitas",
 
   // — Halaman direktori penuh (tautan "Buka katalog lengkap" di beranda) —
   "pub.dir.pageSpklu": "SPKLU Indonesia",
@@ -1131,6 +1135,10 @@ const EN = {
   "pub.dir.telepon": "Phone",
   "pub.dir.bengkel": "Workshop",
   "pub.dir.lokasiSpklu": "Charging station map",
+  "pub.dir.semuaSpklu": "See all charging stations",
+  "pub.dir.semuaBengkel": "See all workshops",
+  "pub.dir.semuaBerita": "See all news",
+  "pub.dir.semuaKomunitas": "See all communities",
 
   // — Full directory pages ("Open full catalogue" links on the home page) —
   "pub.dir.pageSpklu": "Indonesian Charging Stations",
@@ -1752,6 +1760,10 @@ const ZH = {
   "pub.dir.telepon": "电话",
   "pub.dir.bengkel": "维修店",
   "pub.dir.lokasiSpklu": "充电站地图",
+  "pub.dir.semuaSpklu": "查看全部充电站",
+  "pub.dir.semuaBengkel": "查看全部维修店",
+  "pub.dir.semuaBerita": "查看全部新闻",
+  "pub.dir.semuaKomunitas": "查看全部社区",
   "pub.dir.pageSpklu": "印度尼西亚充电站",
   "pub.dir.leadSpklu": "所有已收录的电动车充电地点——筛选功能在首页，这里一次性展示全部。",
   "pub.dir.hitungSpklu": "{n}个充电点",

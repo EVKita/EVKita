@@ -6776,6 +6776,86 @@ html {
   color: var(--text-muted);
 }
 
+/* ===== Perapian beranda di layar sempit =====
+ * Sengaja ditaruh SESUDAH aturan dasar `.dir-feat`, `.news-feat`,
+ * `.home-main`, `.home-side`, dan `.home-vote` — aturan HP yang ditulis
+ * sebelum aturan dasarnya kalah urutan dan tidak pernah berlaku (itulah yang
+ * dulu terjadi pada `.news-feat`). */
+/* Kolom kanan sorotan berita belum pernah punya aturan sendiri, jadi dua
+   kartunya menempel tanpa jarak di semua ukuran layar. Sama dengan
+   `.dir-feat-side`. */
+.news-feat-side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 1279px) {
+  /* `clip` hanya perlu di desktop tiga kolom (menjepit bilah filter sticky
+     supaya tidak menutupi panel kiri). Di satu kolom ia justru memotong baris
+     chip tipe bodi yang sengaja digeser sampai tepi layar. */
+  .home-main {
+    overflow-x: visible;
+  }
+  /* Jarak atas panel samping hanya untuk menghindari header sticky di
+     desktop; di satu kolom ia jadi celah kosong ±76px. Jarak antarseksi
+     sudah diatur `gap` milik `.home-cols`. */
+  .home-side,
+  .home-vote {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .news-feat {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tanpa scroll-padding, scroll-snap menempelkan chip pertama ke tepi layar
+   dan mengabaikan padding baris chip tipe bodi. */
+@media (max-width: 900px) {
+  .chips-row {
+    scroll-padding-inline: max(20px, var(--safe-l)) max(20px, var(--safe-r));
+  }
+}
+
+@media (max-width: 680px) {
+  /* Sorotan SPKLU, bengkel, dan komunitas: dua kolom di HP menjepit kartu
+     jadi ±160px dan memotong isinya di tepi kanan. Satu kolom saja. */
+  .dir-feat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dir-feat > *,
+  .dir-feat-side > * {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Bilah cari katalog menempel di bawah header — rapatkan supaya tidak
+     menutupi seperempat layar. */
+  .toolbar {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .toolbar-top {
+    row-gap: 8px;
+  }
+  .chips-row {
+    scroll-padding-inline: max(16px, var(--safe-l)) max(16px, var(--safe-r));
+  }
+}
+
+/* Placeholder kotak Tanya yang terlalu panjang diakhiri elipsis, bukan
+   dipotong kasar di tengah kata. */
+.tanya-input {
+  text-overflow: ellipsis;
+}
+.tanya-input::placeholder {
+  text-overflow: ellipsis;
+}
+
 /* ===== Sorotan artikel beranda ===== *
  * Satu kartu berfoto memanjang di kiri, dua kartu teks tanpa gambar di
  * kanan — pola yang sama dengan sorotan bengkel. Kartu kiri mengikuti tinggi
