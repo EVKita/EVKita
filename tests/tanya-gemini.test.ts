@@ -90,6 +90,12 @@ describe("kunciGeminiTampakSah", () => {
     assert.equal(kunciGeminiTampakSah("sk-abcdef1234567890"), false);
     assert.equal(kunciGeminiTampakSah(""), false);
   });
+
+  it("menerima kunci lama AIza dan kunci otorisasi baru AQ.", () => {
+    assert.equal(kunciGeminiTampakSah("AIza1234567890abcdef1234567890ab"), true);
+    assert.equal(kunciGeminiTampakSah("AQ.Ab8RN6IXKCausKIRKGQuRK-AL3ZOqIWQluAc3R_3CDpQk8nig"), true);
+    assert.equal(kunciGeminiTampakSah("AQ.Ab8RN6IXKCausKIRKGQuRK AL3ZOqIWQluAc3R"), false);
+  });
 });
 
 describe("kuota harian", () => {

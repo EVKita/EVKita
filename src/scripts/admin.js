@@ -6954,7 +6954,7 @@ function aiGeminiFormHtml() {
           autocomplete="off"
           spellcheck="false"
           autocapitalize="none"
-          placeholder="AIza…"
+          placeholder="AIza… / AQ.…"
           required
         />
         <span class="hint">${esc(t("ai.gemini.hint"))}</span>
@@ -6977,7 +6977,7 @@ function aiGeminiHtml() {
       </div>
       <div class="ai-key-state">
         <span class="badge ${terpasang ? "badge-ok" : "badge-muted"}">${esc(terpasang ? t("ai.state.on") : t("ai.state.off"))}</span>
-        ${terpasang ? `<code class="ai-key-mask">AIza${"•".repeat(24)}${esc(aiState.geminiEkor || "")}</code>` : ""}
+        ${terpasang ? `<code class="ai-key-mask">••••${"•".repeat(20)}${esc(aiState.geminiEkor || "")}</code>` : ""}
       </div>
       ${showForm
         ? aiGeminiFormHtml()

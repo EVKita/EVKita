@@ -26,11 +26,13 @@ import { getEnv } from "./env";
 export const GEMINI_MODEL_BAWAAN = "gemini-2.5-flash";
 
 /**
- * Bentuk kunci Gemini: awalan `AIza` diikuti huruf, angka, garis bawah, atau
- * strip. Seperti `keyLooksValid()` DeepSeek, ini hanya menolak salah tempel
- * yang sudah jelas — uji sesungguhnya tetap ke server saat disimpan.
+ * Bentuk kunci Gemini: kunci lama berawalan `AIza`, kunci otorisasi baru
+ * (sejak 28 Mei 2026) berawalan `AQ.` — diikuti huruf, angka, garis bawah,
+ * strip, atau titik. Seperti `keyLooksValid()` DeepSeek, ini hanya menolak
+ * salah tempel yang sudah jelas — uji sesungguhnya tetap ke server saat
+ * disimpan.
  */
-const KEY_RE = /^AIza[A-Za-z0-9_-]{20,80}$/;
+const KEY_RE = /^(AIza[A-Za-z0-9_-]{20,80}|AQ\.[A-Za-z0-9._-]{10,200})$/;
 
 export function keyLooksValid(key: string): boolean {
   return KEY_RE.test(String(key || "").trim());

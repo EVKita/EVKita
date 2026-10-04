@@ -32,12 +32,14 @@ const TIMEOUT_MS = 30_000;
 const MAKS_TOKEN_KELUARAN = 512;
 
 /**
- * Bentuk kunci Google AI Studio: awalan `AIza` diikuti ±35 karakter. Pemeriksaan
- * ini TIDAK menggantikan uji ke server; ia hanya menolak salah tempel yang
- * sudah jelas — misalnya kunci DeepSeek (`sk-…`) yang ditempel di kolom yang
- * salah — tanpa perlu menunggu jaringan lebih dulu.
+ * Bentuk kunci Google AI Studio. Sejak 28 Mei 2026 kunci BARU berupa kunci
+ * otorisasi berawalan `AQ.` (terikat service account); kunci lama berawalan
+ * `AIza` tetap berlaku. Pemeriksaan ini TIDAK menggantikan uji ke server; ia
+ * hanya menolak salah tempel yang sudah jelas — misalnya kunci DeepSeek
+ * (`sk-…`) yang ditempel di kolom yang salah — tanpa perlu menunggu jaringan
+ * lebih dulu.
  */
-const KEY_RE = /^AIza[A-Za-z0-9_-]{10,120}$/;
+const KEY_RE = /^(AIza[A-Za-z0-9_-]{10,120}|AQ\.[A-Za-z0-9._-]{10,200})$/;
 
 export function kunciGeminiTampakSah(kunci: string): boolean {
   return KEY_RE.test(String(kunci || "").trim());
