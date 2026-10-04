@@ -66,6 +66,20 @@ export function catatPertanyaan(anggotaId, sekarang) {
   return { boleh: true, sisa: TANYA_KUOTA_HARIAN - dipakai - 1 };
 }
 
+/**
+ * Mengembalikan satu jatah pertanyaan — dipanggil kalau AI gagal menjawab
+ * karena gangguan di sisi Google/jaringan. Pengunjung tidak boleh kehilangan
+ * kuota untuk jawaban yang tidak pernah ia terima. Tidak pernah turun di
+ * bawah nol.
+ */
+export function kembalikanPertanyaan(anggotaId, sekarang) {
+  const kunci = kunciUntuk(anggotaId, sekarang);
+  const dipakai = hitungan.get(kunci) || 0;
+  if (dipakai <= 1) hitungan.delete(kunci);
+  else hitungan.set(kunci, dipakai - 1);
+  return sisaKuota(anggotaId, sekarang);
+}
+
 /** Validasi panjang pertanyaan. Mengembalikan kunci galat atau string kosong. */
 export function galatPertanyaan(pertanyaan) {
   const s = String(pertanyaan || "").trim();

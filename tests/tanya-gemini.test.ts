@@ -17,6 +17,7 @@ import {
   tanggalWib,
   sisaKuota,
   catatPertanyaan,
+  kembalikanPertanyaan,
   galatPertanyaan,
   TANYA_KUOTA_HARIAN,
 } from "../src/lib/tanya.js";
@@ -187,6 +188,63 @@ describe("tanyaGemini", () => {
   });
 });
 
+describe("tanyaGemini — tidak langsung menyerah saat Google bermasalah", () => {
+  const balas = (status: number, body: any) =>
+    new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  const OK = { candidates: [{ finishReason: "STOP", content: { parts: [{ text: "Jawaban utuh." }] } }] };
+
+  async function rekam(palsu: (model: string, badan: any) => Response, fn: (log: string[]) => Promise<void>) {
+    const asli = globalThis.fetch;
+    const warnAsli = console.warn;
+    const log: string[] = [];
+    console.warn = () => {};
+    globalThis.fetch = (async (url: any, init: any) => {
+      const model = decodeURIComponent(String(url).match(/models\/([^:]+):/)?.[1] || "");
+      const badan = JSON.parse(init.body);
+      log.push(model + (badan.generationConfig.thinkingConfig ? "+pikir" : ""));
+      return palsu(model, badan);
+    }) as any;
+    try {
+      await fn(log);
+    } finally {
+      globalThis.fetch = asli;
+      console.warn = warnAsli;
+    }
+  }
+  const dasar = { apiKey: "AIza1234567890abcdef", pertanyaan: "halo?", instruksi: "x", jedaUlangMs: 0 };
+
+  it("500 karena konfigurasi berpikir → dicoba tanpa konfigurasi itu", async () => {
+    await rekam((_m, b) => (b.generationConfig.thinkingConfig ? balas(500, { error: { message: "Internal error" } }) : balas(200, OK)), async (log) => {
+      const h = await tanyaGemini({ ...dasar, model: "gemini-3.8-flash" });
+      assert.equal(h.ok, true);
+      assert.deepEqual(log, ["gemini-3.8-flash+pikir", "gemini-3.8-flash"]);
+    });
+  });
+
+  it("model utama terus 503 → pindah ke model cadangan (hanya kalau cadangan diizinkan)", async () => {
+    const palsu = (m: string) => (m === "gemini-3.8-flash" ? balas(503, { error: { message: "The model is overloaded." } }) : balas(200, OK));
+    await rekam(palsu, async (log) => {
+      const h = await tanyaGemini({ ...dasar, model: "gemini-3.8-flash", cadangan: true });
+      assert.equal(h.ok, true);
+      assert.equal(log[log.length - 1], "gemini-flash-latest");
+    });
+    await rekam(palsu, async (log) => {
+      const h = await tanyaGemini({ ...dasar, model: "gemini-3.8-flash" });
+      assert.equal(h.ok, false);
+      assert.equal(h.errorKey, "err.tanya.aiBermasalah");
+      assert.ok(log.every((m) => m.startsWith("gemini-3.8-flash")), "tanpa cadangan tidak pindah model");
+    });
+  });
+
+  it("kunci ditolak (403) → tidak dicoba ulang sama sekali", async () => {
+    await rekam(() => balas(403, { error: { message: "Permission denied" } }), async (log) => {
+      const h = await tanyaGemini({ ...dasar, model: "gemini-3.8-flash", cadangan: true });
+      assert.equal(h.errorKey, "err.tanya.kunciSalah");
+      assert.equal(log.length, 1);
+    });
+  });
+});
+
 describe("susunInstruksi", () => {
   it("selalu memerintahkan kejujuran dan menjawab sesuai bahasa", () => {
     const id = susunInstruksi("id", "- BYD Seal · 520 km");
@@ -316,6 +374,16 @@ describe("kuota harian", () => {
     }
     assert.equal(catatPertanyaan(siapa, pagi).boleh, false);
     assert.equal(sisaKuota(siapa, pagi), 0);
+  });
+
+  it("jatah dikembalikan kalau AI gagal menjawab, tidak pernah lebih dari penuh", () => {
+    const t = new Date("2026-10-10T03:00:00Z");
+    catatPertanyaan("kembali-1", t);
+    catatPertanyaan("kembali-1", t);
+    assert.equal(sisaKuota("kembali-1", t), TANYA_KUOTA_HARIAN - 2);
+    assert.equal(kembalikanPertanyaan("kembali-1", t), TANYA_KUOTA_HARIAN - 1);
+    kembalikanPertanyaan("kembali-1", t);
+    assert.equal(kembalikanPertanyaan("kembali-1", t), TANYA_KUOTA_HARIAN);
   });
 
   it("kuota orang lain tidak ikut terpakai", () => {

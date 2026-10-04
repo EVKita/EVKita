@@ -1357,6 +1357,35 @@ body.nav-open .nav-drawer-link {
   to { opacity: 1; transform: none; }
 }
 
+/* HP: tiga contoh dalam SATU baris ringkas yang bisa digeser, bukan tiga
+   baris bertumpuk (±200px). Tetap di dalam bingkai kotak — tanpa margin
+   negatif — dan tepi kanannya memudar sebagai tanda masih ada contoh lain. */
+@media (max-width: 560px) {
+  .tanya-chips {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-top: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 28px), transparent 100%);
+  }
+  .tanya-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .tanya-chips button {
+    flex: none;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+  .tanya-chips button:hover {
+    transform: none;
+  }
+}
+
 /* Percakapan: gelembung pertanyaan di kanan, jawaban AI di kiri dengan
    avatar, lalu kartu ber-foto kendaraan yang disebut. Latar jawaban selalu
    padat (bukan tembus pandang) supaya tetap terbaca di atas foto hero. */

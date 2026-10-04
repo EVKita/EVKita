@@ -6,7 +6,7 @@ import { json } from "../../../lib/api";
 import { checkLimit, recordFailure, clientKey } from "../../../lib/ratelimit";
 import { readContent } from "../../../lib/store";
 import { hanyaTayang } from "../../../lib/tayang.js";
-import { normalizePubLocale } from "../../../lib/i18n/pub.js";
+import { normalizePubLocale, PUB_COOKIE } from "../../../lib/i18n/pub.js";
 import {
   tanyaGemini,
   pilihKonteks,
@@ -18,6 +18,7 @@ import {
 } from "../../../lib/gemini-tanya";
 import {
   catatPertanyaan,
+  kembalikanPertanyaan,
   galatPertanyaan,
   TANYA_KUOTA_HARIAN,
 } from "../../../lib/tanya.js";
@@ -104,6 +105,10 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     return json({ ok: false, errorKey: galat }, 400);
   }
 
+  // Kunci diperiksa SEBELUM kuota dicatat: chatbot yang belum aktif tidak
+  // boleh memakan jatah pertanyaan pengunjung.
+  const kunciApi = getEnv("GEMINI_API_KEY", "");
+  if (!kunciApi) return json({ ok: false, errorKey: "err.tanya.belumSiap" }, 503);
   const kuota = catatPertanyaan(identitas, new Date());
   if (!kuota.boleh) {
     return json(
@@ -112,11 +117,8 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     );
   }
 
-  const kunciApi = getEnv("GEMINI_API_KEY", "");
-  if (!kunciApi) return json({ ok: false, errorKey: "err.tanya.belumSiap" }, 503);
-
   const lang = normalizePubLocale(
-    badan?.lang || cookies.get("evkita_lang")?.value || "id"
+    badan?.lang || cookies.get(PUB_COOKIE)?.value || "id"
   );
   const content = readContent();
   const konteks = konteksDari(content, pertanyaan);
@@ -127,11 +129,16 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     model: getEnv("GEMINI_MODEL", "") || MODEL_BAWAAN_GEMINI,
     pertanyaan,
     instruksi,
+    // Kalau model utama tumbang, coba model cadangan — pengunjung lebih baik
+    // dijawab model lain daripada membaca "AI sedang bermasalah".
+    cadangan: true,
   });
 
   if (!hasil.ok) {
     if (hasil.errorKey === "err.tanya.sibuk") recordFailure(kunciLaju);
-    return json({ ok: false, errorKey: hasil.errorKey, sisa: kuota.sisa }, 502);
+    // Jawaban tidak pernah sampai — jatah pertanyaannya dikembalikan.
+    const sisa = kembalikanPertanyaan(identitas, new Date());
+    return json({ ok: false, errorKey: hasil.errorKey, sisa, kuota: TANYA_KUOTA_HARIAN }, 502);
   }
 
   const kandidat = pilihTampil(konteks.semua, pertanyaan, 4, hasil.teks);

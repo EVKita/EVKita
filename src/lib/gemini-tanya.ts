@@ -398,10 +398,35 @@ function alasanSelesai(res: any): string {
   return String(k?.finishReason || "");
 }
 
+/** Model cadangan kalau model utama tumbang (5xx/429/404) — hanya untuk Tanya publik. */
+export const MODEL_CADANGAN_GEMINI = ["gemini-flash-latest", "gemini-flash-lite-latest"];
+
+/** Batas total waktu satu pertanyaan, termasuk semua percobaan ulang. */
+const TENGGAT_TOTAL_MS = 40_000;
+
+/** Status yang layak dicoba ulang: gangguan sesaat di sisi Google. */
+function bolehUlang(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
 /**
  * Menanyakan satu pertanyaan ke Gemini. Tanpa riwayat (stateless): tiap
  * pertanyaan berdiri sendiri, supaya biaya terkendali dan tidak ada state
  * percakapan yang perlu disimpan di server.
+ *
+ * Percobaan berlapis — dulu satu kali 5xx langsung jadi "AI sedang
+ * bermasalah" di depan pengunjung:
+ *   1. model utama + konfigurasi berpikir;
+ *   2. model utama TANPA konfigurasi berpikir, kalau langkah 1 ditolak (400),
+ *      tumbang (5xx), atau tidak menghasilkan teks — sebagian model menolak
+ *      `thinkingConfig` dengan 500, bukan 400;
+ *   3. sekali lagi setelah jeda singkat kalau Google sedang sibuk (5xx/429);
+ *   4. dengan `cadangan: true` (hanya Tanya publik): model cadangan
+ *      (`MODEL_CADANGAN_GEMINI`) kalau model utama tetap tumbang atau tidak
+ *      ada (404). Uji kunci di panel TIDAK memakai cadangan — ia harus tahu
+ *      persis model mana yang menjawab.
+ * Setiap kegagalan dicatat ke log server (status + kalimat galat Google, tanpa
+ * kunci) supaya penyebabnya bisa dibaca lewat `pm2 logs evkita`.
  */
 export async function tanyaGemini(opts: {
   apiKey: string;
@@ -409,24 +434,30 @@ export async function tanyaGemini(opts: {
   pertanyaan: string;
   instruksi: string;
   signal?: AbortSignal;
+  cadangan?: boolean;
+  /** Jeda sebelum mencoba ulang saat Google sibuk. Diperkecil di uji. */
+  jedaUlangMs?: number;
 }): Promise<HasilTanya> {
   const kunci = String(opts.apiKey || "").trim();
   if (!kunci) return gagal("err.tanya.belumSiap");
   const tanya = String(opts.pertanyaan || "").trim();
   if (!tanya) return gagal("err.tanya.kosong");
 
-  const model = opts.model || MODEL_BAWAAN_GEMINI;
-  const pikir = konfigPikir(model);
+  const utama = opts.model || MODEL_BAWAAN_GEMINI;
+  const jeda = opts.jedaUlangMs ?? 900;
+  const mulai = Date.now();
+  const sisaWaktu = () => TENGGAT_TOTAL_MS - (Date.now() - mulai);
 
-  async function kirim(denganPikir: boolean): Promise<{ res: Response; data: any } | HasilTanya> {
+  async function kirim(model: string, denganPikir: boolean): Promise<HasilTanya & { status?: number }> {
+    const pikir = denganPikir ? konfigPikir(model) : null;
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => ac.abort(), Math.max(1000, Math.min(TIMEOUT_MS, sisaWaktu())));
     const gabung = opts.signal ? AbortSignal.any([opts.signal, ac.signal]) : ac.signal;
     const generationConfig: Record<string, unknown> = {
       maxOutputTokens: MAKS_TOKEN_KELUARAN,
       temperature: 0.7,
     };
-    if (denganPikir && pikir) generationConfig.thinkingConfig = pikir;
+    if (pikir) generationConfig.thinkingConfig = pikir;
     let res: Response;
     try {
       res = await fetch(`${DASAR_URL}/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -447,38 +478,77 @@ export async function tanyaGemini(opts: {
     } finally {
       clearTimeout(timer);
     }
+    let data: any;
     try {
       const mentah = (await res.text()).trim();
-      return { res, data: mentah ? JSON.parse(mentah) : null };
+      data = mentah ? JSON.parse(mentah) : null;
     } catch {
-      return gagal("err.tanya.jawabanTidakTerbaca");
+      return { ...gagal("err.tanya.jawabanTidakTerbaca"), status: res.status };
     }
+    if (!res.ok) {
+      const detail = detailGalat(data);
+      console.warn(`[tanya] Gemini ${res.status} (${model}${pikir ? ", berpikir" : ""}): ${detail || "-"}`);
+      return { ...gagal(kunciGalatUntukStatus(res.status), detail), status: res.status };
+    }
+    let teks = teksDari(data);
+    if (!teks) {
+      console.warn(`[tanya] Gemini tanpa teks (${model}${pikir ? ", berpikir" : ""}): ${alasanSelesai(data) || "-"}`);
+      return { ...gagal("err.tanya.tanpaJawaban"), status: res.status };
+    }
+    // Kehabisan token: jangan kirim kalimat yang putus di tengah kata.
+    if (alasanSelesai(data) === "MAX_TOKENS") teks = rapikanTerpotong(teks);
+    const meta = data?.usageMetadata || {};
+    return {
+      ok: true,
+      teks,
+      errorKey: "",
+      pemakaian: {
+        masuk: Number(meta.promptTokenCount || 0),
+        keluar: Number(meta.candidatesTokenCount || 0),
+      },
+    };
   }
 
-  let hasil = await kirim(true);
-  // Model yang tidak mengenal bentuk `thinkingConfig` ini menolak dengan 400 —
-  // coba sekali lagi tanpa konfigurasi berpikir, bukan langsung menyerah.
-  if (pikir && !("ok" in hasil) && hasil.res.status === 400) hasil = await kirim(false);
-  if ("ok" in hasil) return hasil;
-  const { res, data } = hasil;
-
-  if (!res.ok) return gagal(kunciGalatUntukStatus(res.status), detailGalat(data));
-
-  let teks = teksDari(data);
-  if (!teks) return gagal("err.tanya.tanpaJawaban");
-  // Kehabisan token: jangan kirim kalimat yang putus di tengah kata.
-  if (alasanSelesai(data) === "MAX_TOKENS") teks = rapikanTerpotong(teks);
-
-  const meta = data?.usageMetadata || {};
-  return {
-    ok: true,
-    teks,
-    errorKey: "",
-    pemakaian: {
-      masuk: Number(meta.promptTokenCount || 0),
-      keluar: Number(meta.candidatesTokenCount || 0),
-    },
+  const tunggu = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const bersih = (h: HasilTanya & { status?: number }): HasilTanya => {
+    const { status: _s, ...sisa } = h;
+    return sisa;
   };
+
+  // 1. Model utama dengan konfigurasi berpikir.
+  let hasil = await kirim(utama, true);
+  if (hasil.ok) return bersih(hasil);
+  if (hasil.errorKey === "err.tanya.tidakTerhubung") return bersih(hasil);
+
+  // 2. Tanpa konfigurasi berpikir: 400 (bentuknya tak dikenal), 5xx (sebagian
+  //    model menolaknya dengan 500), atau 200 tanpa teks.
+  const s1 = hasil.status ?? 0;
+  if (konfigPikir(utama) && (s1 === 400 || bolehUlang(s1) || hasil.errorKey === "err.tanya.tanpaJawaban")) {
+    hasil = await kirim(utama, false);
+    if (hasil.ok) return bersih(hasil);
+  }
+
+  // 3. Google sibuk/tumbang: sekali lagi setelah jeda singkat.
+  if (bolehUlang(hasil.status ?? 0) && sisaWaktu() > 5000) {
+    await tunggu(jeda);
+    hasil = await kirim(utama, false);
+    if (hasil.ok) return bersih(hasil);
+  }
+
+  // 4. Model cadangan — hanya untuk Tanya publik.
+  if (opts.cadangan) {
+    const st = hasil.status ?? 0;
+    if (bolehUlang(st) || st === 404 || hasil.errorKey === "err.tanya.tanpaJawaban") {
+      for (const m of MODEL_CADANGAN_GEMINI) {
+        if (m === utama || sisaWaktu() < 5000) continue;
+        const h = await kirim(m, false);
+        if (h.ok) return bersih(h);
+        hasil = h;
+        if (h.errorKey === "err.tanya.tidakTerhubung") break;
+      }
+    }
+  }
+  return bersih(hasil);
 }
 
 /** Batas model yang dicoba saat menguji kunci — tiap percobaan satu inferensi kecil. */

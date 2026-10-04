@@ -1509,6 +1509,8 @@ const jsonLd = {
           })(tombolContoh[n], kumpulan[(posisiContoh + n) % kumpulan.length], n * 110);
         }
         posisiContoh = (posisiContoh + tombolContoh.length) % kumpulan.length;
+        /* Di HP baris contoh bisa digeser — set baru selalu mulai dari kiri. */
+        if (animasi) setTimeout(function () { chips.scrollTo({ left: 0, behavior: gerakMinimal ? "auto" : "smooth" }); }, 120);
       }
 
       /* Bergilir tiap 6 detik; berhenti saat disentuh/difokus, saat AI menjawab,
