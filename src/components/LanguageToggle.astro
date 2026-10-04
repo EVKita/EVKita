@@ -14,6 +14,10 @@
  *
  * Tingginya sengaja sama dengan tinggi teks "IND/ENG" yang dulu dipakai (14px
  * pada pill ber-padding 9px), supaya ukuran pil di header tidak berubah.
+ *
+ * Tiap bendera membawa kode bahasa (`.lg-kode`) yang disembunyikan di header
+ * dan baru tampil di laci menu HP — di sana pemilih ini jadi tiga segmen
+ * "bendera + kode" selebar laci.
  */
 import { normalizePubLocale, PUB_COOKIE } from "../lib/i18n/pub.js";
 
@@ -32,6 +36,7 @@ const label = current === "en" ? "Language: English" : current === "zh" ? "语�
       <rect width="21" height="7" fill="#CE1126" />
       <rect y="7" width="21" height="7" fill="#FFFFFF" />
     </svg>
+    <span class="lg-kode" aria-hidden="true">ID</span>
   </span>
   <span class="lg-sep" aria-hidden="true">/</span>
   <span class="lg-opt" data-lang="en" data-on={current === "en" ? "1" : undefined}>
@@ -48,6 +53,7 @@ const label = current === "en" ? "Language: English" : current === "zh" ? "语�
       </g>
       <rect width="8.4" height="7.54" fill="#3C3B6E" />
     </svg>
+    <span class="lg-kode" aria-hidden="true">EN</span>
   </span>
   <span class="lg-sep" aria-hidden="true">/</span>
   <span class="lg-opt" data-lang="zh" data-on={current === "zh" ? "1" : undefined}>
@@ -61,6 +67,7 @@ const label = current === "en" ? "Language: English" : current === "zh" ? "语�
         <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(7,6.3) scale(0.7) rotate(46)" />
       </g>
     </svg>
+    <span class="lg-kode" aria-hidden="true">中文</span>
   </span>
 </button>
 

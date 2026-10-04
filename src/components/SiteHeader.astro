@@ -93,7 +93,10 @@ const ICONS: Record<string, string> = {
     </nav>
 
     <div class="masthead-actions">
-      <span class="header-theme">
+      {/* Kapsul alat: di desktop lebar `display: contents` (tiap tombol tetap
+          pil sendiri); di layar sempit jadi satu kapsul berisi ikon. */}
+      <div class="header-alat">
+      <span class="header-theme header-cari">
         <button class="cari-btn" data-cari-buka type="button" aria-label={t("pub.cari.buka")}>
           <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false">
             <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm8 16-4-4" />
@@ -101,8 +104,8 @@ const ICONS: Record<string, string> = {
           <span class="cari-btn-teks">{t("pub.cari.buka")}</span>
         </button>
       </span>
-      <span class="header-theme"><LanguageToggle /></span>
-      <span class="header-theme"><ThemeToggle /></span>
+      <span class="header-theme header-bahasa"><LanguageToggle /></span>
+      <span class="header-theme header-tema"><ThemeToggle /></span>
       {!anggotaMasuk ? (
         <span class="header-theme">
           <button class="member-btn" data-member-buka type="button" aria-label={t("pub.member.open")}>
@@ -113,6 +116,7 @@ const ICONS: Record<string, string> = {
           </button>
         </span>
       ) : null}
+      </div>
 
       <button
         class="nav-toggle"
@@ -299,7 +303,7 @@ const ICONS: Record<string, string> = {
 
     // Kalau layar melebar sampai navigasi penuh muncul kembali, laci ditutup
     // supaya tidak ada dua navigasi aktif sekaligus.
-    const wide = window.matchMedia("(min-width: 901px)");
+    const wide = window.matchMedia("(min-width: 1101px)");
     const onWide = (e: MediaQueryListEvent | MediaQueryList) => {
       if (e.matches) setOpen(false);
     };

@@ -6856,6 +6856,236 @@ html {
   text-overflow: ellipsis;
 }
 
+/* ===== Header ringkas (HP, tablet, desktop sempit) =====
+ * Masalah lama: deretan tombol header (cari, tiga bendera, tema, akun,
+ * hamburger) lebih lebar daripada layar HP — di 375px ia memanjang sampai
+ * ±490px, dan halaman ikut bisa digeser ke samping. Di desktop 1024px pun
+ * tombolnya meluber melewati tepi.
+ *
+ * Sekarang tombol alat dikumpulkan dalam satu KAPSUL berisi ikon:
+ *   > 1360px   : seperti semula — tiap tombol pil bertulisan
+ *                (`.header-alat` memakai `display: contents`).
+ *   ≤ 1360px   : kapsul ikon; bendera bahasa tetap di dalam kapsul.
+ *   ≤ 1100px   : navigasi mendatar diganti laci (hamburger).
+ *   ≤ 480px    : bendera bahasa pindah ke laci (jadi tiga segmen rapi).
+ *   ≤ 360px    : tombol tema juga pindah ke laci.
+ * Batas laci (1100px) WAJIB sama dengan `matchMedia("(min-width: 1101px)")`
+ * di skrip SiteHeader.astro. */
+.header-alat {
+  display: contents;
+}
+.lg-kode {
+  display: none;
+}
+
+/* Cadangan untuk peramban yang belum mengenal `overflow: clip` (Safari iOS
+   ≤ 15, sebagian WebView): tanpa ini laci menu yang tersembunyi di kanan
+   layar tetap membuat halaman bisa digeser ke samping. `hidden` di <html>
+   aman untuk elemen sticky karena nilainya diteruskan ke viewport. */
+@supports not (overflow-x: clip) {
+  html {
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 1360px) {
+  .header-alat {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--bg-elev);
+  }
+  .header-alat .header-theme {
+    display: inline-flex;
+  }
+  .header-alat .cari-btn,
+  .header-alat .theme-toggle,
+  .header-alat .member-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0;
+    gap: 0;
+  }
+  .header-alat .theme-toggle span[aria-hidden="true"] {
+    font-size: 16px;
+  }
+  .header-alat .cari-btn-teks,
+  .header-alat .member-btn-teks {
+    display: none;
+  }
+  .header-alat .cari-btn:hover,
+  .header-alat .theme-toggle:hover,
+  .header-alat .member-btn:hover {
+    background: var(--bg-tint);
+    color: var(--text);
+  }
+  .header-alat .cari-btn:active,
+  .header-alat .theme-toggle:active,
+  .header-alat .member-btn:active {
+    transform: scale(0.94);
+  }
+  /* Bendera di dalam kapsul: tanpa bingkai sendiri dan tanpa garis miring. */
+  .header-alat .lang-toggle {
+    gap: 7px;
+    height: 38px;
+    padding: 0 10px;
+    border: 0;
+    background: transparent;
+  }
+  .header-alat .lg-sep {
+    display: none;
+  }
+  .header-alat .lg-opt svg {
+    width: 19px;
+    height: 13px;
+  }
+  /* Pemisah tipis antara bendera dan tombol lain di kapsul. */
+  .header-alat .header-bahasa {
+    position: relative;
+    margin-inline: 2px;
+  }
+  .header-alat .header-bahasa::before,
+  .header-alat .header-bahasa::after {
+    content: "";
+    position: absolute;
+    top: 9px;
+    bottom: 9px;
+    width: 1px;
+    background: var(--border);
+  }
+  .header-alat .header-bahasa::before { left: -2px; }
+  .header-alat .header-bahasa::after { right: -2px; }
+
+  .nav-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+  }
+}
+
+@media (max-width: 1100px) {
+  .main-nav {
+    display: none;
+  }
+  .nav-toggle {
+    display: inline-flex;
+  }
+  .masthead-inner {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .masthead-inner {
+    gap: 8px;
+  }
+  .masthead-actions {
+    gap: 6px;
+  }
+  /* Logo sedikit lebih kecil; teksnya tidak pernah mendorong tombol keluar
+     layar — paling buruk ia dipotong elipsis. */
+  .logo {
+    gap: 8px;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .logo .logo-glyph,
+  .logo .logo-mark,
+  .logo .logo-img {
+    width: 36px;
+    height: 36px;
+  }
+  .logo-text {
+    font-size: 18px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .header-alat .header-bahasa {
+    display: none;
+  }
+  .header-alat .cari-btn,
+  .header-alat .theme-toggle,
+  .header-alat .member-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .nav-toggle {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-alat .header-tema {
+    display: none;
+  }
+  .logo-text {
+    font-size: 16px;
+  }
+}
+
+/* Laci menu: pemilih bahasa jadi tiga segmen "bendera + kode" selebar laci,
+   tema dan akun berdampingan di bawahnya. */
+.nav-drawer-foot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.nav-drawer-foot .lang-toggle {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius);
+}
+.nav-drawer-foot .lg-sep {
+  display: none;
+}
+.nav-drawer-foot .lg-opt {
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 6px;
+  border-radius: calc(var(--radius) - 3px);
+  opacity: 0.65;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.nav-drawer-foot .lg-opt[data-on] {
+  opacity: 1;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.nav-drawer-foot .lg-opt[data-on] svg {
+  outline: 0;
+}
+.nav-drawer-foot .lg-kode {
+  display: inline;
+}
+.nav-drawer-foot .theme-toggle,
+.nav-drawer-foot .member-btn {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 10px;
+  font-size: 14px;
+}
+.nav-drawer-foot .member-btn:only-child,
+.nav-drawer-foot > :last-child:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
 /* ===== Sorotan artikel beranda ===== *
  * Satu kartu berfoto memanjang di kiri, dua kartu teks tanpa gambar di
  * kanan — pola yang sama dengan sorotan bengkel. Kartu kiri mengikuti tinggi
