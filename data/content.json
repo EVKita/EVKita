@@ -1,5 +1,5 @@
 {
-  "revision": "muoef656-35d91355",
+  "revision": "mursw107-d3a4e40b",
   "site": {
     "brandText": "EVKita",
     "brandSuffix": ".com",
@@ -45,9 +45,9 @@
     "heroCtaAltUrl": "",
     "aboutTitle": "Tentang",
     "aboutText": "Halaman ini adalah situs referensi mandiri untuk mobil listrik yang tersedia di pasar Indonesia. Data spesifikasi (jarak tempuh, kapasitas baterai, tenaga, varian, dan harga) dirangkum dari EVdata.id. Standar pengukuran jarak tempuh dapat berbeda antar model (WLTP, NEDC, CLTC, atau klaim pabrikan), sehingga angka antar model tidak selalu dapat dibandingkan langsung.",
-    "seoTitle": "",
-    "seoDescription": "",
-    "seoKeywords": "",
+    "seoTitle": "EVKita.com — Panduan Kendaraan Listrik Indonesia",
+    "seoDescription": "Katalog mobil dan motor listrik di Indonesia: harga, jarak tempuh, baterai, lokasi SPKLU, bengkel, berita terbaru, dan panduan kepemilikan.",
+    "seoKeywords": "mobil listrik, motor listrik, harga mobil listrik, SPKLU, kendaraan listrik Indonesia, EV Indonesia",
     "seoOgImage": "",
     "contactEmail": "admin@evkita.com",
     "contactPhone": "",
@@ -112,9 +112,13 @@
       "brand": "BYD",
       "name": "Atto 1",
       "bodyType": "Hatchback",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "City car listrik paling laris untuk harian kota.",
+      "description": "BYD Atto 1 adalah hatchback listrik ringkas untuk mobilitas harian di kota, dengan jarak tempuh 300 km (NEDC) dari baterai 30,08 kWh. Tersedia dalam tiga varian — Standard, Dynamic, dan Premium — mulai Rp195 juta, ia menjadi pintu masuk paling terjangkau ke ekosistem BYD di Indonesia.",
+      "highlights": [
+        "Jarak tempuh 300 km (NEDC)",
+        "Baterai 30,08 kWh",
+        "Tiga varian mulai Rp195 juta"
+      ],
       "rangeKm": 300,
       "rangeStandard": "NEDC",
       "batteryKwh": 30.08,
@@ -149,7 +153,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -158,9 +162,13 @@
       "brand": "BYD",
       "name": "Atto 3",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover listrik seimbang untuk keluarga muda.",
+      "description": "BYD Atto 3 memadukan jarak tempuh 410 km (NEDC) dengan tenaga 201 dk dan torsi 310 Nm, cukup untuk harian maupun perjalanan luar kota. Dua variannya, Advanced-Plus dan Superior, dibanderol mulai Rp415 juta dengan akselerasi 0–100 km/jam dalam 7,9 detik.",
+      "highlights": [
+        "Jarak tempuh 410 km (NEDC)",
+        "Tenaga 201 dk, torsi 310 Nm",
+        "0–100 km/jam 7,9 detik"
+      ],
       "rangeKm": 410,
       "rangeStandard": "NEDC",
       "batteryKwh": 49.92,
@@ -200,7 +208,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -209,9 +217,13 @@
       "brand": "Toyota",
       "name": "bZ4X",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover listrik Toyota dengan pengisian DC 150 kW.",
+      "description": "Toyota bZ4X membawa baterai besar 73,11 kWh dengan jarak tempuh 525 km, terpanjang di antara crossover Jepang di katalog ini. Pengisian cepat DC 150 kW dan garansi baterai 8 tahun/160.000 km membuatnya menonjol untuk pemakaian jangka panjang, dengan harga Rp799 juta dalam dua varian.",
+      "highlights": [
+        "Jarak tempuh 525 km",
+        "Pengisian cepat DC 150 kW",
+        "Garansi baterai 8 tahun/160.000 km"
+      ],
       "rangeKm": 525,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 73.11,
@@ -245,7 +257,7 @@
       "gallery": [],
       "video": "https://delivery.tcom.assetscs.toyota.com/adobe/assets/urn:aaid:aem:86b0e0ed-b15b-4ee8-8554-8603907882c9/original/as/BZ4_MY26_NA-CAMP_FeatureseTGNA_NLVStory_V2_1920x1080_TYTW3648000H.mp4",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -254,9 +266,13 @@
       "brand": "Wuling",
       "name": "Cloud EV",
       "bodyType": "Hatchback",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Hatchback lega lima penumpang untuk keluarga.",
+      "description": "Wuling Cloud EV menawarkan kabin lima penumpang yang lapang dengan jarak tempuh 460 km (CLTC) dari baterai 50,6 kWh. Empat variannya — dari SE Lite sampai Pro — dibanderol mulai Rp399 juta, dengan opsi pengisian DC 30–80 persen sekitar 30 menit.",
+      "highlights": [
+        "Jarak tempuh 460 km (CLTC)",
+        "Kabin 5 penumpang",
+        "Empat varian mulai Rp399 juta"
+      ],
       "rangeKm": 460,
       "rangeStandard": "CLTC",
       "batteryKwh": 50.6,
@@ -299,7 +315,7 @@
       "gallery": [],
       "video": "https://wuling.id/assets/images/cloud-ev/Exterior-New-Cloud.mp4",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -308,9 +324,13 @@
       "brand": "Mini",
       "name": "Cooper SE",
       "bodyType": "Hatchback",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Gaya Mini yang ikonik, kini sepenuhnya listrik.",
+      "description": "MINI Cooper SE memadukan desain khas Mini dengan motor listrik 218 dk dan baterai 49,2 kWh untuk jarak tempuh 402 km (WLTP). Kabin empat penumpangnya dibanderol Rp1,17 miliar OTR, menjadikannya hatchback listrik paling berkarakter di kelas premium.",
+      "highlights": [
+        "Jarak tempuh 402 km (WLTP)",
+        "Tenaga 218 dk",
+        "Harga Rp1,17 miliar OTR"
+      ],
       "rangeKm": 402,
       "rangeStandard": "WLTP",
       "batteryKwh": 49.2,
@@ -329,8 +349,8 @@
       "variantNames": [
         "MINI Cooper SE"
       ],
-      "price": null,
-      "priceText": "Harga belum tersedia",
+      "price": 1169000000,
+      "priceText": "Rp 1,17 M",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -343,7 +363,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -352,9 +372,13 @@
       "brand": "Denza",
       "name": "D9",
       "bodyType": "MPV",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "MPV listrik tujuh penumpang untuk perjalanan jauh.",
+      "description": "Denza D9 adalah MPV tujuh penumpang dengan baterai jumbo 103,36 kWh dan jarak tempuh 600 km (NEDC). Pengisian cepat DC 166 kW menambah 150 km hanya dalam 10 menit, dan dua variannya — Elite berpenggerak depan serta Grandeur berpenggerak semua roda — dibanderol mulai Rp950 juta.",
+      "highlights": [
+        "Jarak tempuh 600 km (NEDC)",
+        "DC 166 kW: 10 menit untuk 150 km",
+        "7 penumpang, dua varian penggerak"
+      ],
       "rangeKm": 600,
       "rangeStandard": "NEDC",
       "batteryKwh": 103.36,
@@ -393,7 +417,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -402,9 +426,13 @@
       "brand": "BYD",
       "name": "Dolphin",
       "bodyType": "Hatchback",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Hatchback nyaman dengan dua pilihan tenaga.",
+      "description": "BYD Dolphin menawarkan jarak tempuh 410 km (NEDC) dari baterai 44,9 kWh dalam dua varian: Dynamic dan Premium. Harganya mulai Rp369 juta, dengan varian teratas yang lebih bertenaga untuk yang menginginkan akselerasi lebih sigap.",
+      "highlights": [
+        "Jarak tempuh 410 km (NEDC)",
+        "Baterai 44,9 kWh",
+        "Dua varian mulai Rp369 juta"
+      ],
       "rangeKm": 410,
       "rangeStandard": "NEDC",
       "batteryKwh": 44.9,
@@ -438,7 +466,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -447,9 +475,13 @@
       "brand": "BYD",
       "name": "Dolphin Mini",
       "bodyType": "Hatchback",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Nama lain BYD Seagull di pasar luar.",
+      "description": "Entri ini merujuk pada model yang di Indonesia dipasarkan sebagai BYD Atto 1 (BYD Seagull). Datanya belum terverifikasi untuk pasar Indonesia sehingga disembunyikan dari katalog sampai ada kepastian.",
+      "highlights": [
+        "Duplikat dari BYD Atto 1",
+        "Belum terverifikasi untuk Indonesia",
+        "Lihat BYD Atto 1 untuk data resmi"
+      ],
       "rangeKm": 405,
       "rangeStandard": "CLTC",
       "batteryKwh": 38.9,
@@ -475,7 +507,7 @@
       "penjualan2026": null,
       "stale": false,
       "featured": false,
-      "status": "published",
+      "status": "draft",
       "publishAt": "",
       "tags": [],
       "specs": [],
@@ -484,7 +516,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -493,9 +525,13 @@
       "brand": "Citroën",
       "name": "ë-C3",
       "bodyType": "Hatchback",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover mungil Prancis yang praktis untuk kota.",
+      "description": "Citroën ë-C3 adalah crossover kompak dengan jarak tempuh 320 km dari baterai 29,2 kWh. Harganya Rp380,5 juta OTR Jakarta, dilengkapi garansi baterai 7 tahun/140.000 km — salah satu yang terpanjang di kelasnya.",
+      "highlights": [
+        "Jarak tempuh 320 km",
+        "Garansi baterai 7 tahun/140.000 km",
+        "Harga Rp380,5 juta OTR"
+      ],
       "rangeKm": 320,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 29.2,
@@ -514,8 +550,8 @@
       "variantNames": [
         "Citroën Ë-C3 All Electric"
       ],
-      "price": null,
-      "priceText": "Harga belum tersedia",
+      "price": 380500000,
+      "priceText": "Rp 380 jt",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -533,7 +569,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -542,9 +578,13 @@
       "brand": "Geely",
       "name": "EX5",
       "bodyType": "SUV",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "SUV listrik 215 dk dengan pengisian DC 135 kW.",
+      "description": "Geely EX5 membawa baterai 60,22 kWh untuk jarak tempuh 430 km (WLTP) dan motor 215 dk. Pengisian cepat DC 135 kW mengisi 30–80 persen dalam sekitar 20 menit, dengan dua varian Max dan Pro mulai Rp475 juta.",
+      "highlights": [
+        "Jarak tempuh 430 km (WLTP)",
+        "DC 135 kW: 30–80% sekitar 20 menit",
+        "Dua varian mulai Rp475 juta"
+      ],
       "rangeKm": 430,
       "rangeStandard": "WLTP",
       "batteryKwh": 60.22,
@@ -578,7 +618,7 @@
       "gallery": [],
       "video": "https://global.geely.com/-/media/project/web-portal/models/ex5/videos/tvc-full-edit-new.mp4",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -587,9 +627,13 @@
       "brand": "BMW",
       "name": "i4",
       "bodyType": "Coupe",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Gran coupe listrik dengan kecepatan puncak 190 km/jam.",
+      "description": "BMW i4 adalah coupe empat pintu berpenggerak belakang dengan tenaga 286 dk dan torsi 400 Nm. Baterai 67,1 kWh memberinya jarak tempuh 500 km (WLTP), dan pengisian DC 180 kW mengisi 10–80 persen dalam 41 menit. Dua variannya dibanderol mulai Rp1,84 miliar.",
+      "highlights": [
+        "Jarak tempuh 500 km (WLTP)",
+        "0–100 km/jam 6 detik",
+        "Pengisian DC 180 kW"
+      ],
       "rangeKm": 500,
       "rangeStandard": "WLTP",
       "batteryKwh": 67.1,
@@ -628,7 +672,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -637,9 +681,13 @@
       "brand": "Hyundai",
       "name": "IONIQ 5",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover retro-futuristis dengan pengisian 350 kW.",
+      "description": "Hyundai IONIQ 5 memadukan desain retro yang khas dengan teknologi pengisian 350 kW — 10–80 persen dalam sekitar 17 menit. Baterai 72,6 kWh memberi jarak tempuh 481 km (WLTP), dengan empat varian mulai Rp809 juta dan garansi baterai 8 tahun/160.000 km.",
+      "highlights": [
+        "Jarak tempuh 481 km (WLTP)",
+        "DC 350 kW: 10–80% sekitar 17 menit",
+        "Empat varian mulai Rp809 juta"
+      ],
       "rangeKm": 481,
       "rangeStandard": "WLTP",
       "batteryKwh": 72.6,
@@ -681,7 +729,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -690,9 +738,13 @@
       "brand": "Hyundai",
       "name": "IONIQ 6",
       "bodyType": "Sedan",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Sedan aerodinamis berpenggerak semua roda.",
+      "description": "Hyundai IONIQ 6 adalah sedan berpenggerak semua roda dengan tenaga 321 dk dan torsi 605 Nm, melesat 0–100 km/jam dalam 5,1 detik. Baterai 77,4 kWh memberinya jarak tempuh 519 km (WLTP) dengan harga Rp1,24 miliar.",
+      "highlights": [
+        "Jarak tempuh 519 km (WLTP)",
+        "Tenaga 321 dk, torsi 605 Nm",
+        "0–100 km/jam 5,1 detik"
+      ],
       "rangeKm": 519,
       "rangeStandard": "WLTP",
       "batteryKwh": 77.4,
@@ -733,7 +785,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -742,9 +794,13 @@
       "brand": "BMW",
       "name": "iX3",
       "bodyType": "SUV",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "SUV listrik jarak terjauh di katalog: 805 km.",
+      "description": "BMW iX3 50 xDrive adalah pemegang rekor jarak tempuh katalog ini: 805 km (WLTP) dari baterai 108,7 kWh. Tenaga 469 dk dan pengisian DC 400 kW (10–80 persen dalam 21 menit) melengkapi paket seharga Rp2,27 miliar.",
+      "highlights": [
+        "Jarak tempuh 805 km (WLTP)",
+        "Tenaga 469 dk, 0–100 km/jam 4,9 detik",
+        "Pengisian DC 400 kW"
+      ],
       "rangeKm": 805,
       "rangeStandard": "WLTP",
       "batteryKwh": 108.7,
@@ -786,7 +842,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -795,9 +851,13 @@
       "brand": "Jaecoo",
       "name": "J5 EV",
       "bodyType": "SUV",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "SUV listrik 461 km dengan harga di bawah Rp300 juta.",
+      "description": "Jaecoo J5 EV menawarkan kombinasi langka: jarak tempuh 461 km (NEDC) dari baterai 60,9 kWh dengan harga mulai Rp280 juta. Motor 208 dk-nya bertorsi 288 Nm, tersedia dalam varian Standard dan Premium.",
+      "highlights": [
+        "Jarak tempuh 461 km (NEDC)",
+        "Baterai 60,9 kWh",
+        "Mulai Rp280 juta"
+      ],
       "rangeKm": 461,
       "rangeStandard": "NEDC",
       "batteryKwh": 60.9,
@@ -836,7 +896,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -845,9 +905,13 @@
       "brand": "Chery",
       "name": "J6",
       "bodyType": "SUV",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "SUV boxy berpenggerak belakang dengan enam varian.",
+      "description": "Chery J6 tampil dengan gaya boxy yang khas, baterai 65,59 kWh, dan jarak tempuh 426 km (NEDC). Enam variannya — termasuk edisi Phantom dan opsi penggerak semua roda — dibanderol mulai Rp566 juta.",
+      "highlights": [
+        "Jarak tempuh 426 km (NEDC)",
+        "Enam pilihan varian",
+        "Mulai Rp566 juta"
+      ],
       "rangeKm": 426,
       "rangeStandard": "NEDC",
       "batteryKwh": 65.59,
@@ -885,7 +949,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -894,9 +958,13 @@
       "brand": "Hyundai",
       "name": "Kona Electric",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover 602 km dengan garansi kendaraan 4 tahun.",
+      "description": "Hyundai Kona Electric menawarkan jarak tempuh 602 km (NEDC) dari baterai 66 kWh — salah satu yang terjauh di kelasnya. Tiga variannya (Style, Prime, Signature) mulai Rp565 juta, dengan garansi kendaraan 4 tahun/100.000 km dan garansi baterai 8 tahun/160.000 km.",
+      "highlights": [
+        "Jarak tempuh 602 km (NEDC)",
+        "Garansi kendaraan 4 tahun/100.000 km",
+        "Tiga varian mulai Rp565 juta"
+      ],
       "rangeKm": 602,
       "rangeStandard": "NEDC",
       "batteryKwh": 66,
@@ -941,7 +1009,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -950,9 +1018,13 @@
       "brand": "Nissan",
       "name": "LEAF",
       "bodyType": "Hatchback",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Pelopor mobil listrik dengan garansi baterai 10 tahun.",
+      "description": "Nissan LEAF adalah salah satu mobil listrik paling berpengalaman di dunia, dengan baterai 40 kWh untuk jarak tempuh 270 km (WLTP). Garansi baterainya 10 tahun/210.000 km — terpanjang di katalog — dengan harga Rp744 juta.",
+      "highlights": [
+        "Garansi baterai 10 tahun/210.000 km",
+        "Torsi 320 Nm",
+        "Harga Rp744 juta"
+      ],
       "rangeKm": 270,
       "rangeStandard": "WLTP",
       "batteryKwh": 40,
@@ -995,7 +1067,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1004,9 +1076,13 @@
       "brand": "BYD",
       "name": "M6",
       "bodyType": "MPV",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "MPV listrik tujuh penumpang rakitan 2026.",
+      "description": "BYD M6 adalah MPV tujuh penumpang dengan baterai 55,4 kWh dan jarak tempuh 420 km (NEDC). Tiga varian 2026-nya — Standard, Superior, dan Superior Captain — dibanderol mulai Rp395 juta dengan pengisian cepat DC 89 kW.",
+      "highlights": [
+        "Jarak tempuh 420 km (NEDC)",
+        "7 penumpang, 3 varian 2026",
+        "Mulai Rp395 juta"
+      ],
       "rangeKm": 420,
       "rangeStandard": "NEDC",
       "batteryKwh": 55.4,
@@ -1041,7 +1117,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1050,9 +1126,13 @@
       "brand": "MG Motor",
       "name": "MG4 EV",
       "bodyType": "Hatchback",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Hatchback penggerak belakang dengan DC 140 kW.",
+      "description": "MG4 EV adalah hatchback berpenggerak belakang dengan motor 168 dk dan baterai 51 kWh untuk jarak tempuh 425 km (NEDC). Pengisian DC 140 kW mengisi 10–80 persen dalam 26 menit, dengan dua varian Magnify mulai Rp405 juta.",
+      "highlights": [
+        "Jarak tempuh 425 km (NEDC)",
+        "Penggerak belakang, 168 dk",
+        "DC 140 kW: 10–80% 26 menit"
+      ],
       "rangeKm": 425,
       "rangeStandard": "NEDC",
       "batteryKwh": 51,
@@ -1094,7 +1174,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1103,9 +1183,13 @@
       "brand": "Chery",
       "name": "Omoda E5",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover 505 km dengan garansi seumur hidup.",
+      "description": "Chery Omoda E5 menawarkan jarak tempuh 505 km (NEDC) dari baterai 61,06 kWh dan akselerasi 0–100 km/jam dalam 7,2 detik. Empat ribu pembeli pertama mendapat garansi seumur hidup untuk baterai, motor, dan kontroler, dengan harga mulai Rp380 juta.",
+      "highlights": [
+        "Jarak tempuh 505 km (NEDC)",
+        "Garansi seumur hidup 4.000 pembeli pertama",
+        "0–100 km/jam 7,2 detik"
+      ],
       "rangeKm": 505,
       "rangeStandard": "NEDC",
       "batteryKwh": 61.06,
@@ -1139,7 +1223,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1148,9 +1232,13 @@
       "brand": "BYD",
       "name": "Seal",
       "bodyType": "Sedan",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Sedan listrik 650 km dengan torsi 670 Nm.",
+      "description": "BYD Seal adalah sedan berpenggerak semua roda dengan baterai 82,56 kWh dan jarak tempuh 650 km (NEDC) — terjauh di antara sedan katalog ini. Torsi 670 Nm melesatkannya 0–100 km/jam dalam 5,9 detik, dengan harga Rp639 juta.",
+      "highlights": [
+        "Jarak tempuh 650 km (NEDC)",
+        "Torsi 670 Nm, 0–100 km/jam 5,9 detik",
+        "Harga Rp639 juta"
+      ],
       "rangeKm": 650,
       "rangeStandard": "NEDC",
       "batteryKwh": 82.56,
@@ -1183,7 +1271,7 @@
       "gallery": [],
       "video": "https://www.byd.com/material/byd-site/eu-v3/model/seal2026/pc/herobanner/1-bc.webm",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1192,9 +1280,13 @@
       "brand": "BYD",
       "name": "Sealion 7",
       "bodyType": "SUV",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "SUV coupe listrik dengan kecepatan puncak 215 km/jam.",
+      "description": "BYD Sealion 7 memadukan baterai 82,56 kWh dengan jarak tempuh 567 km (NEDC) dan performa 308 dk yang mencapai 215 km/jam. Kabin lima penumpangnya hadir dalam varian Extended dan Performance mulai Rp621 juta.",
+      "highlights": [
+        "Jarak tempuh 567 km (NEDC)",
+        "Kecepatan puncak 215 km/jam",
+        "Dua varian mulai Rp621 juta"
+      ],
       "rangeKm": 567,
       "rangeStandard": "NEDC",
       "batteryKwh": 82.56,
@@ -1228,7 +1320,7 @@
       "gallery": [],
       "video": "https://www.byd.com/material/byd-site/eu-v3/model/sealion7/pc/herobanner/bc-1.mp4",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1237,9 +1329,13 @@
       "brand": "Lexus",
       "name": "UX 300e",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover listrik premium dari Lexus.",
+      "description": "Lexus UX 300e membawa kemewahan khas Lexus ke segmen crossover listrik, dengan motor 201 dk dan baterai 50,3 kWh untuk jarak tempuh 315 km (WLTP). Harganya Rp1,46 miliar.",
+      "highlights": [
+        "Jarak tempuh 315 km (WLTP)",
+        "Tenaga 201 dk",
+        "Harga Rp1,46 miliar"
+      ],
       "rangeKm": 315,
       "rangeStandard": "WLTP",
       "batteryKwh": 50.3,
@@ -1272,7 +1368,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1281,9 +1377,13 @@
       "brand": "VinFast",
       "name": "VF 5",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover kompak lima penumpang dengan garansi 7 tahun.",
+      "description": "VinFast VF 5 adalah crossover lima penumpang berpenggerak depan dengan baterai 37,2 kWh dan jarak tempuh 260 km (NEDC). Garansi kendaraannya 7 tahun dan harganya mulai Rp323 juta, dengan pengisian DC 0–70 persen dalam 32 menit.",
+      "highlights": [
+        "Garansi kendaraan 7 tahun",
+        "5 penumpang berpenggerak depan",
+        "Mulai Rp323 juta"
+      ],
       "rangeKm": 260,
       "rangeStandard": "NEDC",
       "batteryKwh": 37.2,
@@ -1321,7 +1421,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1330,9 +1430,13 @@
       "brand": "VinFast",
       "name": "VF e34",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover listrik dengan garansi kendaraan 10 tahun.",
+      "description": "VinFast VF e34 menawarkan baterai 44,5 kWh untuk jarak tempuh 318 km (NEDC) dan akselerasi 0–100 km/jam dalam 9 detik. Garansi kendaraannya 10 tahun — terpanjang di kelasnya — dengan harga Rp412 juta.",
+      "highlights": [
+        "Garansi kendaraan 10 tahun",
+        "Jarak tempuh 318 km (NEDC)",
+        "Harga Rp412 juta"
+      ],
       "rangeKm": 318,
       "rangeStandard": "NEDC",
       "batteryKwh": 44.5,
@@ -1373,7 +1477,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1382,9 +1486,13 @@
       "brand": "GAC AION",
       "name": "Y Plus",
       "bodyType": "Crossover",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Crossover lega dengan garansi seumur hidup.",
+      "description": "GAC AION Y Plus menawarkan kabin lima penumpang yang lapang dengan baterai 63,2 kWh dan jarak tempuh 490 km (NEDC). Garansi seumur hidup untuk baterai, motor, dan kontroler plus garansi kendaraan 8 tahun/160.000 km melengkapi harga Rp419 juta dalam dua varian.",
+      "highlights": [
+        "Jarak tempuh 490 km (NEDC)",
+        "Garansi seumur hidup baterai dan motor",
+        "Dua varian, Rp419 juta"
+      ],
       "rangeKm": 490,
       "rangeStandard": "NEDC",
       "batteryKwh": 63.2,
@@ -1426,7 +1534,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     }
   ],
@@ -1437,9 +1545,13 @@
       "brand": "Alva",
       "name": "Cervo",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Skuter kencang dengan kecepatan puncak 103 km/jam.",
+      "description": "Alva Cervo adalah skuter listrik berperforma dengan dua baterai 3,5 kWh untuk jarak tempuh 125 km. Torsinya 53,5 Nm dengan kecepatan puncak 103 km/jam, dibanderol Rp43 juta dengan pengisian sekitar 4 jam.",
+      "highlights": [
+        "Jarak tempuh 125 km",
+        "Kecepatan puncak 103 km/jam",
+        "Harga Rp43 juta"
+      ],
       "rangeKm": 125,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3.5,
@@ -1472,7 +1584,7 @@
       "gallery": [],
       "video": "https://cdn.alvaauto.com/ALVA_CERVO_15s_OK.mp4",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1481,9 +1593,13 @@
       "brand": "Honda",
       "name": "CUV e:",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Skuter Honda untuk mobilitas perkotaan.",
+      "description": "Honda CUV e: menawarkan jarak tempuh 80,7 km dari baterai 3 kWh dengan kecepatan puncak 83 km/jam. Dua variannya — termasuk RoadSync Duo — dibanderol mulai Rp54 juta.",
+      "highlights": [
+        "Jarak tempuh 80,7 km",
+        "Kecepatan puncak 83 km/jam",
+        "Dua varian mulai Rp54 juta"
+      ],
       "rangeKm": 80.7,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3,
@@ -1524,7 +1640,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1533,9 +1649,13 @@
       "brand": "Honda",
       "name": "EM1 e:",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Motor listrik Honda paling terjangkau.",
+      "description": "Honda EM1 e: adalah pintu masuk ke lini listrik Honda dengan harga Rp40 juta. Baterai 1,5 kWh-nya memberi jarak tempuh 41,1 km dengan kecepatan puncak 45 km/jam — pas untuk perjalanan pendek dalam kota.",
+      "highlights": [
+        "Harga Rp40 juta",
+        "Jarak tempuh 41,1 km",
+        "Dua varian: EM1 e: dan PLUS"
+      ],
       "rangeKm": 41.1,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 1.5,
@@ -1574,7 +1694,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1583,9 +1703,13 @@
       "brand": "Polytron",
       "name": "Fox 200",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Skuter harian dengan garansi 1 tahun.",
+      "description": "Polytron Fox 200 menawarkan jarak tempuh 85 km dari baterai 1,94 kWh dengan harga Rp21 juta. Garansi 1 tahun mencakup baterai, dinamo, dan kontroler.",
+      "highlights": [
+        "Jarak tempuh 85 km",
+        "Harga Rp21 juta",
+        "Garansi baterai 1 tahun"
+      ],
       "rangeKm": 85,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 1.94,
@@ -1620,7 +1744,7 @@
       "gallery": [],
       "video": "https://cdn.polytron.co.id/public-assets/polytroncoid/2025/09/fox200cutdown_web.mp4",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1629,9 +1753,13 @@
       "brand": "Polytron",
       "name": "Fox 350",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Jarak 130 km dengan harga di bawah Rp30 juta.",
+      "description": "Polytron Fox 350 memberi jarak tempuh 130 km dari baterai 3,75 kWh dengan kecepatan puncak 95 km/jam. Harganya Rp29 juta dengan garansi 1 tahun untuk baterai, dinamo, dan kontroler.",
+      "highlights": [
+        "Jarak tempuh 130 km",
+        "Baterai 3,75 kWh",
+        "Harga Rp29 juta"
+      ],
       "rangeKm": 130,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3.75,
@@ -1669,7 +1797,7 @@
       "gallery": [],
       "video": "https://cdn.polytron.co.id/public-assets/polytroncoid/2025/11/Video-Home-Banner-Fox-350.webm",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1678,9 +1806,13 @@
       "brand": "Polytron",
       "name": "Fox 500",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Varian tercepat Fox dengan kecepatan puncak 130 km/jam.",
+      "description": "Polytron Fox 500 adalah varian tertinggi lini Fox dengan motor 19,7 dk dan kecepatan puncak 130 km/jam. Baterai 3,89 kWh memberi jarak tempuh 130 km dengan harga Rp43 juta.",
+      "highlights": [
+        "Kecepatan puncak 130 km/jam",
+        "Jarak tempuh 130 km",
+        "Harga Rp43 juta"
+      ],
       "rangeKm": 130,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3.89,
@@ -1715,7 +1847,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1724,9 +1856,13 @@
       "brand": "Polytron",
       "name": "Fox R",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Jarak 130 km termurah di lini Polytron.",
+      "description": "Polytron Fox R menawarkan jarak tempuh 130 km dari baterai 3,7 kWh dengan harga hanya Rp21 juta — kombinasi jarak dan harga terbaik di lininya untuk komuter harian.",
+      "highlights": [
+        "Jarak tempuh 130 km",
+        "Harga Rp21 juta",
+        "Kecepatan puncak 95 km/jam"
+      ],
       "rangeKm": 130,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3.7,
@@ -1759,7 +1895,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1768,9 +1904,13 @@
       "brand": "Gesits",
       "name": "G1",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Skuter listrik karya anak bangsa.",
+      "description": "Gesits G1 adalah skuter listrik buatan Indonesia dengan baterai 1,44 kWh untuk jarak tempuh 50 km dan kecepatan puncak 70 km/jam. Harganya Rp29 juta dengan pengisian sekitar 3 jam.",
+      "highlights": [
+        "Buatan Indonesia",
+        "Jarak tempuh 50 km",
+        "Harga Rp29 juta"
+      ],
       "rangeKm": 50,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 1.44,
@@ -1807,7 +1947,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1816,9 +1956,13 @@
       "brand": "Honda",
       "name": "ICON e:",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Skuter Honda Rp28 juta dengan pengisian di rumah.",
+      "description": "Honda ICON e: dibanderol Rp28 juta dengan baterai 1,5 kWh untuk jarak tempuh 53 km dan kecepatan puncak 55 km/jam. Pengisiannya praktis di rumah tanpa sistem tukar baterai.",
+      "highlights": [
+        "Harga Rp28 juta",
+        "Jarak tempuh 53 km",
+        "Bisa dicas di rumah"
+      ],
       "rangeKm": 53,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 1.5,
@@ -1857,7 +2001,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1866,9 +2010,13 @@
       "brand": "United",
       "name": "MX-1200",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Skuter listrik termurah di katalog: Rp17 juta.",
+      "description": "United MX-1200 adalah motor listrik termurah di katalog ini dengan harga Rp17 juta. Baterai 1,44 kWh-nya memberi jarak tempuh 60 km dengan kecepatan puncak 65 km/jam.",
+      "highlights": [
+        "Harga Rp17 juta",
+        "Jarak tempuh 60 km",
+        "Kecepatan puncak 65 km/jam"
+      ],
       "rangeKm": 60,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 1.44,
@@ -1907,7 +2055,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1916,9 +2064,13 @@
       "brand": "Alva",
       "name": "One",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Skuter seimbang untuk harian kota.",
+      "description": "Alva One menawarkan jarak tempuh 70 km dari baterai 2,7 kWh dengan kecepatan puncak 90 km/jam. Torsi 46,5 Nm-nya responsif untuk lalu lintas kota, dengan harga Rp36 juta.",
+      "highlights": [
+        "Jarak tempuh 70 km",
+        "Kecepatan puncak 90 km/jam",
+        "Harga Rp36 juta"
+      ],
       "rangeKm": 70,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 2.7,
@@ -1951,7 +2103,7 @@
       "gallery": [],
       "video": "https://cdn.alvaauto.com/ALVA_ONE_XP_30s_OK.mp4",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -1960,9 +2112,13 @@
       "brand": "Smoot",
       "name": "Tempur",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Garansi baterai seumur hidup seharga Rp19 juta.",
+      "description": "Smoot Tempur menonjol dengan garansi baterai seumur hidup pada harga Rp19 juta. Baterai 1,34 kWh memberi jarak tempuh 60 km dengan torsi besar 112 Nm untuk stop-and-go.",
+      "highlights": [
+        "Garansi baterai seumur hidup",
+        "Harga Rp19 juta",
+        "Torsi 112 Nm"
+      ],
       "rangeKm": 60,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 1.34,
@@ -1995,7 +2151,7 @@
       "gallery": [],
       "video": "https://video.wixstatic.com/video/dc3d7c_608ad9222ef24464a5d75d0743594d3f/1080p/mp4/file.mp4",
       "sumberUrl": "",
-      "updatedAt": "2026-09-20T00:00:00.000Z",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -2004,9 +2160,13 @@
       "brand": "Alessa",
       "name": "Forte",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Jarak 100 km dengan pengisi cepat 45 menit.",
+      "description": "Alessa Forte membawa baterai 3,5 kWh untuk jarak tempuh 100 km dengan kecepatan puncak 75 km/jam. Pengisi cepatnya penuh dalam 45 menit, dengan harga Rp21 juta.",
+      "highlights": [
+        "Jarak tempuh 100 km",
+        "Pengisi cepat 45 menit",
+        "Harga Rp21 juta"
+      ],
       "rangeKm": 100,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3.5,
@@ -2026,7 +2186,7 @@
         "Standar"
       ],
       "price": 20700000,
-      "priceText": "20,7jt",
+      "priceText": "Rp 21 jt",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -2039,7 +2199,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -2048,9 +2208,13 @@
       "brand": "Alessa",
       "name": "Duo",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Jarak 120 km seharga Rp21 juta.",
+      "description": "Alessa Duo menawarkan jarak tempuh 120 km dari baterai 3,5 kWh dengan harga Rp21 juta. Kecepatan puncaknya 70 km/jam dengan pengisi cepat 45 menit.",
+      "highlights": [
+        "Jarak tempuh 120 km",
+        "Harga Rp21 juta",
+        "Pengisi cepat 45 menit"
+      ],
       "rangeKm": 120,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3.5,
@@ -2070,7 +2234,7 @@
         "Standar"
       ],
       "price": 20900000,
-      "priceText": "20,9jt",
+      "priceText": "Rp 21 jt",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -2083,7 +2247,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -2092,9 +2256,13 @@
       "brand": "Alessa",
       "name": "Uno",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Skuter ringkas untuk perjalanan pendek.",
+      "description": "Alessa Uno adalah skuter ringkas berbaterai LFP untuk jarak tempuh 50 km dengan kecepatan puncak 50 km/jam. Harganya Rp18 juta, cocok untuk mobilitas jarak dekat.",
+      "highlights": [
+        "Harga Rp18 juta",
+        "Jarak tempuh 50 km",
+        "Baterai LFP"
+      ],
       "rangeKm": 50,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 1.3,
@@ -2114,7 +2282,7 @@
         "Standar"
       ],
       "price": 18000000,
-      "priceText": "18jt",
+      "priceText": "Rp 18 jt",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -2127,7 +2295,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -2136,9 +2304,13 @@
       "brand": "Alessa",
       "name": "Evo",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Jarak 110 km seharga Rp19 juta.",
+      "description": "Alessa Evo memberi jarak tempuh 110 km dari baterai 3,5 kWh dengan harga Rp19 juta. Kecepatan puncaknya 60 km/jam dengan pengisi cepat 45 menit.",
+      "highlights": [
+        "Jarak tempuh 110 km",
+        "Harga Rp19 juta",
+        "Pengisi cepat 45 menit"
+      ],
       "rangeKm": 110,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3.5,
@@ -2158,7 +2330,7 @@
         "Standar"
       ],
       "price": 19000000,
-      "priceText": "19jt",
+      "priceText": "Rp 19 jt",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -2171,7 +2343,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -2180,9 +2352,13 @@
       "brand": "Alessa",
       "name": "Quatro",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Varian Alessa tercepat: 85 km/jam.",
+      "description": "Alessa Quatro adalah varian tercepat lini Alessa dengan kecepatan puncak 85 km/jam. Baterai 3,5 kWh memberi jarak tempuh 100 km dengan harga Rp24 juta.",
+      "highlights": [
+        "Kecepatan puncak 85 km/jam",
+        "Jarak tempuh 100 km",
+        "Harga Rp24 juta"
+      ],
       "rangeKm": 100,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 3.5,
@@ -2202,7 +2378,7 @@
         "Standar"
       ],
       "price": 23700000,
-      "priceText": "23,7jt",
+      "priceText": "Rp 24 jt",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -2215,7 +2391,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -2224,9 +2400,13 @@
       "brand": "Alessa",
       "name": "Dimentro E1 pro",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Jarak terjauh Alessa: 150 km.",
+      "description": "Alessa Dimentro E1 Pro adalah flagship jarak tempuh Alessa dengan baterai 4,1 kWh untuk 150 km dan kecepatan puncak 80 km/jam. Harganya belum tersedia dan masih menunggu konfirmasi.",
+      "highlights": [
+        "Jarak tempuh 150 km",
+        "Baterai 4,1 kWh",
+        "Harga belum tersedia"
+      ],
       "rangeKm": 150,
       "rangeStandard": "Klaim pabrikan",
       "batteryKwh": 4.1,
@@ -2246,7 +2426,7 @@
         "Standar"
       ],
       "price": null,
-      "priceText": "Harga akan segera tersedia",
+      "priceText": "Harga belum tersedia",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -2259,7 +2439,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     },
     {
@@ -2268,12 +2448,16 @@
       "brand": "Alessa",
       "name": "eX3000",
       "bodyType": "Skuter",
-      "tagline": "",
-      "description": "",
-      "highlights": [],
+      "tagline": "Akselerasi 0–50 km/jam dalam 3 detik.",
+      "description": "Alessa eX3000 memadukan baterai 2 kWh dengan jarak tempuh 70 km dan akselerasi 0–50 km/jam dalam 3 detik. Torsi 110 Nm dan kecepatan puncak 75 km/jam dibanderol Rp26 juta.",
+      "highlights": [
+        "0–50 km/jam 3 detik",
+        "Torsi 110 Nm",
+        "Harga Rp26 juta"
+      ],
       "rangeKm": 70,
       "rangeStandard": "Klaim pabrikan",
-      "batteryKwh": null,
+      "batteryKwh": 2,
       "powerHp": 3.75,
       "torqueNm": 110,
       "topSpeedKph": 75,
@@ -2290,7 +2474,7 @@
         "Standar"
       ],
       "price": 25700000,
-      "priceText": "25,7jt",
+      "priceText": "Rp 26 jt",
       "penjualan2026": null,
       "stale": false,
       "featured": false,
@@ -2303,7 +2487,7 @@
       "gallery": [],
       "video": "",
       "sumberUrl": "",
-      "updatedAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     }
   ],
@@ -2851,6 +3035,412 @@
   ],
   "berita": [
     {
+      "id": "leapmotor-perluas-pasar-ke-jawa-tengah-lewat-giias-semarang",
+      "title": "Leapmotor Perluas Pasar ke Jawa Tengah Lewat GIIAS Semarang",
+      "source": "AutonetMagz",
+      "url": "https://autonetmagz.com/leapmotor-perluas-pasar-ke-jawa-tengah-lewat-giias-semarang/149384/",
+      "date": "2026-10-03",
+      "image": "",
+      "excerpt": "Setelah debut di GIIAS 2026 Jakarta pada Juli lalu, Leapmotor mulai memperluas langkahnya ke Jawa Tengah. Brand kendaraan listrik ini hadir di GIIAS Semarang 2026 yang berlangsung 30 September hingga ",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.485Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "trump-ajak-pabrikan-ev-china-buat-pabrik-di-as",
+      "title": "Trump Ajak Pabrikan EV China Buat Pabrik di AS",
+      "source": "AutonetMagz",
+      "url": "https://autonetmagz.com/trump-ajak-pabrikan-ev-china-buat-pabrik-di-as/149141/",
+      "date": "2026-10-03",
+      "image": "",
+      "excerpt": "Donald Trump lontarkan pernyataan mengejutkan terkait ekspansi pabrikan mobil listrik asal China ke Amerika Serikat (AS). Sang Presiden AS tersebut menyatakan terbuka jika produsen kendaraan energi ba",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.485Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "byd-atto-1-baru-bakal-punya-kursi-pijat",
+      "title": "BYD Atto 1 Baru Bakal Punya Kursi Pijat",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil-listrik/d-8689706/byd-atto-1-baru-bakal-punya-kursi-pijat",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "BYD akan meluncurkan hatchback listrik BYD Seagull atau Atto 1 generasi kedua. Kabarnya, BYD Atto 1 terbaru akan mendapatkan kursi pijat.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "undang-undang-lalu-lintas-direvisi-kendaraan-otonom-dan-listrik-bakal-diatur",
+      "title": "Undang-Undang Lalu Lintas Direvisi, Kendaraan Otonom dan Listrik Bakal Diatur",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/berita/d-8689679/undang-undang-lalu-lintas-direvisi-kendaraan-otonom-dan-listrik-bakal-diatur",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "DPR RI membahas revisi UU Lalu Lintas. Kendaraan otonom dan listrik bakal diatur dalam undang-undang.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "detik-detik-hilux-listrik-ditimpa-karavan-760-kg-tapi-masih-bisa-hidup",
+      "title": "Detik-detik Hilux Listrik Ditimpa Karavan 760 Kg tapi Masih Bisa Hidup",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/oto-galeri/d-8689564/detik-detik-hilux-listrik-ditimpa-karavan-760-kg-tapi-masih-bisa-hidup",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Toyota kembali menguji ketangguhan Hilux dengan cara ekstrem. Kali ini, Hilux BEV dihantam karavan seberat 760 kg yang dijatuhkan dari ketinggian 9 meter.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "ganti-nama-nilai-jual-danza-lebih-murah-dari-denza",
+      "title": "Ganti Nama, Nilai Jual Danza Lebih Murah dari Denza",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil/d-8689498/ganti-nama-nilai-jual-danza-lebih-murah-dari-denza",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Denza sudah resmi berganti nama jadi Danza di Indonesia. Deretan mobil Danza juga sudah terdaftar di Permendagri dengan nilai jual yang lebih murah.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "tkdn-mobil-listrik-wajib-60-mulai-2027-ini-persiapan-pabrik-toyota",
+      "title": "TKDN Mobil Listrik Wajib 60% Mulai 2027, Ini Persiapan Pabrik Toyota",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil-listrik/d-8689256/tkdn-mobil-listrik-wajib-60-mulai-2027-ini-persiapan-pabrik-toyota",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Toyota mempersiapkan pabriknya untuk memenuhi target TKDN 60% mobil listrik mulai 2027. Kerja sama dengan CATL untuk produksi baterai jadi langkah utama.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "denza-ganti-nama-jadi-danza-terkait-sengketa-merek",
+      "title": "Denza Ganti Nama Jadi Danza, Terkait Sengketa Merek?",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil-listrik/d-8689102/denza-ganti-nama-jadi-danza-terkait-sengketa-merek",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Merek Denza resmi berganti nama menjadi Danza di Indonesia. Perubahan ini terkait sengketa merek dan langkah BYD untuk pengembangan mobilitas premium.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "dijatuhi-karavan-760-kg-toyota-hilux-listrik-masih-bisa-jalan",
+      "title": "Dijatuhi Karavan 760 Kg, Toyota Hilux Listrik Masih Bisa Jalan",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil-listrik/d-8688964/dijatuhi-karavan-760-kg-toyota-hilux-listrik-masih-bisa-jalan",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Toyota menguji ketangguhan Hilux BEV dengan menjatuhkan karavan 760 kg dari ketinggian 9 meter. Meski rusak, mobil listrik ini tetap berfungsi.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "mobil-listrik-harga-di-bawah-rp-200-juta-bisa-jalan-berapa-jauh-ini-daftarnya",
+      "title": "Mobil Listrik Harga di Bawah Rp 200 Juta Bisa Jalan Berapa Jauh? Ini Daftarnya",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil-listrik/d-8688833/mobil-listrik-harga-di-bawah-rp-200-juta-bisa-jalan-berapa-jauh-ini-daftarnya",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Masih ada mobil listrik yang dijual di bawah Rp 200 juta. Seberapa jauh jarak tempuhnya?",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "diskon-rp-20-jutaan-motor-listrik-honda-harga-jadi-segini",
+      "title": "Diskon Rp 20 Jutaan Motor Listrik Honda, Harga Jadi Segini",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/motor/d-8688798/diskon-rp-20-jutaan-motor-listrik-honda-harga-jadi-segini",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Motor listrik Honda kena diskon Rp 20 jutaan. Dengan begitu harganya mulai Rp 30 jutaan.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "mengenal-foton-indonesia-ternyata-yang-ini-hanya-jualan-ev",
+      "title": "Mengenal FOTON Indonesia, Ternyata Yang Ini Hanya Jualan EV!",
+      "source": "AutonetMagz",
+      "url": "https://autonetmagz.com/mengenal-foton-indonesia-ternyata-yang-ini-hanya-jualan-ev/149361/",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Penulis: Claudius Suryawijaya Melalui pertemuan non-formal di sebuah restoran di Jakarta Timur, AutonetMagz mendapat kesempatan untuk mengenal lebih dekat mengenai Foton Indonesia. Kali ini mereka ber",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.485Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "vw-pamer-konsep-ev-super-irit-bernama-mission-efficiency",
+      "title": "VW Pamer Konsep EV Super Irit Bernama Mission Efficiency",
+      "source": "AutonetMagz",
+      "url": "https://autonetmagz.com/vw-pamer-konsep-ev-super-irit-bernama-mission-efficiency/149132/",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Volkswagen baru saja memperkenalkan mobil konsep terbarunya yang diberi nama Mission Efficiency. Konsep ini dihadirkan sebagai gambaran nyata keseriusan VW dalam menciptakan kendaraan listrik super he",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.485Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "polytron-beri-subsidi-rp6-juta-di-giias-semarang-2026",
+      "title": "Polytron Beri Subsidi Rp6 Juta di GIIAS Semarang 2026",
+      "source": "AutonetMagz",
+      "url": "https://autonetmagz.com/polytron-beri-subsidi-rp6-juta-di-giias-semarang-2026/149315/",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Polytron mengukuhkan posisinya sebagai salah satu pemimpin pasar motor listrik roda dua di Indonesia. Salah satu pembuktiannya dengan berpartisipasi dalam gelaran Gaikindo Indonesia International Auto",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.485Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "lepas-kini-punya-10-dealer-di-indonesia",
+      "title": "Lepas Kini Punya 10 Dealer di Indonesia",
+      "source": "CNN Indonesia",
+      "url": "https://www.cnnindonesia.com/otomotif/20261002191735-579-1411084/lepas-kini-punya-10-dealer-di-indonesia",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Lepas membuka dealer 3S Lepas Asco Fatmawati di Jakarta Selatan bersama PT Asco Performa Auto, menjual L8 PHEV dan E4 EV.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.121Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "china-cabut-insentif-baterai-harga-mobil-listrik-bakal-lebih-mahal",
+      "title": "China Cabut Insentif Baterai, Harga Mobil Listrik Bakal Lebih Mahal",
+      "source": "CNN Indonesia",
+      "url": "https://www.cnnindonesia.com/otomotif/20261001142902-603-1410495/china-cabut-insentif-baterai-harga-mobil-listrik-bakal-lebih-mahal",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "China memangkas insentif mobil listrik bertahap, mulai pajak baterai lithium-ion, rabat ekspor baterai, hingga pajak pembelian penuh 10 persen pada 2028.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.121Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "vinfast-targetkan-tkdn-80-persen-untuk-industri-ev-indonesia",
+      "title": "VinFast Targetkan TKDN 80 Persen untuk Industri EV Indonesia",
+      "source": "CNN Indonesia",
+      "url": "https://www.cnnindonesia.com/otomotif/20261002155157-608-1411015/vinfast-targetkan-tkdn-80-persen-untuk-industri-ev-indonesia",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Indonesia berkembang sebagai pasar kendaraan listrik, VinFast targetkan TKDN 80% hingga 2030, dorong industri lokal dan penciptaan lapangan kerja.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.121Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "kenapa-byd-pilih-nama-danza-untuk-gantikan-denza",
+      "title": "Kenapa BYD Pilih Nama Danza untuk Gantikan Denza?",
+      "source": "CNN Indonesia",
+      "url": "https://www.cnnindonesia.com/otomotif/20261002130216-579-1410918/kenapa-byd-pilih-nama-danza-untuk-gantikan-denza",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "BYD Motor Indonesia menyebut nama Danza, pengganti Denza, tidak dirancang memiliki arti spesifik dan dipilih karena pengucapannya mirip Denza.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.121Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "byd-buka-suara-denza-resmi-ganti-nama-jadi-danza",
+      "title": "BYD Buka Suara Denza Resmi Ganti Nama Jadi Danza",
+      "source": "CNN Indonesia",
+      "url": "https://www.cnnindonesia.com/otomotif/20261002104649-579-1410867/byd-buka-suara-denza-resmi-ganti-nama-jadi-danza",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Menurut BYD Indonesia penggantian nama ini jadi bukti komitmen jangka panjang perusahaan.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.121Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "proyek-hancurkan-toyota-hilux-ditimpa-karavan-masih-bisa-jalan",
+      "title": "Proyek Hancurkan Toyota Hilux, Ditimpa Karavan Masih Bisa Jalan",
+      "source": "CNN Indonesia",
+      "url": "https://www.cnnindonesia.com/otomotif/20261001150037-603-1410509/proyek-hancurkan-toyota-hilux-ditimpa-karavan-masih-bisa-jalan",
+      "date": "2026-10-02",
+      "image": "",
+      "excerpt": "Toyota Inggris menjatuhkan karavan 760 kg dari ketinggian sekitar 9,1 meter ke Hilux listrik. Pikap itu masih bisa dinyalakan dan melaju.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.121Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "mobil-hybrid-jangan-pakai-bbm-kayak-gini-pokoknya-jangan",
+      "title": "Mobil Hybrid Jangan Pakai BBM Kayak Gini, Pokoknya Jangan!",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil/d-8688164/mobil-hybrid-jangan-pakai-bbm-kayak-gini-pokoknya-jangan",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "Mobil hybrid direkomendasikan menggunakan BBM dengan kandungan RON di atas 90. Kalau nekat pakai di bawah rekomendasi, ini dampak ngerinya.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "denza-resmi-ganti-nama-jadi-danza-ini-alasannya",
+      "title": "Denza Resmi Ganti Nama Jadi Danza, Ini Alasannya",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil/d-8688093/denza-resmi-ganti-nama-jadi-danza-ini-alasannya",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "Merek mobil premium BYD, Denza, resmi berganti nama menjadi Danza di Indonesia. Perubahan ini mendukung komitmen pengembangan mobilitas premium di Tanah Air.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "janji-pemerintah-kasih-insentif-kendaraan-listrik-menguap-lagi",
+      "title": "Janji Pemerintah Kasih Insentif Kendaraan Listrik 'Menguap' Lagi",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/motor-listrik/d-8687889/janji-pemerintah-kasih-insentif-kendaraan-listrik-menguap-lagi",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "Pemerintah belum realisasikan insentif kendaraan listrik yang dijanjikan. Padahal, insentif kendaraan listrik dijanjikan cair bulan September.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "dijual-mulai-rp-150-jutaan-ternyata-segini-nilai-jual-wuling-aira-ev",
+      "title": "Dijual Mulai Rp 150 Jutaan, Ternyata Segini Nilai Jual Wuling Aira ev",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil/d-8687597/dijual-mulai-rp-150-jutaan-ternyata-segini-nilai-jual-wuling-aira-ev",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "Wuling Aira ev merupakan mobil listrik yang termurah saat ini. Punya banderol mulai Rp 155 juta, ternyata segini nilai jual Aira ev.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "china-pamer-moge-bermesin-plug-in-hybrid-desainnya-gahar",
+      "title": "China Pamer Moge Bermesin Plug-in Hybrid, Desainnya Gahar",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/motor/d-8687430/china-pamer-moge-bermesin-plug-in-hybrid-desainnya-gahar",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "Motor konsep bernama Voge CU-X tersebut menggabungkan mesin bensin dengan motor listrik dan baterai yang bisa diisi ulang dari sumber listrik eksternal.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "brand-china-dominasi-world-car-awards-2027-sumbang-27-dari-56-nominasi",
+      "title": "Brand China Dominasi World Car Awards 2027, Sumbang 27 dari 56 Nominasi",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil/d-8687206/brand-china-dominasi-world-car-awards-2027-sumbang-27-dari-56-nominasi",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "Mobil China mendominasi World Car Awards 2027 dengan 27 dari 56 kandidat. Merek seperti BYD dan Geely bersaing di pasar global otomotif.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "tantang-mobil-china-suzuki-bakal-kembangkan-mobil-reev",
+      "title": "Tantang Mobil China, Suzuki Bakal Kembangkan Mobil REEV",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil/d-8687011/tantang-mobil-china-suzuki-bakal-kembangkan-mobil-reev",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "Suzuki rencanakan pengembangan teknologi kendaraan 10 tahun ke depan, termasuk PHEV atau REEV.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.003Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "toyota-kucurkan-rp24-t-bangun-pabrik-mobil-listrik-di-argentina",
+      "title": "Toyota Kucurkan Rp24 T Bangun Pabrik Mobil Listrik di Argentina",
+      "source": "CNN Indonesia",
+      "url": "https://www.cnnindonesia.com/otomotif/20261001180404-603-1410611/toyota-kucurkan-rp24-t-bangun-pabrik-mobil-listrik-di-argentina",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "Toyota mengucurkan investasi senilai Rp24,06 triliun untuk membangun fasilitas produksi kendaraan listrik di Argentina.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.121Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "resmi-denza-berganti-nama-jadi-danza-di-indonesia",
+      "title": "Resmi Denza Berganti Nama Jadi Danza di Indonesia",
+      "source": "CNN Indonesia",
+      "url": "https://www.cnnindonesia.com/otomotif/20261001174100-603-1410586/resmi-denza-berganti-nama-jadi-danza-di-indonesia",
+      "date": "2026-10-01",
+      "image": "",
+      "excerpt": "BYD Indonesia resmi mengganti nama merek mobil premium yang sebelumnya dikenal sebagai Denza menjadi Danza.",
+      "featured": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-03T02:56:30.121Z",
+      "updatedBy": ""
+    },
+    {
       "id": "desain-interior-icar-v27-raih-best-interior-design-tada-2026",
       "title": "Desain Interior iCAR V27 Raih Best Interior Design TADA 2026",
       "source": "detikOto",
@@ -2862,412 +3452,6 @@
       "status": "published",
       "publishAt": "",
       "updatedAt": "2026-09-30T17:41:54.224Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "pabrik-toyota-di-karawang-pekerjakan-200-wanita",
-      "title": "Pabrik Toyota di Karawang Pekerjakan 200 Wanita",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil/d-8686420/pabrik-toyota-di-karawang-pekerjakan-200-wanita",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "TMMIN kini mempekerjakan lebih dari 200 wanita. Prinsip AMAP diterapkan untuk semua pekerja, mendukung pengembangan SDM di era elektrifikasi.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.224Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "hyundai-ioniq-v-resmi-meluncur-harga-mulai-rp-200-jutaan",
-      "title": "Hyundai Ioniq V Resmi Meluncur, Harga Mulai Rp 200 Jutaan",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil-listrik/d-8686101/hyundai-ioniq-v-resmi-meluncur-harga-mulai-rp-200-jutaan",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Hyundai Ioniq V resmi diluncurkan di China dengan harga mulai Rp 200 jutaan. Mobil listrik ini menawarkan lima varian dan fitur canggih untuk konsumen.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.224Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "kenapa-toyota-belum-ekspor-veloz-hybrid",
-      "title": "Kenapa Toyota Belum Ekspor Veloz Hybrid?",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil/d-8685825/kenapa-toyota-belum-ekspor-veloz-hybrid",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Toyota Veloz Hybrid diluncurkan di Indonesia, namun belum diekspor. Fokus saat ini pada permintaan domestik, meski peluang ekspor tetap terbuka di masa depan.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.224Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "terungkap-taksi-listrik-sempat-netral-sebelum-berhenti-ditabrak-krl-di-bekasi",
-      "title": "Terungkap! Taksi Listrik Sempat Netral Sebelum Berhenti-Ditabrak KRL di Bekasi",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/berita/d-8685787/terungkap-taksi-listrik-sempat-netral-sebelum-berhenti-ditabrak-krl-di-bekasi",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "KNKT merilis hasil investigasi kecelakaan KA Anggrek dan KRL di Bekasi Timur. Taksi listrik yang ditabrak kereta sempat masuk transmisi N sebelum berhenti.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.224Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "kapal-angkut-mobil-listrik-terbakar-otoritas-bantah-baterai-ev-jadi-pemicu",
-      "title": "Kapal Angkut Mobil Listrik Terbakar, Otoritas Bantah Baterai EV Jadi Pemicu",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil-listrik/d-8685403/kapal-angkut-mobil-listrik-terbakar-otoritas-bantah-baterai-ev-jadi-pemicu",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Kapal feri MV June Aster yang mengangkut EV terbakar saat perjalanan dari Manila ke Coron. Penyelidikan menyebut muatan mudah terbakar sebagai penyebab.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.224Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "knkt-ungkap-detik-detik-taksi-listrik-berhenti-dan-ditabrak-krl-di-bekasi-timur",
-      "title": "KNKT Ungkap Detik-detik Taksi Listrik Berhenti dan Ditabrak KRL di Bekasi Timur",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/berita/d-8685360/knkt-ungkap-detik-detik-taksi-listrik-berhenti-dan-ditabrak-krl-di-bekasi-timur",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "KNKT merilis hasil investigasi kecelakaan KA Anggrek dan KRL di Stasiun Bekasi Timur, mengungkap detik-detik taksi listrik berhenti sebelum ditabrak.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.224Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "produksi-veloz-hybrid-di-indonesia-tembus-15-737-unit",
-      "title": "Produksi Veloz Hybrid di Indonesia Tembus 15.737 Unit",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil/d-8685325/produksi-veloz-hybrid-di-indonesia-tembus-15-737-unit",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Produksi Toyota Veloz Hybrid di Indonesia mencapai 15.737 unit sejak peluncuran. Fokus saat ini adalah memenuhi permintaan domestik sebelum ekspor.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.224Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "yamaha-stsj-undi-5-pemenang-customer-day-2026-dapat-fazzio-hybrid",
-      "title": "Yamaha STSJ Undi 5 Pemenang Customer Day 2026, Dapat Fazzio Hybrid!!",
-      "source": "AutonetMagz",
-      "url": "https://autonetmagz.com/yamaha-stsj-undi-5-pemenang-customer-day-2026-dapat-fazzio-hybrid/149216/",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Yamaha STSJ akhirnya mengumumkan para pemenang Yamaha Customer Day 2026. Program apresiasi ini memberikan kesempatan bagi pelanggan di Jawa Timur dan NTB untuk membawa pulang salah satu dari lima unit",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.430Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "nissan-pixo-si-mungil-ini-muncul-lagi-dalam-wujud-ev",
-      "title": "Nissan Pixo, Si Mungil ini Muncul Lagi Dalam Wujud EV",
-      "source": "AutonetMagz",
-      "url": "https://autonetmagz.com/nissan-pixo-si-mungil-ini-muncul-lagi-dalam-wujud-ev/149077/",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Nissan resmi mengumumkan nama Pixo untuk lini mobil listrik mungil kategori A terbaru mereka. Langkah ini menandai kebangkitan nama Pixo yang sebelumnya pernah dipakai pada era 2000-an sebagai mobil p",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.430Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "bidik-pasar-global-xpeng-rakit-suv-setir-kanan-pertama",
-      "title": "Bidik Pasar Global, XPeng Rakit SUV Setir Kanan Pertama",
-      "source": "AutonetMagz",
-      "url": "https://autonetmagz.com/bidik-pasar-global-xpeng-rakit-suv-setir-kanan-pertama/149081/",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "XPeng resmi merayakan pencapaian penting setelah unit pertama SUV G9 versi setir kanan (right-hand-drive) resmi keluar dari lini produksi. Momentum ini menandai kesiapan produsen mobil listrik asal Ti",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.430Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "permintaan-domestik-naik-toyota-indonesia-belum-mau-ekspor-veloz-hev",
-      "title": "Permintaan Domestik Naik, Toyota Indonesia Belum Mau Ekspor Veloz HEV",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930182602-603-1410137/permintaan-domestik-naik-toyota-indonesia-belum-mau-ekspor-veloz-hev",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "PT Toyota Motor Manufacturing Indonesia (TMMIN) memfokuskan produksi Veloz hybrid sepenuhnya untuk memenuhi permintaan pasar domestik.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "belajar-dari-1970-mobil-listrik-wajib-kantongi-tkdn-80-persen",
-      "title": "Belajar dari 1970, Mobil Listrik Wajib Kantongi TKDN 80 Persen",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260929164740-603-1409599/belajar-dari-1970-mobil-listrik-wajib-kantongi-tkdn-80-persen",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "GIAMM mengatakan kebijakan Tingkat Komponen Dalam Negeri (TKDN) untuk kendaraan listrik wajib dilakukan ketimbang cuma impor utuh.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "sempat-direvisi-aturan-tkdn-mobil-listrik-wajib-60-mulai-2027",
-      "title": "Sempat Direvisi, Aturan TKDN Mobil Listrik Wajib 60% Mulai 2027",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930144034-603-1410000/sempat-direvisi-aturan-tkdn-mobil-listrik-wajib-60-mulai-2027",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Kewajiban TKDN 60 persen mobil listrik awalnya dijadwalkan mulai 2024 lewat Perpres 55/2019, lalu direvisi menjadi 2027 lewat Perpres 79/2023.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "periklindo-dorong-micro-ev-di-bawah-rp100-juta",
-      "title": "Periklindo Dorong Micro EV di Bawah Rp100 Juta",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930130137-603-1409937/periklindo-dorong-micro-ev-di-bawah-rp100-juta",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Periklindo mendorong hadirnya mobil micro EV dengan harga terjangkau di bawah Rp100 juta untuk mempercepat pembukaan pasar massal di Indonesia.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "bus-listrik-diminati-daerah-itdp-dorong-pemerintah-bentuk-regulasi",
-      "title": "Bus Listrik Diminati Daerah, ITDP Dorong Pemerintah Bentuk Regulasi",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930123321-603-1409921/bus-listrik-diminati-daerah-itdp-dorong-pemerintah-bentuk-regulasi",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "ITDP mendorong adanya peraturan penggunaan bus listrik di berbagai kota demi mempercepat transisi dan menjadi dasar bila pemerintah ingin memberi insentif.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "periklindo-usul-insentif-berbasis-emisi-gas-tak-eksklusif-hanya-ke-ev",
-      "title": "Periklindo Usul Insentif Berbasis Emisi Gas, Tak Eksklusif Hanya ke EV",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930120946-603-1409912/periklindo-usul-insentif-berbasis-emisi-gas-tak-eksklusif-hanya-ke-ev",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Periklindo usulkan insentif otomotif berbasis emisi gas buang untuk semua lapisan masyarakat. Ini langkah inklusif untuk kurangi polusi dan ramah lingkungan.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "periklindo-tren-penjualan-mobil-listrik-ada-di-jalan-yang-benar",
-      "title": "Periklindo: Tren Penjualan Mobil Listrik Ada di Jalan yang Benar",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930115416-603-1409890/periklindo-tren-penjualan-mobil-listrik-ada-di-jalan-yang-benar",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Wakil Ketua Periklindo, Achmad Rofiqi, menyatakan lonjakan penjualan mobil listrik di Indonesia menunjukkan kemajuan transisi ke kendaraan ramah lingkungan.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "tak-perlu-dibenturkan-biodiesel-b50-dan-ev-bisa-jalan-bersama",
-      "title": "Tak Perlu Dibenturkan, Biodiesel B50 dan EV Bisa Jalan Bersama",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930114831-603-1409888/tak-perlu-dibenturkan-biodiesel-b50-dan-ev-bisa-jalan-bersama",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Guru Besar Universitas Pertamina mengatakan Indonesia sebaiknya multipathway untuk pemanfaatan energi, tak perlu 100 persen EV karena B50 sudah bermanfaat.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "roadmap-kendaraan-listrik-tkdn-naik-jadi-80-persen-pada-2030",
-      "title": "Roadmap Kendaraan Listrik, TKDN Naik Jadi 80 persen Pada 2030",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930104639-603-1409861/roadmap-kendaraan-listrik-tkdn-naik-jadi-80-persen-pada-2030",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Berdasarkan roadmap yang disiapkan pemerintah, target TKDN kendaraan listrik ditetapkan 40 persen di 2026, 60 persen di 2029, lalu 80 persen pada 2030.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "kemenperin-tkdn-mobil-listrik-di-ri-rata-rata-45-tertinggi-80",
-      "title": "Kemenperin: TKDN Mobil Listrik di RI Rata-rata 45%, Tertinggi 80%",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930104841-603-1409862/kemenperin-tkdn-mobil-listrik-di-ri-rata-rata-45-tertinggi-80",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Kemenperin mengungkap sudah lebih dari 100 model mobil listrik dapat sertifikat TKDN, nilai TKDN rata-rata 45 persen sementara tertinggi 80 persen.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "pasar-ev-terus-tumbuh-di-indonesia-tahun-ini-tembus-16",
-      "title": "Pasar EV Terus Tumbuh di Indonesia, Tahun Ini Tembus 16%",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930102131-603-1409842/pasar-ev-terus-tumbuh-di-indonesia-tahun-ini-tembus-16",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Kemenperin menjelaskan penjualan EV sudah tumbuh 'cukup signifikan' sejak 2019.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "kemenperin-populasi-mobil-listrik-bisa-lebih-dari-ice-pada-2029",
-      "title": "Kemenperin: Populasi Mobil Listrik Bisa Lebih dari ICE pada 2029",
-      "source": "CNN Indonesia",
-      "url": "https://www.cnnindonesia.com/otomotif/20260930095718-603-1409831/kemenperin-populasi-mobil-listrik-bisa-lebih-dari-ice-pada-2029",
-      "date": "2026-09-30",
-      "image": "",
-      "excerpt": "Menurut Wamenperin, mobil listrik kemungkinan bisa lebih banyak dari ICE pada 2029.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-30T17:41:54.337Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "kendaraan-listrik-dipakai-di-sektor-pertambangan-ini-tantangannya",
-      "title": "Kendaraan Listrik Dipakai di Sektor Pertambangan, Ini Tantangannya",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/berita/d-8684814/kendaraan-listrik-dipakai-di-sektor-pertambangan-ini-tantangannya",
-      "date": "2026-09-29",
-      "image": "",
-      "excerpt": "Kendaraan listrik sudah beroperasi di sektor pertambangan. Rupanya penggunaan kendaraan listrik di dunia tambang punya tantangan tersendiri.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-29T21:59:08.494Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "mobil-byd-gagal-raih-nilai-sempurna-dalam-uji-tabrak-cuma-dapat-3-bintang",
-      "title": "Mobil BYD Gagal Raih Nilai Sempurna dalam Uji Tabrak, Cuma Dapat 3 Bintang",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil-listrik/d-8684518/mobil-byd-gagal-raih-nilai-sempurna-dalam-uji-tabrak-cuma-dapat-3-bintang",
-      "date": "2026-09-29",
-      "image": "",
-      "excerpt": "BYD Sealion 5 hanya meraih tiga bintang dalam uji tabrak ANCAP karena kekurangan dalam uji pencegahan kecelakaan, meski perlindungan penumpang memadai.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-29T21:59:08.494Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "penyebab-mobil-listrik-bisa-terbakar",
-      "title": "Penyebab Mobil Listrik Bisa Terbakar",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil/d-8684233/penyebab-mobil-listrik-bisa-terbakar",
-      "date": "2026-09-29",
-      "image": "",
-      "excerpt": "Ada sejumlah kasus mobil listrik terbakar di Indonesia. Lalu apa penyebabnya?",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-29T21:59:08.494Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "mobil-listrik-terbaru-huawei-chery-meluncur-berpotensi-masuk-ri",
-      "title": "Mobil Listrik Terbaru Huawei-Chery Meluncur, Berpotensi Masuk RI",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil-listrik/d-8683975/mobil-listrik-terbaru-huawei-chery-meluncur-berpotensi-masuk-ri",
-      "date": "2026-09-29",
-      "image": "",
-      "excerpt": "Merek kendaraan listrik hasil pengembangan bersama Huawei dan Chery, Luxeed, meluncurkan Luxeed R7 terbaru di China. SUV coupe ini berpotensi masuk Indonesia.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-29T21:59:08.494Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "ini-alasan-banyak-pabrikan-mobil-listrik-lebih-pilih-pakai-baterai-lfp",
-      "title": "Ini Alasan Banyak Pabrikan Mobil Listrik Lebih Pilih Pakai Baterai LFP",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/mobil/d-8683890/ini-alasan-banyak-pabrikan-mobil-listrik-lebih-pilih-pakai-baterai-lfp",
-      "date": "2026-09-29",
-      "image": "",
-      "excerpt": "Banyak produsen mobil listrik di Indonesia lebih memilih menggunakan baterai jenis LFP. Ternyata ini faktor di baliknya.",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-29T21:59:08.494Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "berapa-usia-pakai-baterai-lfp-di-mobil-listrik",
-      "title": "Berapa Usia Pakai Baterai LFP di Mobil Listrik?",
-      "source": "detikOto",
-      "url": "https://oto.detik.com/berita/d-8683779/berapa-usia-pakai-baterai-lfp-di-mobil-listrik",
-      "date": "2026-09-29",
-      "image": "",
-      "excerpt": "Baterai jenis LFP yang tersemat pada mobil-motor listrik punya keunggulan, salah satunya usia pakai. Memang berapa umur baterai LFP?",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-29T21:59:08.494Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "byd-rencanakan-ganti-baterai-mobil-produksi-jadi-solid-state",
-      "title": "BYD Rencanakan Ganti Baterai Mobil Produksi Jadi Solid State",
-      "source": "AutonetMagz",
-      "url": "https://autonetmagz.com/byd-rencanakan-ganti-baterai-mobil-produksi-jadi-solid-state/149054/",
-      "date": "2026-09-29",
-      "image": "",
-      "excerpt": "Raksasa kendaraan listrik asal negara tirai bambu, BYD, mengkonfirmasi kesiapannya untuk mulai mengaplikasikan teknologi baterai solid state pada kendaraan fisik mulai tahun depan. Langkah strategis i",
-      "featured": false,
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-09-29T21:59:05.620Z",
       "updatedBy": ""
     }
   ],
@@ -3918,6 +4102,7 @@
       "noindex": false,
       "featured": false,
       "aiAssisted": true,
+      "auto": false,
       "date": "2026-09-27",
       "status": "published",
       "publishAt": "",
@@ -3953,6 +4138,7 @@
       "noindex": false,
       "featured": false,
       "aiAssisted": true,
+      "auto": false,
       "date": "2026-09-28",
       "status": "published",
       "publishAt": "2026-09-28T00:00:00+07:00",
@@ -3988,10 +4174,130 @@
       "noindex": false,
       "featured": false,
       "aiAssisted": true,
+      "auto": false,
       "date": "2026-09-29",
       "status": "published",
       "publishAt": "2026-09-29T00:00:00+07:00",
       "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "tkdn-60-persen-2027-arti-buat-pembeli",
+      "title": "TKDN 60 Persen Mulai 2027: Apa Artinya Buat Calon Pembeli Mobil Listrik",
+      "slug": "tkdn-60-persen-2027-arti-buat-pembeli",
+      "excerpt": "Mulai 2027 mobil listrik wajib berkadar lokal 60 persen. Ini dampaknya ke harga, pilihan model, dan kapan waktu terbaik membeli.",
+      "body": "Kabarnya, pemerintah menyiapkan aturan baru: mulai 2027, mobil listrik yang dipasarkan di Indonesia wajib memenuhi Tingkat Komponen Dalam Negeri (TKDN) 60 persen. Pabrikan seperti Toyota dilaporkan sudah menyiapkan pabriknya, dan VinFast bahkan menargetkan TKDN 80 persen untuk operasinya di Indonesia. Buat calon pembeli, aturan seperti ini terdengar teknis — tapi dampaknya langsung ke dompet.\n\n## Apa itu TKDN dan kenapa 60 persen itu besar?\n\nTKDN mengukur seberapa banyak bagian kendaraan — dan proses pembuatannya — yang berasal dari dalam negeri. Semakin tinggi angkanya, semakin banyak rantai pasok lokal yang terlibat: dari perakitan, pengecatan, sampai baterai dan komponennya.\n\nAngka 60 persen tergolong tinggi untuk industri otomotif. Artinya pabrikan tidak cukup sekadar merakit di sini; mereka harus memindahkan sebagian produksi komponen — idealnya termasuk baterai, komponen termahal mobil listrik — ke Indonesia.\n\n## Dampaknya ke harga dan pilihan model\n\nAda dua sisi. Di satu sisi, pabrikan yang memenuhi ambang TKDN umumnya lebih mudah mendapat insentif, yang ujungnya menekan harga jual. Model yang dirakit lokal dengan kadar lokal tinggi cenderung bertahan harganya, bahkan bisa turun ketika skala produksi naik.\n\nDi sisi lain, model yang masih impor utuh (CBU) dengan kadar lokal rendah akan makin sulit: insentifnya menyusut dan harganya relatif naik. Polanya sudah terlihat — daftar mobil listrik termurah di Indonesia kini didominasi model yang dirakit lokal.\n\n## Kapan waktu terbaik membeli?\n\nKalau model incaranmu sudah dirakit lokal — seperti lini BYD di Subang atau Wuling di Cikarang — menunggu sampai 2027 tidak banyak mengubah apa pun, karena pabrikan itu memang sedang menuju ambang baru. Justru yang perlu diperhatikan adalah model impor yang kamu taksir: harganya berpotensi naik ketika aturan baru berlaku.\n\nSebaliknya, kalau kamu tidak terburu-buru, 2027 ke atas menjanjikan pilihan yang lebih luas: pabrikan yang hari ini masih impor sedang membangun pabrik dan lokalisasi pemasoknya. Persaingan harga di segmen Rp200–400 juta — segmen paling ramai — kemungkinan makin panas.\n\n## Cara mengeceknya sebelum membeli\n\nTanyakan tiga hal ke dealer: apakah unitnya CKD (rakit lokal) atau CBU (impor utuh), berapa persen TKDN-nya saat ini, dan insentif apa yang melekat pada harga yang ditawarkan. Tiga jawaban itu menentukan apakah harga yang kamu lihat hari ini masih berlaku tahun depan — atau malah turun.",
+      "author": "Redaksi EVKita",
+      "category": "Regulasi",
+      "tags": [
+        "TKDN",
+        "regulasi",
+        "insentif",
+        "pabrik lokal"
+      ],
+      "sources": [
+        {
+          "label": "detikOto - TKDN Mobil Listrik Wajib 60% Mulai 2027",
+          "url": "https://oto.detik.com/mobil-listrik/d-8689256/tkdn-mobil-listrik-wajib-60-mulai-2027-ini-persiapan-pabrik-toyota"
+        },
+        {
+          "label": "CNN Indonesia - VinFast Targetkan TKDN 80 Persen",
+          "url": "https://www.cnnindonesia.com/otomotif/20261002155157-608-1411015/vinfast-targetkan-tkdn-80-persen-untuk-industri-ev-indonesia"
+        }
+      ],
+      "image": "",
+      "seoTitle": "",
+      "keywords": "TKDN mobil listrik, TKDN 60 persen 2027, insentif mobil listrik, mobil listrik rakitan lokal",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-10-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "mobil-listrik-bawah-200-juta-pilihan-jarak",
+      "title": "Mobil Listrik di Bawah Rp200 Juta: Pilihannya dan Seberapa Jauh Bisa Jalan",
+      "slug": "mobil-listrik-bawah-200-juta-pilihan-jarak",
+      "excerpt": "Seres E1, BYD Atto 1, sampai Wuling Air ev — pilihan mobil listrik otentik di bawah Rp200 juta dan jarak tempuh masing-masing.",
+      "body": "Dulu mobil listrik identik dengan harga setengah miliar ke atas. Tahun 2026 ceritanya beda: pantauan media per Februari 2026 mencatat mobil listrik termurah sudah menyentuh Rp189 jutaan OTR Jakarta. Segmen di bawah Rp200 juta kini diisi city car listrik yang memang dirancang untuk harian kota.\n\n## Pilihannya apa saja?\n\nMenurut pantauan harga media, model-model di sekitar ambang Rp200 juta antara lain Seres E1 (Rp189 jutaan), BYD Atto 1 Dynamic (Rp199 juta), Changan Lumin (Rp199 juta), VinFast VF 3 (Rp195 jutaan), dan Wuling Air ev Lite Standard Range (Rp214 juta — sedikit di atas ambang, tapi varian Standard Range pernah tercatat sekitar Rp155 juta).\n\nSedikit di atasnya ada Geely EX2 Pro (Rp229 juta) dan Jaecoo J5 EV Standard (Rp249,9 juta) buat yang butuh bodi lebih besar.\n\n## Seberapa jauh bisa jalan?\n\nCity car listrik di kelas ini umumnya menempuh 200–300 km sekali cas. Sebagai patokan dari katalog kami, BYD Atto 1 mencatat 300 km (NEDC) dan Wuling Air ev Long Range sekitar 300 km, sedangkan varian Standard Range sekitar 205 km. VinFast VF 3 dengan skema beli termasuk baterai (sekitar Rp230 jutaan) menempuh sekitar 210–215 km.\n\nAngka itu cukup untuk seminggu perjalanan kantor-rumah sejauh 30 km per hari tanpa mampir SPKLU — asalkan kamu mengisi di rumah semalaman.\n\n## Skema baterai menentukan harga akhir\n\nPerhatikan baik-baik: sebagian harga murah memakai skema sewa baterai. VinFast VF 3 misalnya, mulai Rp156 juta dengan sewa baterai versus sekitar Rp230 jutaan beli putus termasuk baterai. Selisih Rp70 jutaan itu setara sewa bertahun-tahun — hitung dulu sebelum tergiur angka brosur.\n\n## Siapa yang cocok membeli?\n\nKelas ini ideal sebagai mobil kedua keluarga atau kendaraan harian dalam kota dengan garasi sendiri untuk pengisian malam. Kalau rutenya rutin melewati tol antar kota, naik ke kelas Rp300 jutaan dengan jarak 400 km ke atas akan jauh lebih tenang.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "harga",
+        "mobil murah",
+        "city car",
+        "jarak tempuh"
+      ],
+      "sources": [
+        {
+          "label": "detikOto - Mobil Listrik di Bawah Rp200 Juta",
+          "url": "https://oto.detik.com/mobil-listrik/d-8688833/mobil-listrik-harga-di-bawah-rp-200-juta-bisa-jalan-berapa-jauh-ini-daftarnya"
+        },
+        {
+          "label": "Moladin - Harga Mobil Listrik Februari 2026",
+          "url": "https://moladin.com/news/harga-mobil-listrik-terbaru-februari-2026"
+        },
+        {
+          "label": "Oto - Daftar Harga BYD Indonesia 2026",
+          "url": "https://www.oto.com/mobil-baru/byd"
+        }
+      ],
+      "image": "",
+      "seoTitle": "",
+      "keywords": "mobil listrik murah, mobil listrik bawah 200 juta, city car listrik, harga mobil listrik 2026",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-10-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "sewa-atau-beli-baterai-motor-listrik",
+      "title": "Sewa atau Beli Baterai Motor Listrik? Cara Menghitungnya",
+      "slug": "sewa-atau-beli-baterai-motor-listrik",
+      "excerpt": "Selisih harga sewa versus beli baterai bisa Rp9 juta. Ini cara menghitung titik impasnya sebelum kamu memilih.",
+      "body": "Banyak motor listrik dijual dengan dua harga: sewa baterai atau beli putus termasuk baterai. Selisihnya besar — menurut pantauan harga Agustus 2026, Polytron Fox 200 Rp12,1 juta (sewa) versus Rp21,1 juta (beli), Fox 350 Rp16,5 juta versus Rp28,5 juta, dan Fox 500 Rp38,2 juta versus Rp55,7 juta. Jadi mana yang lebih untung?\n\n## Hitung titik impasnya\n\nRumusnya sederhana: selisih harga dibagi biaya sewa per bulan. Contoh Fox 350: selisih Rp12 juta. Kalau sewa baterainya Rp200 ribu per bulan, titik impasnya 60 bulan alias 5 tahun. Sebelum 5 tahun, sewa lebih murah; sesudahnya, beli putus menang.\n\nTapi itu baru separuh cerita. Baterai adalah komponen yang menua — kapasitasnya turun seiring tahun dan siklus cas. Dalam skema sewa, risiko penurunan itu ditanggung operator: baterai lemah ditukar, dan biasanya ada garansi serta akses tukar baterai (swap) di jalan.\n\n## Kapan sewa lebih masuk akal?\n\nSewa cocok kalau jarak harianmu tinggi (ojek atau kurir), kamu tidak punya colokan pribadi di rumah, atau kamu berencana ganti motor dalam 2–3 tahun. Biaya bulanannya tetap dan terukur, dan kamu tidak menanggung risiko harga baterai pengganti.\n\nSewa juga menang saat ada promo: Polytron misalnya memberi subsidi Rp6 juta di GIIAS Semarang 2026, dan motor listrik Honda sempat didiskon Rp20 jutaan. Promo seperti ini biasanya menempel pada harga unit, sehingga skema sewa makin murah di awal.\n\n## Kapan beli putus lebih untung?\n\nBeli putus cocok kalau motor dipakai santai di bawah 30 km per hari, kamu punya colokan di rumah, dan berniat memakai motornya lama. Tanpa cicilan sewa, biaya bulanannya praktis hanya listrik — sekitar Rp2.000–3.000 per 50 km untuk skuter kecil.\n\nPerhatikan juga garansi: sebagian merek memberi garansi baterai seumur hidup (seperti Smoot) atau garansi 1 tahun untuk baterai, dinamo, dan kontroler (seperti Polytron). Garansi yang panjang mengurangi risiko terbesar skema beli putus.\n\n## Checklist sebelum memutuskan\n\nTanyakan biaya sewa pasti per bulan (termasuk syarat jarak minimum), apa yang terjadi kalau baterai rusak atau hilang, berapa lama garansi baterai untuk skema beli, dan apakah ada stasiun tukar baterai di rute harianmu. Empat jawaban itu — bukan harga brosur — yang menentukan pilihanmu.",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "baterai",
+        "sewa baterai",
+        "motor listrik",
+        "biaya"
+      ],
+      "sources": [
+        {
+          "label": "Kompas - Harga Motor Listrik Agustus 2026",
+          "url": "https://otomotif.kompas.com/read/2026/08/18/071200215/update-harga-motor-listrik-baru-per-agustus-2026-mulai-rp-12-jutaan"
+        },
+        {
+          "label": "Carmudi - Daftar Motor Listrik Honda",
+          "url": "https://www.carmudi.co.id/journal/daftar-motor-listrik-honda-terbaru"
+        },
+        {
+          "label": "AutonetMagz - Subsidi Polytron GIIAS Semarang",
+          "url": "https://autonetmagz.com/polytron-beri-subsidi-rp6-juta-di-giias-semarang-2026/149315/"
+        }
+      ],
+      "image": "",
+      "seoTitle": "",
+      "keywords": "sewa baterai motor listrik, beli baterai motor listrik, biaya motor listrik, subsidi motor listrik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-10-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-10-04T00:00:00.000Z",
       "updatedBy": ""
     }
   ],
