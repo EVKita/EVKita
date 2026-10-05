@@ -73,6 +73,7 @@ export const PUT: APIRoute = async ({ request, cookies, url }) => {
     const idSesudah = (sesudah as any)[kunci === "gsc" ? "gscToken" : `${kunci}Id`];
     if (aktifSebelum !== aktifSesudah || idSebelum !== idSesudah) berubah.push(nama);
   }
+  if (sebelum.clerkKey !== sesudah.clerkKey) berubah.push("Clerk");
   if (berubah.length) logActivity(me, "integrasi.update", { layanan: berubah.join(", ") });
 
   return json(muatan(url));

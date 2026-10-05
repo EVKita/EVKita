@@ -106,6 +106,14 @@ const ID = {
   "pub.member.errNet": "Tidak bisa masuk sekarang. Coba lagi.",
   "pub.member.googleOff": "Login Google belum diaktifkan. Masuk dengan email.",
 
+  // — Akun pengunjung lewat Clerk (popup ±8 detik setelah tiba) —
+  "pub.akun.eyebrow": "Akun EVKita",
+  "pub.akun.title": "Gabung gratis, cuma butuh beberapa detik",
+  "pub.akun.sub": "Buat akun EVKita atau masuk ke akunmu. Bisa langsung pakai akun Google — tanpa kata sandi baru.",
+  "pub.akun.daftar": "Daftar dengan Google atau email",
+  "pub.akun.masuk": "Sudah punya akun? Masuk",
+  "pub.akun.nanti": "Nanti saja",
+
   // — Kotak cari situs (SiteSearch): tombol di header + autocomplete —
   "pub.cari.buka": "Cari",
   "pub.cari.ph": "Ketik merek atau model…",
@@ -758,6 +766,14 @@ const EN = {
   "pub.member.errNet": "Could not sign you in. Please try again.",
   "pub.member.googleOff": "Google sign-in is not enabled yet. Please use email.",
 
+  // — Visitor accounts via Clerk (popup ~8 seconds after arrival) —
+  "pub.akun.eyebrow": "EVKita account",
+  "pub.akun.title": "Join for free — it only takes a few seconds",
+  "pub.akun.sub": "Create an EVKita account or sign in to yours. You can use your Google account — no new password needed.",
+  "pub.akun.daftar": "Sign up with Google or email",
+  "pub.akun.masuk": "Already have an account? Sign in",
+  "pub.akun.nanti": "Maybe later",
+
   // — Site search box (SiteSearch): header button + autocomplete —
   "pub.cari.buka": "Search",
   "pub.cari.ph": "Type brand or model…",
@@ -1402,6 +1418,14 @@ const ZH = {
   "pub.member.shortPass": "密码至少需要6个字符。",
   "pub.member.errNet": "目前无法登录，请重试。",
   "pub.member.googleOff": "Google登录尚未启用，请使用邮箱登录。",
+
+  // — 访客账号（Clerk）：到达约 8 秒后弹出 —
+  "pub.akun.eyebrow": "EVKita 账号",
+  "pub.akun.title": "免费加入，只需几秒钟",
+  "pub.akun.sub": "创建 EVKita 账号或登录已有账号。可直接使用 Google 账号，无需设置新密码。",
+  "pub.akun.daftar": "使用 Google 或邮箱注册",
+  "pub.akun.masuk": "已有账号？登录",
+  "pub.akun.nanti": "以后再说",
 
   // — 站内搜索框（SiteSearch）：页眉按钮 + 自动补全 —
   "pub.cari.buka": "搜索",

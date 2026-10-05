@@ -65,6 +65,8 @@ const texts = {
     "err.integrasi.adsenseId": t("err.integrasi.adsenseId"),
     "err.integrasi.gscToken": t("err.integrasi.gscToken"),
     "err.integrasi.googleClientId": t("err.integrasi.googleClientId"),
+    "err.integrasi.clerkKey": t("err.integrasi.clerkKey"),
+    "err.integrasi.clerkRahasia": t("err.integrasi.clerkRahasia"),
     "err.integrasi.gaKosong": t("err.integrasi.gaKosong"),
     "err.integrasi.adsenseKosong": t("err.integrasi.adsenseKosong"),
     "err.integrasi.gscKosong": t("err.integrasi.gscKosong"),
@@ -257,6 +259,36 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
             </p>
           </section>
 
+          <!-- ===== Akun pengunjung lewat Clerk ===== -->
+          <section class="panel form-section">
+            <div class="form-section-head integrasi-head">
+              <span class="integrasi-logo" aria-hidden="true">👤</span>
+              <div>
+                <h2>{t("integrasi.clerk")}</h2>
+                <p>{t("integrasi.clerk.desc")}</p>
+              </div>
+              <span class={statusKelas(!!cfg.clerkKey)} data-status="clerk" data-on={t("integrasi.on")} data-off={t("integrasi.off")}>{statusTeks(!!cfg.clerkKey)}</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="field full">
+                <label for="i-clerkKey">{t("integrasi.clerk.key")}</label>
+                <input id="i-clerkKey" name="clerkKey" value={cfg.clerkKey} placeholder="pk_live_…" spellcheck="false" autocapitalize="none" autocomplete="off" />
+                <span class="hint">{t("integrasi.clerk.keyHint")}</span>
+              </div>
+            </div>
+
+            <ol class="integrasi-langkah">
+              <li>{t("integrasi.clerk.step1")}</li>
+              <li>{t("integrasi.clerk.step2")}</li>
+              <li>{t("integrasi.clerk.step3")}</li>
+              <li>{t("integrasi.clerk.step4")}</li>
+            </ol>
+            <p class="hint">
+              <a href="https://dashboard.clerk.com/" target="_blank" rel="noopener">{t("integrasi.clerk.open")}</a>
+            </p>
+          </section>
+
           <!-- ===== Login Google pengunjung ===== -->
           <section class="panel form-section">
             <div class="form-section-head integrasi-head">
@@ -329,10 +361,11 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
         gscAktif: form.elements.gscAktif.checked,
         gscToken: form.elements.gscToken.value.trim(),
         googleClientId: form.elements.googleClientId.value.trim(),
+        clerkKey: form.elements.clerkKey.value.trim(),
       });
 
       function tandaiStatus(cfg) {
-        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: cfg.gscAktif, login: !!cfg.googleClientId };
+        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: cfg.gscAktif, login: !!cfg.googleClientId, clerk: !!cfg.clerkKey };
         for (const [kunci, aktif] of Object.entries(peta)) {
           const el = document.querySelector('[data-status="' + kunci + '"]');
           if (!el) continue;
@@ -374,6 +407,7 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
           form.elements.adsenseId.value = cfg.adsenseId;
           form.elements.gscToken.value = cfg.gscToken;
           form.elements.googleClientId.value = cfg.googleClientId;
+          form.elements.clerkKey.value = cfg.clerkKey;
           form.elements.adsTxt.value = cfg.adsTxt;
           form.elements.gaAktif.checked = cfg.gaAktif;
           form.elements.adsenseAktif.checked = cfg.adsenseAktif;

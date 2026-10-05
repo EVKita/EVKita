@@ -46,9 +46,20 @@ export const BAWAAN = {
    * diverifikasi server lewat kunci publik Google.
    */
   googleClientId: "",
+
+  /*
+   * Akun pengunjung lewat Clerk (clerk.com): daftar, masuk, dan Google.
+   *
+   * Yang disimpan hanya kunci PUBLISHABLE (`pk_live_…`/`pk_test_…`) — kunci itu
+   * memang tercetak di HTML setiap halaman. Kunci rahasianya (`sk_…`) tidak
+   * pernah dibutuhkan: data akun tinggal di Clerk, dan situs ini cuma
+   * menampilkan tombol dan popupnya. Begitu kunci ini terisi, pintu masuk
+   * pengunjung yang lama (email di peramban + Client ID Google) digantikan.
+   */
+  clerkKey: "",
 };
 
-export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken", "googleClientId"];
+export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken", "googleClientId", "clerkKey"];
 export const KUNCI_SAKLAR = ["gaAktif", "gaAbaikanAdmin", "adsenseAktif", "adsenseAuto", "gscAktif"];
 
 /**
@@ -64,7 +75,35 @@ export const POLA = {
   adsenseId: /^ca-pub-\d{10,20}$/,
   gscToken: /^[A-Za-z0-9_-]{20,100}$/,
   googleClientId: /^\d{6,30}-[A-Za-z0-9_-]{8,80}\.apps\.googleusercontent\.com$/,
+  clerkKey: /^pk_(test|live)_[A-Za-z0-9+/=_-]{12,200}$/,
 };
+
+/** Nama host yang sah: huruf kecil, angka, tanda hubung, minimal dua label. */
+const POLA_HOST = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
+
+/**
+ * Host Frontend API Clerk, diturunkan dari kunci publishable.
+ *
+ * Kuncinya berbentuk `pk_<jenis>_<base64("host$")>` — begitulah clerk-js
+ * sendiri menemukan servernya. Host hasil uraian langsung masuk ke atribut
+ * `src` skrip dan ke header CSP, jadi ia ikut diperiksa daftar-putih: kunci
+ * yang lolos pola tapi isinya bukan nama host dianggap TIDAK SAH, bukan
+ * dibersihkan. Mengembalikan "" bila tidak sah.
+ */
+export function hostClerk(kunci) {
+  const k = String(kunci || "");
+  if (!POLA.clerkKey.test(k)) return "";
+  let teks = "";
+  try {
+    const isi = k.replace(/^pk_(test|live)_/, "").replace(/-/g, "+").replace(/_/g, "/");
+    teks = atob(isi);
+  } catch {
+    return "";
+  }
+  if (!teks.endsWith("$")) return "";
+  const host = teks.slice(0, -1);
+  return host.length <= 253 && POLA_HOST.test(host) ? host : "";
+}
 
 /** Membaca berkas pengaturan apa adanya jadi bentuk yang lengkap dan aman. */
 export function normalisasi(raw) {
@@ -84,6 +123,7 @@ export function normalisasi(raw) {
   /* Client ID yang tidak sah dianggap tidak ada: tombol Google-nya yang
      hilang, bukan halaman yang rusak. */
   if (!POLA.googleClientId.test(out.googleClientId)) out.googleClientId = "";
+  if (!hostClerk(out.clerkKey)) out.clerkKey = "";
   out.adsTxt = bersihkanAdsTxt(out.adsTxt);
   return out;
 }
@@ -107,6 +147,11 @@ export function periksa(masuk) {
      tidak melaporkan "tersimpan" sementara tombol Google-nya tetap hilang
      (normalisasi akan membuangnya saat dibaca). */
   if (nilai.googleClientId && !POLA.googleClientId.test(nilai.googleClientId)) galat.push("err.integrasi.googleClientId");
+  if (nilai.clerkKey && !hostClerk(nilai.clerkKey)) {
+    /* Kunci rahasia yang tertempel di sini adalah salah tempel paling mahal:
+       ia akan tercetak di setiap halaman publik. Diberi pesan sendiri. */
+    galat.push(/^sk_/.test(nilai.clerkKey) ? "err.integrasi.clerkRahasia" : "err.integrasi.clerkKey");
+  }
 
   /*
    * Saklar yang menyala tanpa id adalah keadaan yang paling sering bikin orang
@@ -167,7 +212,7 @@ export function hostCsp(cfg) {
    * kendaraan dari domain pabrikan, jadi piksel pelacak Google sudah lewat.
    * Menuliskannya lagi hanya memanjangkan header tanpa mengubah apa pun.
    */
-  const out = { script: [], connect: [], frame: [] };
+  const out = { script: [], connect: [], frame: [], worker: [] };
 
   if (s.gaAktif) {
     out.script.push("https://www.googletagmanager.com");
@@ -196,6 +241,21 @@ export function hostCsp(cfg) {
     out.script.push("https://accounts.google.com");
     out.frame.push("https://accounts.google.com");
     out.connect.push("https://accounts.google.com");
+  }
+
+  /*
+   * Clerk: server Frontend API-nya sendiri, Cloudflare Turnstile (perlindungan
+   * robot di formulir daftar), dan host anti-penipuan Clerk. Daftarnya
+   * mengikuti https://clerk.com/docs/security/clerk-csp. Foto profil dari
+   * img.clerk.com sudah tertutup `img-src https:`, dan gaya sebaris yang
+   * dipakai komponennya sudah tertutup `style-src 'unsafe-inline'`.
+   */
+  const clerk = hostClerk(s.clerkKey);
+  if (clerk) {
+    out.script.push(`https://${clerk}`, "https://challenges.cloudflare.com", "https://*.protect.clerk.com");
+    out.connect.push(`https://${clerk}`, "https://*.protect.clerk.com");
+    out.frame.push("https://challenges.cloudflare.com", "https://*.protect.clerk.com");
+    out.worker.push("'self'", "blob:");
   }
 
   return out;

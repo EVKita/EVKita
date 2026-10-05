@@ -99,6 +99,11 @@ function cspUntuk(pathname: string): string {
     if (baris.startsWith("object-src") && extra.frame.length) {
       return `frame-src ${extra.frame.join(" ")}; ${baris}`;
     }
+    // Clerk menjalankan web worker dari `blob:`. Tanpa baris sendiri,
+    // `script-src` yang berlaku — dan ia tidak pernah membuka `blob:`.
+    if (baris.startsWith("base-uri") && extra.worker.length) {
+      return `worker-src ${extra.worker.join(" ")}; ${baris}`;
+    }
     return baris;
   }).join("; ");
 }

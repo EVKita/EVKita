@@ -4,6 +4,7 @@ import {
   BAWAAN,
   adaTag,
   bersihkanAdsTxt,
+  hostClerk,
   hostCsp,
   isiAdsTxt,
   normalisasi,
@@ -137,5 +138,47 @@ describe("domain yang dibuka di CSP", () => {
     const h = hostCsp({ gscAktif: true, gscToken: "a".repeat(43) });
     assert.deepEqual(h.script, []);
     assert.equal(adaTag({ gscAktif: true, gscToken: "a".repeat(43) }), true);
+  });
+});
+
+describe("kunci Clerk", () => {
+  // Kunci publishable = "pk_<jenis>_" + base64("<host Frontend API>$").
+  const kunciUntuk = (host: string, jenis = "test") =>
+    `pk_${jenis}_${Buffer.from(`${host}$`).toString("base64")}`;
+  const dev = kunciUntuk("ajaib-kucing-12.clerk.accounts.dev");
+  const prod = kunciUntuk("clerk.evkita.com", "live");
+
+  it("menurunkan host Frontend API dari kuncinya", () => {
+    assert.equal(hostClerk(dev), "ajaib-kucing-12.clerk.accounts.dev");
+    assert.equal(hostClerk(prod), "clerk.evkita.com");
+    assert.deepEqual(periksa({ clerkKey: prod }).galat, []);
+  });
+
+  it("menolak host yang menyelundupkan apa pun selain nama domain", () => {
+    // Host-nya berakhir di atribut src skrip dan di header CSP.
+    for (const host of ['x.dev" onload="alert(1)', "evil.com/;script-src *", "localhost", "a b.com", "evil.com; frame-src *"]) {
+      const k = kunciUntuk(host);
+      assert.equal(hostClerk(k), "", host);
+      assert.equal(normalisasi({ clerkKey: k }).clerkKey, "", host);
+    }
+    // Tanpa penanda "$" di ujung, bukan kunci Clerk.
+    assert.equal(hostClerk(`pk_test_${Buffer.from("clerk.evkita.com").toString("base64")}`), "");
+  });
+
+  it("memberi pesan sendiri untuk secret key yang salah tempel", () => {
+    // Dirakit dari potongan: bentuk utuh `sk_live_…` dicegat pemindai rahasia
+    // GitHub sebagai kunci Stripe, padahal ini cuma contoh palsu.
+    const rahasiaPalsu = ["sk", "live", "x".repeat(26)].join("_");
+    assert.deepEqual(periksa({ clerkKey: rahasiaPalsu }).galat, ["err.integrasi.clerkRahasia"]);
+    assert.deepEqual(periksa({ clerkKey: "pk_test_bukan-base64!!" }).galat, ["err.integrasi.clerkKey"]);
+  });
+
+  it("membuka CSP hanya untuk host Clerk yang dipasang", () => {
+    assert.deepEqual(hostCsp({}).worker, []);
+    const csp = hostCsp({ clerkKey: prod });
+    assert.ok(csp.script.includes("https://clerk.evkita.com"));
+    assert.ok(csp.connect.includes("https://clerk.evkita.com"));
+    assert.ok(csp.frame.includes("https://challenges.cloudflare.com"));
+    assert.deepEqual(csp.worker, ["'self'", "blob:"]);
   });
 });

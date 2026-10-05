@@ -6319,6 +6319,69 @@ html {
   }
 }
 
+/* ===== Popup akun pengunjung (Clerk) =====
+   Memakai kerangka `.member` di atas; yang berbeda hanya isinya: dua tombol
+   yang membuka modal Clerk, bukan formulir sendiri. */
+/* Lajur grid `.member` berukuran mengikuti isinya, jadi tanpa batas ini
+   kalimat panjang mendorong kotak melebihi layar HP alih-alih membungkus. */
+.akun {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+.akun-box {
+  width: min(460px, 100%);
+  text-align: center;
+}
+.akun-eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.akun-title {
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  line-height: 1.3;
+}
+.akun-sub {
+  margin: 0 0 24px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.akun-google {
+  margin-bottom: 12px;
+}
+.akun-err {
+  margin: 12px 0 0;
+}
+.akun-nanti {
+  margin: 14px auto 0;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.akun-nanti:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+/* Wadah tombol profil Clerk (UserButton) yang menggantikan tombol Masuk. */
+.akun-profil {
+  display: inline-flex;
+  align-items: center;
+  min-width: 32px;
+  min-height: 32px;
+}
+.akun-profil[hidden],
+.member-btn[hidden] {
+  display: none;
+}
+
 /* ===== Kotak cari situs (SiteSearch) =====
    Overlay dari tombol kaca pembesar di header. Selalu `hidden` di HTML dan
    baru dibuka skripnya, jadi tanpa JavaScript ia tidak pernah ada. Kotaknya

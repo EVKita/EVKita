@@ -6,6 +6,7 @@ import { safeUrl, denganBase } from "../lib/url.js";
 import { sessionUserId } from "../lib/auth";
 import { MEMBER_COOKIE } from "../lib/member.js";
 import { makePubT } from "../lib/i18n/pub.js";
+import { bacaIntegrasi } from "../lib/integrasi-simpan";
 
 /**
  * Header dipakai beranda dan halaman detail. `base` diisi "/" dari halaman
@@ -39,7 +40,10 @@ const mark = typed.slice(0, 3);
  * Yang sudah masuk tidak melihatnya — sama seperti popup loginnya sendiri
  * (MemberGate) yang memang tidak dirender untuk mereka.
  */
-const anggotaMasuk = !!sessionUserId(Astro.cookies.get(MEMBER_COOKIE)?.value);
+/* Dengan Clerk, tombol akun selalu dirender: keadaan masuknya baru diketahui
+   clerk-js di peramban, dan skrip MemberGate yang menukarnya dengan tombol
+   profil (UserButton) begitu pengunjungnya ternyata sudah masuk. */
+const anggotaMasuk = !bacaIntegrasi().clerkKey && !!sessionUserId(Astro.cookies.get(MEMBER_COOKIE)?.value);
 
 const links = [
   { id: "beranda", label: t("pub.nav.beranda"), href: base || "/", mode: "", note: t("pub.nav.beranda.note") },
