@@ -234,24 +234,24 @@ export function hostCsp(cfg) {
 
   if (s.gaAktif) {
     out.script.push("https://www.googletagmanager.com");
-    out.connect.push("https://www.google-analytics.com", "https://analytics.google.com", "https://*.analytics.google.com", "https://*.google-analytics.com");
+    out.connect.push("https://www.google-analytics.com", "https://analytics.google.com", "https://*.analytics.google.com", "https://*.google-analytics.com", "https://*.googletagmanager.com");
   }
 
+  /*
+   * AdSense: SKEMA, bukan daftar domain. Google tidak menerbitkan daftar
+   * domain untuk iklannya dan secara terang menolak mendukungnya — domain
+   * yang dipakai kodenya berganti dari waktu ke waktu (safeframe, sodar,
+   * fundingchoices, …), dan daftar tulisan tangan diam-diam basi lalu
+   * mengosongkan slot iklan tanpa pesan apa pun selain di konsol. Arahan
+   * yang didukung Google memuat `https:` di script-src; frame dan koneksi
+   * iklannya juga datang dari host yang berganti-ganti. Dilonggarkan hanya
+   * saat AdSense menyala, dan hanya di halaman publik (panel punya CSP-nya
+   * sendiri). https://support.google.com/adsense/answer/16283098
+   */
   if (s.adsenseAktif) {
-    out.script.push(
-      "https://pagead2.googlesyndication.com",
-      "https://partner.googleadservices.com",
-      "https://tpc.googlesyndication.com",
-      "https://www.googletagservices.com",
-      "https://adservice.google.com"
-    );
-    out.connect.push("https://pagead2.googlesyndication.com", "https://googleads.g.doubleclick.net", "https://ep1.adtrafficquality.google");
-    out.frame.push(
-      "https://googleads.g.doubleclick.net",
-      "https://tpc.googlesyndication.com",
-      "https://www.google.com",
-      "https://ep2.adtrafficquality.google"
-    );
+    out.script.push("https:");
+    out.connect.push("https:");
+    out.frame.push("https:");
   }
 
   /* Tombol login Google memuat pustakanya dari akun Google. */

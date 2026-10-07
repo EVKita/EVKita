@@ -129,10 +129,14 @@ describe("domain yang dibuka di CSP", () => {
     assert.deepEqual(h.frame, []);
   });
 
-  it("membuka frame-src untuk AdSense — iklannya digambar di dalam iframe", () => {
+  it("AdSense membuka skema https:, bukan daftar domain yang bisa basi", () => {
+    // Google tidak mendukung daftar domain untuk AdSense; domainnya berganti.
     const h = hostCsp({ adsenseAktif: true, adsenseId: "ca-pub-1234567890123456" });
-    assert.ok(h.script.includes("https://pagead2.googlesyndication.com"));
-    assert.ok(h.frame.includes("https://googleads.g.doubleclick.net"));
+    assert.deepEqual(h.script, ["https:"]);
+    assert.deepEqual(h.frame, ["https:"]);
+    assert.deepEqual(h.connect, ["https:"]);
+    // Tanpa AdSense, tidak ada yang dilonggarkan.
+    assert.deepEqual(hostCsp({ gaAktif: true, gaId: "G-ABCD123456" }).frame, []);
   });
 
   it("Search Console tidak memuat skrip apa pun, jadi CSP tidak disentuh", () => {

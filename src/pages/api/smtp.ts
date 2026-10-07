@@ -36,17 +36,14 @@ export const GET: APIRoute = ({ cookies }) => {
   return json(smtpState());
 };
 
-export const PUT: APIRoute = async ({ request, cookies, clientAddress }) => {
+export const PUT: APIRoute = async ({ request, cookies }) => {
   const me = currentUser(cookies);
   if (!me) return unauthorized();
   if (!can(me, "kontak")) return forbidden();
 
-  const limitKeys = [clientKey(request, clientAddress), `smtp:${me.id}`];
-  const limit = checkLimit(limitKeys);
-  if (limit.blocked) {
-    return apiError("err.ai.terlaluSering", 429, { detik: limit.retryAfter });
-  }
-
+  /* Tanpa pembatas laju: menyimpan tidak menghubungi server surat apa pun,
+     jadi tidak ada tebakan yang bisa diulang. Yang menghubungi — kirim
+     surel uji di POST — punya pembatasnya sendiri. */
   let body: any;
   try {
     body = await request.json();
