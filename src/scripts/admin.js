@@ -765,6 +765,76 @@ function findItem(col, id) {
  * karena ia tidak selalu tahu bahasa yang sedang dipakai panel; `error` yang
  * berbahasa Indonesia hanya cadangan untuk respons lama.
  */
+/* ---------------- Respons server & sesi habis ---------------- */
+
+const DRAF_KEY = "evkita.drafSesi";
+
+/**
+ * Pergi ke halaman masuk, tapi titipkan dulu ketikan yang belum tersimpan.
+ *
+ * Sesi punya batas keras 7 hari. Orang yang sedang menyunting saat batas itu
+ * jatuh dulu kehilangan semuanya; sekarang dokumennya dititipkan di
+ * sessionStorage tab ini dan ditawarkan kembali sesudah masuk lagi
+ * (`tawarkanDrafSesi`).
+ */
+function keLogin() {
+  try {
+    if (dirty && content) {
+      sessionStorage.setItem(DRAF_KEY, JSON.stringify({ at: Date.now(), user: me && me.id, content }));
+      // Sudah dititipkan: peringatan "tinggalkan halaman?" tidak perlu muncul.
+      dirty = false;
+      editorTouched = false;
+    }
+  } catch {
+    /* Penyimpanan penuh atau ditolak — tetap pergi; tidak ada pilihan lain. */
+  }
+  location.href = "/admin/login";
+}
+
+/**
+ * Membaca jawaban JSON dengan aman.
+ *
+ * 401 → ke halaman masuk (janjinya tidak pernah selesai, supaya pemanggil
+ * tidak sempat menampilkan toast galat di detik terakhir). Jawaban yang bukan
+ * JSON — halaman 502/413 dari proxy saat server dimuat ulang — jadi `null`,
+ * yang oleh setiap pemanggil dibaca sebagai galat dengan pesan terjemahan,
+ * bukan "Unexpected token '<'" berbahasa Inggris.
+ */
+function bacaJson(res) {
+  if (res.status === 401) {
+    keLogin();
+    return new Promise(() => {});
+  }
+  return res.json().catch(() => null);
+}
+
+/** Sesudah masuk lagi: tawarkan ketikan yang dititipkan `keLogin()`. */
+async function tawarkanDrafSesi() {
+  let draf = null;
+  try {
+    draf = JSON.parse(sessionStorage.getItem(DRAF_KEY) || "null");
+    sessionStorage.removeItem(DRAF_KEY);
+  } catch {
+    return;
+  }
+  if (!draf || !draf.content || typeof draf.content !== "object") return;
+  // Hanya untuk akun yang sama dan titipan yang belum basi.
+  if (!me || draf.user !== me.id || Date.now() - Number(draf.at || 0) > 24 * 60 * 60 * 1000) return;
+  const ok = await confirmDialog({
+    title: t("draf.sesiTitle"),
+    text: t("draf.sesiText"),
+    okText: t("draf.sesiOk"),
+    cancelText: t("draf.sesiBuang"),
+    tone: "question",
+  });
+  if (!ok) return;
+  const rev = content.revision;
+  content = draf.content;
+  content.revision = rev;
+  commit();
+  toast(t("draf.sesiPulih"), "success");
+}
+
 function apiMessage(data, fallbackKey) {
   if (data && data.errorKey) return t(data.errorKey, data.errorVars || {});
   if (data && data.error) return data.error;
@@ -846,12 +916,58 @@ function lockPageScroll(on) {
   root.style.removeProperty("--modal-scrollgap");
 }
 
+const FOKUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Elemen yang bisa difokus DAN terlihat di dalam sebuah modal. */
+function fokusableDi(el) {
+  return $$(FOKUSABLE, el).filter((x) => x.offsetParent !== null || x === document.activeElement);
+}
+
+/**
+ * Membuka modal dengan perilaku dialog yang benar: peran ARIA, fokus masuk ke
+ * dalamnya, dan — saat ditutup — fokus kembali ke tombol yang membukanya.
+ * Tanpa itu pemakai papan ketik dan pembaca layar tertinggal di halaman di
+ * belakang modal.
+ */
 function openModal(el) {
   if (!el) return;
+  const baru = !modalStack.includes(el);
+  if (baru) el._fokusAsal = document.activeElement;
   el.classList.add("open");
   el.removeAttribute("hidden");
-  if (!modalStack.includes(el)) modalStack.push(el);
+  if (baru) modalStack.push(el);
   lockPageScroll(true);
+
+  const kotak = el.querySelector(".modal");
+  if (kotak && !kotak.hasAttribute("role")) {
+    kotak.setAttribute("role", "dialog");
+    kotak.setAttribute("aria-modal", "true");
+    const judul = kotak.querySelector(".modal-title");
+    if (judul) {
+      if (!judul.id) judul.id = (el.id || "modal") + "-judul";
+      kotak.setAttribute("aria-labelledby", judul.id);
+    }
+  }
+  // Banyak pembuka modal memfokus kolomnya sendiri; jangan merebutnya.
+  setTimeout(() => {
+    if (!el.classList.contains("open") || el.contains(document.activeElement)) return;
+    const target = fokusableDi(el).find((x) => !x.classList.contains("modal-close")) || fokusableDi(el)[0];
+    if (target) target.focus({ preventScroll: true });
+  }, 60);
+}
+
+/** Tab dan Shift+Tab berputar di dalam modal teratas. */
+function jebakFokusModal(e) {
+  const atas = modalStack[modalStack.length - 1];
+  if (!atas || !atas.classList.contains("open")) return false;
+  const daftar = fokusableDi(atas);
+  if (!daftar.length) return false;
+  const pertama = daftar[0];
+  const terakhir = daftar[daftar.length - 1];
+  if (!atas.contains(document.activeElement)) { e.preventDefault(); pertama.focus(); return true; }
+  if (e.shiftKey && document.activeElement === pertama) { e.preventDefault(); terakhir.focus(); return true; }
+  if (!e.shiftKey && document.activeElement === terakhir) { e.preventDefault(); pertama.focus(); return true; }
+  return false;
 }
 
 function closeModal(el) {
@@ -867,6 +983,9 @@ function closeModal(el) {
   // kartu di belakang modal sambil mengetik alt hanya membuang kerja.
   if (el.id === "media-modal") { mediaCtx = null; renderMedia(); }
   lockPageScroll(false);
+  const asal = el._fokusAsal;
+  el._fokusAsal = null;
+  if (asal && document.contains(asal) && typeof asal.focus === "function") asal.focus({ preventScroll: true });
 }
 
 /* Elemen tempat tekanan mouse/jari terakhir dimulai — lihat penutup latar modal. */
@@ -1030,7 +1149,7 @@ async function saveNow() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(content),
     });
-    if (res.status === 401) { location.href = "/admin/login"; return; }
+    if (res.status === 401) { keLogin(); return; }
 
     /* Proxy bisa menjawab dengan halaman HTML (413, 502); tanpa catch,
        toast-nya berbunyi "Unexpected token '<'" dalam bahasa Inggris. */
@@ -1138,7 +1257,7 @@ async function uploadImage(file) {
   const fd = new FormData();
   fd.append("image", siap);
   const res = await fetch("/api/upload", { method: "POST", body: fd });
-  if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
+  if (res.status === 401) { keLogin(); throw new Error(t("toast.sessionExpired")); }
   const data = await res.json().catch(() => null);
   if (!data || !data.ok) throw new Error(apiMessage(data, "toast.uploadRejected"));
   return data.url;
@@ -1163,7 +1282,7 @@ async function berkasDariUrl(url) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url }),
   });
-  if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
+  if (res.status === 401) { keLogin(); throw new Error(t("toast.sessionExpired")); }
 
   const tipe = (res.headers.get("content-type") || "").split(";")[0].trim();
   if (!res.ok || !tipe.startsWith("image/")) {
@@ -2651,8 +2770,8 @@ async function openRiwayat(col, id) {
 
   try {
     const res = await fetch(`/api/backups?col=${encodeURIComponent(col)}&id=${encodeURIComponent(id)}`);
-    if (res.status === 401) { location.href = "/admin/login"; return; }
-    const data = await res.json();
+    if (res.status === 401) { keLogin(); return; }
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
     if (!riwayatCtx) return; // modal sudah ditutup sebelum jawabannya tiba
     riwayatCtx.versi = data.versi || [];
@@ -2721,7 +2840,7 @@ async function kembalikanItem(name) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, col, id }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
     content = data.content;
     dirty = false;
@@ -2732,6 +2851,7 @@ async function kembalikanItem(name) {
     // Editor digambar ulang dari isi yang baru: kalau tidak, formulir di
     // belakang modal masih memegang nilai yang barusan diganti.
     if (vehicleCtx && vehicleCtx.col === col && vehicleCtx.id === id) openVehicle(col, id);
+    if (dirCtx && dirCtx.col === col && dirCtx.id === id) openDir(col, id);
     toast(t("toast.itemRestored"), "success");
   } catch (err) {
     toast(err.message, "error");
@@ -3306,6 +3426,11 @@ function openDir(col, id) {
   const sub = $("dir-modal-sub");
   if (sub) sub.textContent = id ? t("editor.subEdit") : t("dir.subNew");
 
+  /* Riwayat per item — dulu hanya ada di editor kendaraan, padahal
+     /api/backups?col&id melayani semua koleksi, dan teks artikel yang panjang
+     justru yang paling butuh tombol "kembalikan versi kemarin". */
+  const riwayatBtn = $("dir-history");
+  if (riwayatBtn) riwayatBtn.hidden = !id || !isAdmin();
   // "Simpan & Tambah Lagi" hanya masuk akal saat menambah, bukan saat mengedit.
   const again = $("dir-save-add");
   if (again) again.hidden = !!id;
@@ -3947,8 +4072,8 @@ function mediaYatim() {
 async function loadMediaDisk() {
   try {
     const res = await fetch("/api/uploads");
-    if (res.status === 401) { location.href = "/admin/login"; return; }
-    const data = await res.json();
+    if (res.status === 401) { keLogin(); return; }
+    const data = await bacaJson(res);
     if (data && data.ok) mediaDisk = Array.isArray(data.files) ? data.files : [];
   } catch {
     /* Pustaka tetap bisa dipakai dengan gambar yang dirujuk konten saja. */
@@ -4256,8 +4381,8 @@ async function kirimHapusMedia(names) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ names }),
   });
-  if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
-  const data = await res.json();
+  if (res.status === 401) { keLogin(); throw new Error(t("toast.sessionExpired")); }
+  const data = await bacaJson(res);
   if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
   return data;
 }
@@ -4333,8 +4458,8 @@ async function loadBackups() {
   el.innerHTML = `<div class="skeleton"></div>`;
   try {
     const res = await fetch("/api/backups");
-    if (res.status === 401) { location.href = "/admin/login"; return; }
-    const data = await res.json();
+    if (res.status === 401) { keLogin(); return; }
+    const data = await bacaJson(res);
     const backups = (data && data.backups) || [];
     const actions = `<div class="toolbar">
       <div class="toolbar-actions">
@@ -4390,7 +4515,7 @@ async function bandingkanCadangan(name) {
   box.innerHTML = `<div class="skeleton"></div>`;
   try {
     const res = await fetch(`/api/backups?nama=${encodeURIComponent(name)}`);
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
 
     const p = data.perubahan || [];
@@ -4417,7 +4542,7 @@ async function bandingkanCadangan(name) {
 async function unduhCadangan(name) {
   try {
     const res = await fetch(`/api/backups?nama=${encodeURIComponent(name)}&unduh=1`);
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
     downloadJson(name, data.content);
   } catch (err) {
@@ -4753,7 +4878,7 @@ async function ambilMediaResmi(btn) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
     });
-    if (res.status === 401) { location.href = "/admin/login"; return; }
+    if (res.status === 401) { keLogin(); return; }
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) { toast(apiMessage(data, "toast.mediaFailed"), "error"); return; }
 
@@ -4854,10 +4979,10 @@ function buildPalette() {
   palette.innerHTML = `<div class="modal">
     <div class="modal-head">
       <h3 class="modal-title">${esc(t("topbar.searchLabel"))}</h3>
-      <button type="button" class="modal-close" data-palette-close title="${esc(t("common.close"))}">&times;</button>
+      <button type="button" class="modal-close" data-palette-close title="${esc(t("common.close"))}" aria-label="${esc(t("common.close"))}">&times;</button>
     </div>
     <div class="modal-body">
-      <input type="search" class="search-input" id="palette-input" placeholder="${esc(t("palette.placeholder"))}" autocomplete="off" />
+      <input type="search" class="search-input" id="palette-input" placeholder="${esc(t("palette.placeholder"))}" aria-label="${esc(t("topbar.searchLabel"))}" autocomplete="off" />
       <div class="item-list" id="palette-results"></div>
       <p class="palette-hint">${esc(t("palette.hint"))}</p>
     </div>
@@ -5350,6 +5475,10 @@ function bindEvents() {
     }
 
     /* --- Riwayat item --- */
+    if (e.target.closest("#dir-history")) {
+      if (dirCtx && dirCtx.id) openRiwayat(dirCtx.col, dirCtx.id);
+      return;
+    }
     if (e.target.closest("#editor-history")) {
       if (vehicleCtx && vehicleCtx.id) openRiwayat(vehicleCtx.col, vehicleCtx.id);
       return;
@@ -6146,6 +6275,8 @@ function bindEvents() {
       return;
     }
 
+    if (e.key === "Tab" && modalStack.length && jebakFokusModal(e)) return;
+
     if (document.activeElement && document.activeElement.id === "palette-input") {
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
@@ -6304,8 +6435,8 @@ const isAdmin = () => !!me && (me.role === "owner" || me.role === "admin");
 async function loadMe() {
   try {
     const res = await fetch("/api/profile");
-    if (res.status === 401) { location.href = "/admin/login"; return; }
-    const data = await res.json();
+    if (res.status === 401) { keLogin(); return; }
+    const data = await bacaJson(res);
     if (data && data.ok) me = data.user;
   } catch {
     /* Panel tetap bisa dipakai tanpa profil; sapaan saja yang jadi umum. */
@@ -6444,7 +6575,7 @@ async function savePrefs(opts) {
         homeView: me.homeView,
       }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     me = data.user;
     if (!o.silent) toast(t("profile.prefsSaved"), "success");
@@ -6682,8 +6813,8 @@ async function kirim2fa(body) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
-  const data = await res.json();
+  if (res.status === 401) { keLogin(); throw new Error(t("toast.sessionExpired")); }
+  const data = await bacaJson(res);
   if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
   return data;
 }
@@ -6745,7 +6876,7 @@ async function loadLoginHistory() {
   try {
     const res = await fetch("/api/activity?saya=1");
     if (!res.ok) { box.innerHTML = ""; return; }
-    const data = await res.json();
+    const data = await bacaJson(res);
     const entries = (data && data.entries) || [];
     if (!entries.length) { box.innerHTML = ""; return; }
     box.innerHTML = `<h4 class="profile-logins-title">${esc(t("profile.loginHistory"))}</h4>
@@ -6777,7 +6908,7 @@ async function saveProfileIdentity(form) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     me = data.user;
     renderProfile();
@@ -6803,7 +6934,7 @@ async function signOutOtherDevices() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ section: "signOutOthers" }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     toast(t("profile.signedOutOthers"), "success");
   } catch (err) {
@@ -6824,7 +6955,7 @@ async function saveProfilePassword(form) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     form.reset();
     toast(t("profile.passwordChanged"), "success");
@@ -6867,8 +6998,8 @@ async function loadUsers() {
   root.innerHTML = `<div class="skeleton"></div>`;
   try {
     const res = await fetch("/api/users");
-    if (res.status === 401) { location.href = "/admin/login"; return; }
-    const data = await res.json();
+    if (res.status === 401) { keLogin(); return; }
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
     usersList = data.users;
     renderUsers();
@@ -6987,7 +7118,7 @@ async function saveUserForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     usersList = data.users;
     // Mengubah akun sendiri lewat halaman ini harus ikut memperbarui sapaan.
@@ -7016,7 +7147,7 @@ async function deleteUserById(id) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     usersList = data.users;
     renderUsers();
@@ -7056,7 +7187,7 @@ async function loadAi(opts) {
   const url = opts && opts.segar ? "/api/ai/pengaturan?segar=1" : "/api/ai/pengaturan";
   try {
     const res = await fetch(url);
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     aiState = data;
   } catch (err) {
@@ -7272,7 +7403,7 @@ async function saveAiKey(form) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ apiKey }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     // Nilai di field dibuang lebih dulu, baru markup-nya diganti: menggambar
     // ulang saja meninggalkan kuncinya di objek form lama sampai GC berjalan.
@@ -7303,7 +7434,7 @@ async function simpanModelBawaan(model) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     aiState = data;
     aiModelBawaan = data.model;
@@ -7325,7 +7456,7 @@ async function removeAiKey() {
 
   try {
     const res = await fetch("/api/ai/pengaturan", { method: "DELETE" });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     aiState = data;
     aiEditing = false;
@@ -7353,7 +7484,7 @@ async function saveAiGeminiKey(form) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ geminiKey }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) {
       const pesan = apiMessage(data, "err.badJson");
       throw new Error(data && data.detail ? `${pesan} (Google: ${data.detail})` : pesan);
@@ -7387,7 +7518,7 @@ async function removeAiGeminiKey() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ geminiHapus: true }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     aiState = data;
     aiGeminiEditing = false;
@@ -7410,7 +7541,7 @@ async function removeAiGeminiKey() {
 async function loadPembaruan() {
   try {
     const res = await fetch("/api/pembaruan");
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     pembaruan = data;
   } catch {
@@ -7426,7 +7557,7 @@ async function simpanPembaruan(parsial) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsial),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     pembaruan = data;
     renderPembaruan();
@@ -7440,7 +7571,7 @@ async function simpanPembaruan(parsial) {
 async function jalankanPembaruanSekarang() {
   try {
     const res = await fetch("/api/pembaruan", { method: "POST" });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     toast(t("pembaruan.running"), "success");
     pembaruan = { ...(pembaruan || {}), jalan: true };
@@ -7468,7 +7599,7 @@ function mulaiPollPembaruan() {
     sedangTanya = true;
     try {
       const res = await fetch("/api/pembaruan");
-      const data = await res.json();
+      const data = await bacaJson(res);
       if (data && data.ok) {
         pembaruan = data;
         renderPembaruan();
@@ -7595,7 +7726,7 @@ let artikelSegarTimer = null;
 async function loadArtikelAuto() {
   try {
     const res = await fetch("/api/artikel-auto");
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     artikelAuto = data;
   } catch {
@@ -7603,7 +7734,7 @@ async function loadArtikelAuto() {
   }
   try {
     const res = await fetch("/api/artikel-segar");
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     artikelSegar = data;
   } catch {
@@ -7619,7 +7750,7 @@ async function simpanArtikelAuto(parsial) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsial),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     artikelAuto = data;
     renderArtikelAuto();
@@ -7633,7 +7764,7 @@ async function simpanArtikelAuto(parsial) {
 async function tulisArtikelSekarang() {
   try {
     const res = await fetch("/api/artikel-auto", { method: "POST" });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     toast(t("drafauto.running"), "success");
     artikelAuto = { ...(artikelAuto || {}), jalan: true };
@@ -7661,7 +7792,7 @@ function mulaiPollArtikelAuto() {
     sedangTanya = true;
     try {
       const res = await fetch("/api/artikel-auto");
-      const data = await res.json();
+      const data = await bacaJson(res);
       if (data && data.ok) {
         artikelAuto = data;
         renderArtikelAuto();
@@ -7773,7 +7904,7 @@ async function simpanArtikelSegar(parsial) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsial),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     artikelSegar = data;
     renderArtikelSegar();
@@ -7787,7 +7918,7 @@ async function simpanArtikelSegar(parsial) {
 async function segarkanArtikelSekarang() {
   try {
     const res = await fetch("/api/artikel-segar", { method: "POST" });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
     toast(t("segar.running"), "success");
     artikelSegar = { ...(artikelSegar || {}), jalan: true };
@@ -7815,7 +7946,7 @@ function mulaiPollArtikelSegar() {
     sedangTanya = true;
     try {
       const res = await fetch("/api/artikel-segar");
-      const data = await res.json();
+      const data = await bacaJson(res);
       if (data && data.ok) {
         artikelSegar = data;
         renderArtikelSegar();
@@ -7950,7 +8081,7 @@ function syncAiButton() {
 async function muatKeadaanAi() {
   try {
     const res = await fetch("/api/ai/riset");
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) return;
     aiSiap = !!data.siap;
     if (data.modelBawaan) aiModelBawaan = data.modelBawaan;
@@ -8009,7 +8140,7 @@ async function openAiModal() {
 
   try {
     const res = await fetch("/api/ai/riset");
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) return;
     aiCtx.kuota = data.kuota;
     sambungJobLama(data.terakhir);
@@ -8111,7 +8242,7 @@ async function periksaKesehatanAi() {
   renderAiModal();
   try {
     const res = await fetch("/api/ai/riset?uji=1");
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (aiCtx !== ctx) return;
     if (!data?.ok || !data.kesehatan?.ok) {
       ctx.kesehatan = "gagal";
@@ -8156,7 +8287,7 @@ async function bukaJobWizard(jobId) {
 
   try {
     const res = await fetch(`/api/ai/riset?id=${encodeURIComponent(jobId)}`);
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data?.ok || !data.job) throw new Error(apiMessage(data, "err.ai.jobHilang"));
     sambungJobLama(data.job);
     renderAiModal();
@@ -8626,7 +8757,7 @@ async function startAiRiset() {
         hint: aiCtx.wizard ? hintRisetWizard(aiCtx) : aiCtx.hint,
       }),
     });
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.badJson"));
 
     aiCtx.jobId = data.job.id;
@@ -8652,7 +8783,8 @@ async function pollAiRiset() {
   let data;
   try {
     const res = await fetch(`/api/ai/riset?id=${encodeURIComponent(aiCtx.jobId)}`);
-    data = await res.json();
+    data = await bacaJson(res);
+    if (!data) return;
   } catch {
     // Satu permintaan yang gagal bukan alasan membuang risetnya — jaringan
     // panel bisa tersendat sementara server terus bekerja.
@@ -8924,7 +9056,7 @@ async function muatUlangKonten() {
   try {
     const res = await fetch("/api/content");
     if (!res.ok) return;
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (data && data.ok) {
       content = data.content;
       resetHistory();
@@ -8940,7 +9072,7 @@ async function loadActivity() {
   try {
     const res = await fetch("/api/activity?limit=12");
     if (!res.ok) return;
-    const data = await res.json();
+    const data = await bacaJson(res);
     if (data && data.ok) activityList = data.entries;
   } catch {
     /* Log aktivitas bersifat pelengkap — kegagalannya tidak menghentikan dasbor. */
@@ -9046,8 +9178,8 @@ async function loadActivityPage() {
 
   try {
     const res = await fetch(`/api/activity?${q}`);
-    if (res.status === 401) { location.href = "/admin/login"; return; }
-    const data = await res.json();
+    if (res.status === 401) { keLogin(); return; }
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
     activityPage = data;
     renderActivityView();
@@ -9133,8 +9265,8 @@ async function loadAnalitik() {
 
   try {
     const res = await fetch(`/api/trafik?${q}`);
-    if (res.status === 401) { location.href = "/admin/login"; return; }
-    const data = await res.json();
+    if (res.status === 401) { keLogin(); return; }
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(apiMessage(data, "err.forbidden"));
     analitikData = data;
   } catch (err) {
@@ -9446,7 +9578,7 @@ async function syncJobChip() {
   try {
     const res = await fetch("/api/ai/riset");
     if (!res.ok) { chip.hidden = true; return; }
-    const data = await res.json();
+    const data = await bacaJson(res);
     const job = data && data.terakhir;
     const drafAi = bacaDrafAi();
     const jobBaruBisaDibuka = !!job && !job.vehicleId && drafAi.jobId === job.id;
@@ -9511,7 +9643,7 @@ async function checkUpdateBadge() {
   try {
     const res = await fetch("/api/version");
     if (!res.ok) return;
-    const data = await res.json();
+    const data = await bacaJson(res);
     dot.hidden = !(data && data.updateAvailable);
   } catch {
     /* Titik penanda bersifat pelengkap; diamkan kalau GitHub tak terjangkau. */
@@ -9564,8 +9696,8 @@ async function init() {
 
   try {
     const res = await fetch("/api/content");
-    if (res.status === 401) { location.href = "/admin/login"; return; }
-    const data = await res.json();
+    if (res.status === 401) { keLogin(); return; }
+    const data = await bacaJson(res);
     if (!data || !data.ok) throw new Error(t("toast.loadFailed", { error: "" }));
     content = data.content;
   } catch (err) {
@@ -9576,6 +9708,7 @@ async function init() {
   resetHistory();
   setSaveState("saved");
   renderAll();
+  tawarkanDrafSesi();
 
   loadActivity();
   checkUpdateBadge();
