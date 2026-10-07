@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { parseFeed, gabungBerita, urlKunci, tanggalIso } from "../src/lib/berita-rss.js";
-import { relevanBerita } from "../src/lib/berita-sumber.js";
+import { relevanBerita, judulBersih, SUMBER_BERITA } from "../src/lib/berita-sumber.js";
 
 const RSS = `<?xml version="1.0"?>
 <rss version="2.0"><channel>
@@ -66,6 +66,30 @@ describe("relevanBerita", () => {
     assert.equal(relevanBerita("Harga bensin naik bulan ini"), false);
     assert.equal(relevanBerita("Tips ganti oli mesin diesel"), false);
     assert.equal(relevanBerita(""), false);
+  });
+});
+
+describe("sumber Kompas.com", () => {
+  it("terdaftar dengan feed pencarian yang dibatasi ke kompas.com", () => {
+    const kompas = SUMBER_BERITA.find((s: any) => s.id === "kompas");
+    assert.ok(kompas);
+    assert.equal(kompas.nama, "Kompas.com");
+    assert.match(String(kompas.feed), /^https:\/\//);
+    assert.match(String(kompas.feed), /kompas\.com/);
+  });
+
+  it("membuang akhiran ' - Kompas.com' dari judul Google News", () => {
+    const kompas = SUMBER_BERITA.find((s: any) => s.id === "kompas");
+    assert.equal(
+      judulBersih(kompas, "Mobil Listrik Seharusnya Tetap Kena Ganjil Genap - Kompas.com"),
+      "Mobil Listrik Seharusnya Tetap Kena Ganjil Genap"
+    );
+  });
+
+  it("membiarkan judul sumber lain apa adanya", () => {
+    const detik = SUMBER_BERITA.find((s: any) => s.id === "detikoto");
+    assert.equal(judulBersih(detik, "BYD Rilis Mobil Listrik Baru"), "BYD Rilis Mobil Listrik Baru");
+    assert.equal(judulBersih(undefined, "Judul apa adanya"), "Judul apa adanya");
   });
 });
 

@@ -27,11 +27,11 @@ export const KEYAKINAN_URUT = ["tinggi", "sedang", "rendah"];
 
 /** Nilai bawaan pengaturan. Ditulis di sini, bukan di dua tempat sekaligus. */
 export const PEMBARUAN_DEFAULTS = {
-  aktif: false,
+  aktif: true,
   /** Berapa kendaraan paling banyak diriset dalam satu hari. */
   batasHarian: 5,
   /** Kalau menyala, hanya kendaraan bertanda `stale` yang diriset. */
-  hanyaBasi: false,
+  hanyaBasi: true,
   /** Keyakinan minimum agar sebuah nilai boleh diterapkan otomatis. */
   keyakinanMin: "tinggi",
   /** Riset harian pertama dijalankan setelah jam ini (WIB). */

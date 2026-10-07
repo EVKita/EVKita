@@ -254,8 +254,11 @@ normalisasi, slug, daftar sumber, waktu baca, dan tanggal terbit.
 - **Alamatnya di bawah `/artikel/`**, jadi slug-nya tidak pernah bertabrakan
   dengan rute akar. `"artikel"` tetap ditambahkan ke `SLUG_TERPAKAI` supaya
   halaman statis tidak bisa merebut alamat indeksnya.
-- **Artikel baru lahir sebagai draf.** `date` (tanggal terbit yang tampil) dan
-  `publishAt` (jadwal tayang) adalah dua hal yang berbeda.
+- **Artikel otomatis harian langsung terbit.** Mesin `artikel-harian.ts`
+  menulis dan menerbitkan satu artikel setiap hari (`status: "published"`,
+  bawaan saklarnya menyala) — tidak menunggu ditekan Terbit. `date`
+  (tanggal terbit yang tampil) dan `publishAt` (jadwal tayang) adalah dua
+  hal yang berbeda.
 - **`aiAssisted`** hanya lencana transparansi di panel — tidak pernah menjadi
   sinyal SEO, dan tidak pernah ditampilkan di situs publik.
 - Draf bisa dipratinjau lewat `/api/pratinjau` seperti kendaraan dan halaman;

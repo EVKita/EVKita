@@ -7710,10 +7710,10 @@ function renderPembaruan() {
 }
 
 /* ------------------------------------------------------------------ *
- * 25b3. Draf artikel otomatis harian
+ * 25b3. Artikel otomatis harian
  *
- * Saklar + status satu draf sehari, digambar ke `#artikel-auto-root` di view
- * Artikel dan memakai `/api/artikel-auto`. Editor tidak punya kemampuan "ai"
+ * Saklar + status satu artikel sehari (langsung terbit), digambar ke
+ * `#artikel-auto-root` di view Artikel dan memakai `/api/artikel-auto`. Editor tidak punya kemampuan "ai"
  * sehingga endpoint menjawab 403 — dalam hal itu wadahnya dikosongkan
  * diam-diam, bukan menampilkan gembok.
  * ------------------------------------------------------------------ */

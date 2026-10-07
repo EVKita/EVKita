@@ -12,12 +12,12 @@ import {
 import { siapRiset, modelBawaan } from "../../lib/ai-jobs";
 
 /**
- * Pengaturan & kendali draf artikel otomatis harian.
+ * Pengaturan & kendali artikel otomatis harian.
  *
  * Pola yang sama dengan `/api/pembaruan`: `GET` untuk menggambar panel,
- * `PUT` menyimpan saklar, `POST` memaksa satu draf ditulis sekarang di latar
- * belakang. Tertutup untuk Editor lewat `can(me, "ai")` — penulisan memakai
- * kuota/uang AI, jadi keputusannya milik pemilik/admin.
+ * `PUT` menyimpan saklar, `POST` memaksa satu artikel ditulis dan diterbitkan
+ * sekarang di latar belakang. Tertutup untuk Editor lewat `can(me, "ai")` —
+ * penulisan memakai kuota/uang AI, jadi keputusannya milik pemilik/admin.
  */
 function muatan() {
   const status = bacaArtikelHarian();

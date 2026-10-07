@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { readContent, writeContent } from "./store";
-import { SUMBER_BERITA, relevanBerita } from "./berita-sumber.js";
+import { SUMBER_BERITA, relevanBerita, judulBersih } from "./berita-sumber.js";
 import { gabungBerita, parseFeed } from "./berita-rss.js";
 
 /**
@@ -50,7 +50,7 @@ function tulisJadwal(v: any): void {
 }
 
 /** Mengambil satu feed, menyaring yang relevan, memetakan ke bentuk berita. */
-async function ambilSumber(sumber: { id: string; nama: string; feed: string }): Promise<{ items: any[]; error: string }> {
+async function ambilSumber(sumber: { id: string; nama: string; feed: string; stripJudul?: string }): Promise<{ items: any[]; error: string }> {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), 15000);
   try {
@@ -67,7 +67,7 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string }): 
       .filter((it) => relevanBerita(`${it.title} ${it.excerpt}`))
       .map((it) => ({
         id: "",
-        title: it.title,
+        title: judulBersih(sumber, it.title),
         source: sumber.nama,
         url: it.link,
         date: it.date || tanggalWib(),

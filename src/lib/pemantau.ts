@@ -31,7 +31,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { readContent, writeContent } from "./store";
-import { SUMBER_BERITA, relevanBerita } from "./berita-sumber.js";
+import { SUMBER_BERITA, relevanBerita, judulBersih } from "./berita-sumber.js";
 import { parseFeed } from "./berita-rss.js";
 
 const BERKAS = () => path.resolve(process.cwd(), "data/pantauan.json");
@@ -152,7 +152,7 @@ function tulisState(v: any): void {
 }
 
 /** Mengambil satu feed menjadi daftar `{ title, excerpt, link }`. */
-async function ambilSumber(sumber: { feed: string }): Promise<any[]> {
+async function ambilSumber(sumber: { feed: string; stripJudul?: string }): Promise<any[]> {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), 15000);
   try {
@@ -165,7 +165,7 @@ async function ambilSumber(sumber: { feed: string }): Promise<any[]> {
     });
     if (!r.ok) return [];
     return parseFeed(await r.text()).map((it: any) => ({
-      title: it.title,
+      title: judulBersih(sumber, it.title),
       excerpt: it.excerpt,
       link: it.link,
     }));

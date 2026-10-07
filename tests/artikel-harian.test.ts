@@ -18,6 +18,7 @@ import {
   drafTunggu,
   umurHari,
   normalkanPengaturanArtikel,
+  sampulArtikel,
   MAKS_DRAF_TUNGGU,
   UMUR_HAPUS_HARI,
   UMUR_AMAN_HARI,
@@ -168,8 +169,35 @@ describe("pangkasDrafLama", () => {
   });
 });
 
-describe("pembantu", () => {
-  it("drafTunggu hanya menghitung draf otomatis berstatus draf", () => {
+describe("sampulArtikel", () => {
+  const katalog = {
+    berita: [{ url: "https://k.test/1", image: "" }],
+    cars: [{ id: "a", brand: "A", name: "Satu", image: "/api/uploads/a.webp" }],
+    motors: [],
+  };
+
+  it("strategi berita tanpa foto jatuh ke foto katalog, bukan sampul kosong", () => {
+    const topik = { strategi: "berita", kunci: "berita:x", judulKerja: "X", bahan: "", sumberBoleh: ["https://k.test/1"] } as any;
+    assert.equal(sampulArtikel(katalog, topik, "2026-10-07"), "/api/uploads/a.webp");
+  });
+
+  it("memakai foto berita asalnya kalau ada", () => {
+    const isi = {
+      ...katalog,
+      berita: [{ url: "https://k.test/1", image: "/api/uploads/n.webp" }],
+    };
+    const topik = { strategi: "berita", kunci: "berita:x", judulKerja: "X", bahan: "", sumberBoleh: ["https://k.test/1"] } as any;
+    assert.equal(sampulArtikel(isi, topik, "2026-10-07"), "/api/uploads/n.webp");
+  });
+
+  it("kosong kalau katalog memang belum punya satu pun foto", () => {
+    const kosong = { berita: [], cars: [], motors: [] };
+    const topik = { strategi: "panduan", kunci: "panduan:x", judulKerja: "X", bahan: "", sumberBoleh: [] } as any;
+    assert.equal(sampulArtikel(kosong, topik, "2026-10-07"), "");
+  });
+});
+
+describe("pembantu", () => {  it("drafTunggu hanya menghitung draf otomatis berstatus draf", () => {
     const daftar = [
       { auto: true, status: "draft" },
       { auto: true, status: "published" },
@@ -183,8 +211,10 @@ describe("pembantu", () => {
     assert.ok(umurHari(isoLalu(10), SEKARANG) < 11);
   });
 
-  it("pengaturan bawaannya mati", () => {
-    assert.deepEqual(normalkanPengaturanArtikel(undefined), { aktif: false });
+  it("pengaturan bawaannya menyala (langsung terbit tiap hari)", () => {
+    assert.deepEqual(normalkanPengaturanArtikel(undefined), { aktif: true });
+    assert.deepEqual(normalkanPengaturanArtikel({}), { aktif: true });
     assert.deepEqual(normalkanPengaturanArtikel({ aktif: true }), { aktif: true });
+    assert.deepEqual(normalkanPengaturanArtikel({ aktif: false }), { aktif: false });
   });
 });

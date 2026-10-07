@@ -37,7 +37,7 @@ describe("pilihKendaraan", () => {
   };
 
   it("mendahulukan yang stale, lalu yang terlama tidak diperbarui", () => {
-    const hasil = pilihKendaraan(content, { batasHarian: 50 });
+    const hasil = pilihKendaraan(content, { batasHarian: 50, hanyaBasi: false });
     assert.equal(hasil[0].id, "d"); // stale
     assert.equal(hasil[1].id, "e"); // updatedAt kosong (terlama)
     assert.equal(hasil[2].id, "a");
@@ -57,7 +57,7 @@ describe("pilihKendaraan", () => {
   });
 
   it("menandai kolom dan jenis dengan benar", () => {
-    const hasil = pilihKendaraan(content, { batasHarian: 50 });
+    const hasil = pilihKendaraan(content, { batasHarian: 50, hanyaBasi: false });
     const e = hasil.find((k) => k.id === "e");
     assert.equal(e.col, "motors");
     assert.equal(e.kind, "motor");

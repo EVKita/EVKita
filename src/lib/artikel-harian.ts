@@ -15,19 +15,18 @@ import { readContent, writeContent } from "./store";
 import { readJson, writeJsonAtomic } from "./jsonfile";
 
 /**
- * Penulis draf artikel harian.
+ * Penulis artikel otomatis harian.
  *
  * Berita (`berita-harian.ts`) mengkurasi tautan milik penerbit lain; koleksi
- * `artikel` adalah tulisan orisinal situs ini — dan tulisan orisinal tidak
- * boleh terbit tanpa dibaca manusia. Karena itu mesin ini hanya menulis
- * DRAF (`status: "draft"`, `aiAssisted: true`): menerbitkan tetap menekan
- * tombol Terbit di panel, seperti biasa.
+ * `artikel` adalah tulisan orisinal situs ini — dan mesin ini menulis dan
+ * MENERBITKAN satu tulisan setiap hari (`status: "published"`), langsung
+ * tampil di `/artikel` tanpa menunggu ditekan Terbit.
  *
  * Tiga pagar yang membuatnya aman berjalan sendiri:
  *
- *   1. **Sekali sehari, satu draf.** Tanggal terakhir disimpan di
+ *   1. **Sekali sehari, satu tulisan.** Tanggal terakhir disimpan di
  *      `data/artikel-harian.json`. Kalau 7 draf otomatis masih menunggu
- *      telaah, mesin berhenti menambah — menumpuk draf tak terbaca hanya
+ *      telaah, mesin berhenti menambah — menumpuk tulisan tak terbaca hanya
  *      membakar kuota.
  *   2. **Sumber anti-khayal.** Model hanya boleh memakai alamat yang diberikan
  *      di bahan (berita terbaru, angka katalog); alamat lain dibuang sebelum
@@ -107,7 +106,9 @@ function hasilKosong(): NonNullable<StatusArtikelHarian["hasil"]> {
 }
 
 export function normalkanPengaturanArtikel(s: any): { aktif: boolean } {
-  return { aktif: !!(s && s.aktif) };
+  if (!s || typeof s !== "object") return { aktif: true };
+  if (typeof (s as any).aktif === "undefined") return { aktif: true };
+  return { aktif: !!(s as any).aktif };
 }
 
 export function bacaArtikelHarian(): StatusArtikelHarian {
@@ -248,7 +249,8 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
  * hampir tidak pernah ditekan Terbitnya. Fungsinya memilih gambar milik
  * sendiri yang paling nyambung dengan topik, tanpa jaringan dan tanpa
  * menebak: perbandingan memakai foto salah satu kendaraannya, rangkuman
- * berita memakai foto berita asalnya, panduan memakai foto katalog yang
+ * berita memakai foto berita asalnya (atau foto katalog kalau berita itu
+ * tidak bergambar, mis. Kompas.com), panduan memakai foto katalog yang
  * diputar per hari. Kosong kalau katalog memang belum punya satu pun foto.
  * Murni: tidak membaca berkas, tidak memanggil model.
  */
@@ -278,7 +280,9 @@ export function sampulArtikel(content: any, topik: TopikArtikel, hari: string): 
       const g = String((temu && temu.image) || "").trim();
       if (g) return g;
     }
-    return "";
+    /* Berita tanpa foto (mis. Kompas.com via Google News yang feed-nya tidak
+       membawa gambar) jatuh ke foto katalog di bawah — bukan ke sampul
+       kosong — supaya artikel yang terbit otomatis selalu bersampul. */
   }
   const semuaGambar = [...((content && content.cars) || []), ...((content && content.motors) || [])]
     .map((v: any) => String((v && v.image) || "").trim())
@@ -410,8 +414,10 @@ export function pangkasDrafLama(daftar: any[], sekarang = Date.now()): { daftar:
 }
 
 /**
- * Menjalankan satu putaran: tulis satu draf (kalau antrean belum penuh),
- * lalu pangkas draf tua. Selalu draf — tidak pernah terbit sendiri.
+ * Menjalankan satu putaran: tulis dan TERBITKAN satu artikel (kalau antrean
+ * draf belum penuh), lalu pangkas draf tua. Sengaja langsung terbit —
+ * pemilik meminta artikel baru tampil di `/artikel` setiap hari tanpa
+ * menekan Terbit. Yang gagal lolos pagar di bawah tidak disimpan sama sekali.
  */
 export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {}): Promise<any> {
   const status = bacaArtikelHarian();
@@ -451,13 +457,13 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
             slug: "",
             author: "EVKita",
             date: hasil.tanggal,
-            status: "draft",
+            status: "published",
             publishAt: "",
             aiAssisted: true,
             auto: true,
-            /* Sampul relevan otomatis supaya kartu draf langsung terlihat
-               menarik di panel dan — setelah diterbitkan — di /artikel dan
-               beranda. Gambar milik sendiri, tanpa mengunduh apa pun. */
+            /* Sampul relevan otomatis supaya kartu artikel langsung terlihat
+               menarik di /artikel dan beranda. Gambar milik sendiri, tanpa
+               mengunduh apa pun. */
             image: sampulArtikel(segar, topik, hasil.tanggal),
             updatedAt: kini,
             updatedBy: "auto",
