@@ -9,6 +9,7 @@ import {
   isiAdsTxt,
   normalisasi,
   periksa,
+  statusGsc,
 } from "../src/lib/integrasi.js";
 
 /**
@@ -138,6 +139,31 @@ describe("domain yang dibuka di CSP", () => {
     const h = hostCsp({ gscAktif: true, gscToken: "a".repeat(43) });
     assert.deepEqual(h.script, []);
     assert.equal(adaTag({ gscAktif: true, gscToken: "a".repeat(43) }), true);
+  });
+});
+
+describe("cara verifikasi Search Console", () => {
+  const ga = { gaAktif: true, gaId: "G-ABCD123456" };
+
+  it("lewat Analytics tidak butuh kode, dan statusnya ikut tag Analytics", () => {
+    assert.deepEqual(periksa({ ...ga, gscMetode: "analytics" }).galat, []);
+    assert.deepEqual(statusGsc({ ...ga, gscMetode: "analytics" }), { aktif: true, lewat: "analytics" });
+    assert.equal(statusGsc({ gscMetode: "analytics" }).aktif, false);
+  });
+
+  it("menolak verifikasi lewat Analytics saat Analytics mati", () => {
+    assert.deepEqual(periksa({ gscMetode: "analytics" }).galat, ["err.integrasi.gscButuhGa"]);
+  });
+
+  it("lewat DNS selalu aktif dan tidak menyisipkan penanda", () => {
+    assert.deepEqual(statusGsc({ gscMetode: "dns" }), { aktif: true, lewat: "dns" });
+    assert.equal(adaTag({ gscMetode: "dns", gscAktif: true, gscToken: "a".repeat(43) }), false);
+  });
+
+  it("berkas lama tanpa metode tetap dibaca sebagai tag HTML", () => {
+    const s = normalisasi({ gscAktif: true, gscToken: "a".repeat(43), gscMetode: "<script>" });
+    assert.equal(s.gscMetode, "tag");
+    assert.deepEqual(statusGsc(s), { aktif: true, lewat: "tag" });
   });
 });
 

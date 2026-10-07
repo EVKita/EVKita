@@ -35,6 +35,14 @@ export const BAWAAN = {
   // Google Search Console
   gscAktif: false,
   gscToken: "",
+  /**
+   * Cara situs ini diverifikasi di Search Console. Hanya "tag" yang butuh
+   * penanda dari kita; "analytics" menumpang tag Google Analytics (Search
+   * Console mendeteksinya sendiri saat properti ditambahkan), dan "dns"
+   * tinggal di pengaturan domain. Dua yang terakhir tidak bisa ditanyakan ke
+   * Google tanpa OAuth, jadi statusnya diturunkan dari pilihan ini.
+   */
+  gscMetode: "tag",
 
   /*
    * Login Google pengunjung (opsional, tanpa saklar sendiri).
@@ -61,6 +69,10 @@ export const BAWAAN = {
 
 export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken", "googleClientId", "clerkKey"];
 export const KUNCI_SAKLAR = ["gaAktif", "gaAbaikanAdmin", "adsenseAktif", "adsenseAuto", "gscAktif"];
+
+/** Cara verifikasi Search Console yang dikenal. Yang pertama adalah bawaan. */
+export const METODE_GSC = ["tag", "analytics", "dns"];
+const metodeGsc = (v) => (METODE_GSC.includes(v) ? v : METODE_GSC[0]);
 
 /**
  * Pola yang harus dipenuhi tiap nilai. Seluruhnya daftar-putih.
@@ -111,6 +123,7 @@ export function normalisasi(raw) {
   const src = raw && typeof raw === "object" ? raw : {};
   for (const k of KUNCI_TEKS) out[k] = typeof src[k] === "string" ? src[k].trim() : "";
   for (const k of KUNCI_SAKLAR) out[k] = src[k] === undefined ? BAWAAN[k] : !!src[k];
+  out.gscMetode = metodeGsc(src.gscMetode);
 
   /*
    * Nilai yang tidak lolos pola dianggap tidak ada, dan saklarnya ikut mati.
@@ -139,6 +152,7 @@ export function periksa(masuk) {
 
   for (const k of KUNCI_TEKS) nilai[k] = String(src[k] === undefined ? "" : src[k]).trim();
   for (const k of KUNCI_SAKLAR) nilai[k] = !!src[k];
+  nilai.gscMetode = metodeGsc(src.gscMetode);
 
   if (nilai.gaId && !POLA.gaId.test(nilai.gaId)) galat.push("err.integrasi.gaId");
   if (nilai.adsenseId && !POLA.adsenseId.test(nilai.adsenseId)) galat.push("err.integrasi.adsenseId");
@@ -160,7 +174,11 @@ export function periksa(masuk) {
    */
   if (nilai.gaAktif && !nilai.gaId) galat.push("err.integrasi.gaKosong");
   if (nilai.adsenseAktif && !nilai.adsenseId) galat.push("err.integrasi.adsenseKosong");
-  if (nilai.gscAktif && !nilai.gscToken) galat.push("err.integrasi.gscKosong");
+  if (nilai.gscMetode === "tag" && nilai.gscAktif && !nilai.gscToken) galat.push("err.integrasi.gscKosong");
+  /* Verifikasi lewat Analytics hidup selama tag Analytics-nya hidup. Mematikan
+     Analytics diam-diam mencabut kepemilikan di Search Console beberapa hari
+     kemudian, jadi kombinasi itu ditolak di sini, bukan dibiarkan. */
+  if (nilai.gscMetode === "analytics" && !(nilai.gaAktif && nilai.gaId)) galat.push("err.integrasi.gscButuhGa");
 
   if (nilai.adsTxt.length > 4000) galat.push("err.integrasi.adsTxtPanjang");
   nilai.adsTxt = bersihkanAdsTxt(nilai.adsTxt);
@@ -261,8 +279,28 @@ export function hostCsp(cfg) {
   return out;
 }
 
+/** Apakah penanda `google-site-verification` perlu disisipkan? */
+export function pakaiTagGsc(cfg) {
+  const s = normalisasi(cfg);
+  return s.gscMetode === "tag" && s.gscAktif && !!s.gscToken;
+}
+
+/**
+ * Status Search Console untuk panel: `{ aktif, lewat }`.
+ *
+ * Untuk "tag" artinya penandanya terpasang; untuk "analytics" artinya tag
+ * Analytics — yang dibaca Google sebagai bukti kepemilikan — terpasang; untuk
+ * "dns" verifikasinya tidak bergantung pada situs sama sekali.
+ */
+export function statusGsc(cfg) {
+  const s = normalisasi(cfg);
+  if (s.gscMetode === "analytics") return { aktif: s.gaAktif && !!s.gaId, lewat: "analytics" };
+  if (s.gscMetode === "dns") return { aktif: true, lewat: "dns" };
+  return { aktif: pakaiTagGsc(s), lewat: "tag" };
+}
+
 /** Apakah ada satu pun tag yang perlu disisipkan? Dipakai untuk melewati kerja sia-sia. */
 export function adaTag(cfg) {
   const s = normalisasi(cfg);
-  return s.gaAktif || s.adsenseAktif || s.gscAktif;
+  return s.gaAktif || s.adsenseAktif || pakaiTagGsc(s);
 }

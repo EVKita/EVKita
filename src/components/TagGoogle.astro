@@ -1,5 +1,6 @@
 ---
 import { bacaIntegrasi } from "../lib/integrasi-simpan";
+import { pakaiTagGsc } from "../lib/integrasi.js";
 import { SESSION_COOKIE } from "../lib/auth";
 
 /**
@@ -28,7 +29,7 @@ const cfg = bacaIntegrasi();
 const admin = !!Astro.cookies.get(SESSION_COOKIE)?.value;
 const pakaiGa = cfg.gaAktif && !!cfg.gaId && !(cfg.gaAbaikanAdmin && admin);
 const pakaiAdsense = cfg.adsenseAktif && !!cfg.adsenseId;
-const pakaiGsc = cfg.gscAktif && !!cfg.gscToken;
+const pakaiGsc = pakaiTagGsc(cfg);
 
 const gaSrc = `https://www.googletagmanager.com/gtag/js?id=${cfg.gaId}`;
 const adsenseSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${cfg.adsenseId}`;

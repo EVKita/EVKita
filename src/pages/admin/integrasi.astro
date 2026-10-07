@@ -6,7 +6,7 @@ import { currentUser } from "../../lib/auth";
 import { can } from "../../lib/users";
 import { readContent } from "../../lib/store";
 import { bacaIntegrasi } from "../../lib/integrasi-simpan";
-import { isiAdsTxt } from "../../lib/integrasi.js";
+import { isiAdsTxt, statusGsc } from "../../lib/integrasi.js";
 import { siteOrigin } from "../../lib/site-url";
 import { makeT, localeMeta } from "../../lib/i18n/index.js";
 
@@ -43,6 +43,7 @@ const lang = localeMeta(locale);
 const site = readContent().site || {};
 const cfg = bacaIntegrasi();
 const asal = siteOrigin(Astro.url);
+const gsc = statusGsc(cfg);
 const contohAdsTxt = isiAdsTxt({ ...cfg, adsenseAktif: true, adsTxt: "" }).trim();
 
 /* Teks untuk skrip di bawah. Skrip itu berjalan di peramban dan tidak memuat
@@ -60,6 +61,7 @@ const texts = {
   ga: t("integrasi.ga"),
   adsense: t("integrasi.adsense"),
   gsc: t("integrasi.gsc"),
+  gscOn: { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalytics"), dns: t("integrasi.gsc.onDns") },
   galat: {
     "err.integrasi.gaId": t("err.integrasi.gaId"),
     "err.integrasi.adsenseId": t("err.integrasi.adsenseId"),
@@ -70,6 +72,7 @@ const texts = {
     "err.integrasi.gaKosong": t("err.integrasi.gaKosong"),
     "err.integrasi.adsenseKosong": t("err.integrasi.adsenseKosong"),
     "err.integrasi.gscKosong": t("err.integrasi.gscKosong"),
+    "err.integrasi.gscButuhGa": t("err.integrasi.gscButuhGa"),
     "err.integrasi.adsTxtPanjang": t("err.integrasi.adsTxtPanjang"),
     "err.forbidden": t("err.forbidden"),
     "err.badJson": t("err.badJson"),
@@ -78,6 +81,7 @@ const texts = {
 
 const statusKelas = (aktif: boolean) => (aktif ? "integrasi-status is-on" : "integrasi-status");
 const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi.off"));
+const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalytics"), dns: t("integrasi.gsc.onDns") }[gsc.lewat];
 ---
 
 <Base title={`${t("integrasi.title")} — EVKita`} bodyClass="admin-ui" lang={lang.html} noindex site={site} accentOnly>
@@ -222,18 +226,29 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
                 <h2>{t("integrasi.gsc")}</h2>
                 <p>{t("integrasi.gsc.desc")}</p>
               </div>
-              <span class={statusKelas(cfg.gscAktif)} data-status="gsc" data-on={t("integrasi.on")} data-off={t("integrasi.off")}>{statusTeks(cfg.gscAktif)}</span>
+              <span class={statusKelas(gsc.aktif)} data-status="gsc" data-on={gscOnTeks} data-off={t("integrasi.off")}>{gsc.aktif ? gscOnTeks : t("integrasi.off")}</span>
             </div>
 
             <div class="field-grid">
               <div class="field full">
+                <label for="i-gscMetode">{t("integrasi.gsc.metode")}</label>
+                <select id="i-gscMetode" name="gscMetode">
+                  <option value="tag" selected={cfg.gscMetode === "tag"}>{t("integrasi.gsc.metode.tag")}</option>
+                  <option value="analytics" selected={cfg.gscMetode === "analytics"}>{t("integrasi.gsc.metode.analytics")}</option>
+                  <option value="dns" selected={cfg.gscMetode === "dns"}>{t("integrasi.gsc.metode.dns")}</option>
+                </select>
+                <span class="hint" data-gsc-metode="tag" hidden={cfg.gscMetode !== "tag"}>{t("integrasi.gsc.metodeHint")}</span>
+                <span class="hint" data-gsc-metode="analytics" hidden={cfg.gscMetode !== "analytics"}>{t("integrasi.gsc.viaAnalyticsHint")}</span>
+                <span class="hint" data-gsc-metode="dns" hidden={cfg.gscMetode !== "dns"}>{t("integrasi.gsc.viaDnsHint")}</span>
+              </div>
+              <div class="field full" data-gsc-metode="tag" hidden={cfg.gscMetode !== "tag"}>
                 <label class="switch-row">
                   <input type="checkbox" name="gscAktif" checked={cfg.gscAktif} />
                   <span class="switch" aria-hidden="true"></span>
                   <span>{t("integrasi.gsc.enable")}</span>
                 </label>
               </div>
-              <div class="field full">
+              <div class="field full" data-gsc-metode="tag" hidden={cfg.gscMetode !== "tag"}>
                 <label for="i-gscToken">{t("integrasi.gsc.token")}</label>
                 <input id="i-gscToken" name="gscToken" value={cfg.gscToken} placeholder="xKm2_3Fq…" spellcheck="false" autocapitalize="none" autocomplete="off" />
                 <span class="hint">{t("integrasi.gsc.tokenHint")}</span>
@@ -248,7 +263,7 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
               </div>
             </div>
 
-            <ol class="integrasi-langkah">
+            <ol class="integrasi-langkah" data-gsc-metode="tag" hidden={cfg.gscMetode !== "tag"}>
               <li>{t("integrasi.gsc.step1")}</li>
               <li>{t("integrasi.gsc.step2")}</li>
               <li>{t("integrasi.gsc.step3")}</li>
@@ -360,12 +375,25 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
         adsTxt: form.elements.adsTxt.value,
         gscAktif: form.elements.gscAktif.checked,
         gscToken: form.elements.gscToken.value.trim(),
+        gscMetode: form.elements.gscMetode.value,
         googleClientId: form.elements.googleClientId.value.trim(),
         clerkKey: form.elements.clerkKey.value.trim(),
       });
 
-      function tandaiStatus(cfg) {
-        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: cfg.gscAktif, login: !!cfg.googleClientId, clerk: !!cfg.clerkKey };
+      /* Bidang tag HTML (saklar, kode, langkah) hanya relevan untuk metode
+         "tag"; metode lain cuma butuh kalimat penjelasnya. */
+      function tampilkanMetodeGsc() {
+        const metode = form.elements.gscMetode.value;
+        document.querySelectorAll("[data-gsc-metode]").forEach((el) => {
+          el.hidden = el.getAttribute("data-gsc-metode") !== metode;
+        });
+      }
+      form.elements.gscMetode.addEventListener("change", tampilkanMetodeGsc);
+
+      function tandaiStatus(cfg, gsc) {
+        const elGsc = document.querySelector('[data-status="gsc"]');
+        if (elGsc && gsc) elGsc.setAttribute("data-on", texts.gscOn[gsc.lewat] || texts.gscOn.tag);
+        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: gsc ? gsc.aktif : false, login: !!cfg.googleClientId, clerk: !!cfg.clerkKey };
         for (const [kunci, aktif] of Object.entries(peta)) {
           const el = document.querySelector('[data-status="' + kunci + '"]');
           if (!el) continue;
@@ -412,7 +440,9 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
           form.elements.gaAktif.checked = cfg.gaAktif;
           form.elements.adsenseAktif.checked = cfg.adsenseAktif;
           form.elements.gscAktif.checked = cfg.gscAktif;
-          tandaiStatus(cfg);
+          form.elements.gscMetode.value = cfg.gscMetode;
+          tampilkanMetodeGsc();
+          tandaiStatus(cfg, data.statusGsc);
           state.textContent = texts.saved;
           pesan(texts.saved, "is-ok");
         } catch (err) {
@@ -459,8 +489,12 @@ const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi
             if (cfg.adsenseAktif && cfg.adsenseAuto) {
               baris.push(texts.adsense + ": " + (html.includes("client=" + cfg.adsenseId) ? texts.found : texts.missing));
             }
-            if (cfg.gscAktif) {
+            /* Lewat Analytics, bukti kepemilikan yang dibaca Google adalah tag
+               Analytics itu sendiri; lewat DNS tidak ada apa pun di halaman. */
+            if (cfg.gscMetode === "tag" && cfg.gscAktif) {
               baris.push(texts.gsc + ": " + (html.includes('name="google-site-verification"') ? texts.found : texts.missing));
+            } else if (cfg.gscMetode === "analytics") {
+              baris.push(texts.gsc + ": " + (cfg.gaId && html.includes("gtag/js?id=" + cfg.gaId) ? texts.found : texts.missing));
             }
             const semua = baris.length > 0 && baris.every((b) => b.endsWith(texts.found));
             pesan(baris.join(" · ") || texts.checkFail, semua ? "is-ok" : "is-off");

@@ -4,7 +4,7 @@ import { can } from "../../lib/users";
 import { logActivity } from "../../lib/activity";
 import { json, apiError, unauthorized, forbidden } from "../../lib/api";
 import { bacaIntegrasi, tulisIntegrasi } from "../../lib/integrasi-simpan";
-import { isiAdsTxt, periksa } from "../../lib/integrasi.js";
+import { isiAdsTxt, periksa, statusGsc } from "../../lib/integrasi.js";
 import { siteOrigin } from "../../lib/site-url";
 
 /**
@@ -22,6 +22,7 @@ function muatan(url: URL) {
   return {
     ok: true,
     integrasi: cfg,
+    statusGsc: statusGsc(cfg),
     /** Alamat yang perlu ditempelkan orang ke Search Console dan AdSense. */
     situs: {
       asal: siteOrigin(url),
@@ -71,7 +72,8 @@ export const PUT: APIRoute = async ({ request, cookies, url }) => {
     const aktifSesudah = (sesudah as any)[`${kunci}Aktif`];
     const idSebelum = (sebelum as any)[kunci === "gsc" ? "gscToken" : `${kunci}Id`];
     const idSesudah = (sesudah as any)[kunci === "gsc" ? "gscToken" : `${kunci}Id`];
-    if (aktifSebelum !== aktifSesudah || idSebelum !== idSesudah) berubah.push(nama);
+    const metodeBerubah = kunci === "gsc" && sebelum.gscMetode !== sesudah.gscMetode;
+    if (aktifSebelum !== aktifSesudah || idSebelum !== idSesudah || metodeBerubah) berubah.push(nama);
   }
   if (sebelum.clerkKey !== sesudah.clerkKey) berubah.push("Clerk");
   if (berubah.length) logActivity(me, "integrasi.update", { layanan: berubah.join(", ") });
