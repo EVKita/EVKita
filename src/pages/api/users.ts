@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { currentUser } from "../../lib/auth";
+import { currentUser, issueFreshCookie } from "../../lib/auth";
 import {
   can,
   canManage,
@@ -77,7 +77,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   return json({ ok: true, user: publicUser(created), users: listPublicUsers() });
 };
 
-export const PUT: APIRoute = async ({ request, cookies }) => {
+export const PUT: APIRoute = async ({ request, cookies, url }) => {
   const me = currentUser(cookies);
   if (!me) return unauthorized();
   if (!can(me, "users")) return forbidden();
@@ -121,7 +121,12 @@ export const PUT: APIRoute = async ({ request, cookies }) => {
   // Kata sandi yang direset admin harus ikut mengeluarkan sesi lama akun itu.
   // Kalau tidak, mereset kata sandi akun yang diduga disusupi tidak menutup
   // apa pun: yang sudah masuk tetap di dalam.
-  if (password) revokeSessions(next.id);
+  if (password) {
+    revokeSessions(next.id);
+    // Mereset kata sandi SENDIRI dari daftar Pengguna tidak boleh ikut
+    // mengeluarkan pelakunya — sama seperti di halaman Profil.
+    if (next.id === me.id) issueFreshCookie(cookies, next.id, url);
+  }
 
   logActivity(me, "user.update", { name: next.name });
   return json({ ok: true, user: publicUser(next), users: listPublicUsers() });

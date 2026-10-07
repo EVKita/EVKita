@@ -25,6 +25,9 @@ const UPLOAD_DIR = () => path.resolve(process.cwd(), "data", "uploads");
 /** Foto profil tinggal di data/users.json, bukan di content.json. */
 const avatarUrls = () => listPublicUsers().map((u) => u.avatar).filter(Boolean);
 
+/** Batas umur berkas sebelum boleh dihapus sebagai yatim. */
+const BARU_MS = 24 * 60 * 60 * 1000;
+
 export const GET: APIRoute = ({ cookies }) => {
   if (!currentUser(cookies)) return unauthorized();
 
@@ -98,8 +101,18 @@ export const DELETE: APIRoute = async ({ request, cookies }) => {
   for (const nama of diminta) {
     if (!namaBerkasAman(nama)) { dilewati++; continue; }
     if (urlDipakai(content, `/api/uploads/${nama}`, avatar)) { dilewati++; continue; }
+    const berkas = path.join(UPLOAD_DIR(), nama);
+    /* Berkas berumur < 24 jam tidak pernah dianggap yatim: bisa jadi baru
+       diunggah orang lain ke editor yang belum ia simpan, dan penghapusan
+       berkas tidak punya tombol urung (data/backups/ hanya menyimpan JSON). */
     try {
-      fs.unlinkSync(path.join(UPLOAD_DIR(), nama));
+      if (Date.now() - fs.statSync(berkas).mtimeMs < BARU_MS) { dilewati++; continue; }
+    } catch {
+      dilewati++;
+      continue;
+    }
+    try {
+      fs.unlinkSync(berkas);
       dihapus++;
     } catch {
       // Sudah hilang duluan bukan kegagalan: hasil akhirnya sama.

@@ -40,6 +40,11 @@ const KELAS_OK = {
 let root = null;
 let pending = null;
 let fokusSebelumnya = null;
+/* Jawaban untuk "ditutup tanpa memilih" (Escape, klik di luar, digantikan
+   dialog lain). Bawaannya `false`; dialog yang kedua pilihannya sama-sama
+   tindakan — mis. bentrok simpan, tempat Batal berarti "buang perubahan
+   saya" — memakai `null` supaya menutup tidak pernah diam-diam memilih. */
+let nilaiTutup = false;
 /**
  * Apakah KITA yang mengunci gulir halaman?
  *
@@ -81,7 +86,7 @@ function bangun() {
     if (tombol) { selesai(tombol.getAttribute("data-kdialog") === "ok"); return; }
     // Klik di luar kartunya sama artinya dengan Batal — jalan keluar yang
     // paling sering dicari orang, dan tidak pernah berarti "ya".
-    if (e.target === root) selesai(false);
+    if (e.target === root) selesai(nilaiTutup);
   });
 
   return root;
@@ -114,7 +119,12 @@ function jebakFokus(e) {
 
 function onKeydown(e) {
   if (!pending) return;
-  if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); selesai(false); return; }
+  /* Selama dialog terbuka, tidak ada pintasan halaman yang boleh ikut jalan:
+     Ctrl+S / Ctrl+Z / Ctrl+K di belakang dialog bisa mengubah dokumen yang
+     sedang ditanyakan. Pendengar ini terpasang di fase capture, jadi
+     menghentikannya di sini menahan pendengar `document` lain. */
+  e.stopPropagation();
+  if (e.key === "Escape") { e.preventDefault(); selesai(nilaiTutup); return; }
   if (e.key === "Tab") { jebakFokus(e); return; }
   if (e.key === "Enter" && !e.target.closest("[data-kdialog]")) {
     // Enter di luar tombol berarti "lanjutkan". Kalau fokusnya sedang di salah
@@ -175,6 +185,7 @@ function selesai(nilai) {
  * @param {string} opts.okText Label tombol utama. Sebut TINDAKANNYA, bukan "OK".
  * @param {string} [opts.cancelText] Label tombol batal.
  * @param {"danger"|"warning"|"info"|"question"|"success"} [opts.tone]
+ * @param {*} [opts.nilaiTutup] Jawaban bila ditutup tanpa memilih (bawaan `false`).
  */
 export function konfirmasi(opts) {
   const o = opts || {};
@@ -183,7 +194,8 @@ export function konfirmasi(opts) {
 
   // Panggilan baru saat masih ada yang terbuka: yang lama dijawab "tidak"
   // lebih dulu supaya janjinya tidak pernah tergantung selamanya.
-  if (pending) selesai(false);
+  if (pending) selesai(nilaiTutup);
+  nilaiTutup = o.nilaiTutup === undefined ? false : o.nilaiTutup;
 
   fokusSebelumnya = document.activeElement;
 

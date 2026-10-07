@@ -23,7 +23,11 @@ window.evkitaKonfirmasi = konfirmasi;
   const app = document.getElementById("admin-app");
   if (!app) return;
 
-  if (localStorage.getItem("evkita.sidebar") === "collapsed") app.classList.add("sidebar-collapsed");
+  // Penyimpanan peramban bisa dilempar (mode privat, situs diblokir);
+  // lebar sidebar cuma kenyamanan, jadi kegagalannya didiamkan.
+  try {
+    if (localStorage.getItem("evkita.sidebar") === "collapsed") app.classList.add("sidebar-collapsed");
+  } catch { /* abaikan */ }
 
   function toggleSidebar() {
     // Di layar sempit sidebar berperilaku sebagai drawer yang menimpa konten,
@@ -33,7 +37,7 @@ window.evkitaKonfirmasi = konfirmasi;
       return;
     }
     const collapsed = app.classList.toggle("sidebar-collapsed");
-    localStorage.setItem("evkita.sidebar", collapsed ? "collapsed" : "expanded");
+    try { localStorage.setItem("evkita.sidebar", collapsed ? "collapsed" : "expanded"); } catch { /* abaikan */ }
   }
 
   document.addEventListener("click", (e) => {
@@ -66,6 +70,17 @@ window.evkitaKonfirmasi = konfirmasi;
       else keCari("");
     }
   });
+
+  /* Titik "ada versi baru" di sidebar. admin.js menyalakannya di /admin;
+     tanpa ini titiknya selalu padam di halaman Integrasi dan Kontak. Titik
+     itu hanya dirender untuk peran yang boleh memperbarui. */
+  const titik = document.getElementById("update-dot");
+  if (titik) {
+    fetch("/api/version")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { titik.hidden = !(data && data.updateAvailable); })
+      .catch(() => { /* pelengkap; diamkan kalau GitHub tak terjangkau */ });
+  }
 
   /* Butir pencarian pengaturan membuka halaman ini dengan `#jangkar`;
      bagiannya digulir ke tengah dan disorot sebentar supaya mata langsung

@@ -810,7 +810,10 @@ function toast(message, kind, action) {
     el.classList.remove("show");
     setTimeout(() => el.remove(), 250);
   }
-  setTimeout(remove, action ? 7000 : 3200);
+  // Galat bertahan lebih lama dan bisa ditutup dengan klik: 3,2 detik terlalu
+  // singkat untuk membaca kenapa sesuatu gagal.
+  if (kind === "error") el.addEventListener("click", (e) => { if (!e.target.closest(".toast-action")) remove(); });
+  setTimeout(remove, action ? 7000 : kind === "error" ? 9000 : 3200);
 }
 
 /* ------------------------------------------------------------------ *
@@ -866,6 +869,10 @@ function closeModal(el) {
   lockPageScroll(false);
 }
 
+/* Elemen tempat tekanan mouse/jari terakhir dimulai — lihat penutup latar modal. */
+let tekanAwal = null;
+document.addEventListener("pointerdown", (e) => { tekanAwal = e.target; }, true);
+
 /** Menutup modal editor: kalau formulir sudah disentuh, minta konfirmasi dulu. */
 async function requestCloseModal(modal) {
   if (!modal) return;
@@ -901,7 +908,22 @@ function confirmDialog(opts) {
     okText: o.okText || t("common.delete"),
     cancelText: o.cancelText || t("common.cancel"),
     tone: o.tone || (o.danger === false ? "question" : "danger"),
+    nilaiTutup: o.nilaiTutup,
   });
+}
+
+/**
+ * Memulihkan cuplikan riwayat TANPA ikut memulihkan nomor revisinya.
+ *
+ * Cuplikan menyimpan seluruh dokumen, termasuk `revision` dari saat itu. Kalau
+ * ikut dipulihkan, urung sesudah simpan otomatis mengirim revisi lama, server
+ * menjawab 409, dan dialog "orang lain mengubah" muncul padahal tidak ada
+ * siapa-siapa.
+ */
+function pulihkanCuplikan(json) {
+  const rev = content && content.revision;
+  content = JSON.parse(json);
+  if (rev !== undefined) content.revision = rev;
 }
 
 /* ------------------------------------------------------------------ *
@@ -946,7 +968,7 @@ function applyHistory(step) {
   }
   historyIndex = next;
   historyKey = "";
-  content = JSON.parse(history[historyIndex]);
+  pulihkanCuplikan(history[historyIndex]);
   markDirty();
   renderAll();
   scheduleSave();
@@ -991,9 +1013,13 @@ function commit(options) {
   scheduleSave();
 }
 
+/* Selama dialog bentrok terbuka tidak ada simpanan lain yang boleh berangkat:
+   simpanan itu akan bentrok lagi dan memanggil dialog kedua di atasnya. */
+let konflikTerbuka = false;
+
 async function saveNow() {
   clearTimeout(saveTimer);
-  if (!content) return;
+  if (!content || konflikTerbuka) return;
   if (savingNow) { savePending = true; return; }
   savingNow = true;
   setSaveState("saving");
@@ -1034,7 +1060,10 @@ async function saveNow() {
     }
   } catch (err) {
     setSaveState("dirty");
-    toast(t("toast.saveFailed", { error: err && err.message ? err.message : t("toast.networkError") }), "error");
+    toast(t("toast.saveFailed", { error: err && err.message ? err.message : t("toast.networkError") }), "error", {
+      label: t("toast.retry"),
+      onClick: () => saveNow(),
+    });
   } finally {
     savingNow = false;
     if (savePending) { savePending = false; saveNow(); }
@@ -1048,14 +1077,25 @@ async function saveNow() {
  * bisa dihindari adalah kehilangan itu terjadi tanpa seorang pun tahu.
  */
 async function resolveConflict(serverContent) {
+  konflikTerbuka = true;
   const timpa = await confirmDialog({
     title: t("conflict.title"),
     text: t("conflict.text"),
     okText: t("conflict.overwrite"),
     cancelText: t("conflict.reload"),
-    cancelKey: "conflict.reload",
     danger: true,
+    nilaiTutup: null,
   });
+  konflikTerbuka = false;
+
+  /* Ditutup tanpa memilih (Escape, klik di luar): Batal di dialog ini berarti
+     "buang perubahan saya", jadi menutup TIDAK boleh dianggap Batal. Ketikan
+     tetap ada dan tetap kotor; simpanan berikutnya menanyakan lagi. */
+  if (timpa === null) {
+    setSaveState("dirty");
+    toast(t("conflict.dismissed"), "info");
+    return;
+  }
 
   if (timpa) {
     // Pakai revisi terbaru dari server, lalu kirim ulang dengan izin eksplisit.
@@ -2359,7 +2399,7 @@ async function deleteItem(col, id) {
   commit();
   toast(t("toast.deleted", { name: titleOf(col, item) }), "success", {
     label: t("toast.undo"),
-    onClick: () => { content = JSON.parse(before); commit(); toast(t("toast.deleteUndone"), "info"); },
+    onClick: () => { pulihkanCuplikan(before); commit(); toast(t("toast.deleteUndone"), "info"); },
   });
 }
 
@@ -2379,7 +2419,7 @@ async function bulkAction(col, action) {
     commit();
     toast(t("toast.deletedBulk", { n: ids.length }), "success", {
       label: t("toast.undo"),
-      onClick: () => { content = JSON.parse(before); commit(); toast(t("toast.deleteUndone"), "info"); },
+      onClick: () => { pulihkanCuplikan(before); commit(); toast(t("toast.deleteUndone"), "info"); },
     });
     return;
   }
@@ -2673,6 +2713,7 @@ async function kembalikanItem(name) {
     tone: "warning",
   });
   if (!ok) return;
+  await tuntaskanSimpanan();
 
   try {
     const res = await fetch("/api/backups", {
@@ -3165,7 +3206,12 @@ function saveVehicle(opts) {
 
   if (id) {
     const idx = content[col].findIndex((x) => x.id === id);
-    content[col][idx] = Object.assign({}, content[col][idx], data, { id });
+    /* Item bisa sudah hilang dari dokumen selagi editornya terbuka (dimuat
+       ulang karena bentrok, dihapus di tab lain). `content[col][-1] = …` tidak
+       masuk JSON, jadi ketikannya lenyap sementara toast bilang "tersimpan" —
+       sekarang ia dikembalikan sebagai item dengan id yang sama. */
+    if (idx < 0) content[col].push(Object.assign({}, data, { id }));
+    else content[col][idx] = Object.assign({}, content[col][idx], data, { id });
   } else {
     data.id = uniqueId(col, slugify(`${data.brand} ${data.name}`));
     content[col].push(data);
@@ -3431,7 +3477,12 @@ function saveDir(opts) {
 
   if (id) {
     const idx = content[col].findIndex((x) => x.id === id);
-    content[col][idx] = Object.assign({}, content[col][idx], data, { id });
+    /* Item bisa sudah hilang dari dokumen selagi editornya terbuka (dimuat
+       ulang karena bentrok, dihapus di tab lain). `content[col][-1] = …` tidak
+       masuk JSON, jadi ketikannya lenyap sementara toast bilang "tersimpan" —
+       sekarang ia dikembalikan sebagai item dengan id yang sama. */
+    if (idx < 0) content[col].push(Object.assign({}, data, { id }));
+    else content[col][idx] = Object.assign({}, content[col][idx], data, { id });
   } else {
     data.id = uniqueId(col, slugify(data[nameKey]) || col);
     content[col].push(data);
@@ -4374,6 +4425,19 @@ async function unduhCadangan(name) {
   }
 }
 
+/**
+ * Menuntaskan simpanan sebelum dokumen diganti seluruhnya dari server.
+ *
+ * Tanpa ini, PUT yang masih di jalan bisa mendarat SESUDAH pemulihan dan
+ * menimpanya; dan ketikan yang belum tersimpan hilang tanpa jejak. Dengan
+ * menyimpannya dulu, ketikan itu ikut masuk riwayat cadangan server.
+ */
+async function tuntaskanSimpanan() {
+  clearTimeout(saveTimer);
+  if (dirty && !savingNow) await saveNow();
+  for (let i = 0; i < 100 && savingNow; i++) await new Promise((r) => setTimeout(r, 100));
+}
+
 async function restoreBackup(name) {
   const ok = await confirmDialog({
     title: t("confirm.restoreTitle"),
@@ -4383,13 +4447,14 @@ async function restoreBackup(name) {
     tone: "warning",
   });
   if (!ok) return;
+  await tuntaskanSimpanan();
   try {
     const res = await fetch("/api/backups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
     if (!data || !data.ok) throw new Error(apiMessage(data, "backups.failTitle"));
     content = data.content;
     dirty = false;
@@ -5231,7 +5296,7 @@ function bindEvents() {
 
     if (e.target.closest("#logout")) {
       e.preventDefault();
-      fetch("/api/auth/logout", { method: "POST" }).finally(() => { location.href = "/admin/login"; });
+      keluarPanel();
       return;
     }
 
@@ -5368,7 +5433,10 @@ function bindEvents() {
       requestCloseModal(modal);
       return;
     }
-    if (e.target.classList && e.target.classList.contains("modal-backdrop")) {
+    // Hanya kalau tekanannya juga DIMULAI di latar. Menyeret seleksi teks dari
+    // dalam kolom lalu melepasnya di latar memicu `click` di latar, dan dulu
+    // itu menutup modal Pengguna/Impor/Massal beserta isinya tanpa bertanya.
+    if (e.target.classList && e.target.classList.contains("modal-backdrop") && tekanAwal === e.target) {
       requestCloseModal(e.target);
       return;
     }
@@ -6104,7 +6172,10 @@ function bindEvents() {
     }
     if (mod && key === "k") { e.preventDefault(); openPalette(""); return; }
     if (mod && key === "s") { e.preventDefault(); saveNow(); return; }
-    if (mod && key === "z") {
+    // Di dalam kolom teks, Ctrl+Z milik peramban: urung ketikan di kolom itu.
+    // Dulu pintasan ini merebutnya dan malah membatalkan perubahan katalog
+    // terakhir — bisa item lain — lalu menyimpannya diam-diam.
+    if (mod && key === "z" && !typing) {
       e.preventDefault();
       applyHistory(e.shiftKey ? 1 : -1);
       return;
@@ -7383,13 +7454,18 @@ async function jalankanPembaruanSekarang() {
 /** Menanyakan kabar ke server selama putaran masih berjalan. */
 function mulaiPollPembaruan() {
   if (pembaruanTimer) return;
+  let sedangTanya = false;
   pembaruanTimer = setInterval(async () => {
+    // Jawaban lambat tidak boleh ditumpuk giliran berikutnya — dua jawaban
+    // "selesai" berarti dua kali memuat ulang dokumen.
+    if (sedangTanya) return;
     const masihJalan = pembaruan && pembaruan.jalan;
     if (!masihJalan) {
       clearInterval(pembaruanTimer);
       pembaruanTimer = null;
       return;
     }
+    sedangTanya = true;
     try {
       const res = await fetch("/api/pembaruan");
       const data = await res.json();
@@ -7400,6 +7476,8 @@ function mulaiPollPembaruan() {
       }
     } catch {
       /* gangguan jaringan — coba lagi di giliran berikutnya */
+    } finally {
+      sedangTanya = false;
     }
   }, 4000);
 }
@@ -7569,13 +7647,18 @@ async function tulisArtikelSekarang() {
 /** Menanyakan kabar ke server selama penulisan masih berjalan. */
 function mulaiPollArtikelAuto() {
   if (artikelAutoTimer) return;
+  let sedangTanya = false;
   artikelAutoTimer = setInterval(async () => {
+    // Jawaban lambat tidak boleh ditumpuk giliran berikutnya — dua jawaban
+    // "selesai" berarti dua kali memuat ulang dokumen.
+    if (sedangTanya) return;
     const masihJalan = artikelAuto && artikelAuto.jalan;
     if (!masihJalan) {
       clearInterval(artikelAutoTimer);
       artikelAutoTimer = null;
       return;
     }
+    sedangTanya = true;
     try {
       const res = await fetch("/api/artikel-auto");
       const data = await res.json();
@@ -7586,6 +7669,8 @@ function mulaiPollArtikelAuto() {
       }
     } catch {
       /* gangguan jaringan — coba lagi di giliran berikutnya */
+    } finally {
+      sedangTanya = false;
     }
   }, 4000);
 }
@@ -7716,13 +7801,18 @@ async function segarkanArtikelSekarang() {
 /** Menanyakan kabar ke server selama penyegaran masih berjalan. */
 function mulaiPollArtikelSegar() {
   if (artikelSegarTimer) return;
+  let sedangTanya = false;
   artikelSegarTimer = setInterval(async () => {
+    // Jawaban lambat tidak boleh ditumpuk giliran berikutnya — dua jawaban
+    // "selesai" berarti dua kali memuat ulang dokumen.
+    if (sedangTanya) return;
     const masihJalan = artikelSegar && artikelSegar.jalan;
     if (!masihJalan) {
       clearInterval(artikelSegarTimer);
       artikelSegarTimer = null;
       return;
     }
+    sedangTanya = true;
     try {
       const res = await fetch("/api/artikel-segar");
       const data = await res.json();
@@ -7733,6 +7823,8 @@ function mulaiPollArtikelSegar() {
       }
     } catch {
       /* gangguan jaringan — coba lagi di giliran berikutnya */
+    } finally {
+      sedangTanya = false;
     }
   }, 4000);
 }
@@ -9424,6 +9516,29 @@ async function checkUpdateBadge() {
   } catch {
     /* Titik penanda bersifat pelengkap; diamkan kalau GitHub tak terjangkau. */
   }
+}
+
+/**
+ * Keluar, tapi simpan dulu. Sesi dihapus SEBELUM peringatan `beforeunload`
+ * sempat muncul, jadi ketikan dalam jendela simpan otomatis (1,2 detik) dulu
+ * hilang begitu saja — dan memilih "tetap di sini" meninggalkan sesi mati.
+ */
+async function keluarPanel() {
+  if (dirty || savingNow) {
+    await saveNow();
+    for (let i = 0; i < 50 && savingNow; i++) await new Promise((r) => setTimeout(r, 100));
+    if (dirty) {
+      const ok = await confirmDialog({
+        title: t("confirm.logoutDirtyTitle"),
+        text: t("confirm.logoutDirtyText"),
+        okText: t("topbar.logout"),
+        tone: "warning",
+      });
+      if (!ok) return;
+    }
+  }
+  dirty = false; // supaya beforeunload tidak bertanya lagi sesudah dijawab
+  fetch("/api/auth/logout", { method: "POST" }).finally(() => { location.href = "/admin/login"; });
 }
 
 /** Menyembunyikan menu yang tidak boleh diakses peran ini. */

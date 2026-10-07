@@ -609,6 +609,8 @@ export default {
   "confirm.discardTitle": "Close without saving?",
   "confirm.discardText": "Changes in this form will be lost.",
   "confirm.discardOk": "Close without saving",
+  "confirm.logoutDirtyTitle": "Log out without saving?",
+  "confirm.logoutDirtyText": "Some changes could not be saved and will be lost if you log out now.",
   "confirm.deleteTitle": "Delete item?",
   "confirm.deleteText": "“{name}” will be removed from {col}.",
   "confirm.deleteBulkTitle": "Delete selected items?",
@@ -639,6 +641,7 @@ export default {
   "toast.deletedBulk": "{n} items deleted",
   "toast.deleteUndone": "Deletion undone",
   "toast.undo": "Undo",
+  "toast.retry": "Retry",
   "toast.updatedBulk": "{n} items updated",
   "toast.itemGone": "That item is gone — it may have been deleted",
   "toast.fixRedFields": "Fill in the fields marked in red",
@@ -861,6 +864,7 @@ export default {
   "conflict.reload": "Load the latest content",
   "conflict.overwritten": "Your changes were saved, replacing the previous version.",
   "conflict.reloaded": "The latest content is loaded. Your unsaved changes were discarded.",
+  "conflict.dismissed": "Your changes are still here and unsaved. Save again (Ctrl+S) to choose.",
   "err.nameRequired": "Name is required.",
   "err.usernameShort": "Username must be at least 3 characters.",
   "err.usernameTaken": "That username is already taken.",
@@ -1320,6 +1324,7 @@ export default {
   "err.ai.deepseekBermasalah": "DeepSeek is having trouble on its end. Try again shortly.",
   "err.ai.ditolak": "DeepSeek refused this request.",
   "err.ai.jawabanTidakTerbaca": "The reply from DeepSeek could not be read. Try again.",
+  "err.ai.tanpaSumber": "The draft was discarded because the AI did not include a single valid source.",
   "err.ai.terlaluSering": "Too many attempts. Try again in {detik} seconds.",
 
   /* ---------- AI research ---------- */

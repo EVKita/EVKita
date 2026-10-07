@@ -661,6 +661,8 @@ export default {
   "confirm.discardTitle": "Tutup tanpa menyimpan?",
   "confirm.discardText": "Perubahan pada formulir ini akan hilang.",
   "confirm.discardOk": "Tutup tanpa simpan",
+  "confirm.logoutDirtyTitle": "Keluar tanpa menyimpan?",
+  "confirm.logoutDirtyText": "Ada perubahan yang gagal tersimpan dan akan hilang kalau Anda keluar sekarang.",
   "confirm.deleteTitle": "Hapus item?",
   "confirm.deleteText": "“{name}” akan dihapus dari {col}.",
   "confirm.deleteBulkTitle": "Hapus item terpilih?",
@@ -691,6 +693,7 @@ export default {
   "toast.deletedBulk": "{n} item dihapus",
   "toast.deleteUndone": "Penghapusan diurungkan",
   "toast.undo": "Urungkan",
+  "toast.retry": "Coba lagi",
   "toast.updatedBulk": "{n} item diperbarui",
   "toast.itemGone": "Item itu tidak ada lagi — mungkin sudah dihapus",
   "toast.fixRedFields": "Lengkapi field yang ditandai merah",
@@ -915,6 +918,7 @@ export default {
   "conflict.reload": "Muat ulang isi terbaru",
   "conflict.overwritten": "Perubahanmu disimpan, menimpa versi sebelumnya.",
   "conflict.reloaded": "Isi terbaru dimuat. Perubahanmu yang belum tersimpan dibuang.",
+  "conflict.dismissed": "Perubahan Anda masih ada dan belum tersimpan. Simpan lagi (Ctrl+S) untuk memilih.",
   "err.nameRequired": "Nama wajib diisi.",
   "err.usernameShort": "Nama pengguna minimal 3 karakter.",
   "err.usernameTaken": "Nama pengguna itu sudah dipakai.",
@@ -1384,6 +1388,7 @@ export default {
   "err.ai.deepseekBermasalah": "DeepSeek sedang bermasalah di sisinya. Coba lagi beberapa saat lagi.",
   "err.ai.ditolak": "DeepSeek menolak permintaan ini.",
   "err.ai.jawabanTidakTerbaca": "Jawaban dari DeepSeek tidak bisa dibaca. Coba lagi.",
+  "err.ai.tanpaSumber": "Draf dibuang karena AI tidak menyertakan satu pun sumber yang sah.",
   "err.ai.terlaluSering": "Terlalu banyak percobaan. Coba lagi dalam {detik} detik.",
 
   /* ---------- Riset AI ---------- */

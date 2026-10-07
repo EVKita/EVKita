@@ -608,6 +608,8 @@ export default {
   "confirm.discardTitle": "不保存就关闭？",
   "confirm.discardText": "此表单中的更改将会丢失。",
   "confirm.discardOk": "不保存并关闭",
+  "confirm.logoutDirtyTitle": "不保存就退出？",
+  "confirm.logoutDirtyText": "有些更改未能保存，现在退出将会丢失。",
   "confirm.deleteTitle": "删除此条目？",
   "confirm.deleteText": "“{name}”将从{col}中删除。",
   "confirm.deleteBulkTitle": "删除已选条目？",
@@ -638,6 +640,7 @@ export default {
   "toast.deletedBulk": "已删除 {n} 个条目",
   "toast.deleteUndone": "删除已撤销",
   "toast.undo": "撤销",
+  "toast.retry": "重试",
   "toast.updatedBulk": "已更新 {n} 个条目",
   "toast.itemGone": "该条目已不存在 — 可能已被删除",
   "toast.fixRedFields": "请补全标红的字段",
@@ -860,6 +863,7 @@ export default {
   "conflict.reload": "载入最新内容",
   "conflict.overwritten": "你的修改已保存，并替换了先前的版本。",
   "conflict.reloaded": "已载入最新内容。你尚未保存的修改已丢弃。",
+  "conflict.dismissed": "您的更改仍在，但尚未保存。再次保存（Ctrl+S）以做出选择。",
   "err.nameRequired": "姓名为必填项。",
   "err.usernameShort": "用户名至少 3 个字符。",
   "err.usernameTaken": "该用户名已被占用。",
@@ -1319,6 +1323,7 @@ export default {
   "err.ai.deepseekBermasalah": "DeepSeek 端出现故障。请稍后再试。",
   "err.ai.ditolak": "DeepSeek 拒绝了此请求。",
   "err.ai.jawabanTidakTerbaca": "无法解析 DeepSeek 的回复。请重试。",
+  "err.ai.tanpaSumber": "草稿已丢弃，因为 AI 没有提供任何有效来源。",
   "err.ai.terlaluSering": "尝试次数过多。请在 {detik} 秒后再试。",
 
   /* ---------- AI 检索 ---------- */

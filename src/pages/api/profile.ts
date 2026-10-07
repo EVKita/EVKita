@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { currentUser, makeSession, LOCALE_COOKIE, SESSION_COOKIE } from "../../lib/auth";
+import { currentUser, issueFreshCookie, LOCALE_COOKIE } from "../../lib/auth";
 import {
   hashPassword,
   publicUser,
@@ -16,24 +16,6 @@ import { json, apiError, unauthorized } from "../../lib/api";
 
 const USERNAME_RE = /^[A-Za-z0-9._]+$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/**
- * Menerbitkan ulang cookie sesi setelah pencabutan.
- *
- * Pencabutan mematikan SEMUA sesi milik akun ini, termasuk yang sedang dipakai
- * orang yang menekan tombolnya. Tanpa cookie baru, mengganti kata sandi sendiri
- * akan langsung melempar pelakunya ke halaman masuk — perilaku yang terasa
- * seperti kegagalan, bukan keberhasilan.
- */
-function issueFreshCookie(cookies: any, userId: string, url: URL): void {
-  cookies.set(SESSION_COOKIE, makeSession(userId), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    secure: url.protocol === "https:",
-    maxAge: 60 * 60 * 24 * 7,
-  });
-}
 
 /**
  * Pengaturan akun sendiri. Dipisah per `section` supaya satu formulir yang

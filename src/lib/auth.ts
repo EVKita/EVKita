@@ -163,3 +163,21 @@ export function currentUser(cookies: CookieJar): User | null {
 export function isAuthed(cookies: CookieJar): boolean {
   return !!currentUser(cookies);
 }
+
+/**
+ * Menerbitkan ulang cookie sesi setelah pencabutan.
+ *
+ * Pencabutan mematikan SEMUA sesi milik akun ini, termasuk yang sedang dipakai
+ * orang yang menekan tombolnya. Tanpa cookie baru, mengganti kata sandi sendiri
+ * akan langsung melempar pelakunya ke halaman masuk — perilaku yang terasa
+ * seperti kegagalan, bukan keberhasilan.
+ */
+export function issueFreshCookie(cookies: any, userId: string, url: URL): void {
+  cookies.set(SESSION_COOKIE, makeSession(userId), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: url.protocol === "https:",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
