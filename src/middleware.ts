@@ -139,8 +139,51 @@ function alamatKlien(context: Parameters<MiddlewareHandler>[0]): string {
   }
 }
 
-export const onRequest: MiddlewareHandler = async (context, next) => {
-  // Bahasa situs publik, dari cookie pilihan pembaca. Dipakai halaman dan
+/**
+ * Jaring pengaman penjadwalan: interval sekali per proses.
+ *
+ * Semua `jadwalkan*()` di atas juga dipanggil di setiap permintaan — tapi
+ * kalau tidak ada kunjungan yang sampai ke Node (mis. halaman disajikan dari
+ * cache reverse proxy, atau lalu lintas sepi), penarikan harian tidak pernah
+ * terpicu dan Berita Terkini membeku di tanggal lama tanpa satu pun galat.
+ * Interval ini memastikan putaran tetap dicoba tiap 10 menit apa pun yang
+ * terjadi di lalu lintas. Idempoten: tiap mesin menjaga dirinya lewat
+ * berkas jadwalnya sendiri ("sekali sehari", "sejam sekali"), jadi
+ * pemanggilan ganda tidak pernah menarik dua kali.
+ *
+ * `unref()` itu wajib, bukan hiasan: modul ini ikut dimuat saat `astro build`
+ * (prerender), dan interval tanpa unref menahan proses build selamanya.
+ * Penanda `globalThis` mencegah interval ganda saat HMR memuat ulang modul
+ * di `astro dev`.
+ */
+const INTERVAL_PENJADWAL_MS = 10 * 60 * 1000;
+function mulaiPenjadwalInterval(): void {
+  try {
+    const g = globalThis as any;
+    if (g.__evkitaPenjadwalJalan) return;
+    g.__evkitaPenjadwalJalan = true;
+    const timer = setInterval(() => {
+      try {
+        jadwalkanBerita();
+        jadwalkanArtikel();
+        jadwalkanSegar();
+        jadwalkanModelBaru();
+        jadwalkanPeluncuran();
+        jadwalkanPembaruan();
+        jadwalkanPantauan();
+      } catch {
+        /* tidak ada yang boleh menjatuhkan proses */
+      }
+    }, INTERVAL_PENJADWAL_MS);
+    const t = timer as any;
+    if (t && typeof t.unref === "function") t.unref();
+  } catch {
+    /* penjadwal yang gagal mulai bukan alasan menjatuhkan apa pun */
+  }
+}
+mulaiPenjadwalInterval();
+
+export const onRequest: MiddlewareHandler = async (context, next) => {  // Bahasa situs publik, dari cookie pilihan pembaca. Dipakai halaman dan
   // komponen lewat `Astro.locals.pubLang` tanpa harus diteruskan sebagai prop.
   context.locals.pubLang = normalizePubLocale(context.cookies.get(PUB_COOKIE)?.value);
 

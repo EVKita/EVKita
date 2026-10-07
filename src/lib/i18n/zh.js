@@ -177,6 +177,7 @@ export default {
   "toast.beritaTarik": "已添加 {n} 条新闻。",
   "toast.beritaKosong": "来源暂时没有新新闻。",
   "toast.beritaGagal": "更新新闻失败。",
+  "toast.beritaGagalSumber": "更新新闻失败——以下来源无响应：{daftar}。",
   "dash.quick.site": "网站设置",
   "dash.quick.viewSite": "查看网站",
   "dash.score.title": "数据完整度",

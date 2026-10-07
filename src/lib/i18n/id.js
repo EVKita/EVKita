@@ -189,6 +189,7 @@ export default {
   "toast.beritaTarik": "{n} berita baru ditambahkan.",
   "toast.beritaKosong": "Belum ada berita baru dari sumber.",
   "toast.beritaGagal": "Gagal memperbarui berita.",
+  "toast.beritaGagalSumber": "Gagal memperbarui berita — sumber mati: {daftar}.",
   "dash.quick.site": "Pengaturan Situs",
   "dash.quick.viewSite": "Lihat Situs",
   "dash.score.title": "Kelengkapan data",

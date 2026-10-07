@@ -9027,7 +9027,15 @@ async function perbaruiBeritaPanel() {
   try {
     const res = await fetch("/api/berita", { method: "POST" });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) { toast(t("toast.beritaGagal"), "error"); return; }
+    if (!res.ok || !data.ok) {
+      /* Galat 502 dari server membawa daftar sumber yang mati — tampilkan
+         supaya pemilik tahu apanya yang rusak tanpa membuka SSH. */
+      const daftar = Array.isArray(data.gagal) && data.gagal.length
+        ? data.gagal.join(", ")
+        : (typeof data.error === "string" && data.error ? data.error : "");
+      toast(daftar ? t("toast.beritaGagalSumber", { daftar }) : t("toast.beritaGagal"), "error");
+      return;
+    }
     if (data.ditambah > 0) {
       toast(t("toast.beritaTarik", { n: data.ditambah }), "success");
       await muatUlangKonten();

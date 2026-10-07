@@ -178,6 +178,7 @@ export default {
   "toast.beritaTarik": "{n} new articles added.",
   "toast.beritaKosong": "No new articles from sources yet.",
   "toast.beritaGagal": "Failed to refresh news.",
+  "toast.beritaGagalSumber": "Failed to refresh news — dead sources: {daftar}.",
   "dash.quick.site": "Site Settings",
   "dash.quick.viewSite": "View Site",
   "dash.score.title": "Data completeness",
