@@ -82,6 +82,11 @@ const texts = {
   doneReauth: t("update.doneReauth"),
   doneReauthNote: t("update.doneReauthNote"),
   cannotStart: t("update.cannotStart"),
+  galat: {
+    "err.update.noDeploy": t("err.update.noDeploy"),
+    "err.update.running": t("err.update.running"),
+    "err.forbidden": t("err.forbidden"),
+  },
   cannotReach: t("update.cannotReach"),
   confirmTitle: t("update.confirmTitle"),
   confirmInstall: t("update.confirmInstall"),
@@ -112,6 +117,12 @@ const texts = {
       <div class="topbar-heading">
         <span class="topbar-heading-eyebrow">{t("topbar.adminPanel")}</span>
         <strong>{t("update.title")}</strong>
+      </div>
+
+      <div class="topbar-search">
+        <svg class="topbar-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="shell-search" type="search" placeholder={t("topbar.searchPlaceholder")} autocomplete="off" aria-label={t("topbar.searchLabel")} />
+        <span class="kbd">⌘K</span>
       </div>
 
       <div class="topbar-right">
@@ -573,7 +584,7 @@ const texts = {
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok) {
-            return finish(false, data.error || texts.cannotStart);
+            return finish(false, (data.errorKey && texts.galat[data.errorKey]) || data.error || texts.cannotStart);
           }
         } catch {
           return finish(false, texts.cannotReach);

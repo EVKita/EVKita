@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 import { currentUser } from "../../lib/auth";
 import { can } from "../../lib/users";
 import { logActivity } from "../../lib/activity";
+import { apiError } from "../../lib/api";
 import { getEnv, writeEnvFile } from "../../lib/env";
 
 /**
@@ -172,14 +173,11 @@ export const POST: APIRoute = ({ cookies }) => {
   if (!can(me, "update")) return json({ ok: false, errorKey: "err.forbidden", error: "Forbidden" }, 403);
 
   if (!fs.existsSync(deployScript())) {
-    return json(
-      { ok: false, error: "deploy.sh tidak ditemukan. Pembaruan otomatis hanya tersedia pada instalasi dari paket rilis." },
-      400,
-    );
+    return apiError("err.update.noDeploy", 400);
   }
 
   if (currentState().state === "running") {
-    return json({ ok: false, error: "Pembaruan sedang berjalan." }, 409);
+    return apiError("err.update.running", 409);
   }
 
   fs.mkdirSync(stateDir(), { recursive: true });

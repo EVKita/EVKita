@@ -22,7 +22,9 @@ export const POST: APIRoute = async ({ request, cookies, url, clientAddress }) =
   }
   const credential = String(body?.credential || "");
 
-  const keys = [clientKey(request, clientAddress), "member-google"];
+  // Hanya per alamat: kunci bersama "member-google" dulu membuat 8 token buruk
+  // dari SIAPA PUN mengunci login Google untuk SEMUA pengunjung 15 menit.
+  const keys = [clientKey(request, clientAddress)];
   const limit = checkLimit(keys);
   if (limit.blocked) return json({ ok: false }, 429, { "Retry-After": String(limit.retryAfter) });
 

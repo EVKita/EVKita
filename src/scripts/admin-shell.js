@@ -1,7 +1,7 @@
 /**
  * Perilaku kerangka panel admin untuk halaman yang TIDAK memuat admin.js
- * (saat ini hanya /admin/update): buka-tutup sidebar, ingat lebar pilihan
- * terakhir, dan tombol keluar.
+ * (Integrasi, Kontak, Pembaruan): buka-tutup sidebar, ingat lebar pilihan
+ * terakhir, tombol keluar, kotak cari, dan sorotan `#jangkar`.
  *
  * admin.js punya salinan logika yang sama untuk /admin. Sengaja tidak
  * dipakai bersama karena berkas itu ikut memuat seluruh CMS — halaman
@@ -47,7 +47,35 @@ window.evkitaKonfirmasi = konfirmasi;
     }
   });
 
+  /* Pencarian. Halaman ini tidak memuat palet (ia butuh seluruh CMS), jadi
+     kotak cari dan Ctrl/⌘+K mengantar ke /admin, yang membuka paletnya dengan
+     kata yang sama. */
+  const keCari = (q) => { location.href = "/admin?cari=" + encodeURIComponent(q || ""); };
+  const kotakCari = document.getElementById("shell-search");
+  if (kotakCari) {
+    kotakCari.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); keCari(kotakCari.value.trim()); }
+    });
+  }
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && app.classList.contains("sidebar-open")) app.classList.remove("sidebar-open");
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === "k") {
+      e.preventDefault();
+      if (kotakCari) kotakCari.focus();
+      else keCari("");
+    }
   });
+
+  /* Butir pencarian pengaturan membuka halaman ini dengan `#jangkar`;
+     bagiannya digulir ke tengah dan disorot sebentar supaya mata langsung
+     menemukannya. */
+  const jangkar = location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+  if (jangkar) {
+    requestAnimationFrame(() => {
+      jangkar.scrollIntoView({ block: "start", behavior: "smooth" });
+      jangkar.classList.add("cari-sorot");
+      setTimeout(() => jangkar.classList.remove("cari-sorot"), 2200);
+    });
+  }
 })();

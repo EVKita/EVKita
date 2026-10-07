@@ -16,6 +16,13 @@
   --adm-surface: color-mix(in srgb, var(--text) 4%, transparent);
   --adm-surface-2: color-mix(in srgb, var(--text) 7%, transparent);
   --adm-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 32%, transparent);
+  /* Cincin fokus papan ketik: celah selebar 2px berwarna kartu, lalu garis
+     aksen penuh. Lebih tegas daripada --adm-ring, dan tetap terlihat di atas
+     tombol beraksen yang latarnya sewarna dengan cincinnya sendiri. */
+  --adm-focus: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--accent-ink, var(--accent));
+  /* Tinggi seragam untuk kolom teks, pilihan, dan tombol standar. */
+  --adm-field-h: 40px;
+  --adm-label: color-mix(in srgb, var(--text) 82%, var(--text-muted));
   --adm-shadow-sm: 0 1px 2px rgba(16, 19, 25, 0.06);
   --adm-shadow-md: 0 4px 16px rgba(16, 19, 25, 0.08);
   --adm-shadow-lg: 0 24px 60px rgba(16, 19, 25, 0.22);
@@ -142,7 +149,8 @@
   height: var(--adm-top);
   padding: 0 16px;
   background: var(--header-bg, var(--bg-card));
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  backdrop-filter: saturate(1.4) blur(14px);
   border-bottom: 1px solid var(--border);
 }
 
@@ -215,10 +223,8 @@
 }
 
 .topbar-heading-eyebrow {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 11.5px;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
@@ -323,18 +329,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 18px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border);
 }
 
 .panel-title {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   letter-spacing: -0.2px;
+  line-height: 1.35;
 }
 
 .panel-body {
-  padding: 18px;
+  padding: 20px;
 }
 
 .sub-head {
@@ -372,17 +379,20 @@
   margin-bottom: 10px;
 }
 
+/* Judul kelompok: huruf biasa, bukan kapital semua — lebih cepat dibaca, dan
+   cukup dibedakan dari item lewat ukuran dan warna redupnya. */
 .nav-group-label {
-  padding: 8px 10px 4px;
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  padding: 10px 12px 4px;
+  font-size: 11.5px;
+  font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -409,12 +419,28 @@
 
 .nav-item:focus-visible {
   outline: none;
-  box-shadow: var(--adm-ring);
+  box-shadow: var(--adm-focus);
 }
 
-.nav-item.active {
+.nav-item.active,
+.nav-item[aria-current="page"] {
   background: var(--accent-soft);
   color: var(--accent-ink, var(--accent));
+  font-weight: 700;
+}
+
+/* Bilah aksen tipis di tepi kiri item aktif: penanda posisi yang tetap
+   terbaca walau latar lembutnya nyaris tak terlihat di mode gelap. */
+.nav-item.active::before,
+.nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent-ink, var(--accent));
 }
 
 .nav-item.active .nav-item-icon {
@@ -518,7 +544,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 38px;
+  min-height: var(--adm-field-h);
   padding: 8px 16px;
   border: 1px solid transparent;
   border-radius: var(--adm-r);
@@ -545,7 +571,7 @@
 
 .btn:focus-visible {
   outline: none;
-  box-shadow: var(--adm-ring);
+  box-shadow: var(--adm-focus);
 }
 
 .btn svg {
@@ -564,6 +590,13 @@
 .btn-primary:hover {
   background: var(--accent-grad);
   filter: brightness(1.07);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+/* Bayangan bercahaya tombol utama ditumpuk di bawah cincin fokus, supaya
+   fokusnya tidak hilang di balik bayangan sendiri. */
+.btn-primary:focus-visible {
+  box-shadow: var(--adm-focus), 0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .btn-ghost {
@@ -581,7 +614,8 @@
   color: var(--text);
 }
 
-.btn-outline:hover {
+.btn-outline:hover,
+.btn-outline[aria-expanded="true"] {
   border-color: var(--accent-ink, var(--accent));
   color: var(--accent-ink, var(--accent));
   background: var(--accent-soft);
@@ -612,8 +646,8 @@
 }
 
 .btn-icon {
-  width: 38px;
-  min-height: 38px;
+  width: var(--adm-field-h);
+  min-height: var(--adm-field-h);
   padding: 0;
   background: transparent;
   color: var(--text-muted);
@@ -640,12 +674,14 @@
 }
 
 .btn[disabled],
-.btn:disabled {
-  opacity: 0.5;
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
   cursor: not-allowed;
   pointer-events: none;
-  filter: none;
+  filter: grayscale(0.35);
   box-shadow: none;
+  transform: none;
 }
 
 .kbd {
@@ -700,7 +736,7 @@
 
 .search-input {
   width: 100%;
-  height: 38px;
+  height: var(--adm-field-h);
   padding: 0 14px;
   border: 1px solid var(--border);
   border-radius: var(--adm-r);
@@ -714,6 +750,10 @@
 
 .search-input::-webkit-search-cancel-button {
   -webkit-appearance: none;
+}
+
+.search-input:hover {
+  border-color: color-mix(in srgb, var(--text) 20%, var(--border));
 }
 
 .search-input:focus {
@@ -834,6 +874,11 @@
 .item-row:hover {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
   box-shadow: var(--adm-shadow-md);
+}
+
+.item-row:focus-visible {
+  outline: none;
+  border-color: var(--accent-ink, var(--accent));
 }
 
 .item-row.selected {
@@ -1220,13 +1265,13 @@
 .field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 18px 16px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   min-width: 0;
 }
 
@@ -1234,12 +1279,31 @@
   grid-column: 1 / -1;
 }
 
+/* Label ditulis dengan huruf biasa: label kapital kecil-kecil memang rapi,
+   tapi lebih lambat dibaca — terutama untuk label panjang dan dalam bahasa
+   Mandarin, yang tidak punya huruf kapital sama sekali. */
 .field label {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--adm-label);
+  letter-spacing: 0;
+}
+
+/* `.field label` lebih spesifik daripada `.switch-row` / `.check-row`, jadi
+   tanpa ini saklar di dalam field ikut mengecil dan meredup seperti label. */
+.field .switch-row,
+.field .check-row {
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.field .switch-row {
+  font-weight: 600;
+}
+
+.field .check-row {
+  font-weight: 500;
 }
 
 .field input,
@@ -1249,13 +1313,15 @@
 .editor-section select,
 .editor-section textarea {
   width: 100%;
-  padding: 10px 12px;
+  min-height: var(--adm-field-h);
+  padding: 9px 12px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--adm-r);
   color: var(--text);
   font: inherit;
   font-size: 14px;
+  line-height: 1.4;
   outline: none;
   transition: border-color var(--adm-t), box-shadow var(--adm-t), background var(--adm-t);
 }
@@ -1277,6 +1343,25 @@
   border-color: var(--accent-ink, var(--accent));
   box-shadow: var(--adm-ring);
   background: var(--bg-card);
+}
+
+/* Kolom yang tidak bisa diubah harus terlihat begitu sebelum diklik. */
+.field input:disabled,
+.field select:disabled,
+.field textarea:disabled,
+.field input[readonly],
+.field textarea[readonly] {
+  background: var(--adm-surface);
+  border-color: var(--border);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.field input:disabled,
+.field select:disabled,
+.field textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
 }
 
 .field select {
@@ -1307,9 +1392,16 @@
 }
 
 .field .hint {
-  font-size: 11.5px;
+  font-size: 12.5px;
   line-height: 1.5;
   color: var(--text-muted);
+  max-width: 72ch;
+}
+
+.field .hint a,
+.form-section > .hint a {
+  color: var(--accent-ink, var(--accent));
+  font-weight: 600;
 }
 
 .field.has-error input,
@@ -1324,7 +1416,7 @@
 }
 
 .error-text {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--danger);
 }
@@ -1533,13 +1625,15 @@
 .switch-row {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
+  gap: 12px;
+  min-height: 46px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: var(--adm-r);
   background: var(--bg);
   font-size: 13.5px;
   font-weight: 600;
+  line-height: 1.4;
   color: var(--text);
   text-transform: none;
   letter-spacing: 0;
@@ -1549,6 +1643,22 @@
 
 .switch-row:hover {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+/* Saklar yang menyala memberi tanda tipis ke seluruh barisnya, supaya
+   keadaan lima saklar sekaligus bisa dibaca sekilas. */
+.switch-row:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+}
+
+.switch-row:has(input:focus-visible) {
+  border-color: var(--accent-ink, var(--accent));
+}
+
+.switch-row:has(input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .switch-row input[type="checkbox"] {
@@ -1590,7 +1700,7 @@
 }
 
 .switch-row input[type="checkbox"]:focus-visible + .switch {
-  box-shadow: var(--adm-ring);
+  box-shadow: var(--adm-focus);
 }
 
 /* Pemilih warna */
@@ -1622,6 +1732,7 @@
 .range-field input[type="range"] {
   width: 100%;
   height: 22px;
+  min-height: 0;
   padding: 0;
   border: none;
   background: transparent;
@@ -1681,26 +1792,38 @@
   border: 1px solid var(--border);
   border-radius: var(--adm-r-lg);
   box-shadow: var(--adm-shadow-sm);
-  padding: 18px;
+  /* Jarak tepi disimpan di variabel: garis bawah kepala bagian menjangkau
+     tepi ke tepi kartu dengan margin negatif selebar jarak itu. */
+  --fs-pad: 22px;
+  padding: 20px var(--fs-pad) 22px;
   margin-bottom: 16px;
 }
 
 .form-section-head {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin: 0 calc(-1 * var(--fs-pad, 0px)) 20px;
+  padding: 0 var(--fs-pad, 0px) 16px;
   border-bottom: 1px solid var(--border);
 }
 
 .form-section-head h2 {
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 700;
   letter-spacing: -0.2px;
+  line-height: 1.3;
 }
 
 .form-section-head p {
-  margin-top: 3px;
-  font-size: 12.5px;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--text-muted);
+  max-width: 68ch;
+}
+
+/* Isi bebas setelah kisi field (daftar langkah, catatan, tautan) diberi
+   jarak yang sama dengan jarak antar-field. */
+.form-section > .field-grid + * {
+  margin-top: 18px;
 }
 
 /* Bilah simpan yang lengket di bawah viewport. */
@@ -1933,7 +2056,8 @@
   padding: 40px 16px;
   overflow-y: auto;
   background: rgba(9, 11, 15, 0.55);
-  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   overscroll-behavior: contain;
 }
 
@@ -2064,7 +2188,7 @@ html.modal-open {
 
 .modal-close:focus-visible {
   outline: none;
-  box-shadow: var(--adm-ring);
+  box-shadow: var(--adm-focus);
 }
 
 .modal-body {
@@ -3110,7 +3234,7 @@ html.modal-open {
 
 .fab:focus-visible {
   outline: none;
-  box-shadow: var(--adm-ring), var(--adm-shadow-lg);
+  box-shadow: var(--adm-focus), var(--adm-shadow-lg);
 }
 
 .fab[hidden] {
@@ -3954,7 +4078,8 @@ body:has(.modal-backdrop.open) .fab {
   }
 
   .form-section {
-    padding: 14px;
+    --fs-pad: 14px;
+    padding: 16px var(--fs-pad);
   }
 
   .form-actions {
@@ -3967,6 +4092,59 @@ body:has(.modal-backdrop.open) .fab {
 
   .media-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  /* Pengaman gulir samping: isi yang kebablasan (kode panjang, tabel) harus
+     menggulir di wadahnya sendiri, bukan menggeser seluruh halaman.
+     `clip` dipilih ketimbang `hidden` karena tidak mematikan `sticky`. */
+  .admin-main {
+    overflow-x: clip;
+  }
+
+  /* Sasaran sentuh minimal ±44px untuk navigasi dan tombol. */
+  .nav-item {
+    min-height: 44px;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    min-height: 38px;
+  }
+
+  .btn-icon {
+    width: 44px;
+  }
+
+  .btn-icon.btn-sm {
+    width: 38px;
+    min-height: 38px;
+  }
+
+  .view-sub {
+    font-size: 13px;
+  }
+
+  .field-grid {
+    gap: 16px;
+  }
+
+  .switch-row {
+    min-height: 50px;
+  }
+
+  .integrasi-head {
+    flex-wrap: wrap;
+  }
+
+  .integrasi-head > div {
+    flex-basis: calc(100% - 60px);
+  }
+
+  .integrasi-status {
+    margin-left: 50px;
   }
 }
 
@@ -4680,6 +4858,7 @@ body:has(.modal-backdrop.open) .fab {
 .editor-section input[type="radio"] {
   width: 17px;
   height: 17px;
+  min-height: 0;
   padding: 0;
   flex: none;
   accent-color: var(--accent-ink, var(--accent));
@@ -5274,6 +5453,7 @@ body:has(.modal-backdrop.open) .fab {
    bagian tidak membatalkan bagian lain yang sudah benar. */
 .view[data-view="profile"] .form-section {
   margin-bottom: var(--adm-gap);
+  --fs-pad: 20px;
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: var(--adm-r-lg);
@@ -6681,25 +6861,239 @@ body:has(.modal-backdrop.open) .fab {
   border-bottom: 1px solid var(--border);
 }
 
-/* --- Palet perintah --- */
+/* --- Palet perintah ---
+   Dibangun admin.js sebagai `.modal-backdrop#search-palette` berisi satu
+   `.modal`. Di sini ia dibentuk ulang menjadi palet perintah: muncul di
+   sepertiga atas layar, kolom ketik besar menempel di atas, dan baris hasil
+   rata tanpa kartu — satu baris disorot penuh saat dipilih dengan panah
+   (`.is-active`) atau disentuh tetikus. */
+#search-palette {
+  align-items: flex-start;
+  padding-top: min(12vh, 96px);
+  background: rgba(9, 11, 15, 0.45);
+}
+
+#search-palette .modal {
+  max-width: 640px;
+  margin: 0 auto;
+  max-height: min(560px, calc(100dvh - 2 * min(12vh, 96px)));
+  border-radius: 18px;
+}
+
+/* Judul "Cari" tidak perlu ruang sebesar judul dialog biasa: kolom ketiknya
+   sudah menjelaskan dirinya. Kepala dipadatkan jadi satu baris tipis. */
+#search-palette .modal-head {
+  padding: 10px 12px 0 18px;
+  border-bottom: none;
+  align-items: center;
+}
+
+#search-palette .modal-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+#search-palette .modal-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+
+#search-palette .search-input {
+  flex: none;
+  width: auto;
+  height: 54px;
+  margin: 6px 12px 0;
+  padding: 0 14px 0 44px;
+  border-radius: var(--adm-r);
+  border-color: transparent;
+  background-color: var(--adm-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 15px center;
+  background-size: 18px;
+  font-size: 16.5px;
+  font-weight: 500;
+}
+
+#search-palette .search-input:focus {
+  border-color: transparent;
+  box-shadow: none;
+  background-color: var(--adm-surface-2);
+}
+
+#search-palette .item-list {
+  flex: 1;
+  min-height: 0;
+  gap: 1px;
+  margin-top: 10px;
+  padding: 4px 8px 10px;
+  border-top: 1px solid var(--border);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+#search-palette .item-row {
+  position: relative;
+  gap: 12px;
+  min-height: 44px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: var(--adm-r-sm);
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  scroll-margin: 8px 0;
+  transition: background 90ms ease;
+}
+
+#search-palette .item-row:hover {
+  background: var(--adm-surface);
+  box-shadow: none;
+}
+
+/* Baris aktif (dipilih dengan panah atas/bawah) menang atas hover, supaya
+   hanya ada satu baris yang tampak "akan dijalankan dengan Enter". */
+#search-palette .item-row.is-active {
+  background: var(--accent-soft);
+  color: var(--accent-ink, var(--accent));
+}
+
+#search-palette .item-row.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent-ink, var(--accent));
+}
+
+#search-palette .item-row.is-active::after {
+  content: "↵";
+  flex: none;
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+#search-palette .item-row.is-active .row-meta {
+  color: color-mix(in srgb, var(--accent-ink, var(--accent)) 70%, var(--text-muted));
+}
+
+#search-palette .row-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Petunjuk papan ketik di kaki palet. */
+#search-palette .palette-hint {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  #search-palette .palette-hint { display: none; }
+}
+
+#search-palette .row-thumb {
+  width: 44px;
+  height: 32px;
+  border-radius: 7px;
+}
+
+#search-palette .empty-state-text {
+  padding: 8px 12px 4px;
+}
+
+#search-palette .empty-state {
+  padding: 36px 20px;
+  border: none;
+  background: transparent;
+}
 
 /* Judul kelompok di dalam palet. Kecil dan tenang: ia penanda arah, bukan
    sesuatu yang perlu dibaca setiap kali. */
 .palette-group {
-  padding: 12px 2px 5px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  padding: 14px 12px 5px;
+  font-size: 11.5px;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
 .palette-group:first-child {
-  padding-top: 2px;
+  padding-top: 8px;
 }
 
 .palette-cmd {
   cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  #search-palette {
+    padding-top: 0;
+  }
+
+  #search-palette .modal {
+    max-height: none;
+    border-radius: 0;
+  }
+
+  #search-palette .search-input {
+    height: 50px;
+    font-size: 16px;
+  }
+}
+
+/* --- Sorotan hasil lompatan pencarian ---
+   Saat pencarian membawa pengguna ke sebuah field, field itu diberi
+   `.cari-sorot` sekitar dua detik: garis aksen dan denyut latar lembut
+   menjawab "yang mana?" tanpa harus mencari-cari di halaman. */
+.cari-sorot {
+  border-radius: var(--adm-r);
+  /* Garisnya hanya hidup di dalam animasi; tanpa `fill-mode` latar asli
+     field kembali utuh begitu animasinya selesai. */
+  outline: 2px solid transparent;
+  outline-offset: 4px;
+  animation: adm-cari-sorot 2s ease-out;
+  scroll-margin-top: calc(var(--adm-top) + 24px);
+}
+
+@keyframes adm-cari-sorot {
+  0% {
+    outline-color: var(--accent-ink, var(--accent));
+    background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  30% {
+    background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+  75% {
+    outline-color: var(--accent-ink, var(--accent));
+  }
+  100% {
+    outline-color: transparent;
+    background-color: transparent;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Tanpa gerak: sorotannya tetap ada, hanya diam selama dua detik itu. */
+@media (prefers-reduced-motion: reduce) {
+  .cari-sorot {
+    animation: none;
+    outline-color: var(--accent-ink, var(--accent));
+  }
 }
 
 /* --- Riwayat item & pratinjau cadangan --- */
@@ -7095,10 +7489,12 @@ body:has(.modal-backdrop.open) .fab {
    "Aktif" yang terbaca mengalahkan lingkaran hijau yang harus ditebak. */
 .integrasi-status {
   margin-left: auto;
+  flex: none;
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
+  gap: 7px;
+  padding: 4px 11px 4px 9px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--bg);
@@ -7126,6 +7522,19 @@ body:has(.modal-backdrop.open) .fab {
 .integrasi-status.is-on::before {
   background: var(--ok);
   opacity: 1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent);
+}
+
+/* Kepala bagian integrasi: judul dan deskripsi mengisi sisa ruang, lencana
+   status tetap utuh di kanan. */
+.integrasi-head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.integrasi-langkah li::marker {
+  color: var(--accent-ink, var(--accent));
+  font-weight: 700;
 }
 
 /* Baris "salin alamat ini ke Google": kotak alamat + tombol salin. */
@@ -7139,6 +7548,9 @@ body:has(.modal-backdrop.open) .fab {
 .salin-nilai {
   flex: 1 1 240px;
   min-width: 0;
+  min-height: var(--adm-field-h);
+  display: flex;
+  align-items: center;
   padding: 9px 12px;
   border: 1px solid var(--border);
   border-radius: var(--adm-r-sm);

@@ -965,7 +965,13 @@ function setSaveState(state) {
   el.textContent = t(key);
 }
 
+/* Naik setiap ada perubahan. saveNow() membandingkannya sebelum dan sesudah
+   permintaan: kalau naik, ada ketikan baru selama PUT berjalan, dan salinan
+   dari server — yang belum memuat ketikan itu — tidak boleh menimpanya. */
+let editSeq = 0;
+
 function markDirty() {
+  editSeq++;
   dirty = true;
   setSaveState("dirty");
 }
@@ -991,6 +997,7 @@ async function saveNow() {
   if (savingNow) { savePending = true; return; }
   savingNow = true;
   setSaveState("saving");
+  const seqAwal = editSeq;
   try {
     const res = await fetch("/api/content", {
       method: "PUT",
@@ -999,7 +1006,9 @@ async function saveNow() {
     });
     if (res.status === 401) { location.href = "/admin/login"; return; }
 
-    const data = await res.json();
+    /* Proxy bisa menjawab dengan halaman HTML (413, 502); tanpa catch,
+       toast-nya berbunyi "Unexpected token '<'" dalam bahasa Inggris. */
+    const data = await res.json().catch(() => null);
 
     // Orang lain menyimpan lebih dulu. Menimpanya diam-diam berarti menghapus
     // pekerjaan mereka tanpa ada yang tahu — jadi keputusannya diserahkan.
@@ -1011,10 +1020,18 @@ async function saveNow() {
     }
 
     if (!data || !data.ok) throw new Error(apiMessage(data, "toast.serverRejected"));
-    content = data.content;
-    dirty = false;
-    setSaveState("saved");
-    renderAll();
+    if (editSeq !== seqAwal) {
+      /* Ada ketikan baru selama permintaan berjalan. Yang diambil dari server
+         cuma nomor revisinya — supaya simpanan berikutnya tidak dianggap
+         bentrok — dan isinya tetap milik formulir. */
+      content.revision = data.content.revision;
+      savePending = true;
+    } else {
+      content = data.content;
+      dirty = false;
+      setSaveState("saved");
+      renderAll();
+    }
   } catch (err) {
     setSaveState("dirty");
     toast(t("toast.saveFailed", { error: err && err.message ? err.message : t("toast.networkError") }), "error");
@@ -1049,7 +1066,7 @@ async function resolveConflict(serverContent) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...content, force: true }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!data || !data.ok) throw new Error(apiMessage(data, "toast.serverRejected"));
       content = data.content;
       dirty = false;
@@ -1082,7 +1099,7 @@ async function uploadImage(file) {
   fd.append("image", siap);
   const res = await fetch("/api/upload", { method: "POST", body: fd });
   if (res.status === 401) { location.href = "/admin/login"; throw new Error(t("toast.sessionExpired")); }
-  const data = await res.json();
+  const data = await res.json().catch(() => null);
   if (!data || !data.ok) throw new Error(apiMessage(data, "toast.uploadRejected"));
   return data.url;
 }
@@ -4777,6 +4794,7 @@ function buildPalette() {
     <div class="modal-body">
       <input type="search" class="search-input" id="palette-input" placeholder="${esc(t("palette.placeholder"))}" autocomplete="off" />
       <div class="item-list" id="palette-results"></div>
+      <p class="palette-hint">${esc(t("palette.hint"))}</p>
     </div>
   </div>`;
   document.body.appendChild(palette);
@@ -4810,6 +4828,7 @@ function perintahPalet() {
   }
   if (admin) out.push({ id: "buka:update", grup: "palette.group.open", label: t("nav.update"), jalan: () => { location.href = "/admin/update"; } });
   if (admin) out.push({ id: "buka:integrasi", grup: "palette.group.open", label: t("nav.integrasi"), jalan: () => { location.href = "/admin/integrasi"; } });
+  if (admin) out.push({ id: "buka:kontak", grup: "palette.group.open", label: t("nav.kontak"), jalan: () => { location.href = "/admin/kontak"; } });
 
   for (const col of COLLECTIONS) {
     out.push({ id: `tambah:${col}`, grup: "palette.group.add", label: t("palette.addTo", { col: colOne(col) }), jalan: () => openEditor(col, null) });
@@ -4884,6 +4903,94 @@ function searchAll(q) {
   return out;
 }
 
+/* ---------------- Pencarian pengaturan ---------------- */
+
+/**
+ * Setelan yang bisa dicari dari palet: "warna", "footer", "Search Console",
+ * "SMTP" — tanpa harus tahu di menu mana ia tinggal.
+ *
+ * Indeksnya dibaca dari DOM Pengaturan Situs dan Tampilan, bukan daftar yang
+ * ditulis tangan: setiap field baru langsung bisa dicari, dan labelnya selalu
+ * dalam bahasa yang sedang dipakai. Halaman di luar aplikasi ini (Integrasi,
+ * Kontak, Pembaruan) tidak ada di DOM, jadi butirnya ditulis di sini dan
+ * dibuka lewat alamat `#jangkar` yang disorot `admin-shell.js`.
+ */
+const VIEW_SETELAN = ["site", "tampilan"];
+
+function setelanEksternal() {
+  if (!isAdmin()) return [];
+  const ke = (href) => () => { location.href = href; };
+  const integrasi = t("nav.integrasi");
+  return [
+    { label: t("integrasi.ga"), konteks: integrasi, kata: "analytics ga4 gtag", jalan: ke("/admin/integrasi#ga") },
+    { label: t("integrasi.adsense"), konteks: integrasi, kata: "adsense iklan ads", jalan: ke("/admin/integrasi#adsense") },
+    { label: t("integrasi.adsense.adsTxt"), konteks: integrasi, kata: "ads.txt", jalan: ke("/admin/integrasi#adsense") },
+    { label: t("integrasi.gsc"), konteks: integrasi, kata: "search console gsc verifikasi seo", jalan: ke("/admin/integrasi#gsc") },
+    { label: t("integrasi.gsc.sitemap"), konteks: integrasi, kata: "sitemap xml", jalan: ke("/admin/integrasi#gsc") },
+    { label: t("integrasi.clerk"), konteks: integrasi, kata: "clerk akun pengunjung login", jalan: ke("/admin/integrasi#clerk") },
+    { label: t("integrasi.login"), konteks: integrasi, kata: "google oauth client id login", jalan: ke("/admin/integrasi#login-google") },
+    { label: t("nav.kontak"), konteks: t("nav.kontak"), kata: "smtp email surel formulir", jalan: ke("/admin/kontak") },
+    { label: t("nav.update"), konteks: t("nav.update"), kata: "update versi rilis deploy", jalan: ke("/admin/update") },
+    { label: t("nav.ai"), konteks: t("nav.ai"), kata: "deepseek gemini api kunci", jalan: () => setView("ai") },
+  ];
+}
+
+const teksBersih = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : "");
+
+function indeksSetelan() {
+  const out = [];
+  for (const view of VIEW_SETELAN) {
+    const nav = document.querySelector(`.nav-item[data-view="${view}"]`);
+    if (nav && nav.hidden) continue;
+    const root = document.querySelector(`.view[data-view="${view}"]`);
+    if (!root) continue;
+    const namaView = t(`nav.${view}`);
+    root.querySelectorAll(".form-section").forEach((sec) => {
+      const judul = teksBersih(sec.querySelector(".form-section-head h2"));
+      if (!judul) return;
+      out.push({ label: judul, konteks: namaView, kata: "", jalan: () => bukaSetelan(view, sec) });
+      sec.querySelectorAll(".field > label").forEach((lab) => {
+        const label = teksBersih(lab);
+        if (!label || label.length > 80) return;
+        out.push({ label, konteks: `${namaView} › ${judul}`, kata: "", jalan: () => bukaSetelan(view, lab) });
+      });
+    });
+  }
+  return out.concat(setelanEksternal());
+}
+
+function cariSetelan(q) {
+  const kata = String(q || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!kata.length) return [];
+  const cocok = [];
+  for (const it of indeksSetelan()) {
+    const label = it.label.toLowerCase();
+    const hay = `${label} ${it.konteks.toLowerCase()} ${it.kata}`;
+    if (!kata.every((k) => hay.includes(k))) continue;
+    // Yang labelnya sendiri cocok naik di atas yang cuma cocok konteksnya.
+    const skor = (label.startsWith(kata[0]) ? 0 : label.includes(kata[0]) ? 1 : 2);
+    cocok.push({ it, skor });
+  }
+  return cocok.sort((a, b) => a.skor - b.skor).slice(0, 8).map((c) => c.it);
+}
+
+/** Pindah ke tampilannya, gulir ke field-nya, lalu sorot sebentar. */
+function bukaSetelan(view, el) {
+  setView(view);
+  requestAnimationFrame(() => {
+    const target = el.closest(".field") || el.closest(".form-section") || el;
+    target.scrollIntoView({ block: "center", behavior: "smooth" });
+    target.classList.remove("cari-sorot");
+    void target.offsetWidth;
+    target.classList.add("cari-sorot");
+    setTimeout(() => target.classList.remove("cari-sorot"), 2200);
+    const input = target.querySelector("input:not([type=hidden]), select, textarea");
+    if (input && target.classList.contains("field")) input.focus({ preventScroll: true });
+  });
+}
+
+let hasilSetelan = [];
+
 function renderPalette(q) {
   const box = $("palette-results");
   if (!box) return;
@@ -4897,8 +5004,9 @@ function renderPalette(q) {
   const perKelompok = (grup) => semuaPerintah.filter((c) => c.grup === grup).slice(0, kata ? 6 : 4);
   const results = kata ? searchAll(kata) : [];
   const perintah = ["palette.group.open", "palette.group.add", "palette.group.action"].flatMap(perKelompok);
+  hasilSetelan = cariSetelan(kata);
 
-  if (!perintah.length && !results.length) {
+  if (!perintah.length && !results.length && !hasilSetelan.length) {
     box.innerHTML = emptyStateHtml(t("common.noResults"), t("palette.emptyText"), "🔍");
     return;
   }
@@ -4915,6 +5023,19 @@ function renderPalette(q) {
     html += kepala(grup) + isi
       .map((c) => `<div class="item-row palette-cmd" data-cmd="${esc(c.id)}">
         <div class="row-main"><div class="row-title">${esc(c.label)}</div></div>
+      </div>`)
+      .join("");
+  }
+
+  /* Setelan di atas konten: orang yang mengetik "warna" atau "footer" hampir
+     pasti mencari tempat mengaturnya, bukan mobil yang kebetulan bernama itu. */
+  if (hasilSetelan.length) {
+    html += kepala("palette.group.settings") + hasilSetelan
+      .map((c, i) => `<div class="item-row palette-cmd" data-setel="${i}">
+        <div class="row-main">
+          <div class="row-title">${esc(c.label)}</div>
+          <div class="row-meta">${esc(c.konteks)}</div>
+        </div>
       </div>`)
       .join("");
   }
@@ -4936,6 +5057,26 @@ function renderPalette(q) {
   }
 
   box.innerHTML = html;
+  const pertama = box.querySelector(".item-row");
+  if (pertama) pertama.classList.add("is-active");
+}
+
+/** Panah atas/bawah memindah sorotan di hasil palet; Enter menjalankannya. */
+function geserPalet(arah) {
+  const baris = $$("#palette-results .item-row");
+  if (!baris.length) return;
+  const kini = baris.findIndex((b) => b.classList.contains("is-active"));
+  const next = (kini + arah + baris.length) % baris.length;
+  baris.forEach((b) => b.classList.remove("is-active"));
+  baris[next].classList.add("is-active");
+  baris[next].scrollIntoView({ block: "nearest" });
+}
+
+function jalankanSetelan(i) {
+  const it = hasilSetelan[i];
+  if (!it) return;
+  closeModal(palette);
+  it.jalan();
 }
 
 /** Menjalankan satu perintah palet, lalu menutup paletnya. */
@@ -5374,6 +5515,8 @@ function bindEvents() {
 
     const cmd = e.target.closest("[data-cmd]");
     if (cmd) { jalankanPerintah(cmd.getAttribute("data-cmd")); return; }
+    const setel = e.target.closest("[data-setel]");
+    if (setel) { jalankanSetelan(Number(setel.getAttribute("data-setel"))); return; }
 
     const bandingBtn = e.target.closest("[data-backup-diff-open]");
     if (bandingBtn) { bandingkanCadangan(bandingBtn.getAttribute("data-backup-diff-open")); return; }
@@ -5935,6 +6078,18 @@ function bindEvents() {
       return;
     }
 
+    if (document.activeElement && document.activeElement.id === "palette-input") {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        geserPalet(e.key === "ArrowDown" ? 1 : -1);
+        return;
+      }
+      if (e.key === "Enter") {
+        const aktif = document.querySelector("#palette-results .item-row.is-active");
+        if (aktif) { e.preventDefault(); aktif.click(); return; }
+      }
+    }
+
     const mod = e.ctrlKey || e.metaKey;
     const key = String(e.key || "").toLowerCase();
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) ||
@@ -6124,6 +6279,8 @@ function setLocale(code, opts) {
 
   locale = next;
   t = makeT(locale);
+  // Palet dirakit sekali dengan teks bahasa lama; dibuang supaya dirakit ulang.
+  if (palette && !palette.classList.contains("open")) { palette.remove(); palette = null; }
 
   const meta = localeMeta(locale);
   document.documentElement.setAttribute("lang", meta.html);
@@ -7239,6 +7396,7 @@ function mulaiPollPembaruan() {
       if (data && data.ok) {
         pembaruan = data;
         renderPembaruan();
+        if (!data.jalan) await muatUlangSesudahJob();
       }
     } catch {
       /* gangguan jaringan — coba lagi di giliran berikutnya */
@@ -7424,11 +7582,30 @@ function mulaiPollArtikelAuto() {
       if (data && data.ok) {
         artikelAuto = data;
         renderArtikelAuto();
+        if (!data.jalan) await muatUlangSesudahJob();
       }
     } catch {
       /* gangguan jaringan — coba lagi di giliran berikutnya */
     }
   }, 4000);
+}
+
+/**
+ * Ringkasan putaran draf terakhir. Putaran yang gagal atau dilewati harus
+ * terbaca begitu — dulu galatnya dibuang dan yang tampil cuma "— (tanggal)",
+ * yang sekilas mirip keberhasilan.
+ */
+function alasanDrafAuto(terakhir) {
+  const kunci = terakhir.errorKey || "";
+  if (terakhir.ok && !kunci) {
+    return `<p class="hint">${esc(t("drafauto.lastSummary", { judul: terakhir.judul || "—", tanggal: terakhir.tanggal }))}</p>`;
+  }
+  const alasan = kunci === "penuh" ? t("drafauto.alasan.penuh")
+    : kunci === "topikHabis" ? t("drafauto.alasan.topikHabis")
+    : kunci.startsWith("err.") ? t(kunci)
+    : t("drafauto.alasan.lain");
+  const kelas = terakhir.ok ? "hint" : "ai-note ai-note-warn";
+  return `<p class="${kelas}">${esc(t("drafauto.lastSkipped", { tanggal: terakhir.tanggal, alasan }))}</p>`;
 }
 
 function renderArtikelAuto() {
@@ -7453,7 +7630,7 @@ function renderArtikelAuto() {
   const statusHtml = artikelAuto.jalan
     ? `<p class="ai-note ai-note-info">${esc(t("drafauto.running"))}</p>`
     : terakhir.tanggal
-      ? `<p class="hint">${esc(t("drafauto.lastSummary", { judul: terakhir.judul || "—", tanggal: terakhir.tanggal }))}</p>`
+      ? alasanDrafAuto(terakhir)
       : `<p class="hint">${esc(t("drafauto.lastEmpty"))}</p>`;
 
   root.innerHTML = `
@@ -7552,6 +7729,7 @@ function mulaiPollArtikelSegar() {
       if (data && data.ok) {
         artikelSegar = data;
         renderArtikelSegar();
+        if (!data.jalan) await muatUlangSesudahJob();
       }
     } catch {
       /* gangguan jaringan — coba lagi di giliran berikutnya */
@@ -8637,6 +8815,19 @@ async function perbaruiBeritaPanel() {
   }
 }
 
+/**
+ * Dipanggil saat pekerjaan server (draf otomatis, penyegar artikel, pembaruan
+ * katalog) selesai. Pekerjaan itu menulis `content.json` sendiri, jadi salinan
+ * panel basi: tanpa memuat ulang, hasilnya tidak terlihat dan simpanan
+ * berikutnya bentrok (409) — dan memilih "Timpa" di sana menghapus hasilnya.
+ * Kalau ada ketikan yang belum tersimpan, dokumen tidak ditimpa; dialog
+ * bentrok yang akan menyerahkan pilihannya.
+ */
+async function muatUlangSesudahJob() {
+  if (dirty || savingNow) return;
+  await muatUlangKonten();
+}
+
 async function muatUlangKonten() {
   try {
     const res = await fetch("/api/content");
@@ -9294,6 +9485,15 @@ async function init() {
     setView(me.homeView);
   } else {
     setView(route.view, { hash: false });
+  }
+
+  /* Kotak cari di halaman Integrasi/Kontak/Pembaruan mengantar ke sini dengan
+     `?cari=`; palet dibuka, lalu parameternya dibuang dari alamat. */
+  const params = new URLSearchParams(location.search);
+  if (params.has("cari")) {
+    const q = params.get("cari") || "";
+    history.replaceState(null, "", location.pathname + location.hash);
+    openPalette(q);
   }
 }
 

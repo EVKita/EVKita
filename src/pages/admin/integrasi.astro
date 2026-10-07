@@ -44,6 +44,9 @@ const site = readContent().site || {};
 const cfg = bacaIntegrasi();
 const asal = siteOrigin(Astro.url);
 const gsc = statusGsc(cfg);
+/* Begitu kunci Clerk terisi, pintu masuk Google yang lama tidak dirender lagi
+   (MemberGate.astro) — jadi statusnya tidak boleh tetap "Aktif". */
+const loginAktif = !!cfg.googleClientId && !cfg.clerkKey;
 const contohAdsTxt = isiAdsTxt({ ...cfg, adsenseAktif: true, adsTxt: "" }).trim();
 
 /* Teks untuk skrip di bawah. Skrip itu berjalan di peramban dan tidak memuat
@@ -100,6 +103,12 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
         <strong>{t("integrasi.title")}</strong>
       </div>
 
+      <div class="topbar-search">
+        <svg class="topbar-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="shell-search" type="search" placeholder={t("topbar.searchPlaceholder")} autocomplete="off" aria-label={t("topbar.searchLabel")} />
+        <span class="kbd">⌘K</span>
+      </div>
+
       <div class="topbar-right">
         <span id="integrasi-state" class="save-state">{t("save.ready")}</span>
         <button id="themeToggle" class="btn btn-icon" type="button" aria-label={t("topbar.themeToggle")} title={t("topbar.themeToggle")}>
@@ -124,7 +133,7 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
 
         <form id="integrasi-form">
           <!-- ===== Google Analytics ===== -->
-          <section class="panel form-section">
+          <section class="panel form-section" id="ga">
             <div class="form-section-head integrasi-head">
               <span class="integrasi-logo" aria-hidden="true">📊</span>
               <div>
@@ -168,7 +177,7 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
           </section>
 
           <!-- ===== Google AdSense ===== -->
-          <section class="panel form-section">
+          <section class="panel form-section" id="adsense">
             <div class="form-section-head integrasi-head">
               <span class="integrasi-logo" aria-hidden="true">💰</span>
               <div>
@@ -219,7 +228,7 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
           </section>
 
           <!-- ===== Google Search Console ===== -->
-          <section class="panel form-section">
+          <section class="panel form-section" id="gsc">
             <div class="form-section-head integrasi-head">
               <span class="integrasi-logo" aria-hidden="true">🔎</span>
               <div>
@@ -275,7 +284,7 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
           </section>
 
           <!-- ===== Akun pengunjung lewat Clerk ===== -->
-          <section class="panel form-section">
+          <section class="panel form-section" id="clerk">
             <div class="form-section-head integrasi-head">
               <span class="integrasi-logo" aria-hidden="true">👤</span>
               <div>
@@ -305,14 +314,14 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
           </section>
 
           <!-- ===== Login Google pengunjung ===== -->
-          <section class="panel form-section">
+          <section class="panel form-section" id="login-google">
             <div class="form-section-head integrasi-head">
               <span class="integrasi-logo" aria-hidden="true">🔑</span>
               <div>
                 <h2>{t("integrasi.login")}</h2>
                 <p>{t("integrasi.login.desc")}</p>
               </div>
-              <span class={statusKelas(!!cfg.googleClientId)} data-status="login" data-on={t("integrasi.on")} data-off={t("integrasi.off")}>{statusTeks(!!cfg.googleClientId)}</span>
+              <span class={statusKelas(loginAktif)} data-status="login" data-on={t("integrasi.on")} data-off={t("integrasi.off")} data-replaced={t("integrasi.login.replaced")}>{loginAktif ? t("integrasi.on") : cfg.googleClientId && cfg.clerkKey ? t("integrasi.login.replaced") : t("integrasi.off")}</span>
             </div>
 
             <div class="field-grid">
@@ -393,12 +402,13 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
       function tandaiStatus(cfg, gsc) {
         const elGsc = document.querySelector('[data-status="gsc"]');
         if (elGsc && gsc) elGsc.setAttribute("data-on", texts.gscOn[gsc.lewat] || texts.gscOn.tag);
-        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: gsc ? gsc.aktif : false, login: !!cfg.googleClientId, clerk: !!cfg.clerkKey };
+        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: gsc ? gsc.aktif : false, login: !!cfg.googleClientId && !cfg.clerkKey, clerk: !!cfg.clerkKey };
         for (const [kunci, aktif] of Object.entries(peta)) {
           const el = document.querySelector('[data-status="' + kunci + '"]');
           if (!el) continue;
           el.classList.toggle("is-on", !!aktif);
-          el.textContent = aktif ? el.getAttribute("data-on") : el.getAttribute("data-off");
+          const digantikan = kunci === "login" && cfg.googleClientId && cfg.clerkKey;
+          el.textContent = aktif ? el.getAttribute("data-on") : digantikan ? el.getAttribute("data-replaced") : el.getAttribute("data-off");
         }
       }
 
