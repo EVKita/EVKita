@@ -5,6 +5,64 @@ Dokumen ini berlaku untuk **semua** agent AI yang bekerja di repo ini
 
 ---
 
+## Safecheck sinkron: repo ini dikerjakan BERSAMA
+
+Repo ini tidak dikerjakan satu orang. Lebih dari satu orang — dan lebih dari
+satu agent — mengedit, merilis langsung ke `main`, lalu memasangnya lewat
+**Admin → Pembaruan**. Salinan lokal yang sudah tertinggal beberapa rilis adalah
+keadaan biasa, bukan kekecualian. Karena itu pemeriksaan di bawah **wajib**,
+bukan saran.
+
+### 1. Di awal sesi — sebelum mengedit satu berkas pun
+
+```bash
+git fetch origin --tags
+git status -sb                         # "behind N" = lokal tertinggal
+git log --oneline HEAD..origin/main    # commit yang belum ada di lokal
+```
+
+- Kalau lokal **tertinggal**, beri tahu user lebih dulu: siapa yang merilis,
+  versi berapa, dan ringkasan isinya. Lalu tarik dengan
+  `git pull --rebase --autostash origin main` **sebelum** mulai bekerja.
+- Kalau ada perubahan lokal yang belum di-commit (mis. `data/content.json`),
+  sebutkan ke user. Jangan dibuang, jangan ditimpa, jangan ikut di-commit tanpa
+  diminta.
+- Kalau `git pull --rebase` berhenti karena konflik, **berhenti dan tanya
+  user**. Jangan menyelesaikan konflik dengan membuang sisi orang lain.
+
+### 2. Sebelum push rilis
+
+Antara awal sesi dan saat rilis, orang lain bisa saja sudah merilis. Jadi:
+
+1. `git fetch origin` lagi. Kalau `origin/main` bergerak, `git pull --rebase`.
+2. Periksa berkas yang disentuh **kedua** pihak:
+   ```bash
+   # AWAL  = commit tempat kita mulai bekerja (HEAD sebelum pull/rebase)
+   # ORIGIN = origin/main hasil fetch (pekerjaan orang lain)
+   # KITA  = HEAD sesudah rebase (pekerjaan kita di atas ORIGIN)
+   comm -12 <(git diff --name-only AWAL ORIGIN | sort) \
+            <(git diff --name-only ORIGIN KITA | sort)
+   ```
+   Untuk tiap berkas di daftar itu, pastikan baris yang ditambahkan pihak lain
+   masih ada sesudah rebase, dan baris yang kita hapus hanya baris milik
+   pekerjaan kita sendiri.
+3. Ulangi `npm run build` **dan** `npm test` pada hasil gabungan — bukan hasil
+   sebelum rebase. Baru push.
+
+### 3. Yang tidak boleh dilakukan
+
+- **Jangan pernah `git push --force`** (atau `--force-with-lease`) ke `main`.
+  Push yang ditolak karena "fetch first" artinya ada pekerjaan orang lain yang
+  belum kita punya — tarik, jangan timpa.
+- **`data/content.json` hanya ikut commit kalau user memintanya secara
+  eksplisit.** Kalau `.env` server memuat `EVKITA_SYNC_CONTENT=1`, isi berkas
+  itu di paket rilis MENIMPA konten server (lihat `deploy.sh`).
+- Saat melaporkan rilis, sebutkan **versi yang sedang terpasang di server**
+  (terlihat di Admin → Pembaruan) dan **versi yang baru dirilis**, supaya
+  keduanya tidak tertukar.
+
+---
+
 ## Istilah: "rilis"
 
 **"Rilis" adalah satu istilah baku di proyek ini.** Kalau user menulis
@@ -26,6 +84,10 @@ atau perubahannya tidak menyentuh apa pun yang ikut ke dalam paket rilis
 (mis. hanya mengubah `AGENTS.md` atau `README.md`).
 
 ### Langkah rilis
+
+0. **Jalankan safecheck sinkron "Sebelum push rilis"** di bagian atas
+   dokumen ini. Rilis yang dibangun dari salinan tertinggal bisa menimpa
+   pekerjaan orang lain.
 
 1. **Pastikan build lolos** di mesin lokal:
    ```bash
