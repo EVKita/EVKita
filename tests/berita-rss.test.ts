@@ -93,6 +93,35 @@ describe("sumber Kompas.com", () => {
   });
 });
 
+describe("gambar dan video dari isi feed", () => {
+  const FEED = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>Mobil Listrik Baru Meluncur</title>
+    <link>https://contoh.test/ev-baru/</link>
+    <pubDate>Mon, 05 Oct 2026 06:00:00 +0000</pubDate>
+    <description><![CDATA[<p><img src="https://contoh.test/foto/mobil.jpg"/>Ringkasan.</p><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>]]></description>
+  </item>
+  <item>
+    <title>Logo Situs Saja</title>
+    <link>https://contoh.test/logo/</link>
+    <pubDate>Mon, 05 Oct 2026 05:00:00 +0000</pubDate>
+    <description><![CDATA[<p><img src="https://contoh.test/assets/logo.png"/>Bukan foto berita.</p>]]></description>
+  </item>
+</channel></rss>`;
+
+  it("mengambil foto dari img di deskripsi dan video YouTube dari iframe", () => {
+    const items = parseFeed(FEED);
+    assert.equal(items[0].image, "https://contoh.test/foto/mobil.jpg");
+    assert.match(items[0].video || "", /youtube\.com/);
+  });
+
+  it("membuang gambar hiasan seperti logo", () => {
+    const items = parseFeed(FEED);
+    assert.equal(items[1].image, "");
+  });
+});
+
 describe("urlKunci", () => {
   it("menyamakan http/https, www, query, dan garis miring akhir", () => {
     assert.equal(urlKunci("https://www.Contoh.test/berita/?utm=1"), urlKunci("http://contoh.test/berita"));

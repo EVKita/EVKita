@@ -40,6 +40,51 @@ function atribut(blok, tag, attr) {
   return m ? m[1] : "";
 }
 
+/** Kata yang menandakan gambar hiasan — dibuang dari hasil. */
+const HIASAN_RSS = /(logo|icon|favicon|placeholder|spacer|pixel|badge|avatar|1x1|blank|loading|arrow)/i;
+
+/**
+ * Mengambil gambar pertama yang layak dari HTML konten feed.
+ * Banyak penerbit berita Indonesia tidak pakai media:content tapi menaruh
+ * gambar di dalam deskripsi/content:encoded sebagai tag <img>.
+ */
+function gambarDariHtml(html) {
+  const s = String(html || "");
+  // Coba og:image dan twitter:image dulu (kadang ada di dalam konten)
+  const metaM = s.match(/<meta[^>]+(?:property|name)=["']og:image["'][^>]*?content=["']([^"']+)["']/i)
+    || s.match(/<meta[^>]+content=["']([^"']+)["'][^>]*?(?:property|name)=["']og:image["']/i);
+  if (metaM) {
+    const u = metaM[1].trim();
+    if (/^https?:\/\//i.test(u) && !HIASAN_RSS.test(u)) return u;
+  }
+  // Cari <img src> pertama yang layak
+  for (const m of s.matchAll(/<img\b[^>]*\bsrc=["']([^"']+)["']/gi)) {
+    const u = m[1].trim();
+    if (/^https?:\/\//i.test(u) && /\.(jpe?g|png|webp|avif|gif)(?:$|[?#])/i.test(u) && !HIASAN_RSS.test(u)) {
+      return u;
+    }
+  }
+  return "";
+}
+
+/**
+ * Mengambil URL YouTube pertama dari HTML konten feed.
+ * Beberapa penerbit menyematkan iframe YouTube di dalam content:encoded.
+ */
+function videoDariHtml(html) {
+  const s = String(html || "");
+  // Cari iframe YouTube
+  for (const m of s.matchAll(/<iframe\b[^>]*\bsrc=["']([^"']+)["']/gi)) {
+    const u = m[1].trim();
+    if (/(youtube\.com\/embed|youtu\.be)/i.test(u)) return u;
+  }
+  // Cari tautan YouTube biasa
+  for (const m of s.matchAll(/https?:\/\/(?:www\.)?(youtube\.com\/watch\?[^\s"'<>]+|youtu\.be\/[^\s"'<>]+)/gi)) {
+    return m[0];
+  }
+  return "";
+}
+
 /** Tanggal apa pun dari feed diubah ke `YYYY-MM-DD`. Kosong kalau tak terbaca. */
 export function tanggalIso(v) {
   const s = String(v || "").trim();
@@ -79,7 +124,11 @@ export function parseFeed(xml) {
     const image =
       atribut(blok, "enclosure", "url") ||
       atribut(blok, "media:content", "url") ||
-      atribut(blok, "media:thumbnail", "url");
+      atribut(blok, "media:thumbnail", "url") ||
+      gambarDariHtml(rawDesk);
+
+    /* Video YouTube dari konten — dipakai artikel rangkuman otomatis. */
+    const video = videoDariHtml(rawDesk);
 
     out.push({
       title,
@@ -87,6 +136,7 @@ export function parseFeed(xml) {
       date: tanggalIso(rawDate),
       excerpt: teks(rawDesk).slice(0, 200),
       image: image ? teks(image) : "",
+      video: video || "",
     });
   }
   return out;

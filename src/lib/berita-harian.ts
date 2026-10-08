@@ -75,6 +75,7 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string; str
            berupa http(s) — kalau feed tidak membawanya, thumbnail dilengkapi
            saat render lewat cache og:image di `berita-gambar.ts`. */
         image: /^https?:\/\//i.test(String(it.image || "").trim()) ? String(it.image).trim() : "",
+        video: /^https?:\/\//i.test(String(it.video || "").trim()) ? String(it.video).trim() : "",
         excerpt: it.excerpt,
         featured: false,
         status: "published",

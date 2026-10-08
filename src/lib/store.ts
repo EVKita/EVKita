@@ -326,6 +326,9 @@ function normalizeBerita(v: any): any {
     url: str(v?.url),
     date: str(v?.date),
     image: str(v?.image),
+    /* Tautan video (YouTube) dari feed — dipakai artikel rangkuman otomatis.
+       Disimpan seperti tautan lain: penyaring skema dipasang saat render. */
+    video: str(v?.video),
     excerpt: str(v?.excerpt),
     featured: !!v?.featured,
     status: str(v?.status) === "draft" ? "draft" : "published",

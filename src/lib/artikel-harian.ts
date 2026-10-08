@@ -74,6 +74,8 @@ export interface TopikArtikel {
   bahan: string;
   /** Alamat yang BOLEH dikutip — di luar ini dibuang. */
   sumberBoleh: string[];
+  /** URL video YouTube dari berita sumber, untuk disematkan di artikel. */
+  videoEmbed?: string;
 }
 
 export interface StatusArtikelHarian {
@@ -194,12 +196,15 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
     const kunciTopik = `berita:${kunci}`;
     if (!bebas(kunciTopik)) continue;
     const bahan = unik.map((b: any) => `- ${b.title} (${b.source || "media"}): ${b.url}`).join("\n");
+    /* Ambil video YouTube pertama dari berita sumber kalau ada — disematkan di artikel. */
+    const videoEmbed = unik.map((b: any) => String(b.video || "")).find((v) => /youtube|youtu\.be/i.test(v)) || "";
     return {
       strategi: "berita",
       kunci: kunciTopik,
       judulKerja: `Rangkuman: ${unik[0].title}`,
       bahan: `Berita terbaru seputar "${kunci}":\n${bahan}`,
       sumberBoleh: unik.map((b: any) => String(b.url)),
+      videoEmbed: videoEmbed || undefined,
     };
   }
 
@@ -391,6 +396,15 @@ async function tulisSatu(
     if (!rapi.ok) return { draf: null, biayaRupiah: biaya, errorKey: (rapi as any).errorKey || "err.ai.jawabanTidakTerbaca" };
     const { draf, alasan } = bersihkanDraf((rapi as any).hasil, topik);
     if (!draf) return { draf: null, biayaRupiah: biaya, errorKey: alasan === "tanpaSumber" ? "err.ai.tanpaSumber" : "err.ai.jawabanTidakTerbaca" };
+    /* Sisipkan embed video YouTube kalau topik membawanya — diletakkan tepat
+       sebelum ## sumber supaya muncul di akhir isi artikel. Format tautan
+       teks aman untuk Markdown dan tidak membutuhkan iframe di sini. */
+    if (topik.videoEmbed) {
+      const youtubeId = topik.videoEmbed.match(/(?:embed\/|youtu\.be\/|v=|v\/)([\w-]{11})/)?.[1];
+      if (youtubeId) {
+        draf.body = `${draf.body}\n\n> 🎬 **Video:** [Tonton di YouTube](https://www.youtube.com/watch?v=${youtubeId})`;
+      }
+    }
     return { draf, biayaRupiah: biaya, errorKey: "" };
   } catch {
     return { draf: null, biayaRupiah: biaya, errorKey: galatTidakTerhubung() };
