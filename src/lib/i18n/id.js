@@ -1380,6 +1380,7 @@ export default {
   "err.ai.geminiDitolak": "Gemini menolak permintaan ini.",
   "err.ai.geminiJawabanBuruk": "Jawaban Gemini tidak terbaca. Coba lagi.",
   "err.ai.geminiTidakTerhubung": "Tidak bisa menghubungi Google. Periksa koneksi server lalu coba lagi.",
+  "err.ai.geminiLambat": "Google menerima permintaan tapi terlalu lama menjawab. Coba lagi sebentar lagi.",
   "err.ai.geminiModelTakTersedia": "Kuncinya sah, tapi belum ada model Gemini yang mau menjawab untuk akun ini. Coba lagi nanti, atau periksa kuota di Google AI Studio.",
   "ai.remove.title": "Hapus kunci DeepSeek?",
   "ai.remove.text": "Riset AI berhenti bekerja sampai ada kunci baru yang dipasang. Konten dan pengaturan lain tidak tersentuh.",

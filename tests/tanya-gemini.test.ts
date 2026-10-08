@@ -236,6 +236,68 @@ describe("tanyaGemini — tidak langsung menyerah saat Google bermasalah", () =>
     });
   });
 
+  /* Model yang menggantung: permintaan tidak pernah dijawab sampai dibatalkan. */
+  async function rekamGantung(gantung: (model: string) => boolean, fn: (log: string[], warn: string[]) => Promise<void>) {
+    const asli = globalThis.fetch;
+    const warnAsli = console.warn;
+    const log: string[] = [];
+    const warn: string[] = [];
+    console.warn = (m: string) => { warn.push(String(m)); };
+    globalThis.fetch = ((url: any, init: any) => {
+      const model = decodeURIComponent(String(url).match(/models\/([^:]+):/)?.[1] || "");
+      log.push(model + (JSON.parse(init.body).generationConfig.thinkingConfig ? "+pikir" : ""));
+      if (!gantung(model)) return Promise.resolve(balas(200, OK));
+      return new Promise((_r, tolak) => {
+        init.signal.addEventListener("abort", () => tolak(new DOMException("This operation was aborted", "AbortError")));
+      });
+    }) as any;
+    try {
+      await fn(log, warn);
+    } finally {
+      globalThis.fetch = asli;
+      console.warn = warnAsli;
+    }
+  }
+
+  it("model utama habis waktu → langsung ke Lite, bukan 'tidak terhubung'", async () => {
+    await rekamGantung((m) => m !== "gemini-flash-lite-latest", async (log, warn) => {
+      const h = await tanyaGemini({ ...dasar, model: "gemini-3.8-flash", cadangan: true, batasPercobaanMs: 20 });
+      assert.equal(h.ok, true);
+      // Tidak dicoba ulang tanpa berpikir, dan Lite didahulukan dari alias Flash.
+      assert.deepEqual(log, ["gemini-3.8-flash+pikir", "gemini-flash-lite-latest"]);
+      assert.ok(warn.some((w) => w.includes("habis waktu")), "penyebabnya tercatat di log server");
+    });
+  });
+
+  it("semua model habis waktu → err.tanya.lambat, bukan err.tanya.tidakTerhubung", async () => {
+    await rekamGantung(() => true, async () => {
+      const h = await tanyaGemini({ ...dasar, model: "gemini-3.8-flash", cadangan: true, batasPercobaanMs: 20 });
+      assert.equal(h.ok, false);
+      assert.equal(h.errorKey, "err.tanya.lambat");
+    });
+  });
+
+  it("jaringan benar-benar putus → tidakTerhubung, dengan penyebab di log, tanpa mencoba model lain", async () => {
+    const asli = globalThis.fetch;
+    const warnAsli = console.warn;
+    const warn: string[] = [];
+    let panggil = 0;
+    console.warn = (m: string) => { warn.push(String(m)); };
+    globalThis.fetch = (async () => {
+      panggil++;
+      throw new TypeError("fetch failed", { cause: Object.assign(new Error("connect ENETUNREACH"), { code: "ENETUNREACH" }) });
+    }) as any;
+    try {
+      const h = await tanyaGemini({ ...dasar, model: "gemini-3.8-flash", cadangan: true });
+      assert.equal(h.errorKey, "err.tanya.tidakTerhubung");
+      assert.equal(panggil, 1);
+      assert.ok(warn.some((w) => w.includes("ENETUNREACH")));
+    } finally {
+      globalThis.fetch = asli;
+      console.warn = warnAsli;
+    }
+  });
+
   it("kunci ditolak (403) → tidak dicoba ulang sama sekali", async () => {
     await rekam(() => balas(403, { error: { message: "Permission denied" } }), async (log) => {
       const h = await tanyaGemini({ ...dasar, model: "gemini-3.8-flash", cadangan: true });

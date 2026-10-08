@@ -55,7 +55,7 @@ export function urutkanModelFlash(daftar: string[]): string[] {
  * DeepSeek: ini inferensi sungguhan. Tetap dibatasi supaya satu pertanyaan
  * yang menggantung tidak menahan koneksi server.
  */
-const TIMEOUT_MS = 30_000;
+const TIMEOUT_MS = 20_000;
 
 /**
  * Keluaran maksimum per jawaban. Dulu 512 — dan itulah penyebab jawaban
@@ -401,8 +401,12 @@ function alasanSelesai(res: any): string {
 /** Model cadangan kalau model utama tumbang (5xx/429/404) — hanya untuk Tanya publik. */
 export const MODEL_CADANGAN_GEMINI = ["gemini-flash-latest", "gemini-flash-lite-latest"];
 
-/** Batas total waktu satu pertanyaan, termasuk semua percobaan ulang. */
-const TENGGAT_TOTAL_MS = 40_000;
+/**
+ * Batas total waktu satu pertanyaan, termasuk semua percobaan ulang. Lebih
+ * panjang dari satu percobaan supaya, kalau model utama habis waktu, model
+ * cadangan yang lebih ringan masih kebagian ±25 detik.
+ */
+const TENGGAT_TOTAL_MS = 45_000;
 
 /** Status yang layak dicoba ulang: gangguan sesaat di sisi Google. */
 function bolehUlang(status: number): boolean {
@@ -422,8 +426,9 @@ function bolehUlang(status: number): boolean {
  *      `thinkingConfig` dengan 500, bukan 400;
  *   3. sekali lagi setelah jeda singkat kalau Google sedang sibuk (5xx/429);
  *   4. dengan `cadangan: true` (hanya Tanya publik): model cadangan
- *      (`MODEL_CADANGAN_GEMINI`) kalau model utama tetap tumbang atau tidak
- *      ada (404). Uji kunci di panel TIDAK memakai cadangan — ia harus tahu
+ *      (`MODEL_CADANGAN_GEMINI`) kalau model utama tetap tumbang, tidak
+ *      ada (404), atau HABIS WAKTU — langkah 2 dan 3 dilewati untuk yang
+ *      terakhir ini, langsung ke model yang lebih ringan. Uji kunci di panel TIDAK memakai cadangan — ia harus tahu
  *      persis model mana yang menjawab.
  * Setiap kegagalan dicatat ke log server (status + kalimat galat Google, tanpa
  * kunci) supaya penyebabnya bisa dibaca lewat `pm2 logs evkita`.
@@ -437,6 +442,8 @@ export async function tanyaGemini(opts: {
   cadangan?: boolean;
   /** Jeda sebelum mencoba ulang saat Google sibuk. Diperkecil di uji. */
   jedaUlangMs?: number;
+  /** Batas tunggu satu percobaan. Diperkecil di uji. */
+  batasPercobaanMs?: number;
 }): Promise<HasilTanya> {
   const kunci = String(opts.apiKey || "").trim();
   if (!kunci) return gagal("err.tanya.belumSiap");
@@ -451,7 +458,8 @@ export async function tanyaGemini(opts: {
   async function kirim(model: string, denganPikir: boolean): Promise<HasilTanya & { status?: number }> {
     const pikir = denganPikir ? konfigPikir(model) : null;
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), Math.max(1000, Math.min(TIMEOUT_MS, sisaWaktu())));
+    const t0 = Date.now();
+    const timer = setTimeout(() => ac.abort(), Math.max(opts.batasPercobaanMs ? 1 : 1000, Math.min(opts.batasPercobaanMs ?? TIMEOUT_MS, sisaWaktu())));
     const gabung = opts.signal ? AbortSignal.any([opts.signal, ac.signal]) : ac.signal;
     const generationConfig: Record<string, unknown> = {
       maxOutputTokens: MAKS_TOKEN_KELUARAN,
@@ -473,8 +481,23 @@ export async function tanyaGemini(opts: {
           generationConfig,
         }),
       });
-    } catch {
-      return gagal("err.tanya.tidakTerhubung");
+    } catch (e: any) {
+      /*
+       * Dua kegagalan yang dulu disamakan: HABIS WAKTU (Google menerima
+       * permintaan tapi belum menjawab) dan TIDAK TERHUBUNG (jaringan server
+       * gagal sama sekali). Menyamakannya membuat pengunjung membaca "tidak
+       * bisa menghubungi AI" padahal yang lambat modelnya — dan menghentikan
+       * percobaan model cadangan yang justru bisa menjawab. Penyebab aslinya
+       * dicatat, karena tanpa itu `pm2 logs` kosong dan tidak ada yang bisa
+       * dibaca.
+       */
+      const dibatalkanPemanggil = !!opts.signal?.aborted;
+      const habisWaktu = ac.signal.aborted && !dibatalkanPemanggil;
+      const sebab = e?.cause?.code || e?.cause?.message || e?.code || e?.name || "-";
+      console.warn(
+        `[tanya] Gemini ${habisWaktu ? "habis waktu" : "tidak terjangkau"} (${model}${pikir ? ", berpikir" : ""}) setelah ${Date.now() - t0} ms: ${habisWaktu ? "-" : sebab}`
+      );
+      return gagal(habisWaktu ? "err.tanya.lambat" : "err.tanya.tidakTerhubung");
     } finally {
       clearTimeout(timer);
     }
@@ -521,9 +544,12 @@ export async function tanyaGemini(opts: {
   if (hasil.errorKey === "err.tanya.tidakTerhubung") return bersih(hasil);
 
   // 2. Tanpa konfigurasi berpikir: 400 (bentuknya tak dikenal), 5xx (sebagian
-  //    model menolaknya dengan 500), atau 200 tanpa teks.
+  //    model menolaknya dengan 500), atau 200 tanpa teks. Model utama yang
+  //    habis waktu TIDAK dicoba lagi — percobaan kedua hampir pasti sama
+  //    lambatnya dan menghabiskan tenggat model cadangan.
   const s1 = hasil.status ?? 0;
-  if (konfigPikir(utama) && (s1 === 400 || bolehUlang(s1) || hasil.errorKey === "err.tanya.tanpaJawaban")) {
+  const lambat = hasil.errorKey === "err.tanya.lambat";
+  if (!lambat && konfigPikir(utama) && (s1 === 400 || bolehUlang(s1) || hasil.errorKey === "err.tanya.tanpaJawaban")) {
     hasil = await kirim(utama, false);
     if (hasil.ok) return bersih(hasil);
   }
@@ -538,8 +564,12 @@ export async function tanyaGemini(opts: {
   // 4. Model cadangan — hanya untuk Tanya publik.
   if (opts.cadangan) {
     const st = hasil.status ?? 0;
-    if (bolehUlang(st) || st === 404 || hasil.errorKey === "err.tanya.tanpaJawaban") {
-      for (const m of MODEL_CADANGAN_GEMINI) {
+    if (bolehUlang(st) || st === 404 || lambat || hasil.errorKey === "err.tanya.tanpaJawaban" || hasil.errorKey === "err.tanya.lambat") {
+      /* Habis waktu: yang paling ringan (Lite) dulu. Alias Flash bisa jadi
+         model yang sama dengan yang barusan lambat, dan kalau ia didahulukan
+         tenggatnya habis sebelum Lite sempat dicoba. */
+      const urutan = lambat ? [...MODEL_CADANGAN_GEMINI].reverse() : MODEL_CADANGAN_GEMINI;
+      for (const m of urutan) {
         if (m === utama || sisaWaktu() < 5000) continue;
         const h = await kirim(m, false);
         if (h.ok) return bersih(h);

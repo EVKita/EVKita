@@ -1315,6 +1315,7 @@ export default {
   "err.ai.geminiDitolak": "Gemini 拒绝了此请求。",
   "err.ai.geminiJawabanBuruk": "无法读取 Gemini 的响应。请重试。",
   "err.ai.geminiTidakTerhubung": "无法连接 Google。请检查服务器网络后重试。",
+  "err.ai.geminiLambat": "Google 已收到请求，但回答超时。请稍后再试。",
   "err.ai.geminiModelTakTersedia": "密钥有效，但此账号目前没有可用的 Gemini 模型。请稍后再试，或在 Google AI Studio 中检查配额。",
   "ai.remove.title": "删除 DeepSeek 密钥？",
   "ai.remove.text": "在配置新密钥之前，AI 检索将停止工作。内容和其他设置不受影响。",

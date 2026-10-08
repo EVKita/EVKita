@@ -1316,6 +1316,7 @@ export default {
   "err.ai.geminiDitolak": "Gemini refused this request.",
   "err.ai.geminiJawabanBuruk": "The Gemini response could not be read. Try again.",
   "err.ai.geminiTidakTerhubung": "Could not reach Google. Check the server connection and try again.",
+  "err.ai.geminiLambat": "Google accepted the request but took too long to answer. Try again shortly.",
   "err.ai.geminiModelTakTersedia": "The key is valid, but no Gemini model will answer for this account yet. Try again later, or check your quota in Google AI Studio.",
   "ai.remove.title": "Remove the DeepSeek key?",
   "ai.remove.text": "AI research stops working until a new key is installed. Your content and other settings are untouched.",

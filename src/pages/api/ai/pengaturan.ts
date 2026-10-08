@@ -161,6 +161,7 @@ export const PUT: APIRoute = async ({ request, cookies, clientAddress }) => {
         "err.tanya.kunciSalah": "err.ai.geminiSalah",
         "err.tanya.sibuk": "err.ai.geminiSibuk",
         "err.tanya.tidakTerhubung": "err.ai.geminiTidakTerhubung",
+        "err.tanya.lambat": "err.ai.geminiLambat",
         "err.tanya.modelTakTersedia": "err.ai.geminiModelTakTersedia",
       };
       const res = apiError(PADANAN[uji.errorKey] || "err.ai.geminiBermasalah", kunciSalah ? 400 : 502);
