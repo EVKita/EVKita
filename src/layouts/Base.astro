@@ -288,8 +288,6 @@ const tagPublik = !!site && !accentOnly;
             document.documentElement.classList.add("modal-open");
             var em = gate.querySelector('input[type="email"]');
             if (em) em.focus();
-            /* Tawarkan masuk Google sekali ketuk begitu popup dibuka. */
-            tawarOneTap();
           }
           function tutup() {
             document.documentElement.classList.remove("modal-open");
@@ -364,81 +362,6 @@ const tagPublik = !!site && !accentOnly;
             } catch (e3) {}
             selesai = true;
             tutup();
-          });
-
-          /* Masuk Google sekali klik: tombol berlogo G selalu tampil. Bila
-             Client ID terpasang (Admin → Integrasi), klik membuka pilihan
-             akun Google dan langsung masuk; bila belum, pesan jujur tampil
-             dan login email tetap jalan. */
-          var googleSiap = false;
-          window.evkitaGoogle = function (resp) {
-            var cred = resp && resp.credential;
-            if (!cred) { err(gate.dataset.errNet); return; }
-            fetch("/api/member-google", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ credential: cred }),
-            })
-              .then(function (r) {
-                return r.json().then(function (b) { return { s: r.status, b: b }; });
-              })
-              .then(function (x) {
-                /* Cookie sesi 30 hari sudah dipasang server: muat ulang
-                   supaya pintu ini tidak pernah tampil lagi. */
-                if (x.s === 200 && x.b && x.b.ok) { selesai = true; location.reload(); }
-                else { err(gate.dataset.errNet); }
-              })
-              .catch(function () { err(gate.dataset.errNet); });
-          };
-          function siapGoogle() {
-            if (googleSiap) return true;
-            var clientId = gate.getAttribute("data-google-id") || "";
-            if (!clientId) return false;
-            if (!(window.google && window.google.accounts && window.google.accounts.id)) return false;
-            try {
-              window.google.accounts.id.initialize({
-                client_id: clientId,
-                callback: window.evkitaGoogle,
-                auto_select: true,
-              });
-              googleSiap = true;
-              return true;
-            } catch (e) {
-              return false;
-            }
-          }
-          /* Pustaka Google dimuat di MemberGate; dicoba dari sekarang supaya
-             siap sebelum tombol diklik. */
-          var _cobaGoogle = 0;
-          var googleTimer = setInterval(function () {
-            if (siapGoogle() || ++_cobaGoogle > 40) clearInterval(googleTimer);
-          }, 500);
-          function tawarOneTap() {
-            try {
-              if (!siapGoogle()) return;
-              window.google.accounts.id.prompt();
-            } catch (e) {}
-          }
-          var gbtn = document.getElementById("memberGoogle");
-          if (gbtn) gbtn.addEventListener("click", function () {
-            var clientId = gate.getAttribute("data-google-id") || "";
-            if (!clientId) { err(gate.dataset.errGoogleoff); return; }
-            if (siapGoogle()) {
-              try { window.google.accounts.id.prompt(); return; }
-              catch (e) { err(gate.dataset.errNet); return; }
-            }
-            /* Pustaka belum selesai dimuat: unduh lalu tawarkan. */
-            var s = document.createElement("script");
-            s.src = "https://accounts.google.com/gsi/client";
-            s.async = true;
-            s.defer = true;
-            s.onload = function () {
-              if (!siapGoogle()) { err(gate.dataset.errNet); return; }
-              try { window.google.accounts.id.prompt(); }
-              catch (e) { err(gate.dataset.errNet); }
-            };
-            s.onerror = function () { err(gate.dataset.errNet); };
-            document.head.appendChild(s);
           });
         })();
       </script>

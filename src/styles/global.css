@@ -6260,20 +6260,6 @@ html {
 .member-login:hover {
   background: #186840;
 }
-.member-or {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 22px 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-.member-or::before,
-.member-or::after {
-  content: "";
-  flex: 1;
-  border-top: 1px solid var(--border);
-}
 .member-google {
   display: flex;
   align-items: center;

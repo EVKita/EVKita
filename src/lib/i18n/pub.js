@@ -98,13 +98,11 @@ const ID = {
   "pub.member.password": "Kata sandi",
   "pub.member.remember": "Ingat saya",
   "pub.member.login": "Masuk",
-  "pub.member.or": "atau masuk dengan",
   "pub.member.rights": "© {year} evkita.com Seluruh hak cipta dilindungi.",
   "pub.member.close": "Tutup",
   "pub.member.badEmail": "Isi alamat email yang sah.",
   "pub.member.shortPass": "Kata sandi minimal 6 karakter.",
   "pub.member.errNet": "Tidak bisa masuk sekarang. Coba lagi.",
-  "pub.member.googleOff": "Login Google belum diaktifkan. Masuk dengan email.",
 
   // — Akun pengunjung lewat Clerk (popup ±8 detik setelah tiba) —
   "pub.akun.eyebrow": "Akun EVKita",
@@ -758,13 +756,11 @@ const EN = {
   "pub.member.password": "Password",
   "pub.member.remember": "Remember Me",
   "pub.member.login": "Login",
-  "pub.member.or": "or sign in with",
   "pub.member.rights": "© {year} evkita.com All rights reserved.",
   "pub.member.close": "Close",
   "pub.member.badEmail": "Enter a valid email address.",
   "pub.member.shortPass": "Password must be at least 6 characters.",
   "pub.member.errNet": "Could not sign you in. Please try again.",
-  "pub.member.googleOff": "Google sign-in is not enabled yet. Please use email.",
 
   // — Visitor accounts via Clerk (popup ~8 seconds after arrival) —
   "pub.akun.eyebrow": "EVKita account",
@@ -1411,13 +1407,11 @@ const ZH = {
   "pub.member.password": "密码",
   "pub.member.remember": "记住我",
   "pub.member.login": "登录",
-  "pub.member.or": "或使用以下方式登录",
   "pub.member.rights": "© {year} evkita.com版权所有。",
   "pub.member.close": "关闭",
   "pub.member.badEmail": "请输入有效的电子邮箱地址。",
   "pub.member.shortPass": "密码至少需要6个字符。",
   "pub.member.errNet": "目前无法登录，请重试。",
-  "pub.member.googleOff": "Google登录尚未启用，请使用邮箱登录。",
 
   // — 访客账号（Clerk）：到达约 8 秒后弹出 —
   "pub.akun.eyebrow": "EVKita 账号",

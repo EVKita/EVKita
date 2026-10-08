@@ -1,5 +1,5 @@
 /**
- * Integrasi Google — Analytics, AdSense, Search Console.
+ * Integrasi — Google Analytics, AdSense, Search Console, dan Clerk.
  *
  * Berkas ini bagian yang MURNI: bentuk pengaturannya, penyaringnya, dan
  * potongan kode yang disisipkan ke halaman. Tidak ada berkas dan tidak ada
@@ -45,29 +45,19 @@ export const BAWAAN = {
   gscMetode: "tag",
 
   /*
-   * Login Google pengunjung (opsional, tanpa saklar sendiri).
-   *
-   * Client ID OAuth dari Google Cloud Console; tombol "Google" di pintu masuk
-   * pengunjung hanya dirender bila nilainya sah. Disimpan di berkas yang sama
-   * karena sifatnya sama: id publik yang tampil di HTML, bukan rahasia.
-   * Rahasianya (client secret) tidak pernah dibutuhkan — token ID
-   * diverifikasi server lewat kunci publik Google.
-   */
-  googleClientId: "",
-
-  /*
    * Akun pengunjung lewat Clerk (clerk.com): daftar, masuk, dan Google.
    *
    * Yang disimpan hanya kunci PUBLISHABLE (`pk_live_…`/`pk_test_…`) — kunci itu
    * memang tercetak di HTML setiap halaman. Kunci rahasianya (`sk_…`) tidak
    * pernah dibutuhkan: data akun tinggal di Clerk, dan situs ini cuma
    * menampilkan tombol dan popupnya. Begitu kunci ini terisi, pintu masuk
-   * pengunjung yang lama (email di peramban + Client ID Google) digantikan.
+   * pengunjung yang lama (email di peramban) digantikan. Login Google lewat
+   * Client ID sendiri sudah dibuang: Google kini ditangani Clerk.
    */
   clerkKey: "",
 };
 
-export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken", "googleClientId", "clerkKey"];
+export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken", "clerkKey"];
 export const KUNCI_SAKLAR = ["gaAktif", "gaAbaikanAdmin", "adsenseAktif", "adsenseAuto", "gscAktif"];
 
 /** Cara verifikasi Search Console yang dikenal. Yang pertama adalah bawaan. */
@@ -86,7 +76,6 @@ export const POLA = {
   gaId: /^(G-[A-Z0-9]{4,20}|UA-\d{4,12}-\d{1,4}|GT-[A-Z0-9]{4,20})$/,
   adsenseId: /^ca-pub-\d{10,20}$/,
   gscToken: /^[A-Za-z0-9_-]{20,100}$/,
-  googleClientId: /^\d{6,30}-[A-Za-z0-9_-]{8,80}\.apps\.googleusercontent\.com$/,
   clerkKey: /^pk_(test|live)_[A-Za-z0-9+/=_-]{12,200}$/,
 };
 
@@ -133,9 +122,6 @@ export function normalisasi(raw) {
   if (!POLA.gaId.test(out.gaId)) { out.gaId = ""; out.gaAktif = false; }
   if (!POLA.adsenseId.test(out.adsenseId)) { out.adsenseId = ""; out.adsenseAktif = false; }
   if (!POLA.gscToken.test(out.gscToken)) { out.gscToken = ""; out.gscAktif = false; }
-  /* Client ID yang tidak sah dianggap tidak ada: tombol Google-nya yang
-     hilang, bukan halaman yang rusak. */
-  if (!POLA.googleClientId.test(out.googleClientId)) out.googleClientId = "";
   if (!hostClerk(out.clerkKey)) out.clerkKey = "";
   out.adsTxt = bersihkanAdsTxt(out.adsTxt);
   return out;
@@ -157,10 +143,6 @@ export function periksa(masuk) {
   if (nilai.gaId && !POLA.gaId.test(nilai.gaId)) galat.push("err.integrasi.gaId");
   if (nilai.adsenseId && !POLA.adsenseId.test(nilai.adsenseId)) galat.push("err.integrasi.adsenseId");
   if (nilai.gscToken && !POLA.gscToken.test(nilai.gscToken)) galat.push("err.integrasi.gscToken");
-  /* Client ID yang bentuknya salah langsung ditolak di sini, supaya panel
-     tidak melaporkan "tersimpan" sementara tombol Google-nya tetap hilang
-     (normalisasi akan membuangnya saat dibaca). */
-  if (nilai.googleClientId && !POLA.googleClientId.test(nilai.googleClientId)) galat.push("err.integrasi.googleClientId");
   if (nilai.clerkKey && !hostClerk(nilai.clerkKey)) {
     /* Kunci rahasia yang tertempel di sini adalah salah tempel paling mahal:
        ia akan tercetak di setiap halaman publik. Diberi pesan sendiri. */
@@ -252,13 +234,6 @@ export function hostCsp(cfg) {
     out.script.push("https:");
     out.connect.push("https:");
     out.frame.push("https:");
-  }
-
-  /* Tombol login Google memuat pustakanya dari akun Google. */
-  if (s.googleClientId) {
-    out.script.push("https://accounts.google.com");
-    out.frame.push("https://accounts.google.com");
-    out.connect.push("https://accounts.google.com");
   }
 
   /*

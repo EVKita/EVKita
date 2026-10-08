@@ -11,7 +11,7 @@ import { siteOrigin } from "../../lib/site-url";
 import { makeT, localeMeta } from "../../lib/i18n/index.js";
 
 /**
- * Halaman Integrasi — Google Analytics, AdSense, dan Search Console.
+ * Halaman Integrasi — Google Analytics, AdSense, Search Console, dan Clerk.
  *
  * Sengaja HALAMAN SENDIRI, bukan satu tampilan lagi di dalam /admin, dan
  * alasannya sama dengan halaman Pembaruan: isinya tidak menyentuh
@@ -44,9 +44,6 @@ const site = readContent().site || {};
 const cfg = bacaIntegrasi();
 const asal = siteOrigin(Astro.url);
 const gsc = statusGsc(cfg);
-/* Begitu kunci Clerk terisi, pintu masuk Google yang lama tidak dirender lagi
-   (MemberGate.astro) — jadi statusnya tidak boleh tetap "Aktif". */
-const loginAktif = !!cfg.googleClientId && !cfg.clerkKey;
 const contohAdsTxt = isiAdsTxt({ ...cfg, adsenseAktif: true, adsTxt: "" }).trim();
 
 /* Teks untuk skrip di bawah. Skrip itu berjalan di peramban dan tidak memuat
@@ -69,7 +66,6 @@ const texts = {
     "err.integrasi.gaId": t("err.integrasi.gaId"),
     "err.integrasi.adsenseId": t("err.integrasi.adsenseId"),
     "err.integrasi.gscToken": t("err.integrasi.gscToken"),
-    "err.integrasi.googleClientId": t("err.integrasi.googleClientId"),
     "err.integrasi.clerkKey": t("err.integrasi.clerkKey"),
     "err.integrasi.clerkRahasia": t("err.integrasi.clerkRahasia"),
     "err.integrasi.gaKosong": t("err.integrasi.gaKosong"),
@@ -85,6 +81,26 @@ const texts = {
 const statusKelas = (aktif: boolean) => (aktif ? "integrasi-status is-on" : "integrasi-status");
 const statusTeks = (aktif: boolean) => (aktif ? t("integrasi.on") : t("integrasi.off"));
 const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalytics"), dns: t("integrasi.gsc.onDns") }[gsc.lewat];
+
+/* Logo resmi tiap layanan, digambar sebagai SVG sebaris: CSP panel tidak
+   membuka gambar dari domain lain, dan logo yang dimuat dari Google akan
+   kosong tanpa satu pun pesan. Warnanya warna merek, jadi kotaknya selalu
+   putih — juga di tema gelap. */
+const LOGO = {
+  ga: `<rect x="15.2" y="2" width="6.3" height="20" rx="3.15" fill="#F9AB00"/><rect x="8.85" y="9" width="6.3" height="13" rx="3.15" fill="#E37400"/><circle cx="5.65" cy="18.85" r="3.15" fill="#E37400"/>`,
+  adsense: `<path d="M12.2 5.2 8.3 13.4" stroke="#FBBC04" stroke-width="4.6" stroke-linecap="round"/><path d="M12.2 5.2 18.6 18.4" stroke="#4285F4" stroke-width="4.6" stroke-linecap="round"/><circle cx="5.9" cy="18.4" r="3.2" fill="#34A853"/>`,
+  gsc: `<rect x="2.5" y="3.5" width="19" height="15" rx="2.6" fill="none" stroke="#9AA0A6" stroke-width="2"/><circle cx="11" cy="10.5" r="4.2" fill="#E8F0FE" stroke="#4285F4" stroke-width="2.2"/><path d="m14 13.6 5.4 5.6" stroke="#1A73E8" stroke-width="2.8" stroke-linecap="round"/>`,
+  clerk: `<path d="M17.4 6.3a8 8 0 1 0 0 11.4" fill="none" stroke="#6C47FF" stroke-width="3.2" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2" fill="#6C47FF"/><path d="M17.4 17.7a8 8 0 0 1-8.6 1.6" fill="none" stroke="#2F3037" stroke-width="3.2" stroke-linecap="round"/>`,
+};
+
+/* Ringkasan di puncak halaman: satu kartu per layanan, menunjuk ke bagiannya.
+   Statusnya ikut diperbarui skrip di bawah lewat `data-status` yang sama. */
+const ringkas = [
+  { id: "ga", nama: t("integrasi.ga"), aktif: cfg.gaAktif, on: t("integrasi.on") },
+  { id: "adsense", nama: t("integrasi.adsense"), aktif: cfg.adsenseAktif, on: t("integrasi.on") },
+  { id: "gsc", nama: t("integrasi.gsc"), aktif: gsc.aktif, on: gscOnTeks },
+  { id: "clerk", nama: t("integrasi.clerk.short"), aktif: !!cfg.clerkKey, on: t("integrasi.on") },
+];
 ---
 
 <Base title={`${t("integrasi.title")} — EVKita`} bodyClass="admin-ui" lang={lang.html} noindex site={site} accentOnly>
@@ -131,11 +147,23 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
           </div>
         </div>
 
+        <nav class="integrasi-ringkas" aria-label={t("integrasi.ringkas")}>
+          {ringkas.map((r) => (
+            <a class="integrasi-kartu" href={`#${r.id}`}>
+              <span class="integrasi-logo" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={LOGO[r.id]} /></span>
+              <span class="integrasi-kartu-nama">{r.nama}</span>
+              <span class={statusKelas(r.aktif)} data-status={r.id} data-on={r.on} data-off={t("integrasi.off")}>{r.aktif ? r.on : t("integrasi.off")}</span>
+            </a>
+          ))}
+        </nav>
+
         <form id="integrasi-form">
+          <h2 class="integrasi-grup">{t("integrasi.group.google")}</h2>
+
           <!-- ===== Google Analytics ===== -->
           <section class="panel form-section" id="ga">
             <div class="form-section-head integrasi-head">
-              <span class="integrasi-logo" aria-hidden="true">📊</span>
+              <span class="integrasi-logo" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={LOGO.ga} /></span>
               <div>
                 <h2>{t("integrasi.ga")}</h2>
                 <p>{t("integrasi.ga.desc")}</p>
@@ -171,15 +199,15 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
               <li>{t("integrasi.ga.step2")}</li>
               <li>{t("integrasi.ga.step3")}</li>
             </ol>
-            <p class="hint">
-              <a href="https://analytics.google.com/" target="_blank" rel="noopener">{t("integrasi.ga.open")}</a>
+            <p class="integrasi-buka">
+              <a class="btn btn-ghost btn-sm" href="https://analytics.google.com/" target="_blank" rel="noopener">{t("integrasi.ga.open")}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
             </p>
           </section>
 
           <!-- ===== Google AdSense ===== -->
           <section class="panel form-section" id="adsense">
             <div class="form-section-head integrasi-head">
-              <span class="integrasi-logo" aria-hidden="true">💰</span>
+              <span class="integrasi-logo" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={LOGO.adsense} /></span>
               <div>
                 <h2>{t("integrasi.adsense")}</h2>
                 <p>{t("integrasi.adsense.desc")}</p>
@@ -222,15 +250,15 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
               </div>
             </div>
 
-            <p class="hint">
-              <a href="https://www.google.com/adsense/" target="_blank" rel="noopener">{t("integrasi.adsense.open")}</a>
+            <p class="integrasi-buka">
+              <a class="btn btn-ghost btn-sm" href="https://www.google.com/adsense/" target="_blank" rel="noopener">{t("integrasi.adsense.open")}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
             </p>
           </section>
 
           <!-- ===== Google Search Console ===== -->
           <section class="panel form-section" id="gsc">
             <div class="form-section-head integrasi-head">
-              <span class="integrasi-logo" aria-hidden="true">🔎</span>
+              <span class="integrasi-logo" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={LOGO.gsc} /></span>
               <div>
                 <h2>{t("integrasi.gsc")}</h2>
                 <p>{t("integrasi.gsc.desc")}</p>
@@ -278,15 +306,17 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
               <li>{t("integrasi.gsc.step3")}</li>
               <li>{t("integrasi.gsc.step4")}</li>
             </ol>
-            <p class="hint">
-              <a href="https://search.google.com/search-console" target="_blank" rel="noopener">{t("integrasi.gsc.open")}</a>
+            <p class="integrasi-buka">
+              <a class="btn btn-ghost btn-sm" href="https://search.google.com/search-console" target="_blank" rel="noopener">{t("integrasi.gsc.open")}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
             </p>
           </section>
+
+          <h2 class="integrasi-grup">{t("integrasi.group.akun")}</h2>
 
           <!-- ===== Akun pengunjung lewat Clerk ===== -->
           <section class="panel form-section" id="clerk">
             <div class="form-section-head integrasi-head">
-              <span class="integrasi-logo" aria-hidden="true">👤</span>
+              <span class="integrasi-logo" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={LOGO.clerk} /></span>
               <div>
                 <h2>{t("integrasi.clerk")}</h2>
                 <p>{t("integrasi.clerk.desc")}</p>
@@ -308,37 +338,8 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
               <li>{t("integrasi.clerk.step3")}</li>
               <li>{t("integrasi.clerk.step4")}</li>
             </ol>
-            <p class="hint">
-              <a href="https://dashboard.clerk.com/" target="_blank" rel="noopener">{t("integrasi.clerk.open")}</a>
-            </p>
-          </section>
-
-          <!-- ===== Login Google pengunjung ===== -->
-          <section class="panel form-section" id="login-google">
-            <div class="form-section-head integrasi-head">
-              <span class="integrasi-logo" aria-hidden="true">🔑</span>
-              <div>
-                <h2>{t("integrasi.login")}</h2>
-                <p>{t("integrasi.login.desc")}</p>
-              </div>
-              <span class={statusKelas(loginAktif)} data-status="login" data-on={t("integrasi.on")} data-off={t("integrasi.off")} data-replaced={t("integrasi.login.replaced")}>{loginAktif ? t("integrasi.on") : cfg.googleClientId && cfg.clerkKey ? t("integrasi.login.replaced") : t("integrasi.off")}</span>
-            </div>
-
-            <div class="field-grid">
-              <div class="field full">
-                <label for="i-googleClientId">{t("integrasi.login.id")}</label>
-                <input id="i-googleClientId" name="googleClientId" value={cfg.googleClientId} placeholder="1234567890-abcdefgh.apps.googleusercontent.com" spellcheck="false" autocapitalize="none" autocomplete="off" />
-                <span class="hint">{t("integrasi.login.idHint")}</span>
-              </div>
-            </div>
-
-            <ol class="integrasi-langkah">
-              <li>{t("integrasi.login.step1")}</li>
-              <li>{t("integrasi.login.step2")}</li>
-              <li>{t("integrasi.login.step3")}</li>
-            </ol>
-            <p class="hint">
-              <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">{t("integrasi.login.open")}</a>
+            <p class="integrasi-buka">
+              <a class="btn btn-ghost btn-sm" href="https://dashboard.clerk.com/" target="_blank" rel="noopener">{t("integrasi.clerk.open")}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
             </p>
           </section>
 
@@ -385,7 +386,6 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
         gscAktif: form.elements.gscAktif.checked,
         gscToken: form.elements.gscToken.value.trim(),
         gscMetode: form.elements.gscMetode.value,
-        googleClientId: form.elements.googleClientId.value.trim(),
         clerkKey: form.elements.clerkKey.value.trim(),
       });
 
@@ -400,15 +400,14 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
       form.elements.gscMetode.addEventListener("change", tampilkanMetodeGsc);
 
       function tandaiStatus(cfg, gsc) {
-        const elGsc = document.querySelector('[data-status="gsc"]');
-        if (elGsc && gsc) elGsc.setAttribute("data-on", texts.gscOn[gsc.lewat] || texts.gscOn.tag);
-        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: gsc ? gsc.aktif : false, login: !!cfg.googleClientId && !cfg.clerkKey, clerk: !!cfg.clerkKey };
+        if (gsc) document.querySelectorAll('[data-status="gsc"]').forEach((el) => el.setAttribute("data-on", texts.gscOn[gsc.lewat] || texts.gscOn.tag));
+        const peta = { ga: cfg.gaAktif, adsense: cfg.adsenseAktif, gsc: gsc ? gsc.aktif : false, clerk: !!cfg.clerkKey };
         for (const [kunci, aktif] of Object.entries(peta)) {
-          const el = document.querySelector('[data-status="' + kunci + '"]');
-          if (!el) continue;
-          el.classList.toggle("is-on", !!aktif);
-          const digantikan = kunci === "login" && cfg.googleClientId && cfg.clerkKey;
-          el.textContent = aktif ? el.getAttribute("data-on") : digantikan ? el.getAttribute("data-replaced") : el.getAttribute("data-off");
+          /* Tiap layanan punya dua lencana: di kartu ringkasan dan di kepala bagiannya. */
+          document.querySelectorAll('[data-status="' + kunci + '"]').forEach((el) => {
+            el.classList.toggle("is-on", !!aktif);
+            el.textContent = aktif ? el.getAttribute("data-on") : el.getAttribute("data-off");
+          });
         }
       }
 
@@ -444,7 +443,6 @@ const gscOnTeks = { tag: t("integrasi.on"), analytics: t("integrasi.gsc.onAnalyt
           form.elements.gaId.value = cfg.gaId;
           form.elements.adsenseId.value = cfg.adsenseId;
           form.elements.gscToken.value = cfg.gscToken;
-          form.elements.googleClientId.value = cfg.googleClientId;
           form.elements.clerkKey.value = cfg.clerkKey;
           form.elements.adsTxt.value = cfg.adsTxt;
           form.elements.gaAktif.checked = cfg.gaAktif;

@@ -76,7 +76,6 @@ export const PUT: APIRoute = async ({ request, cookies, url }) => {
     if (aktifSebelum !== aktifSesudah || idSebelum !== idSesudah || metodeBerubah) berubah.push(nama);
   }
   if (sebelum.clerkKey !== sesudah.clerkKey) berubah.push("Clerk");
-  if (sebelum.googleClientId !== sesudah.googleClientId) berubah.push("Login Google");
   if (berubah.length) logActivity(me, "integrasi.update", { layanan: berubah.join(", ") });
 
   return json(muatan(url));

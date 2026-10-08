@@ -7474,6 +7474,8 @@ body:has(.modal-backdrop.open) .fab {
   gap: 12px;
 }
 
+/* Logo layanan: warna merek, jadi kotaknya selalu putih — juga di tema gelap,
+   tempat logo oranye/biru di atas latar gelap kehilangan bentuknya. */
 .integrasi-logo {
   flex: none;
   width: 38px;
@@ -7481,8 +7483,92 @@ body:has(.modal-backdrop.open) .fab {
   display: grid;
   place-items: center;
   border-radius: 11px;
-  background: var(--adm-surface-2);
-  font-size: 18px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: #fff;
+}
+
+.integrasi-logo svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Ringkasan: satu kartu per layanan di puncak halaman. */
+.integrasi-ringkas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.integrasi-kartu {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--adm-r-lg);
+  background: var(--bg-card);
+  box-shadow: var(--adm-shadow-sm);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.integrasi-kartu:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  transform: translateY(-1px);
+}
+
+.integrasi-kartu:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.integrasi-kartu-nama {
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.integrasi-kartu .integrasi-status {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-left: 0;
+}
+
+/* Judul kelompok di antara bagian formulir. */
+.integrasi-grup {
+  margin: 26px 0 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+#integrasi-form > .integrasi-grup:first-child {
+  margin-top: 0;
+}
+
+/* Lompatan dari kartu ringkasan tidak boleh tertutup topbar. */
+#integrasi-form > .form-section {
+  scroll-margin-top: 84px;
+}
+
+.integrasi-buka {
+  margin: 12px 0 0;
+}
+
+.integrasi-buka .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.integrasi-buka svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Penanda hidup/mati per layanan. Sengaja teks, bukan cuma titik warna:
