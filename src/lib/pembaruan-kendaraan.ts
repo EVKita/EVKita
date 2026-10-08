@@ -19,6 +19,7 @@ import { biayaDari } from "./ai-biaya.js";
 import { modelBawaan, siapRiset, tanggalWib } from "./ai-jobs";
 import { logActivity } from "./activity";
 import { IMAGE_EXT } from "./imagefile";
+import { mulaiJalan, selesaiJalan, sedangJalan } from "./kunci-jalan.js";
 import {
   normalkanPengaturan,
   pilihKendaraan,
@@ -54,6 +55,14 @@ const BERKAS = () => path.resolve(process.cwd(), "data/pembaruan-kendaraan.json"
 
 /** Batas keras satu riset kendaraan, supaya antrean tidak membeku selamanya. */
 const BATAS_MS_PER_KENDARAAN = 3 * 60 * 1000;
+
+/**
+ * Batas satu putaran penuh: riset + media per kendaraan, ditambah kelonggaran.
+ * Lewat dari ini, `jalan` dianggap sisa putaran yang mati (lihat `kunci-jalan.js`).
+ */
+function batasPutaranMs(batasHarian: number): number {
+  return Math.max(1, Number(batasHarian) || 1) * (BATAS_MS_PER_KENDARAAN + 2 * 60 * 1000) + 15 * 60 * 1000;
+}
 
 export interface RincianPembaruan {
   col: string;
@@ -97,9 +106,12 @@ export function bacaPembaruan(): StatusPembaruan {
   const res = readJson<any>(BERKAS());
   const data = res.status === "ok" ? res.data : {};
   const terakhir = data?.terakhir && typeof data.terakhir === "object" ? data.terakhir : {};
+  const pengaturan = normalkanPengaturan(data?.pengaturan);
   return {
-    pengaturan: normalkanPengaturan(data?.pengaturan),
-    jalan: !!data?.jalan,
+    pengaturan,
+    /* `jalan` di disk bisa sisa putaran yang mati saat aplikasi dimulai ulang;
+       yang dipercaya hanya putaran yang memang berjalan di proses ini. */
+    jalan: !!data?.jalan && sedangJalan("pembaruan", batasPutaranMs(pengaturan.batasHarian)),
     terakhir: {
       tanggal: String(terakhir.tanggal || ""),
       mulaiPada: Number(terakhir.mulaiPada) || 0,
@@ -282,6 +294,7 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
   const apiKey = kunciMesin(mesinAktif());
 
   status.jalan = true;
+  mulaiJalan("pembaruan");
   status.terakhir = {
     ...terakhirKosong(),
     tanggal: tanggalWib(),
@@ -294,6 +307,11 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
     const dipilih = pilihKendaraan(content, status.pengaturan);
 
     const tambalan: { col: string; id: string; patch: Record<string, any> }[] = [];
+    /* Kendaraan yang risetnya berhasil — tanda basinya dilepas, ADA atau
+       TIDAK ADA perubahan nilai. Riset itulah pemeriksaan ulang yang diminta
+       tanda tersebut; tanpa melepasnya, kendaraan yang sama diriset setiap
+       hari selamanya dan sisanya tidak pernah mendapat giliran. */
+    const terperiksa: { col: string; id: string }[] = [];
     const rincian: RincianPembaruan[] = [];
     let biayaTotal = 0;
     let gagal = 0;
@@ -317,6 +335,7 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
           ? await ambilMediaUntuk(vehicle)
           : {};
       const semuaPatch = { ...patch, ...mediaPatch };
+      if (!hasil.errorKey) terperiksa.push({ col: k.col, id: k.id });
 
       if (hasil.errorKey && Object.keys(semuaPatch).length === 0) {
         gagal++;
@@ -339,12 +358,21 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
     }
 
     let diubah = 0;
-    if (tambalan.length) {
+    if (tambalan.length || terperiksa.length) {
       // Baca ulang sebelum menulis: riset memakan waktu, dan penyunting bisa
       // saja menyimpan di tengah jalan. Patch diterapkan per id, jadi perubahan
       // panel yang tidak menyinggung kendaraan yang sama tetap selamat.
       const segar = readContent();
       const kini = new Date().toISOString();
+      let tandaDilepas = false;
+      for (const t of terperiksa) {
+        const item = ((segar as any)[t.col] || []).find((v: any) => v.id === t.id);
+        if (item && (item.stale || item.perluCek)) {
+          item.stale = false;
+          item.perluCek = false;
+          tandaDilepas = true;
+        }
+      }
       for (const t of tambalan) {
         const daftar = segar[t.col];
         const item = (daftar || []).find((v: any) => v.id === t.id);
@@ -354,8 +382,8 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
         item.updatedBy = "auto";
         diubah++;
       }
+      if (diubah > 0 || tandaDilepas) writeContent(segar);
       if (diubah > 0) {
-        writeContent(segar);
         /* Terjemahan Inggris & Mandarin disiapkan SEKARANG, bukan menunggu
            pengunjung pertama: cache terjemahan hanya menyimpan teks yang
            belum ada, jadi yang diterjemahkan hanyalah kalimat yang baru
@@ -390,6 +418,7 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
     return { dilewati: false, error: String((e && e.message) || e) };
   } finally {
     status.jalan = false;
+    selesaiJalan("pembaruan");
     tulisPembaruan(status);
   }
 }
@@ -407,10 +436,13 @@ export function jadwalkanPembaruan(): void {
 
     const hari = tanggalWib();
     if (sudahHari === hari) return;
-    sudahHari = hari;
 
+    /* Jam diperiksa SEBELUM hari ditandai. Urutan sebaliknya membuat
+       penjadwal 10-menitan menandai hari ini sekitar 00.10 WIB — sebelum
+       `mulaiJam` — lalu melewatkan putaran seharian penuh. */
     const jam = new Date(Date.now() + 7 * 3600 * 1000).getUTCHours();
     if (jam < status.pengaturan.mulaiJam) return;
+    sudahHari = hari;
 
     void jalankanPembaruan().catch(() => {});
   } catch {

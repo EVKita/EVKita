@@ -125,4 +125,25 @@ describe("gabungBerita", () => {
     const { daftar } = gabungBerita(lama, [], 3);
     assert.equal(daftar.length, 3);
   });
+
+  it("tidak pernah membuang berita yang ditambahkan redaksi", () => {
+    const manual = { url: "https://redaksi.test/lama", date: "2026-01-01", updatedBy: "Kevin" };
+    const unggulan = { url: "https://a.test/unggul", date: "2026-01-02", featured: true };
+    const rss = Array.from({ length: 10 }, (_, i) => ({ url: `https://rss.test/${i}`, date: `2026-09-${10 + i}`, updatedBy: "" }));
+    const { daftar } = gabungBerita([manual, unggulan], rss, 6);
+    assert.ok(daftar.some((b) => b.url === manual.url));
+    assert.ok(daftar.some((b) => b.url === unggulan.url));
+    // Sisa jatah diisi berita RSS terbaru.
+    assert.equal(daftar.length, 6);
+    assert.ok(daftar.some((b) => b.url === "https://rss.test/9"));
+    assert.ok(!daftar.some((b) => b.url === "https://rss.test/0"));
+  });
+
+  it("berita RSS tetap kebagian minimal separuh jatah walau redaksi menyimpan banyak", () => {
+    const manual = Array.from({ length: 8 }, (_, i) => ({ url: `https://redaksi.test/${i}`, date: "2026-01-01", updatedBy: "Ed" }));
+    const rss = Array.from({ length: 10 }, (_, i) => ({ url: `https://rss.test/${i}`, date: `2026-09-${10 + i}` }));
+    const { daftar } = gabungBerita(manual, rss, 6);
+    assert.equal(daftar.filter((b) => b.url.startsWith("https://rss.test/")).length, 3);
+    assert.equal(daftar.filter((b) => b.url.startsWith("https://redaksi.test/")).length, 8);
+  });
 });

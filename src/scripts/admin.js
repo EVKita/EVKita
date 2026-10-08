@@ -452,7 +452,7 @@ const vehicleStatusFilter = () => ({
       : v === "scheduled" ? terjadwal(it)
         // Basi manual DAN basi karena lama tidak disentuh: saringannya menjawab
         // pertanyaan yang sama, jadi tidak ada gunanya dua pilihan terpisah.
-        : v === "stale" ? (!!it.stale || basi(it))
+        : v === "stale" ? (!!it.stale || !!it.perluCek || basi(it))
           : v === "odd" ? adaNilaiJanggal(it)
             : v === "noimage" ? !it.image
               : v === "noprice" ? it.price == null && !it.priceText
@@ -2055,7 +2055,8 @@ function healthIssues() {
       if (it.status === "draft") why.push("issue.draft");
       // Basi karena ditandai manusia ATAU karena lama tidak disentuh; keduanya
       // menuntut hal yang sama, yaitu ditinjau ulang.
-      if (it.stale || basi(it)) why.push("issue.stale");
+      // `perluCek` = tanda mesin (pemantau berita/model viral), tidak tampil publik.
+      if (it.stale || it.perluCek || basi(it)) why.push("issue.stale");
       if (adaNilaiJanggal(it)) why.push("issue.odd");
       if (idKembar.has(it.id)) why.push("issue.duplicate");
       if (why.length) issues.push({ col, id: it.id, title: titleOf(col, it), why });
@@ -2293,7 +2294,7 @@ function rowHtml(col, it, dragEnabled) {
   if (it.status === "draft") badges.push(`<span class="badge badge-draft">${esc(t("badge.draft"))}</span>`);
   else if (terjadwal(it)) badges.push(`<span class="badge badge-sched">${esc(t("badge.scheduled"))}</span>`);
   if (it.featured) badges.push(`<span class="badge badge-featured">${esc(t("badge.featured"))}</span>`);
-  if (isVehicle(col) && (it.stale || basi(it))) badges.push(`<span class="badge badge-warn">${esc(t("badge.stale"))}</span>`);
+  if (isVehicle(col) && (it.stale || it.perluCek || basi(it))) badges.push(`<span class="badge badge-warn">${esc(t("badge.stale"))}</span>`);
   if (isVehicle(col) && adaNilaiJanggal(it)) badges.push(`<span class="badge badge-warn">${esc(t("badge.odd"))}</span>`);
   if (isVehicle(col) && !it.image) badges.push(`<span class="badge badge-muted">${esc(t("badge.noImage"))}</span>`);
   /* Artikel tanpa satu pun sumber ditandai — bukan dilarang, tapi harus

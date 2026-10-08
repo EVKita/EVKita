@@ -226,6 +226,11 @@ function normalizeCar(c: any, kind: "mobil" | "motor"): any {
       return n !== null && n >= 0 ? Math.round(n) : null;
     })(),
     stale: !!c?.stale,
+    /* Tanda mesin (pemantau berita, pendeteksi viral): "riset ulang ini".
+       Sengaja terpisah dari `stale` — `stale` keputusan redaksi dan tampil
+       ke pembaca sebagai "Data lama"; tanda mesin hanya untuk panel dan
+       antrean auto-update. */
+    perluCek: !!c?.perluCek,
     featured: !!c?.featured,
     status,
     /* Waktu tayang berlaku untuk kelima koleksi lewat `src/lib/tayang.js`.

@@ -103,12 +103,33 @@ export function urlKunci(u) {
 }
 
 /**
+ * Berita yang dijaga redaksi dan tidak boleh dibuang pemotongan otomatis:
+ * ditambah/disunting lewat panel (`updatedBy` terisi — penarik RSS selalu
+ * mengosongkannya), diunggulkan, masih draf, atau dijadwalkan tayang.
+ */
+export function beritaDijaga(b) {
+  if (!b) return false;
+  return !!(
+    String(b.updatedBy || "").trim() ||
+    b.featured ||
+    b.status === "draft" ||
+    String(b.publishAt || "").trim()
+  );
+}
+
+/**
  * Menggabungkan berita baru ke daftar lama.
  *
  * Berita dianggap sama kalau alamatnya sama, bukan kalau judulnya sama: satu
  * penerbit bisa memakai judul yang persis sama dua kali, dan dua penerbit bisa
  * menulis judul yang nyaris sama untuk peristiwa yang berbeda. Yang tersisa
  * diurutkan dari yang terbaru dan dipotong pada `maks`.
+ *
+ * Pemotongan hanya mengenai berita hasil tarikan RSS. Berita yang dijaga
+ * redaksi (`beritaDijaga`) selalu ikut — sebelumnya satu tarikan berisi 55
+ * berita baru ikut membuang tulisan yang ditambahkan tangan. Berita RSS tetap
+ * kebagian minimal separuh `maks`, supaya Berita Terkini tidak membeku hanya
+ * karena redaksi menyimpan banyak tulisan.
  */
 export function gabungBerita(lama, baru, maks = 30) {
   const daftar = Array.isArray(lama) ? [...lama] : [];
@@ -124,5 +145,8 @@ export function gabungBerita(lama, baru, maks = 30) {
   }
 
   daftar.sort((a, b) => String((b && b.date) || "").localeCompare(String((a && a.date) || "")));
-  return { daftar: daftar.slice(0, maks), ditambah };
+  const dijaga = daftar.filter(beritaDijaga).length;
+  let jatah = Math.max(maks - dijaga, Math.ceil(maks / 2));
+  const hasil = daftar.filter((b) => beritaDijaga(b) || jatah-- > 0);
+  return { daftar: hasil, ditambah };
 }

@@ -30,7 +30,7 @@ export const PEMBARUAN_DEFAULTS = {
   aktif: true,
   /** Berapa kendaraan paling banyak diriset dalam satu hari. */
   batasHarian: 5,
-  /** Kalau menyala, hanya kendaraan bertanda `stale` yang diriset. */
+  /** Kalau menyala, hanya kendaraan bertanda `stale` atau `perluCek` yang diriset. */
   hanyaBasi: true,
   /** Keyakinan minimum agar sebuah nilai boleh diterapkan otomatis. */
   keyakinanMin: "tinggi",
@@ -101,7 +101,9 @@ export function pilihKendaraan(content, pengaturan) {
         id: String(v.id || ""),
         brand: String(v.brand),
         name: String(v.name),
-        stale: !!v.stale,
+        // Tanda redaksi (`stale`) dan tanda mesin (`perluCek`) sama-sama berarti
+        // "riset ulang" bagi antrean ini.
+        stale: !!v.stale || !!v.perluCek,
         updatedAt: String(v.updatedAt || ""),
       });
     }

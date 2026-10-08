@@ -24,6 +24,18 @@ describe("normalkanPengaturan", () => {
 });
 
 describe("pilihKendaraan", () => {
+  it("tanda mesin `perluCek` ikut antrean seperti `stale`", () => {
+    const content = {
+      cars: [
+        { id: "a", brand: "BYD", name: "Seal", perluCek: true },
+        { id: "b", brand: "BYD", name: "Atto 3" },
+      ],
+      motors: [],
+    };
+    const hasil = pilihKendaraan(content, { batasHarian: 5, hanyaBasi: true });
+    assert.deepEqual(hasil.map((v: any) => v.id), ["a"]);
+  });
+
   const content = {
     cars: [
       { id: "a", brand: "BYD", name: "Seal", status: "published", stale: false, updatedAt: "2026-01-01" },

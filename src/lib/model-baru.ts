@@ -18,6 +18,7 @@ import { readJson, writeJsonAtomic } from "./jsonfile";
 import { modelBawaan, siapRiset, tanggalWib } from "./ai-jobs";
 import { bacaPembaruan } from "./pembaruan-kendaraan";
 import { logContentChanges } from "./activity";
+import { mulaiJalan, selesaiJalan, sedangJalan } from "./kunci-jalan.js";
 
 /**
  * Penemuan model baru otomatis.
@@ -51,6 +52,8 @@ const BERKAS = () => path.resolve(process.cwd(), "data/model-baru.json");
 
 /** Batas keras satu riset model, supaya antrean tidak membeku selamanya. */
 const BATAS_MS_MODEL = 3 * 60 * 1000;
+/** Batas satu putaran (ekstraksi + riset tiap kandidat), lihat `kunci-jalan.js`. */
+const BATAS_MS_PUTARAN = 30 * 60 * 1000;
 /** Model baru terbanyak yang ditambahkan per hari. */
 export const MAKS_BARU_SEHARI = 2;
 /** Putaran harian dimulai setelah jam ini (WIB). */
@@ -217,7 +220,8 @@ export function bacaModelBaru(): StatusModelBaru {
   const res = readJson<any>(BERKAS());
   const data = res.status === "ok" ? res.data : {};
   return {
-    jalan: !!data?.jalan,
+    // `jalan` di disk bisa sisa putaran yang mati saat aplikasi dimulai ulang.
+    jalan: !!data?.jalan && sedangJalan("model-baru", BATAS_MS_PUTARAN),
     tanggal: String(data?.tanggal || ""),
     hasil: data?.hasil && typeof data.hasil === "object" ? { ...hasilKosong(), ...data.hasil } : null,
     riwayat: Array.isArray(data?.riwayat) ? data.riwayat.map((k: any) => String(k)).filter(Boolean) : [],
@@ -355,6 +359,7 @@ export async function jalankanModelBaru({ paksa = false }: { paksa?: boolean } =
   const apiKey = kunciMesin(mesinAktif());
 
   status.jalan = true;
+  mulaiJalan("model-baru");
   tulisModelBaru(status);
 
   const hasil = { ...hasilKosong(), tanggal: tanggalWib() };
@@ -416,6 +421,7 @@ export async function jalankanModelBaru({ paksa = false }: { paksa?: boolean } =
     return { dilewati: false, ...hasil };
   } finally {
     status.jalan = false;
+    selesaiJalan("model-baru");
     tulisModelBaru(status);
   }
 }

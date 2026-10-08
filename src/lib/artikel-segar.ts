@@ -12,6 +12,7 @@ import { normalizeArtikel, artikelTayang } from "./artikel.js";
 import { modelBawaan, siapRiset, tanggalWib } from "./ai-jobs";
 import { readContent, writeContent } from "./store";
 import { readJson, writeJsonAtomic } from "./jsonfile";
+import { mulaiJalan, selesaiJalan, sedangJalan } from "./kunci-jalan.js";
 import { safeUrl } from "./url.js";
 
 /**
@@ -57,6 +58,8 @@ const BERKAS = () => path.resolve(process.cwd(), "data/artikel-segar.json");
 const BATAS_MS_SEGAR = 5 * 60 * 1000;
 /** Artikel terbanyak yang disegarkan per hari — pembatas biaya AI. */
 export const BATAS_SEHARI = 10;
+/** Batas satu putaran penuh, lihat `kunci-jalan.js`. */
+const BATAS_MS_PUTARAN = BATAS_SEHARI * BATAS_MS_SEGAR + 15 * 60 * 1000;
 /** Putaran harian dimulai setelah jam ini (WIB), sesudah draf otomatis (05.00). */
 export const JAM_MULAI = 6;
 /** Isi minimum yang diterima dari AI — di bawah ini dianggap terpotong. */
@@ -108,7 +111,8 @@ export function bacaSegar(): StatusSegar {
   const data = res.status === "ok" ? res.data : {};
   return {
     pengaturan: normalkanPengaturanSegar(data?.pengaturan),
-    jalan: !!data?.jalan,
+    // `jalan` di disk bisa sisa putaran yang mati saat aplikasi dimulai ulang.
+    jalan: !!data?.jalan && sedangJalan("artikel-segar", BATAS_MS_PUTARAN),
     tanggal: String(data?.tanggal || ""),
     hasil: data?.hasil && typeof data.hasil === "object" ? { ...hasilKosong(), ...data.hasil } : null,
     riwayat: Array.isArray(data?.riwayat)
@@ -307,6 +311,8 @@ async function segarkanSatu(
       instructions: instruksiSegar(artikel),
       input: `NASKAH LAMA:\n${String(artikel?.body || "").slice(0, 18000)}\n\nBAHAN SEGAR (angka hanya dari sini):\n${bahan}\n\nDaftar alamat yang boleh dikutip (JANGAN tulis yang lain):\n${daftarBoleh.map((u) => `- ${u}`).join("\n")}\n\nJawab hanya dengan JSON sesuai skema.`,
       schema: SKEMA_SEGAR,
+      // Tanpa ini batas BATAS_MS_SEGAR tidak berlaku pada panggilan utama.
+      signal: ac.signal,
     });
     if (res.usage) biaya += biayaDariUsage(res.usage, model, new Date()).rupiah;
 
@@ -345,6 +351,7 @@ export async function jalankanSegar({ paksa = false }: { paksa?: boolean } = {})
   const apiKey = kunciMesin(mesinAktif());
 
   status.jalan = true;
+  mulaiJalan("artikel-segar");
   tulisSegar(status);
 
   const hasil = { ...hasilKosong(), tanggal: tanggalWib() };
@@ -403,6 +410,7 @@ export async function jalankanSegar({ paksa = false }: { paksa?: boolean } = {})
     return { dilewati: false, ...hasil };
   } finally {
     status.jalan = false;
+    selesaiJalan("artikel-segar");
     tulisSegar(status);
   }
 }

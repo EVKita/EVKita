@@ -8,7 +8,7 @@
  *      yang sama. Jadi yang berjalan per jam hanyalah yang GRATIS: membaca
  *      ulang RSS penerbit yang sama dengan penarik berita harian, mencari
  *      sinyal penjualan/peluncuran, dan menandai kendaraan yang cocok sebagai
- *      `stale` supaya muncul di "Perlu ditinjau" pada dasbor panel.
+ *      `perluCek` (tanda mesin — tidak tampil ke pembaca, beda dengan `stale`) supaya muncul di "Perlu ditinjau" pada dasbor panel.
  *   2. Tanpa kunci DeepSeek, mesin riset harian memang diam — tapi pemantau
  *      ini, penarik berita, dan pendeteksi viral tetap jalan penuh. Otomatisasi
  *      turun tingkat dengan sendirinya ke "bantu-manual": yang tinggal untuk
@@ -183,7 +183,7 @@ export interface HasilPantauan {
 }
 
 /**
- * Memindai RSS, menandai kendaraan yang tersangkut sinyal sebagai `stale`.
+ * Memindai RSS, menandai kendaraan yang tersangkut sinyal sebagai `perluCek`.
  *
  * @param paksa `true` untuk mengabaikan penjaga "sejam sekali".
  */
@@ -223,8 +223,8 @@ export async function pantauSinyal({ paksa = false }: { paksa?: boolean } = {}):
       for (const k of target) {
         const daftar = k.col === "motors" ? (content as any).motors : (content as any).cars;
         const item = (daftar || []).find((v: any) => v && v.id === k.id);
-        if (item && !item.stale) {
-          item.stale = true;
+        if (item && !item.stale && !item.perluCek) {
+          item.perluCek = true;
           berubah = true;
         }
       }

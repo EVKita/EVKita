@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { readContent, writeContent } from "./store";
 import { SUMBER_BERITA, relevanBerita, judulBersih } from "./berita-sumber.js";
-import { gabungBerita, parseFeed } from "./berita-rss.js";
+import { gabungBerita, parseFeed, urlKunci } from "./berita-rss.js";
 
 /**
  * Penarik berita harian.
@@ -93,6 +93,27 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string; str
 let sedangJalan = false;
 
 /**
+ * Apakah hasil tarikan terakhir masih ada di konten?
+ *
+ * "Sudah berhasil hari ini" di berkas jadwal tidak menjamin beritanya masih
+ * ada: `content.json` bisa ditimpa sesudahnya — dipulihkan dari cadangan, atau
+ * disalin dari paket rilis oleh `deploy.sh` saat `EVKITA_SYNC_CONTENT=1`.
+ * Tanpa pemeriksaan ini Berita Terkini kembali ke isi lama dan baru ditarik
+ * ulang esok pagi. Penanda = kunci alamat berita terbaru hasil tarikan.
+ */
+function penandaMasihAda(penanda: unknown): boolean {
+  const k = String(penanda || "");
+  if (!k) return false;
+  // "*" = tarikan berhasil tapi daftar memang kosong; tidak ada yang bisa hilang.
+  if (k === "*") return true;
+  try {
+    return (readContent().berita || []).some((b: any) => urlKunci(b && b.url) === k);
+  } catch {
+    return true;
+  }
+}
+
+/**
  * Menarik seluruh sumber dan menggabungkannya ke `content.berita`.
  *
  * @param paksa `true` untuk mengabaikan penjaga "sekali sehari" (tombol panel).
@@ -105,7 +126,7 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
      kunjungan berikutnya, bukan hangus sehari penuh. Sebelumnya tanggal
      ditandai SEBELUM menarik, jadi satu kegagalan sesaat menghanguskan
      seluruh harinya tanpa jejak. */
-  if (!paksa && jadwal.tanggal === hariIni && jadwal.hasil && jadwal.hasil.ok) {
+  if (!paksa && jadwal.tanggal === hariIni && jadwal.hasil && jadwal.hasil.ok && penandaMasihAda(jadwal.penanda)) {
     return { dilewati: true, tanggal: hariIni };
   }
   if (sedangJalan) return { dilewati: true, tanggal: hariIni };
@@ -146,7 +167,8 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
       ok,
       ...(gagal.length && ditambah === 0 ? { error: `sumber mati: ${gagal.join(", ")}` } : {}),
     };
-    tulisJadwal({ tanggal: hariIni, hasil: ringkas });
+    const terbaru = daftar.find((b: any) => b && b.url);
+    tulisJadwal({ tanggal: hariIni, hasil: ringkas, penanda: terbaru ? urlKunci(terbaru.url) : "*" });
     return ringkas;
   } catch (e: any) {
     const ringkas = { dilewati: false, tanggal: hariIni, ditambah: 0, ok: false, error: String((e && e.message) || e) };

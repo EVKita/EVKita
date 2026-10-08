@@ -13,6 +13,7 @@ import { normalizeArtikel, KATEGORI_ARTIKEL } from "./artikel.js";
 import { modelBawaan, siapRiset, tanggalWib } from "./ai-jobs";
 import { readContent, writeContent } from "./store";
 import { readJson, writeJsonAtomic } from "./jsonfile";
+import { mulaiJalan, selesaiJalan, sedangJalan } from "./kunci-jalan.js";
 
 /**
  * Penulis artikel otomatis harian.
@@ -44,6 +45,8 @@ const BERKAS = () => path.resolve(process.cwd(), "data/artikel-harian.json");
 
 /** Batas keras satu penulisan, supaya antrean tidak membeku selamanya. */
 const BATAS_MS_TULIS = 5 * 60 * 1000;
+/** Batas satu putaran (tulis + rapikan + pangkas), lihat `kunci-jalan.js`. */
+const BATAS_MS_PUTARAN = 20 * 60 * 1000;
 /** Berhenti menambah draf baru kalau yang menunggu telaah sudah sebanyak ini. */
 export const MAKS_DRAF_TUNGGU = 7;
 /** Draf otomatis yang tak tersentuh lebih lama dari ini dibersihkan. */
@@ -116,7 +119,8 @@ export function bacaArtikelHarian(): StatusArtikelHarian {
   const data = res.status === "ok" ? res.data : {};
   return {
     pengaturan: normalkanPengaturanArtikel(data?.pengaturan),
-    jalan: !!data?.jalan,
+    // `jalan` di disk bisa sisa putaran yang mati saat aplikasi dimulai ulang.
+    jalan: !!data?.jalan && sedangJalan("artikel-harian", BATAS_MS_PUTARAN),
     tanggal: String(data?.tanggal || ""),
     hasil: data?.hasil && typeof data.hasil === "object" ? { ...hasilKosong(), ...data.hasil } : null,
     riwayat: Array.isArray(data?.riwayat) ? data.riwayat.filter((r: any) => r && r.kunci).slice(-90) : [],
@@ -372,6 +376,9 @@ async function tulisSatu(
       instructions: instruksiTulis(topik),
       input: `${topik.bahan}${bahanSumber}\n\nJawab hanya dengan JSON sesuai skema.`,
       schema: SKEMA_DRAF,
+      // Tanpa ini batas BATAS_MS_TULIS tidak pernah berlaku pada panggilan
+      // utama, dan riset yang menggantung menahan putaran selamanya.
+      signal: ac.signal,
     });
     if (res.usage) biaya += biayaDariUsage(res.usage, model, new Date()).rupiah;
 
@@ -433,6 +440,7 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
   const apiKey = kunciMesin(mesinAktif());
 
   status.jalan = true;
+  mulaiJalan("artikel-harian");
   tulisArtikelHarian(status);
 
   const hasil = { ...hasilKosong(), tanggal: tanggalWib() };
@@ -505,6 +513,7 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
     return { dilewati: false, ...hasil };
   } finally {
     status.jalan = false;
+    selesaiJalan("artikel-harian");
     tulisArtikelHarian(status);
   }
 }

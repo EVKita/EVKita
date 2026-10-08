@@ -37,7 +37,7 @@ export interface Perubahan {
  * dibandingkan, setiap penyimpanan akan melaporkan dirinya sendiri sebagai
  * perubahan dan tidak ada satu pun penyimpanan yang pernah terlihat kosong.
  */
-const ABAIKAN = new Set(["id", "kind", "variants", "updatedAt", "updatedBy"]);
+const ABAIKAN = new Set(["id", "kind", "variants", "updatedAt", "updatedBy", "perluCek"]);
 
 function sama(a: unknown, b: unknown): boolean {
   if (a === b) return true;

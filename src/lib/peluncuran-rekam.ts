@@ -10,7 +10,7 @@ import { AMBANG_VIRAL, kandidatViral } from "./peluncuran.js";
  *
  * Membaca statistik kunjungan yang sudah ada, mencari halaman kendaraan yang
  * melewati `AMBANG_VIRAL` dalam dua hari terakhir (perkiraan "24 jam" dari
- * angka harian WIB), lalu menandai kendaraannya `stale` supaya muncul di
+ * angka harian WIB), lalu menandai kendaraannya `perluCek` (tanda mesin, tidak tampil ke pembaca) supaya muncul di
  * daftar "Perlu ditinjau" pada dasbor panel.
  *
  * Sengaja TIDAK menulis data baru dan TIDAK memanggil AI: halaman yang ramai
@@ -56,8 +56,8 @@ export function deteksiViral() {
       for (const k of kandidat) {
         const daftar = k.kind === "motor" ? content.motors : content.cars;
         const item = (daftar || []).find((v: any) => v.id === k.slug);
-        if (item && !item.stale) {
-          item.stale = true;
+        if (item && !item.stale && !item.perluCek) {
+          item.perluCek = true;
           berubah = true;
         }
       }
