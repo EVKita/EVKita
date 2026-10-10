@@ -1,0 +1,109 @@
+---
+/**
+ * Kartu "Ikuti EVKita" ala Shining Awards: enam ubin (Instagram, X, Facebook,
+ * Telegram, WhatsApp Channel, TikTok) di atas footer. Diklik membuka medsos
+ * masing-masing di tab baru.
+ *
+ * Datanya MEMAKAI ULANG field `site.social*` yang sama dengan ikon footer
+ * (`Admin → Pengaturan Situs`), jadi admin cukup mengisi sekali di satu tempat:
+ * ubin yang URL-nya kosong tidak tampil, dan kalau semuanya kosong seluruh
+ * kartu tidak tampil — sama aturannya dengan blok footer lain.
+ */
+import { safeUrl } from "../lib/url.js";
+import { SOCIAL_NETWORKS } from "../lib/footer.js";
+import { makePubT } from "../lib/i18n/pub.js";
+
+interface Props {
+  site: Record<string, any>;
+}
+
+const lang = Astro.locals?.pubLang;
+const t = makePubT(lang);
+const site = Astro.props.site || {};
+
+/** Urutan tetap seperti contoh: enam jejaring, tanpa YouTube/LinkedIn. */
+const URUTAN = [
+  "socialInstagram",
+  "socialX",
+  "socialFacebook",
+  "socialTelegram",
+  "socialWhatsapp",
+  "socialTiktok",
+];
+
+/**
+ * Nomor WhatsApp lebih sering diketik sebagai angka daripada sebagai URL —
+ * aturan yang sama persis dengan ikon footer di `SiteFooter.astro`. Tautan
+ * Channel (`https://whatsapp.com/channel/…`) lolos apa adanya lewat `safeUrl`.
+ */
+function urlUntuk(key: string, nilai: unknown): string {
+  const v = String(nilai ?? "").trim();
+  if (!v) return "";
+  if (key === "socialWhatsapp" && /^[\d+\s()-]{6,}$/.test(v)) {
+    return safeUrl(`https://wa.me/${v.replace(/[^\d]/g, "")}`);
+  }
+  return safeUrl(v);
+}
+
+/** Nama kecil di bawah nama jejaring, mis. `@evkita` — seperti `@shiningawards`. */
+function pegangan(key: string, url: string): string {
+  if (key === "socialWhatsapp") {
+    if (/whatsapp\.com\/channel\//i.test(url)) return "Channel";
+    return "Chat";
+  }
+  try {
+    const u = new URL(url);
+    const seg = u.pathname.split("/").filter(Boolean).pop() || "";
+    const bersih = decodeURIComponent(seg).replace(/^@/, "");
+    if (!bersih || /^(channel|user|c|@)$/i.test(bersih)) {
+      return u.hostname.replace(/^www\./, "");
+    }
+    const nama = bersih.startsWith("@") ? bersih : `@${bersih}`;
+    return nama.length > 20 ? `${nama.slice(0, 19)}…` : nama;
+  } catch {
+    return "";
+  }
+}
+
+const items = URUTAN.map((key) => {
+  const def = SOCIAL_NETWORKS.find((s) => s.key === key);
+  const url = urlUntuk(key, site[key]);
+  if (!def || !url) return null;
+  return { ...def, url, handle: pegangan(key, url) };
+}).filter(Boolean) as { key: string; label: string; icon: string; url: string; handle: string }[];
+
+const judul = t("pub.follow.title");
+---
+
+{items.length ? (
+  <section class="follow-card" aria-label={judul}>
+    <h2 class="follow-title">{judul}</h2>
+    <p class="follow-sub">{t("pub.follow.sub")}</p>
+    <div class="follow-grid">
+      {items.map((it) => (
+        <a
+          class="follow-tile"
+          data-key={it.key}
+          href={it.url}
+          target="_blank"
+          rel="noopener me"
+          aria-label={`${it.label}${it.handle ? ` — ${it.handle}` : ""}`}
+        >
+          <span class="follow-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              set:html={it.icon}
+            />
+          </span>
+          <span class="follow-name">{it.label}</span>
+          {it.handle ? <span class="follow-handle">{it.handle}</span> : null}
+        </a>
+      ))}
+    </div>
+  </section>
+) : null}

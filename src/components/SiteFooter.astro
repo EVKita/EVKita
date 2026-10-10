@@ -11,6 +11,7 @@
 import { safeUrl } from "../lib/url.js";
 import LogoMark from "./LogoMark.astro";
 import { SOCIAL_NETWORKS, CONTACT_ROWS } from "../lib/footer.js";
+import SocialFollow from "./SocialFollow.astro";
 import { readContent } from "../lib/store";
 import { tautanFooter } from "../lib/laman.js";
 import { makePubT, cms, cmsSite } from "../lib/i18n/pub.js";
@@ -113,6 +114,7 @@ const hasSource = site.showFooterSource && (site.footerSourceText || site.footer
 
 <footer class="site-footer" id="sumber">
   <div class="footer-inner container">
+    <SocialFollow site={site} />
     <div class="footer-top">
       <div class="footer-brand-col">
         <div class="footer-brand">

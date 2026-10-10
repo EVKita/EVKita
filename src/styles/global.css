@@ -3813,6 +3813,119 @@ body.nav-open .nav-drawer-link {
   text-decoration: none;
 }
 
+/* ----- Kartu "Ikuti EVKita" (ubin medsos) ----- */
+
+/* Warnanya SELALU dari variabel tema, bukan dipatok: ganti aksen/preset di
+   Menu Tampilan dan kartu ini ikut berubah — termasuk dalam mode gelap. */
+.follow-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 20px 18px 18px;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+/* Garis gradien di bibir atas kartu — gradien situs (bawaan: tosca→biru EVKita). */
+.follow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--accent-grad);
+}
+
+.follow-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.follow-sub {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.follow-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.follow-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+  transition: transform 0.18s var(--ease), border-color 0.18s var(--ease),
+    background 0.18s var(--ease);
+}
+
+.follow-tile:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-ink);
+  background: var(--accent-soft);
+  text-decoration: none;
+}
+
+/* Ikon memakai warna aksen situs, bukan warna bawaan tiap merek — supaya
+   selaras dengan tema (dan mode gelap) yang dipilih di Menu Tampilan. */
+.follow-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.follow-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.follow-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.follow-handle {
+  font-size: 11px;
+  color: var(--text-muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .follow-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .follow-card {
+    padding: 18px 14px 16px;
+  }
+
+  .follow-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* ----- Bilah bawah ----- */
 
 .footer-bottom {
