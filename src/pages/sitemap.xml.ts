@@ -146,13 +146,25 @@ export const GET: APIRoute = ({ url }) => {
   ]);
   const entriesTayang = entries.filter((e) => !sembunyi.has(e.loc));
 
+  /*
+   * Tiap URL diumumkan bersama dua versi bahasanya (`?lang=en`, `?lang=zh`).
+   * Tanpa pasangan `xhtml:link` ini, Google/Baidu hanya mengenal versi
+   * Indonesia — padahal halaman Inggris dan Mandarin-nya sudah dirender
+   * server dan ditandai `hreflang` di `<head>`. Keduanya harus bicara hal
+   * yang sama: sitemap yang ini, tag di Base.astro yang itu.
+   */
+  const alt = (loc: string, lang: string) => (lang === "id" ? loc : `${loc}?lang=${lang}`);
+
   const body =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
     entriesTayang
       .map((e) => {
         const lastmod = e.lastmod ? `\n    <lastmod>${escapeXml(e.lastmod)}</lastmod>` : "";
-        return `  <url>\n    <loc>${escapeXml(e.loc)}</loc>${lastmod}\n    <priority>${e.priority}</priority>\n  </url>`;
+        const ganti = (["id", "en", "zh"] as const)
+          .map((l) => `\n    <xhtml:link rel="alternate" hreflang="${l}" href="${escapeXml(alt(e.loc, l))}" />`)
+          .join("") + `\n    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(e.loc)}" />`;
+        return `  <url>\n    <loc>${escapeXml(e.loc)}</loc>${ganti}${lastmod}\n    <priority>${e.priority}</priority>\n  </url>`;
       })
       .join("\n") +
     `\n</urlset>\n`;

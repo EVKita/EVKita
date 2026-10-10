@@ -2274,6 +2274,56 @@ export const PUB_COOKIE = "evkita_pub_lang";
 
 export const PUB_DEFAULT = "id";
 
+/** Bahasa publik yang punya URL sendiri (`?lang=`). Urutan = prioritas. */
+export const PUB_LANGS = ["id", "en", "zh"];
+
+/**
+ * Nilai `?lang=` atau cookie → kode dua huruf, atau null kalau tidak memilih.
+ *
+ * `normalizePubLocale()` tidak bisa dipakai di sini: ia jatuh ke "id" untuk
+ * APAPUN, sehingga "cookie tidak ada" tidak bisa dibedakan dari "memilih
+ * Indonesia". Di sini null berarti "tidak ada pilihan", dan pemanggil yang
+ * memutuskan jatuhnya (bahasa peramban untuk manusia, bawaan untuk bot).
+ */
+export function normalizeLangParam(value) {
+  const s = String(value || "").toLowerCase().split(/[-_]/)[0];
+  if (s === "id" || s === "in") return "id";
+  if (s === "en") return "en";
+  if (s === "zh") return "zh";
+  return null;
+}
+
+/**
+ * Bahasa dari header `Accept-Language` peramban.
+ *
+ * Dipakai HANYA untuk kunjungan pertama tanpa `?lang=` dan tanpa cookie —
+ * mis. peramban Huawei/Xiaomi di China yang mengirim `zh-CN`. Bobot `q=`
+ * dihormati; rentang yang tidak dikenal dilewati; tanpa kecocokan jatuh ke
+ * bawaan. Bot tidak lewat sini (middleware memaksa bawaan untuk robot).
+ */
+export function parseAcceptLanguage(header) {
+  const bagian = String(header || "").split(",");
+  let terbaik = null;
+  let bobotTerbaik = -1;
+  for (const potong of bagian) {
+    const [rentang, ...param] = potong.trim().split(";");
+    if (!rentang) continue;
+    let q = 1;
+    for (const p of param) {
+      const m = p.trim().match(/^q\s*=\s*(0(?:\.\d+)?|1(?:\.0+)?)$/);
+      if (m) q = parseFloat(m[1]);
+    }
+    if (!(q > 0)) continue;
+    const kode = normalizeLangParam(rentang.trim());
+    if (!kode) continue;
+    if (q > bobotTerbaik) {
+      bobotTerbaik = q;
+      terbaik = kode;
+    }
+  }
+  return terbaik || PUB_DEFAULT;
+}
+
 export function normalizePubLocale(value) {
   const s = String(value || "").toLowerCase().split(/[-_]/)[0];
   return DICTS[s] ? s : PUB_DEFAULT;

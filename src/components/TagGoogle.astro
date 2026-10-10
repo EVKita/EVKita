@@ -7,6 +7,11 @@ import { SESSION_COOKIE } from "../lib/auth";
  * Tag Google di `<head>` halaman publik: Analytics, AdSense, dan penanda
  * kepemilikan Search Console.
  *
+ * Ditambah penanda kepemilikan Baidu (`baidu-site-verification`) untuk
+ * perayap China — tokennya diisi lewat SSH di `data/integrasi.json`, karena
+ * panel tidak punya field-nya. Nilainya sudah lewat `normalisasi()`, jadi
+ * aman disisipkan langsung seperti token Search Console.
+ *
  * Hanya dipanggil dari `Base.astro` untuk halaman yang punya `site` dan bukan
  * halaman panel — jadi panel admin, halaman masuk, dan wizard pemasangan tidak
  * pernah ikut memuat skrip pihak ketiga.
@@ -36,6 +41,7 @@ const adsenseSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.
 const gaInit = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${cfg.gaId}');`;
 ---
 {pakaiGsc && <meta name="google-site-verification" content={cfg.gscToken} />}
+{cfg.baiduToken && <meta name="baidu-site-verification" content={cfg.baiduToken} />}
 
 {pakaiGa && (
   <>

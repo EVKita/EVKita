@@ -1,3 +1,5 @@
+import { normalizeLangParam } from "./i18n/pub.js";
+
 /**
  * URL kanonis situs.
  *
@@ -7,10 +9,14 @@
  * proxy (lihat catatan `allowedDomains` di sana), jadi `Astro.url` sudah berisi
  * skema dan domain yang sebenarnya.
  *
- * Yang dibuang di sini adalah query string, dan itu yang penting: `app.js`
- * menulis status filter ke URL (`?merek=`, `?urut=`, `?banding=`), sehingga
- * tanpa kanonis, beranda yang sama bisa terindeks dalam puluhan varian yang
- * saling mengencerkan peringkatnya sendiri.
+ * Dua aturan query string:
+ *
+ *   - Filter katalog (`?merek=`, `?urut=`, `?banding=`) tetap dibuang: tanpa
+ *     kanonis, beranda yang sama bisa terindeks dalam puluhan varian yang
+ *     saling mengencerkan peringkatnya sendiri.
+ *   - `?lang=en` / `?lang=zh` DIPERTAHANKAN: itulah URL bahasa yang diumumkan
+ *     ke Google/Baidu lewat `hreflang` dan peta situs. Versi bahasa yang
+ *     kanonisnya dibuang tidak akan pernah terindeks sebagai halaman sendiri.
  */
 
 /** `https://evkita.com` — tanpa garis miring di akhir. */
@@ -18,9 +24,21 @@ export function siteOrigin(url: URL): string {
   return url.origin;
 }
 
-/** `https://evkita.com/mobil/byd-seal` — tanpa query, tanpa fragmen. */
+/** `https://evkita.com/mobil/byd-seal` — tanpa query, kecuali `?lang=`. */
 export function canonicalUrl(url: URL): string {
-  return `${url.origin}${url.pathname}`;
+  const dasar = `${url.origin}${url.pathname}`;
+  const lang = normalizeLangParam(url.searchParams.get("lang"));
+  if (lang && lang !== "id") return `${dasar}?lang=${lang}`;
+  return dasar;
+}
+
+/**
+ * Tiga URL absolut untuk tag `hreflang`. Indonesia adalah bawaan tanpa
+ * parameter; Inggris dan Mandarin punya parameternya masing-masing.
+ */
+export function alternateLangUrls(url: URL): { id: string; en: string; zh: string } {
+  const dasar = `${url.origin}${url.pathname}`;
+  return { id: dasar, en: `${dasar}?lang=en`, zh: `${dasar}?lang=zh` };
 }
 
 /** Menyusun URL absolut dari path relatif. */

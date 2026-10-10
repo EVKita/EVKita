@@ -8,9 +8,10 @@
  * digambar sebagai `<svg>`, bukan emoji bendera —
  * Windows tidak punya glif bendera dan menampilkan huruf wilayah dua karakter,
  * sehingga yang terlihat justru "ID"/"US". Bendera yang aktif ditandai garis
- * melingkar; mengeklik yang tidak aktif menulis cookie lalu memuat ulang
- * halaman, supaya server merender ulang seluruh teks dalam bahasa yang baru
- * (SEO tetap utuh).
+ * melingkar; mengeklik yang tidak aktif menulis cookie lalu membuka URL yang
+ * sama dengan `?lang=` yang sesuai (dihapus untuk Indonesia), supaya server
+ * merender ulang seluruh teks dalam bahasa yang baru (SEO tetap utuh) dan
+ * pilihannya bisa dibagikan sebagai tautan yang ikut terindeks.
  *
  * Tingginya sengaja sama dengan tinggi teks "IND/ENG" yang dulu dipakai (14px
  * pada pill ber-padding 9px), supaya ukuran pil di header tidak berubah.
@@ -88,7 +89,17 @@ const label = current === "en" ? "Language: English" : current === "zh" ? "语�
       var now = btn ? btn.getAttribute("data-current") : null;
       if (next === now) return;
       document.cookie = COOKIE + "=" + next + "; path=/; max-age=31536000; SameSite=Lax";
-      location.reload();
+      // Bahasa juga ditulis ke `?lang=` supaya bisa dibagikan dan dirayapi
+      // mesin pencari (Google/Baidu mengindeks URL, bukan cookie). Indonesia
+      // adalah bawaan tanpa parameter; yang lain membawa parameternya.
+      try {
+        var u = new URL(window.location.href);
+        if (next === "id") u.searchParams.delete("lang");
+        else u.searchParams.set("lang", next);
+        window.location.href = u.toString();
+      } catch (e) {
+        location.reload();
+      }
     });
   })();
 </script>

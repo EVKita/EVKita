@@ -55,9 +55,19 @@ export const BAWAAN = {
    * Client ID sendiri sudah dibuang: Google kini ditangani Clerk.
    */
   clerkKey: "",
+
+  /*
+   * Verifikasi Baidu Webmaster (ziyuan.baidu.com): isi `content` penanda
+   * `baidu-site-verification`. Sengaja TANPA saklar dan TANPA field di panel —
+   * tokennya diisi sekali lewat SSH (`data/integrasi.json`), dan endpoint
+   * panel mempertahankannya saat formulir disimpan (lihat api/integrasi.ts).
+   * Menambah field panel berarti menambah teks tiga bahasa; token sekali-isi
+   * ini tidak sepadan dengan itu.
+   */
+  baiduToken: "",
 };
 
-export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken", "clerkKey"];
+export const KUNCI_TEKS = ["gaId", "adsenseId", "adsTxt", "gscToken", "clerkKey", "baiduToken"];
 export const KUNCI_SAKLAR = ["gaAktif", "gaAbaikanAdmin", "adsenseAktif", "adsenseAuto", "gscAktif"];
 
 /** Cara verifikasi Search Console yang dikenal. Yang pertama adalah bawaan. */
@@ -77,6 +87,9 @@ export const POLA = {
   adsenseId: /^ca-pub-\d{10,20}$/,
   gscToken: /^[A-Za-z0-9_-]{20,100}$/,
   clerkKey: /^pk_(test|live)_[A-Za-z0-9+/=_-]{12,200}$/,
+  // Kode verifikasi Baidu hanya alfanumerik/garis — ia berakhir di atribut
+  // `content` sebuah meta, jadi aturan daftar-putih yang sama berlaku.
+  baiduToken: /^[A-Za-z0-9_-]{8,120}$/,
 };
 
 /** Nama host yang sah: huruf kecil, angka, tanda hubung, minimal dua label. */
@@ -122,6 +135,7 @@ export function normalisasi(raw) {
   if (!POLA.gaId.test(out.gaId)) { out.gaId = ""; out.gaAktif = false; }
   if (!POLA.adsenseId.test(out.adsenseId)) { out.adsenseId = ""; out.adsenseAktif = false; }
   if (!POLA.gscToken.test(out.gscToken)) { out.gscToken = ""; out.gscAktif = false; }
+  if (!POLA.baiduToken.test(out.baiduToken)) out.baiduToken = "";
   if (!hostClerk(out.clerkKey)) out.clerkKey = "";
   out.adsTxt = bersihkanAdsTxt(out.adsTxt);
   return out;
@@ -143,6 +157,14 @@ export function periksa(masuk) {
   if (nilai.gaId && !POLA.gaId.test(nilai.gaId)) galat.push("err.integrasi.gaId");
   if (nilai.adsenseId && !POLA.adsenseId.test(nilai.adsenseId)) galat.push("err.integrasi.adsenseId");
   if (nilai.gscToken && !POLA.gscToken.test(nilai.gscToken)) galat.push("err.integrasi.gscToken");
+  /*
+   * Token Baidu TIDAK punya kunci galat: panel tidak punya field-nya (diisi
+   * lewat SSH), jadi panel tidak akan pernah mengirim nilai yang salah —
+   * dan menambah kunci galat berarti menambah teks tiga bahasa untuk keadaan
+   * yang tidak bisa terjadi dari panel. Nilai yang tidak berbentuk dibuang
+   * diam-diam, sama seperti yang dilakukan `normalisasi()` untuk berkas.
+   */
+  if (nilai.baiduToken && !POLA.baiduToken.test(nilai.baiduToken)) nilai.baiduToken = "";
   if (nilai.clerkKey && !hostClerk(nilai.clerkKey)) {
     /* Kunci rahasia yang tertempel di sini adalah salah tempel paling mahal:
        ia akan tercetak di setiap halaman publik. Diberi pesan sendiri. */

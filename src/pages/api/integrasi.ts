@@ -58,6 +58,14 @@ export const PUT: APIRoute = async ({ request, cookies, url }) => {
   if (galat.length) return apiError(galat[0], 400);
 
   const sebelum = bacaIntegrasi();
+  /*
+   * Token Baidu tidak ada di formulir panel (diisi lewat SSH di
+   * `data/integrasi.json`). Tanpa baris ini, setiap penyimpanan dari panel
+   * akan menimpanya jadi kosong — `periksa()` tidak pernah menerima nilainya
+   * dari formulir. Dipertahankan apa adanya, kecuali panel suatu hari punya
+   * field-nya dan mengirim nilai yang sah.
+   */
+  if (!nilai.baiduToken) nilai.baiduToken = sebelum.baiduToken;
   const sesudah = tulisIntegrasi(nilai);
 
   /*

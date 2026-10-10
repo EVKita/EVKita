@@ -1,6 +1,6 @@
 ---
 import "../styles/global.css";
-import { canonicalUrl } from "../lib/site-url";
+import { alternateLangUrls, canonicalUrl } from "../lib/site-url";
 import { themeAccentStyle, themeStyle, themeBodyClass, themeExtraCss, themeFontHref, themeMode } from "../lib/theme.js";
 import { makePubT, cms, pubOgLocale } from "../lib/i18n/pub.js";
 import TagGoogle from "../components/TagGoogle.astro";
@@ -54,6 +54,15 @@ const {
 } = Astro.props;
 
 const canonical = canonicalUrl(Astro.url);
+
+/**
+ * URL tiap versi bahasa untuk tag `hreflang`. Indonesia adalah bawaan tanpa
+ * parameter (`x-default` ikut menunjuk ke sana); Inggris dan Mandarin punya
+ * `?lang=`-nya masing-masing supaya bisa dirayapi dan diindeks terpisah oleh
+ * Google, Bing, dan Baidu.
+ */
+const alternates = alternateLangUrls(Astro.url);
+const ogAlternate = lang === "en" ? ["id_ID", "zh_CN"] : lang === "zh" ? ["id_ID", "en_US"] : ["en_US", "zh_CN"];
 
 /**
  * Deskripsi meta. Nilai yang dikirim pemanggil diterjemahkan dulu (banyak
@@ -167,13 +176,18 @@ const tagPublik = !!site && !accentOnly;
     </script>
     {noindex ? <meta name="robots" content="noindex, nofollow" /> : null}
     <link rel="canonical" href={canonical} />
-    <meta name="description" content={description} />
+    <link rel="alternate" hreflang="id" href={alternates.id} />
+    <link rel="alternate" hreflang="en" href={alternates.en} />
+    <link rel="alternate" hreflang="zh" href={alternates.zh} />
+    <link rel="alternate" hreflang="x-default" href={alternates.id} />
+    <meta name="description" content={metaDesc} />
     {keywords ? <meta name="keywords" content={keywords} /> : null}
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={pubOgLocale(lang)} />
+    {ogAlternate.map((loc) => <meta property="og:locale:alternate" content={loc} />)}
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={metaDesc} />
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -195,9 +209,17 @@ const tagPublik = !!site && !accentOnly;
       Font CJK hanya untuk pembaca Mandarin: mengunduh Noto Sans SC di setiap
       bahasa hanya menambah bobot tanpa guna, dan huruf Latin di kamus zh
       tetap tertutup font tema di atas.
+
+      Sengaja non-pemblokir seperti font tema: fonts.googleapis.com diblokir di
+      Tiongkok, dan sebagai stylesheet biasa ia menahan render sampai koneksinya
+      habis waktu. Kalau gagal dimuat, tumpukan PingFang SC / Microsoft YaHei
+      di global.css yang mengambil alih — halaman tetap Mandarin dan rapi.
     */}
     {lang === "zh" ? (
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" />
+      <>
+        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'" />
+      </>
     ) : null}
     {extraCss ? <style is:inline set:html={extraCss}></style> : null}
     {tagPublik && <TagGoogle />}

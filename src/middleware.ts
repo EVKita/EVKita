@@ -12,7 +12,8 @@ import { jadwalkanPeluncuran } from "./lib/peluncuran-rekam";
 import { jadwalkanPembaruan } from "./lib/pembaruan-kendaraan";
 import { jadwalkanPantauan } from "./lib/pemantau";
 import { SESSION_COOKIE } from "./lib/auth";
-import { normalizePubLocale, PUB_COOKIE } from "./lib/i18n/pub.js";
+import { normalizeLangParam, parseAcceptLanguage, PUB_COOKIE, PUB_DEFAULT } from "./lib/i18n/pub.js";
+import { apakahBot } from "./lib/trafik.js";
 
 /**
  * Header keamanan untuk seluruh jawaban.
@@ -186,11 +187,51 @@ function mulaiPenjadwalInterval(): void {
 }
 mulaiPenjadwalInterval();
 
-export const onRequest: MiddlewareHandler = async (context, next) => {  // Bahasa situs publik, dari cookie pilihan pembaca. Dipakai halaman dan
-  // komponen lewat `Astro.locals.pubLang` tanpa harus diteruskan sebagai prop.
-  context.locals.pubLang = normalizePubLocale(context.cookies.get(PUB_COOKIE)?.value);
+export const onRequest: MiddlewareHandler = async (context, next) => {
+  /*
+   * Bahasa situs publik. Urutan: `?lang=` eksplisit (URL yang bisa dirayapi
+   * Google/Baidu) > cookie pilihan pembaca > bahasa peramban pada kunjungan
+   * pertama. Robot selalu dapat bawaan di URL kanonis: menyajikan isi
+   * negosiasi ke perayap adalah penyelubungan (cloaking) di mata mesin
+   * pencari. Dipakai halaman dan komponen lewat `Astro.locals.pubLang` tanpa
+   * harus diteruskan sebagai prop.
+   */
+  const langParam = normalizeLangParam(context.url.searchParams.get("lang"));
+  if (langParam) {
+    context.locals.pubLang = langParam;
+  } else {
+    const langCookie = normalizeLangParam(context.cookies.get(PUB_COOKIE)?.value);
+    if (langCookie) {
+      context.locals.pubLang = langCookie;
+    } else if (apakahBot(context.request.headers.get("user-agent") || "")) {
+      context.locals.pubLang = PUB_DEFAULT;
+    } else {
+      // Kunjungan pertama manusia: ikuti bahasa perambannya. Peramban
+      // Huawei/Xiaomi di China mengirim `zh-CN` → langsung Mandarin.
+      context.locals.pubLang = parseAcceptLanguage(context.request.headers.get("accept-language"));
+    }
+  }
 
   const response = await next();
+
+  // `?lang=` ikut disimpan ke cookie supaya pilihan bahasanya terbawa ke
+  // halaman berikutnya yang dibuka tanpa parameter.
+  if (langParam && normalizeLangParam(context.cookies.get(PUB_COOKIE)?.value) !== langParam) {
+    response.headers.append(
+      "Set-Cookie",
+      `${PUB_COOKIE}=${langParam}; Path=/; Max-Age=31536000; SameSite=Lax`
+    );
+  }
+
+  // Isi dinegosiasikan dari Accept-Language/Cookie — beri tahu cache bersama
+  // supaya tidak menyajikan Mandarin ke pembaca Indonesia dan sebaliknya.
+  const varySekarang = response.headers.get("Vary");
+  if (!varySekarang || !/accept-language/i.test(varySekarang)) {
+    response.headers.set(
+      "Vary",
+      varySekarang ? `${varySekarang}, Accept-Language, Cookie` : "Accept-Language, Cookie"
+    );
+  }
 
   const h = response.headers;
 
