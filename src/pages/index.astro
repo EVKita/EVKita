@@ -536,6 +536,74 @@ const jsonLd = {
       </section>
     ) : null}
 
+    {/*
+      Mulai dari sini: tiga jalan pintas sesuai posisi pembaca — baru kenal,
+      mau membeli, atau sudah punya. Isinya hanya tautan ke halaman yang sudah
+      ada; tidak ada satu pun kata lama yang diubah.
+    */}
+    <section class="section mulai-section" id="mulai">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">{t("pub.mulai.title")}</h2>
+            <p class="section-note">{t("pub.mulai.note")}</p>
+          </div>
+        </div>
+        <div class="mulai-grid">
+          <div class="mulai-card">
+            <h3>{t("pub.mulai.baruT")}</h3>
+            <p>{t("pub.mulai.baruD")}</p>
+            <nav class="tag-row" aria-label={t("pub.mulai.baruT")}>
+              <a class="tag-pill" href="/edukasi-dasar">{t("pub.mulai.edukasi")}</a>
+              <a class="tag-pill" href="/apa-itu-ev-bev-phev-hev">{t("pub.mulai.glosa")}</a>
+              <a class="tag-pill" href="/mitos-fakta-ev">{t("pub.mulai.mitos")}</a>
+            </nav>
+          </div>
+          <div class="mulai-card">
+            <h3>{t("pub.mulai.beliT")}</h3>
+            <p>{t("pub.mulai.beliD")}</p>
+            <nav class="tag-row" aria-label={t("pub.mulai.beliT")}>
+              <a class="tag-pill" href="/katalog">{t("pub.koleksi.katalogLengkap")}</a>
+              <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">{t("pub.kalk.titleHemat")}</a>
+              <a class="tag-pill" href="/artikel/mobil-listrik-bawah-200-juta-pilihan-jarak">{t("pub.mulai.bawah200")}</a>
+            </nav>
+          </div>
+          <div class="mulai-card">
+            <h3>{t("pub.mulai.punyaT")}</h3>
+            <p>{t("pub.mulai.punyaD")}</p>
+            <nav class="tag-row" aria-label={t("pub.mulai.punyaT")}>
+              <a class="tag-pill" href="/spklu">{t("pub.nav.spklu")}</a>
+              <a class="tag-pill" href="/kalkulator/biaya-pengisian">{t("pub.kalk.titleBiaya")}</a>
+              <a class="tag-pill" href="/bengkel">{t("pub.nav.bengkel")}</a>
+            </nav>
+          </div>
+        </div>
+        <h3 class="mulai-faq-title">{t("pub.mulai.faqT")}</h3>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>{t("pub.mulai.faq1q")}</summary>
+            <p>{t("pub.mulai.faq1a")} <a href="/kalkulator/biaya-pengisian">{t("pub.kalk.titleBiaya")} →</a></p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.mulai.faq2q")}</summary>
+            <p>{t("pub.mulai.faq2a")} <a href="/kalkulator/hemat-listrik-vs-bensin">{t("pub.kalk.titleHemat")} →</a></p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.mulai.faq3q")}</summary>
+            <p>{t("pub.mulai.faq3a")} <a href="/panduan-charging-baterai">{t("pub.mulai.panduanCas")} →</a></p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.mulai.faq4q")}</summary>
+            <p>{t("pub.mulai.faq4a")} <a href="/artikel/merawat-baterai-mobil-listrik">{t("pub.mulai.rawatBaterai")} →</a></p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.mulai.faq5q")}</summary>
+            <p>{t("pub.mulai.faq5a")} <a href="/spklu">{t("pub.mulai.lihatSpklu")} →</a></p>
+          </details>
+        </div>
+      </div>
+    </section>
+
     {/* Kolom dua: panel peringkat di kiri, sisa seksi di kanan. Di layar
         sempit kembali satu kolom dengan isi utama dulu, panel sesudahnya. */}
     <div class="container home-cols">

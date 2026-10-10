@@ -9,6 +9,7 @@ import { siteOrigin, canonicalUrl } from "../lib/site-url";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
 import { gambarBerita, kunciKanonik, petaGambarBerita } from "../lib/berita-gambar";
+import { SUMBER_BERITA } from "../lib/berita-sumber.js";
 
 /**
  * Daftar berita kurasi yang penuh.
@@ -130,6 +131,35 @@ const jsonLd = site.showBerita
         <p class="katalog-lead">{lead}</p>
         <p class="katalog-lead">{t("pub.dir.hitungBerita", { n: beritaList.length })}</p>
       </header>
+
+      {/*
+        Cara membaca + sumber + FAQ: menjawab tiga hal yang paling sering
+        membingungkan — kenapa tautan keluar, seberapa segar daftarnya, dan
+        dari mana kabarnya. Nama medianya proper noun, tanpa kunci terjemahan.
+      */}
+      <section class="kalk-section">
+        <h2>{t("pub.beritaX.panduanT")}</h2>
+        <p class="section-note">{t("pub.beritaX.panduanD")}</p>
+        <p class="section-note"><strong>{t("pub.beritaX.sumberT")}:</strong> {SUMBER_BERITA.map((s: any) => s.nama).join(" · ")}</p>
+      </section>
+
+      <section class="kalk-section">
+        <h2>{t("pub.beritaX.faqT")}</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>{t("pub.beritaX.faq1q")}</summary>
+            <p>{t("pub.beritaX.faq1a")}</p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.beritaX.faq2q")}</summary>
+            <p>{t("pub.beritaX.faq2a")}</p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.beritaX.faq3q")}</summary>
+            <p>{t("pub.beritaX.faq3a")}</p>
+          </details>
+        </div>
+      </section>
 
       <div class="news-grid">
         {beritaList.map((n: any) => (

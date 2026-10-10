@@ -148,6 +148,37 @@ const jsonLd = {
         <p class="result-count">{t("pub.dir.hitungSpklu", { n: spkluList.length })}</p>
       </header>
 
+      {/*
+        Cara memakai + FAQ: daya, konektor, tarif, dan etika — empat hal yang
+        menentukan apakah perjalanan mengisi daya masuk akal.
+      */}
+      <section class="kalk-section">
+        <h2>{t("pub.spkluX.panduanT")}</h2>
+        <p class="section-note">{t("pub.spkluX.panduanD")}</p>
+      </section>
+
+      <section class="kalk-section">
+        <h2>{t("pub.spkluX.faqT")}</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>{t("pub.spkluX.faq1q")}</summary>
+            <p>{t("pub.spkluX.faq1a")}</p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.spkluX.faq2q")}</summary>
+            <p>{t("pub.spkluX.faq2a")}</p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.spkluX.faq3q")}</summary>
+            <p>{t("pub.spkluX.faq3a")}</p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.spkluX.faq4q")}</summary>
+            <p>{t("pub.spkluX.faq4a")} <a href="/etika-charging-spklu">{t("pub.spkluX.etika")} →</a></p>
+          </details>
+        </div>
+      </section>
+
       <div class="dir-grid">
         {spkluList.map((s: any) => (
           <article class={`dir-card${s.featured ? " is-featured" : ""}`}>

@@ -156,6 +156,33 @@ const teks = {
 };
 
 const ringkas = teksRingkasPengisian(hasil, t);
+
+/**
+ * Contoh yang sudah dihitung: tiga terlaris berk baterai tercatat, skenario
+ * sama (20→80%, DC 50 kW, tarif SPKLU). Dihitung fungsi yang sama dengan
+ * kalkulator di atas — bukan angka yang diketik tangan — jadi tidak bisa
+ * berselisih dengan hasil form. Entri yang hilang dari katalog gugur sendiri.
+ */
+const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
+  .map((id) => pilihan.find((c: any) => c.id === id))
+  .filter((v: any) => v && Number(v.batteryKwh) > 0)
+  .map((v: any) => {
+    const r = hitungPengisian({
+      batteryKwh: v.batteryKwh,
+      socAwal: 20,
+      socAkhir: 80,
+      dayaKw: 50,
+      tarif: 2466,
+      dayaMaksKendaraan: null,
+      rangeKm: v.rangeKm ?? null,
+    });
+    return {
+      nama: `${v.brand} ${v.name}`,
+      masuk: kwhKeTeks(r.energiMasuk),
+      waktu: teksDurasi(r, t),
+      biaya: rupiahPenuh(r.biaya),
+    };
+  });
 ---
 
 <Base
@@ -289,6 +316,57 @@ const ringkas = teksRingkasPengisian(hasil, t);
           <a href={vehicleHref(terpilih)}>{t("pub.kalk.lihatSpesifikasi")} {terpilih.brand} {terpilih.name} →</a>
         </p>
       ) : null}
+    </section>
+
+    <section class="kalk-section">
+      <h2>{t("pub.isiX.contohT")}</h2>
+      <p class="section-note">{t("pub.isiX.contohD")}</p>
+      {contohIsi.length ? (
+        <div class="compare-scroll">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th scope="col">{t("pub.isiX.kend")}</th>
+                <th scope="col">{t("pub.isiX.masuk")}</th>
+                <th scope="col">{t("pub.isiX.waktu")}</th>
+                <th scope="col">{t("pub.isiX.biaya")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {contohIsi.map((c: any) => (
+                <tr>
+                  <th scope="row">{c.nama}</th>
+                  <td>{c.masuk}</td>
+                  <td>{c.waktu}</td>
+                  <td>{c.biaya}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </section>
+
+    <section class="kalk-section">
+      <h2>{t("pub.isiX.faqT")}</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>{t("pub.isiX.faq1q")}</summary>
+          <p>{t("pub.isiX.faq1a")}</p>
+        </details>
+        <details class="faq-item">
+          <summary>{t("pub.isiX.faq2q")}</summary>
+          <p>{t("pub.isiX.faq2a")}</p>
+        </details>
+        <details class="faq-item">
+          <summary>{t("pub.isiX.faq3q")}</summary>
+          <p>{t("pub.isiX.faq3a")}</p>
+        </details>
+        <details class="faq-item">
+          <summary>{t("pub.isiX.faq4q")}</summary>
+          <p>{t("pub.isiX.faq4a")}</p>
+        </details>
+      </div>
     </section>
 
     <section class="kalk-section">

@@ -136,6 +136,25 @@ const teks = {
 };
 
 const ringkas = teksRingkas(hasil, t);
+
+/**
+ * Contoh menurut jarak tempuh: asumsi bawaan (Atto 1 10 kWh/100 km, listrik
+ * rumah, bensin 13 rb @ 12 km/l) dengan contoh selisih harga Rp45 jt.
+ * Dihitung `hitungHemat()` yang sama dengan form di atas — bukan angka
+ * ketikan — jadi tidak bisa berselisih dengan kalkulatornya.
+ */
+const contohProfil = [1000, 2000, 3000].map((km) => {
+  const r = hitungHemat({
+    kwhPer100: 10,
+    elecPrice: 1444.7,
+    fuelPrice: 13000,
+    kmPerLiter: 12,
+    kmPerMonth: km,
+    evPrice: 195000000,
+    icePrice: 150000000,
+  });
+  return { km: km.toLocaleString(intl), hemat: rupiahPenuh(r.savingMonthly), kembali: teksBalikModal(r, t) };
+});
 ---
 
 <Base title={pageTitle} description={metaDesc} keywords={t("pub.kalk.keywordHemat")} ogImage={site.seoOgImage} site={site}>
@@ -250,6 +269,52 @@ const ringkas = teksRingkas(hasil, t);
           <a href={vehicleHref(terpilih)}>{t("pub.kalk.lihatSpesifikasi")} {terpilih.brand} {terpilih.name} →</a>
         </p>
       ) : null}
+    </section>
+
+    <section class="kalk-section">
+      <h2>{t("pub.hemX.profilT")}</h2>
+      <p class="section-note">{t("pub.hemX.profilD")}</p>
+      <div class="compare-scroll">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th scope="col">{t("pub.hemX.jarak")}</th>
+              <th scope="col">{t("pub.hemX.hematB")}</th>
+              <th scope="col">{t("pub.hemX.kembali")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {contohProfil.map((c: any) => (
+              <tr>
+                <th scope="row">{c.km} km</th>
+                <td>{c.hemat}</td>
+                <td>{c.kembali}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="kalk-hint">{t("pub.hemX.acuan")}</p>
+      <h3 class="mulai-faq-title">{t("pub.hemX.caraT")}</h3>
+      <p class="section-note">{t("pub.hemX.caraD")}</p>
+    </section>
+
+    <section class="kalk-section">
+      <h2>{t("pub.hemX.faqT")}</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>{t("pub.hemX.faq1q")}</summary>
+          <p>{t("pub.hemX.faq1a")}</p>
+        </details>
+        <details class="faq-item">
+          <summary>{t("pub.hemX.faq2q")}</summary>
+          <p>{t("pub.hemX.faq2a")}</p>
+        </details>
+        <details class="faq-item">
+          <summary>{t("pub.hemX.faq3q")}</summary>
+          <p>{t("pub.hemX.faq3a")}</p>
+        </details>
+      </div>
     </section>
 
     <section class="kalk-section">

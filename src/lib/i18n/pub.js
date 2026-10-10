@@ -668,6 +668,125 @@ const ID = {
 
   // — src/pages/bandingkan/[combo].astro —
   "pub.banding.crumb": "Bandingkan",
+
+  // — Blok "Mulai dari sini" + FAQ beranda, contoh kalkulator —
+  "pub.mulai.title": "Mulai dari sini",
+  "pub.mulai.note": "Tiga jalan pintas sesuai posisimu sekarang — pilih yang paling dekat denganmu.",
+  "pub.mulai.baruT": "Baru kenal mobil listrik?",
+  "pub.mulai.baruD": "Mulai dari dasarnya: apa itu EV, bedanya BEV, PHEV, dan HEV, serta mitos yang sering beredar.",
+  "pub.mulai.beliT": "Mau membeli?",
+  "pub.mulai.beliD": "Bandingkan model di katalog, hitung hematnya lawan bensin, dan baca panduan memilihnya.",
+  "pub.mulai.punyaT": "Sudah punya EV?",
+  "pub.mulai.punyaD": "Cari tempat mengisi terdekat, hitung biaya sekali cas, dan temukan bengkelnya.",
+  "pub.mulai.edukasi": "Edukasi dasar",
+  "pub.mulai.glosa": "BEV vs PHEV vs HEV",
+  "pub.mulai.mitos": "Mitos vs fakta",
+  "pub.mulai.bawah200": "Di bawah Rp200 juta",
+  "pub.mulai.panduanCas": "Panduan charging",
+  "pub.mulai.rawatBaterai": "Merawat baterai",
+  "pub.mulai.lihatSpklu": "Lihat direktori SPKLU",
+  "pub.mulai.faqT": "Pertanyaan yang sering ditanyakan",
+  "pub.mulai.faq1q": "Berapa biaya ngecas mobil listrik sampai penuh?",
+  "pub.mulai.faq1a":
+    "Tergantung kapasitas baterai dan tarifnya. Contoh: BYD Atto 1 (30 kWh) diisi 20→80% di SPKLU 50 kW menghabiskan sekitar Rp46 ribu dalam 23–35 menit. Di rumah tarifnya jauh lebih murah per kWh, tapi waktunya berjam-jam.",
+  "pub.mulai.faq2q": "Mobil listrik benar-benar lebih hemat dari bensin?",
+  "pub.mulai.faq2a":
+    "Untuk pemakaian harian kota, ya — selisihnya besar. Dengan tarif rumah Rp1.445/kWh dan bensin Rp13.000/liter, BYD Atto 1 hemat sekitar Rp939 ribu sebulan untuk 1.000 km. Makin jauh jarak tempuhmu, makin besar hematnya.",
+  "pub.mulai.faq3q": "Bisa ngecas di rumah?",
+  "pub.mulai.faq3a":
+    "Bisa. Colokan rumah 2,2 kW paling murah tapi paling lama (semalaman); wallbox 7 kW jauh lebih cepat dengan tarif yang sama. Pastikan instalasi listrik rumah dicek teknisi sebelum pasang wallbox.",
+  "pub.mulai.faq4q": "Baterai mobil listrik tahan berapa lama?",
+  "pub.mulai.faq4a":
+    "Umumnya bergaransi 8 tahun atau 160 ribu km. Umur pakai riil bisa lebih panjang kalau dijaga: isi 20–80% untuk harian, hindari membiarkan baterai kosong, dan hindari panas berlebih.",
+  "pub.mulai.faq5q": "Di mana bisa ngecas di jalan?",
+  "pub.mulai.faq5a":
+    "Di SPKLU — direktorinya memuat lokasi, daya, konektor, dan jam buka. Untuk perjalanan jauh, baca juga panduan rute mudik dan charging di rest area.",
+  "pub.isiX.contohT": "Contoh yang sudah dihitung",
+  "pub.isiX.contohD":
+    "Pengisian 20→80% di DC SPKLU 50 kW dengan tarif Rp2.466/kWh. Angkanya dihitung fungsi yang sama dengan kalkulator di atas — pilih kendaraannya untuk menghitung ulang.",
+  "pub.isiX.kend": "Kendaraan",
+  "pub.isiX.masuk": "Masuk",
+  "pub.isiX.waktu": "Waktu",
+  "pub.isiX.biaya": "Biaya",
+  "pub.isiX.faqT": "Yang sering ditanyakan soal ngecas",
+  "pub.isiX.faq1q": "Kenapa pengisian berhenti di 80%?",
+  "pub.isiX.faq1a":
+    "Di atas 80%, pengisian DC menukik tajam — 20% terakhir bisa memakan waktu selama 60% sebelumnya. Klaim pabrik pun hampir selalu berbunyi 10–80% karena alasan ini.",
+  "pub.isiX.faq2q": "Kenapa yang dibayar lebih besar dari yang masuk?",
+  "pub.isiX.faq2a":
+    "Sebagian energi jadi panas di kabel dan baterai. Hitungan ini memakai efisiensi 96% untuk DC dan 88% untuk AC — keduanya perkiraan, karena tidak ada angkanya di katalog.",
+  "pub.isiX.faq3q": "Apa beda ngecas AC dan DC?",
+  "pub.isiX.faq3a":
+    "AC (sampai 22 kW) lewat pengisi bawaan mobil: lambat tapi rata — colokan rumah dan wallbox itu AC. DC (di atas 22 kW) masuk langsung ke baterai: cepat tapi melambat mendekati penuh — SPKLU cepat itu DC.",
+  "pub.isiX.faq4q": "Stasiun 150 kW pasti lebih cepat dari 50 kW?",
+  "pub.isiX.faq4a":
+    "Belum tentu — mobil hanya menerima sampai batasnya. Kalau batas mobilmu 50 kW, menancap ke stasiun 150 kW tetap mengisi 50 kW. Katalog kami belum mencatat batas tiap kendaraan, jadi hitungan menganggap seluruh daya terserap.",
+  "pub.hemX.profilT": "Contoh menurut jarak tempuh",
+  "pub.hemX.profilD":
+    "BYD Atto 1 (10 kWh/100 km), listrik rumah Rp1.445/kWh, bensin Rp13.000/liter pada 12 km/liter. Contoh selisih harga beli: Rp195 jt (listrik) lawan Rp150 jt (bensin).",
+  "pub.hemX.jarak": "Jarak / bulan",
+  "pub.hemX.hematB": "Hemat / bulan",
+  "pub.hemX.kembali": "Balik modal",
+  "pub.hemX.acuan":
+    "Acuan Oktober 2026: bensin non-subsidi ±Rp13.000/liter, tarif rumah ±Rp1.445/kWh, tarif SPKLU ±Rp2.466/kWh. Ganti dengan angka yang benar-benar kamu bayar.",
+  "pub.hemX.caraT": "Cara membaca balik modal",
+  "pub.hemX.caraD":
+    "Selisih harga beli dibagi hemat bulanan. Selisihnya tetap, hematnya membesar mengikuti jarak tempuh — itu sebabnya makin jauh jalanmu, makin cepat kembali.",
+  "pub.hemX.faqT": "Yang sering ditanyakan soal hemat",
+  "pub.hemX.faq1q": "Kenapa kolom balik modal kosong?",
+  "pub.hemX.faq1a":
+    "Harga mobil bensin pembanding belum diisi — kolom itu opsional. Isi harganya untuk tahu kapan selisih harga belinya kembali.",
+  "pub.hemX.faq2q": "Servis, pajak, dan asuransi ikut dihitung?",
+  "pub.hemX.faq2a":
+    "Tidak — kalkulator ini murni bahan bakar. Servis EV umumnya lebih murah (tanpa oli dan busi) dan pajak tahunannya ringan, tapi asuransi dan penyusutan bisa mengubah kesimpulan.",
+  "pub.hemX.faq3q": "Ngecas di SPKLU masih hemat?",
+  "pub.hemX.faq3a":
+    "Masih, tapi selisihnya menyusut: tarif SPKLU (±Rp2.466/kWh) hampir dua kali lipat tarif rumah. Pakai tombol preset tarif di atas untuk membandingkan keduanya.",
+
+  // — Halaman /berita, /spklu, /artikel (peringkat 4–10) —
+  "pub.beritaX.panduanT": "Cara membaca halaman ini",
+  "pub.beritaX.panduanD":
+    "Semua kartu adalah tautan ke situs penerbitnya — isi lengkapnya tinggal di sana. Daftar diperbarui otomatis setiap hari dari umpan resmi lima media di bawah.",
+  "pub.beritaX.sumberT": "Sumber yang dipantau",
+  "pub.beritaX.faqT": "Yang sering ditanyakan soal berita",
+  "pub.beritaX.faq1q": "Kenapa mengeklik judul membuka situs lain?",
+  "pub.beritaX.faq1a":
+    "EVKita tidak menyalin isi berita — yang disimpan hanya judul, ringkasan, dan tautan. Gunanya justru mengantarmu ke halaman aslinya.",
+  "pub.beritaX.faq2q": "Seberapa sering daftar ini diperbarui?",
+  "pub.beritaX.faq2a":
+    "Sekali sehari, pagi hari WIB. Berita lama yang masih relevan dipertahankan; yang sudah basi digantikan kabar terbaru.",
+  "pub.beritaX.faq3q": "Kenapa ada berita tanpa foto?",
+  "pub.beritaX.faq3a":
+    "Fotonya diambil dari umpan penerbit; kalau penerbit tidak menyertakan, dilengkapi dari gambar utama halaman aslinya. Kartu yang tetap tanpa foto tampil teks saja.",
+  "pub.spkluX.panduanT": "Cara memakai direktori ini",
+  "pub.spkluX.panduanD":
+    "Setiap kartu memuat daya (kW), konektor, tarif, dan jam buka bila tersedia. Tombol lokasi membuka peta; kalau datanya kosong, ia membuka pencarian nama tempatnya.",
+  "pub.spkluX.etika": "Etika di SPKLU",
+  "pub.spkluX.faqT": "Yang sering ditanyakan soal SPKLU",
+  "pub.spkluX.faq1q": "Konektor apa yang dipakai di Indonesia?",
+  "pub.spkluX.faq1a":
+    "Mobil umumnya CCS2 untuk DC dan Type 2 untuk AC; sebagian model Jepang memakai CHAdeMO. Bentuknya memang tidak saling masuk, jadi salah colok tidak merusak apa pun — hanya membuang waktu antre.",
+  "pub.spkluX.faq2q": "Bagaimana cara membayar?",
+  "pub.spkluX.faq2a":
+    "Hampir semua operator menjalankannya lewat aplikasi: cari lokasi, nyalakan sesi, dan bayar dari aplikasi yang sama. Unduh dan daftarkan akunnya sebelum berangkat.",
+  "pub.spkluX.faq3q": "Berapa tarif ngecas di SPKLU?",
+  "pub.spkluX.faq3a":
+    "Berbeda tiap operator, sekitar Rp2.466/kWh sebagai patokan — hampir dua kali lipat tarif rumah. Sebagian lokasi menambah biaya layanan atau parkir.",
+  "pub.spkluX.faq4q": "Boleh meninggalkan mobil sambil ngecas?",
+  "pub.spkluX.faq4a":
+    "Boleh, tapi geser begitu sesi berhenti — SPKLU bukan parkir. Aturan tak tertulisnya ada di panduan etika.",
+  "pub.artikelX.panduanD":
+    "Tulisan orisinal redaksi EVKita — bukan salinan media. Setiap angka berasal dari katalog, setiap kutipan berita dicantumkan sumbernya di kaki tulisan.",
+  "pub.artikelX.faqT": "Yang sering ditanyakan soal artikel",
+  "pub.artikelX.faq1q": "Apakah isi artikel ini orisinal?",
+  "pub.artikelX.faq1a":
+    "Ya. Berita mengkurasi tautan milik penerbit lain; artikel adalah tulisan situs ini sendiri, ditulis dan disunting manusia (yang dibantu AI ditandai).",
+  "pub.artikelX.faq2q": "Dari mana angka-angkanya?",
+  "pub.artikelX.faq2a":
+    "Dari katalog kendaraan dan berita yang ditautkan sebagai sumber. Kalau sebuah angka tidak ada di bahan, ia tidak ditulis sebagai angka.",
+  "pub.artikelX.faq3q": "Bisakah mengusulkan topik?",
+  "pub.artikelX.faq3a":
+    "Bisa — lewat halaman kontak di footer. Topik yang paling sering diminta didahulukan.",
 };
 
 const EN = {
@@ -1327,6 +1446,125 @@ const EN = {
 
   // — src/pages/bandingkan/[combo].astro —
   "pub.banding.crumb": "Compare",
+
+  // — Blok "Mulai dari sini" + FAQ beranda, contoh kalkulator —
+  "pub.mulai.title": "Start here",
+  "pub.mulai.note": "Three shortcuts for where you are right now — pick the closest one.",
+  "pub.mulai.baruT": "New to electric cars?",
+  "pub.mulai.baruD": "Start with the basics: what an EV is, how BEV, PHEV, and HEV differ, and the myths going around.",
+  "pub.mulai.beliT": "Thinking of buying?",
+  "pub.mulai.beliD": "Compare models in the catalogue, calculate the savings against petrol, and read the buying guides.",
+  "pub.mulai.punyaT": "Already own an EV?",
+  "pub.mulai.punyaD": "Find the nearest charger, calculate one charge-up, and find a workshop.",
+  "pub.mulai.edukasi": "Basic education",
+  "pub.mulai.glosa": "BEV vs PHEV vs HEV",
+  "pub.mulai.mitos": "Myths vs facts",
+  "pub.mulai.bawah200": "Under Rp200 million",
+  "pub.mulai.panduanCas": "Charging guide",
+  "pub.mulai.rawatBaterai": "Battery care",
+  "pub.mulai.lihatSpklu": "Browse the SPKLU directory",
+  "pub.mulai.faqT": "Frequently asked questions",
+  "pub.mulai.faq1q": "How much does a full charge cost?",
+  "pub.mulai.faq1a":
+    "It depends on battery size and tariff. Example: charging a BYD Atto 1 (30 kWh) from 20 to 80% at a 50 kW SPKLU costs about Rp46 thousand and takes 23–35 minutes. At home the tariff per kWh is far cheaper, but it takes hours.",
+  "pub.mulai.faq2q": "Are electric cars really cheaper than petrol cars?",
+  "pub.mulai.faq2a":
+    "For daily city use, yes — by a wide margin. At the home tariff of Rp1,445/kWh and petrol at Rp13,000/litre, a BYD Atto 1 saves about Rp939 thousand a month for 1,000 km. The further you drive, the bigger the saving.",
+  "pub.mulai.faq3q": "Can I charge at home?",
+  "pub.mulai.faq3a":
+    "Yes. A 2.2 kW home socket is cheapest but slowest (overnight); a 7 kW wallbox is far quicker at the same tariff. Have an electrician check your home wiring before installing a wallbox.",
+  "pub.mulai.faq4q": "How long does an EV battery last?",
+  "pub.mulai.faq4a":
+    "Usually warranted for 8 years or 160,000 km. Real-world life can be longer with care: charge 20–80% daily, avoid leaving the battery empty, and avoid excessive heat.",
+  "pub.mulai.faq5q": "Where can I charge on the road?",
+  "pub.mulai.faq5a":
+    "At SPKLU stations — our directory lists locations, power, connectors, and opening hours. For long trips, also read the mudik route and rest-area charging guides.",
+  "pub.isiX.contohT": "Worked examples",
+  "pub.isiX.contohD":
+    "Charging 20–80% at a 50 kW DC SPKLU at Rp2,466/kWh. The figures come from the same function as the calculator above — pick a vehicle to recalculate.",
+  "pub.isiX.kend": "Vehicle",
+  "pub.isiX.masuk": "Energy in",
+  "pub.isiX.waktu": "Time",
+  "pub.isiX.biaya": "Cost",
+  "pub.isiX.faqT": "Charging FAQs",
+  "pub.isiX.faq1q": "Why does charging stop at 80%?",
+  "pub.isiX.faq1a":
+    "Above 80%, DC charging tapers sharply — the last 20% can take as long as the previous 60%. Factory claims almost always read 10–80% for this reason.",
+  "pub.isiX.faq2q": "Why do I pay for more than goes in?",
+  "pub.isiX.faq2a":
+    "Some energy becomes heat in the cable and battery. This calculator assumes 96% efficiency for DC and 88% for AC — both estimates, as catalogues never state the figure.",
+  "pub.isiX.faq3q": "What is the difference between AC and DC charging?",
+  "pub.isiX.faq3a":
+    "AC (up to 22 kW) goes through the car's onboard charger: slow but steady — home sockets and wallboxes are AC. DC (above 22 kW) goes straight to the battery: fast but slows near full — fast SPKLU stations are DC.",
+  "pub.isiX.faq4q": "Is a 150 kW station always faster than a 50 kW one?",
+  "pub.isiX.faq4a":
+    "Not necessarily — a car only accepts up to its own limit. If your car's limit is 50 kW, plugging into a 150 kW station still charges at 50 kW. Our catalogue does not record each vehicle's limit yet, so the maths assumes the full station power is absorbed.",
+  "pub.hemX.profilT": "Examples by mileage",
+  "pub.hemX.profilD":
+    "BYD Atto 1 (10 kWh/100 km), home electricity Rp1,445/kWh, petrol Rp13,000/litre at 12 km/litre. Example purchase-price gap: Rp195m (electric) vs Rp150m (petrol).",
+  "pub.hemX.jarak": "Distance / month",
+  "pub.hemX.hematB": "Saving / month",
+  "pub.hemX.kembali": "Payback",
+  "pub.hemX.acuan":
+    "October 2026 reference: non-subsidised petrol ±Rp13,000/litre, home tariff ±Rp1,445/kWh, SPKLU tariff ±Rp2,466/kWh. Replace with what you actually pay.",
+  "pub.hemX.caraT": "How to read the payback",
+  "pub.hemX.caraD":
+    "Purchase-price gap divided by monthly saving. The gap stays fixed while the saving grows with mileage — which is why the further you drive, the sooner it pays back.",
+  "pub.hemX.faqT": "Savings FAQs",
+  "pub.hemX.faq1q": "Why is the payback column empty?",
+  "pub.hemX.faq1a":
+    "The comparison petrol car's price has not been entered — that field is optional. Enter it to see when the price gap pays back.",
+  "pub.hemX.faq2q": "Are servicing, tax, and insurance included?",
+  "pub.hemX.faq2a":
+    "No — this calculator covers fuel only. EV servicing is usually cheaper (no oil or spark plugs) and annual tax is light, but insurance and depreciation can change the conclusion.",
+  "pub.hemX.faq3q": "Is charging at SPKLU still cheaper?",
+  "pub.hemX.faq3a":
+    "Yes, but the margin shrinks: the SPKLU tariff (±Rp2,466/kWh) is almost double the home tariff. Use the tariff preset buttons above to compare both.",
+
+  // — Halaman /berita, /spklu, /artikel (peringkat 4–10) —
+  "pub.beritaX.panduanT": "How to read this page",
+  "pub.beritaX.panduanD":
+    "Every card links to the publisher's own site — the full text lives there. The list refreshes automatically every day from the official feeds of the five outlets below.",
+  "pub.beritaX.sumberT": "Monitored sources",
+  "pub.beritaX.faqT": "News FAQs",
+  "pub.beritaX.faq1q": "Why does clicking a headline open another site?",
+  "pub.beritaX.faq1a":
+    "EVKita does not copy article text — only the headline, summary, and link are kept. The point is to take you to the original page.",
+  "pub.beritaX.faq2q": "How often is this list updated?",
+  "pub.beritaX.faq2a":
+    "Once a day, in the WIB morning. Older items that are still relevant are kept; stale ones are replaced by the newest stories.",
+  "pub.beritaX.faq3q": "Why do some stories have no photo?",
+  "pub.beritaX.faq3a":
+    "Photos come from the publisher's feed; where the publisher sends none, the main image of the source page is used instead. Cards left without a photo render as text.",
+  "pub.spkluX.panduanT": "How to use this directory",
+  "pub.spkluX.panduanD":
+    "Each card shows power (kW), connector, tariff, and opening hours where available. The location button opens a map; where the data is empty, it opens a search for the place name instead.",
+  "pub.spkluX.etika": "SPKLU etiquette",
+  "pub.spkluX.faqT": "SPKLU FAQs",
+  "pub.spkluX.faq1q": "Which connectors are used in Indonesia?",
+  "pub.spkluX.faq1a":
+    "Cars generally use CCS2 for DC and Type 2 for AC; some Japanese models use CHAdeMO. The shapes do not fit each other, so a wrong plug damages nothing — it only wastes queue time.",
+  "pub.spkluX.faq2q": "How do I pay?",
+  "pub.spkluX.faq2a":
+    "Almost every operator runs through an app: find the location, start the session, and pay inside the same app. Download it and register before you leave.",
+  "pub.spkluX.faq3q": "What does SPKLU charging cost?",
+  "pub.spkluX.faq3a":
+    "It differs per operator, around Rp2,466/kWh as a benchmark — almost double the home tariff. Some sites add a service or parking fee.",
+  "pub.spkluX.faq4q": "May I leave the car while charging?",
+  "pub.spkluX.faq4a":
+    "You may, but move it once the session stops — an SPKLU is not a parking lot. The unwritten rules are in the etiquette guide.",
+  "pub.artikelX.panduanD":
+    "Original writing from the EVKita editors — not copied from the media. Every figure comes from the catalogue, every quoted story is cited at the foot of the piece.",
+  "pub.artikelX.faqT": "Article FAQs",
+  "pub.artikelX.faq1q": "Is the article content original?",
+  "pub.artikelX.faq1a":
+    "Yes. News curates links owned by other publishers; articles are this site's own writing, written and edited by humans (AI-assisted pieces are labelled).",
+  "pub.artikelX.faq2q": "Where do the figures come from?",
+  "pub.artikelX.faq2a":
+    "From the vehicle catalogue and the stories linked as sources. Where a figure is absent from the material, it is not written as a figure.",
+  "pub.artikelX.faq3q": "Can I suggest a topic?",
+  "pub.artikelX.faq3a":
+    "Yes — through the contact page in the footer. The most requested topics go first.",
 };
 
 const ZH = {
@@ -1902,6 +2140,125 @@ const ZH = {
   "pub.artikel.metaDesc": "{n}篇关于印度尼西亚电动车的原创文章：注明出处的指南、对比和评测。",
   "pub.artikel.metaDescEmpty": "来自{brand}的印度尼西亚电动车文章与指南。",
   "pub.banding.crumb": "对比",
+
+  // — Blok "Mulai dari sini" + FAQ beranda, contoh kalkulator —
+  "pub.mulai.title": "从这里开始",
+  "pub.mulai.note": "根据你目前所处的位置，提供三条快捷路径——选择最接近你的一条。",
+  "pub.mulai.baruT": "刚接触电动车？",
+  "pub.mulai.baruD": "从基础开始：什么是电动车，BEV、PHEV、HEV有何区别，以及常见误区。",
+  "pub.mulai.beliT": "打算购车？",
+  "pub.mulai.beliD": "在目录中对比车型，计算相比燃油车的节省，并阅读选购指南。",
+  "pub.mulai.punyaT": "已经拥有电动车？",
+  "pub.mulai.punyaD": "查找最近的充电站，计算一次充电费用，并找到维修店。",
+  "pub.mulai.edukasi": "基础知识",
+  "pub.mulai.glosa": "BEV / PHEV / HEV 对比",
+  "pub.mulai.mitos": "误区与事实",
+  "pub.mulai.bawah200": "2亿印尼盾以下",
+  "pub.mulai.panduanCas": "充电指南",
+  "pub.mulai.rawatBaterai": "电池保养",
+  "pub.mulai.lihatSpklu": "查看充电站目录",
+  "pub.mulai.faqT": "常见问题",
+  "pub.mulai.faq1q": "电动车充满电要多少钱？",
+  "pub.mulai.faq1a":
+    "取决于电池容量和电价。例如：BYD Atto 1（30度电）在50 kW充电站从20%充到80%，约需46,000印尼盾，用时23–35分钟。在家充电每度电便宜得多，但需要几个小时。",
+  "pub.mulai.faq2q": "电动车真的比燃油车省钱吗？",
+  "pub.mulai.faq2a":
+    "对日常城市使用来说，是的，而且差距很大。按家用电价1,445印尼盾/度、油价13,000印尼盾/升计算，BYD Atto 1每月跑1,000公里可省约939,000印尼盾。跑得越多，省得越多。",
+  "pub.mulai.faq3q": "可以在家充电吗？",
+  "pub.mulai.faq3a":
+    "可以。2.2 kW家用插座最便宜但最慢（需要一整夜）；7 kW充电桩快得多，电价相同。安装充电桩前请先请电工检查家庭电路。",
+  "pub.mulai.faq4q": "电动车电池能用多久？",
+  "pub.mulai.faq4a":
+    "一般保修8年或16万公里。保养得当实际寿命更长：日常保持20%–80%电量，避免电池耗空，避免过热。",
+  "pub.mulai.faq5q": "在路上哪里可以充电？",
+  "pub.mulai.faq5a":
+    "在SPKLU充电站——我们的目录包含位置、功率、接口和营业时间。长途出行还可以查看返乡路线和休息区充电指南。",
+  "pub.isiX.contohT": "计算示例",
+  "pub.isiX.contohD":
+    "在50 kW直流充电站以2,466印尼盾/度从20%充到80%。数字与上方计算器使用同一函数得出——选择车型可重新计算。",
+  "pub.isiX.kend": "车型",
+  "pub.isiX.masuk": "充入电量",
+  "pub.isiX.waktu": "用时",
+  "pub.isiX.biaya": "费用",
+  "pub.isiX.faqT": "充电常见问题",
+  "pub.isiX.faq1q": "为什么充电到80%就停了？",
+  "pub.isiX.faq1a":
+    "超过80%后直流充电速度急剧下降——最后20%的时间可能和之前60%一样长。厂家标称几乎都是10%–80%，原因就在于此。",
+  "pub.isiX.faq2q": "为什么付费电量比充入电量多？",
+  "pub.isiX.faq2a":
+    "部分电能在充电线和电池中变成热量。本计算按直流96%、交流88%的效率估算——两者都是估计值，因为产品目录从不标注这个数字。",
+  "pub.isiX.faq3q": "交流充电和直流充电有何区别？",
+  "pub.isiX.faq3a":
+    "交流（最高22 kW）经过车载充电机：慢但稳定——家用插座和充电桩属于交流。直流（22 kW以上）直接进入电池：快，但在接近充满时会变慢——快充站属于直流。",
+  "pub.isiX.faq4q": "150 kW充电站一定比50 kW快吗？",
+  "pub.isiX.faq4a":
+    "不一定——车辆只接受不超过自身上限的功率。如果你的车上限是50 kW，插到150 kW桩上仍然只以50 kW充电。我们的目录尚未收录各车型的上限，因此计算默认全部站端功率都被接受。",
+  "pub.hemX.profilT": "按里程计算的示例",
+  "pub.hemX.profilD":
+    "BYD Atto 1（10度电/100公里），家用电1,445印尼盾/度，油价13,000印尼盾/升、油耗12公里/升。购车差价示例：1.95亿（电动）对1.5亿（燃油）。",
+  "pub.hemX.jarak": "月里程",
+  "pub.hemX.hematB": "月节省",
+  "pub.hemX.kembali": "回本时间",
+  "pub.hemX.acuan":
+    "2026年10月参考：非补贴汽油约13,000印尼盾/升，家用电约1,445印尼盾/度，充电站约2,466印尼盾/度。请换成你实际支付的价格。",
+  "pub.hemX.caraT": "如何理解回本时间",
+  "pub.hemX.caraD":
+    "购车差价除以月节省额。差价固定，节省随里程增加——所以跑得越多，回本越快。",
+  "pub.hemX.faqT": "省钱常见问题",
+  "pub.hemX.faq1q": "为什么回本一栏是空的？",
+  "pub.hemX.faq1a":
+    "还没有填写对比燃油车的价格——该栏为选填。填上价格即可知道差价多久能回本。",
+  "pub.hemX.faq2q": "保养、税费和保险包含在内吗？",
+  "pub.hemX.faq2a":
+    "不包含——本计算器只算燃料。电动车保养通常更便宜（无需机油和火花塞），年税也较低，但保险和贬值可能改变结论。",
+  "pub.hemX.faq3q": "在充电站充电还省钱吗？",
+  "pub.hemX.faq3a":
+    "省，但差距缩小：充电站电价（约2,466印尼盾/度）几乎是家用电的两倍。用上方电价预设按钮对比两者。",
+
+  // — Halaman /berita, /spklu, /artikel (peringkat 4–10) —
+  "pub.beritaX.panduanT": "如何阅读本页",
+  "pub.beritaX.panduanD":
+    "每张卡片都链接到发布方自己的网站——全文在那里。列表每天根据以下五家媒体的官方订阅源自动更新。",
+  "pub.beritaX.sumberT": "监测来源",
+  "pub.beritaX.faqT": "新闻常见问题",
+  "pub.beritaX.faq1q": "为什么点击标题会打开别的网站？",
+  "pub.beritaX.faq1a":
+    "EVKita不复制新闻正文——只保留标题、摘要和链接。目的正是把你送到原文页面。",
+  "pub.beritaX.faq2q": "这个列表多久更新一次？",
+  "pub.beritaX.faq2a":
+    "每天一次（印尼西部时间上午）。仍有价值的旧闻予以保留，过时的由最新消息替换。",
+  "pub.beritaX.faq3q": "为什么有的新闻没有图片？",
+  "pub.beritaX.faq3a":
+    "图片来自发布方的订阅源；若发布方未提供，则采用原文页面的主图。始终没有图片的卡片只显示文字。",
+  "pub.spkluX.panduanT": "如何使用本目录",
+  "pub.spkluX.panduanD":
+    "每张卡片注明功率（kW）、接口、电价和营业时间（若有）。位置按钮打开地图；若数据为空，则改为按场所名称搜索。",
+  "pub.spkluX.etika": "充电站礼仪",
+  "pub.spkluX.faqT": "充电站常见问题",
+  "pub.spkluX.faq1q": "印尼使用哪种充电接口？",
+  "pub.spkluX.faq1a":
+    "汽车一般直流用CCS2、交流用Type 2；部分日系车型用CHAdeMO。接口形状互不兼容，插错不会损坏任何东西——只会浪费排队时间。",
+  "pub.spkluX.faq2q": "如何支付？",
+  "pub.spkluX.faq2a":
+    "几乎所有运营商都通过App运行：在同一App内查找位置、启动充电并支付。出门前先下载并注册好。",
+  "pub.spkluX.faq3q": "充电站充电多少钱？",
+  "pub.spkluX.faq3a":
+    "各运营商不同，约2,466印尼盾/度可作参考——几乎是家用电的两倍。部分站点另收服务费或停车费。",
+  "pub.spkluX.faq4q": "充电时可以离开车辆吗？",
+  "pub.spkluX.faq4a":
+    "可以，但充电结束后请立即移车——充电站不是停车场。不成文的规定见礼仪指南。",
+  "pub.artikelX.panduanD":
+    "EVKita编辑原创——非媒体转载。每个数字来自车型目录，每篇引用的新闻都在文末注明出处。",
+  "pub.artikelX.faqT": "文章常见问题",
+  "pub.artikelX.faq1q": "文章内容是原创的吗？",
+  "pub.artikelX.faq1a":
+    "是的。新闻是整理其他发布方的链接；文章是本站自己的作品，由人工撰写和编辑（AI辅助的会注明）。",
+  "pub.artikelX.faq2q": "数字从哪里来？",
+  "pub.artikelX.faq2a":
+    "来自车型目录和作为来源链接的新闻。若材料中没有某个数字，就不会把它写成数字。",
+  "pub.artikelX.faq3q": "可以建议选题吗？",
+  "pub.artikelX.faq3a":
+    "可以——通过页脚的联系页面。被点名最多的选题优先写。",
 };
 
 const DICTS = { id: ID, en: EN, zh: ZH };
