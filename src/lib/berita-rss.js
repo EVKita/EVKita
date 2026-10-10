@@ -11,11 +11,18 @@
  * `trafik.js` dan `footer.js`.
  */
 
-/** Isi CDATA dibuka, entitas dasar HTML dibereskan, tag dibuang. */
+/**
+ * Isi CDATA dibuka, entitas HTML dibereskan, tag dibuang.
+ *
+ * Urutannya disengaja: entitas DULU, tag belakangan. Umpan Google News
+ * menulis deskripsinya lolos-ganda (`&lt;a href=…&gt;`) — kalau tag dibuang
+ * lebih dulu tidak ada yang terbuang, lalu `&lt;` dibuka menjadi teks
+ * `<a href=…>` yang ikut tampil di kartu berita. Kasus nyata: 20 dari 30
+ * ringkasan berisi potongan tautan mentah (Okt 2026).
+ */
 function teks(v) {
   return String(v || "")
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
@@ -24,6 +31,7 @@ function teks(v) {
     .replace(/&#0?39;|&apos;|&#8216;|&#8217;/gi, "'")
     .replace(/&#8211;|&#8212;|&mdash;|&ndash;/gi, "-")
     .replace(/&#8230;|&hellip;/gi, "…")
+    .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
