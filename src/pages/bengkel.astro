@@ -4,7 +4,7 @@ import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import { readContent } from "../lib/store";
 import { hanyaTayang } from "../lib/tayang.js";
-import { safeUrl } from "../lib/url.js";
+import { safeUrl, sematVideo } from "../lib/url.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
 import { makePubT, normalizePubLocale, cms, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
@@ -60,6 +60,13 @@ function bengkelMapUrl(b: any) {
 
 /** Seluruh entri tayang — tidak dipangkas seperti di beranda. */
 const bengkelList = byFeatured((content.bengkel || []).filter(hanyaTayang()));
+
+/**
+ * Video tiap kartu, dihitung sekali. YouTube → iframe hemat-privasi, berkas
+ * langsung → `<video>`, selain itu kartu tampil foto atau teks saja. Kuncinya
+ * id (selalu ada lewat `ensureIds`), bukan nama yang bisa kembar.
+ */
+const videoBengkel = new Map(bengkelList.map((b: any) => [b.id, sematVideo(b.video)]));
 
 /**
  * Bengkel dipisah menjadi dua kelompok supaya pembaca tidak mencampur servis
@@ -154,12 +161,83 @@ const jsonLd = {
         <p class="result-count">{t("pub.dir.hitungBengkel", { n: bengkelList.length })}</p>
       </header>
 
+      {/*
+        Cara membaca + FAQ: polanya sama dengan halaman Berita — menjawab dulu
+        kebingungan yang paling sering (dari mana fotonya, bagaimana videonya,
+        milik siapa direktori ini), baru daftar kartunya.
+      */}
+      <section class="kalk-section">
+        <h2>{t("pub.bengkelX.panduanT")}</h2>
+        <p class="section-note">{t("pub.bengkelX.panduanD")}</p>
+      </section>
+
+      <section class="kalk-section">
+        <h2>{t("pub.bengkelX.faqT")}</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>{t("pub.bengkelX.faq1q")}</summary>
+            <p>{t("pub.bengkelX.faq1a")}</p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.bengkelX.faq2q")}</summary>
+            <p>{t("pub.bengkelX.faq2a")}</p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.bengkelX.faq3q")}</summary>
+            <p>{t("pub.bengkelX.faq3a")}</p>
+          </details>
+          <details class="faq-item">
+            <summary>{t("pub.bengkelX.faq4q")}</summary>
+            <p>{t("pub.bengkelX.faq4a")}</p>
+          </details>
+        </div>
+      </section>
+
       {bengkelGroups.map((g: any) => (
         <div class="dir-group">
           <h3 class="dir-group-title">{g.title}</h3>
           <div class="dir-grid">
             {g.items.map((b: any) => (
               <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
+                {(() => {
+                  const v = videoBengkel.get(b.id);
+                  if (v && v.jenis === "youtube") {
+                    return (
+                      <div class="dir-visual">
+                        <iframe
+                          class="dir-video"
+                          src={v.src}
+                          title={b.name}
+                          loading="lazy"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowfullscreen
+                          referrerpolicy="strict-origin-when-cross-origin"
+                        />
+                      </div>
+                    );
+                  }
+                  if (v && v.jenis === "langsung") {
+                    return (
+                      <div class="dir-visual">
+                        <video
+                          class="dir-video"
+                          src={v.src}
+                          poster={safeUrl(b.image) || undefined}
+                          controls
+                          muted
+                          loop
+                          playsinline
+                          preload="none"
+                        />
+                      </div>
+                    );
+                  }
+                  return safeUrl(b.image) ? (
+                    <div class="dir-visual">
+                      <img class="dir-photo" src={safeUrl(b.image)} alt={b.name} loading="lazy" decoding="async" />
+                    </div>
+                  ) : null;
+                })()}
                 <div class="dir-top">
                   <span class="dir-badge">{cms(b.type, lang) || t("pub.dir.bengkel")}</span>
                   {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}

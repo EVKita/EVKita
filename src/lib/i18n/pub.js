@@ -777,6 +777,22 @@ const ID = {
   "pub.spkluX.faq4q": "Boleh meninggalkan mobil sambil ngecas?",
   "pub.spkluX.faq4a":
     "Boleh, tapi geser begitu sesi berhenti — SPKLU bukan parkir. Aturan tak tertulisnya ada di panduan etika.",
+  "pub.bengkelX.panduanT": "Cara membaca halaman ini",
+  "pub.bengkelX.panduanD":
+    "Setiap kartu memuat layanan, jam buka, dan telepon bila tersedia. Tombol lokasi membuka peta; kalau datanya kosong, ia membuka pencarian nama bengkelnya. Entri bertanda Pilihan adalah bengkel unggulan.",
+  "pub.bengkelX.faqT": "Yang sering ditanyakan soal bengkel",
+  "pub.bengkelX.faq1q": "Dari mana foto di kartu ini?",
+  "pub.bengkelX.faq1a":
+    "Foto diisi satu per satu dari situs resmi masing-masing bengkel. Kartu yang belum punya foto tampil teks saja — isinya tetap lengkap.",
+  "pub.bengkelX.faq2q": "Bagaimana cara menonton videonya?",
+  "pub.bengkelX.faq2a":
+    "Sebagian kartu membawa video profil dari kanal resmi bengkelnya. Tekan putar untuk menonton; videonya dimuat hemat kuota dan baru berjalan setelah ditekan.",
+  "pub.bengkelX.faq3q": "Apakah ini bengkel milik EVKita?",
+  "pub.bengkelX.faq3a":
+    "Bukan — direktori ini hanya mencatat bengkel pihak ketiga, resmi maupun umum, yang melayani kendaraan listrik. Untuk antrean dan biaya, hubungi bengkelnya langsung.",
+  "pub.bengkelX.faq4q": "Bengkel saya belum ada di daftar?",
+  "pub.bengkelX.faq4a":
+    "Kirim lewat halaman kontak di footer. Bengkel yang melayani EV — motor maupun mobil — didahulukan.",
   "pub.artikelX.panduanD":
     "Tulisan orisinal redaksi EVKita — bukan salinan media. Setiap angka berasal dari katalog, setiap kutipan berita dicantumkan sumbernya di kaki tulisan.",
   "pub.artikelX.faqT": "Yang sering ditanyakan soal artikel",
@@ -1557,6 +1573,22 @@ const EN = {
   "pub.spkluX.faq4q": "May I leave the car while charging?",
   "pub.spkluX.faq4a":
     "You may, but move it once the session stops — an SPKLU is not a parking lot. The unwritten rules are in the etiquette guide.",
+  "pub.bengkelX.panduanT": "How to read this page",
+  "pub.bengkelX.panduanD":
+    "Each card lists services, opening hours, and phone where available. The location button opens a map; where the data is empty, it opens a search for the workshop's name instead. Cards marked Featured are highlighted workshops.",
+  "pub.bengkelX.faqT": "Workshop FAQs",
+  "pub.bengkelX.faq1q": "Where are the card photos from?",
+  "pub.bengkelX.faq1a":
+    "Photos are added one by one from each workshop's official website. Cards without a photo yet still show the full details as text.",
+  "pub.bengkelX.faq2q": "How do I watch the video?",
+  "pub.bengkelX.faq2a":
+    "Some cards carry a profile video from the workshop's official channel. Press play to watch; videos load data-light and only start after you press play.",
+  "pub.bengkelX.faq3q": "Are these EVKita's own workshops?",
+  "pub.bengkelX.faq3a":
+    "No — this directory only lists third-party workshops, authorised or independent, that service electric vehicles. For queues and pricing, contact the workshop directly.",
+  "pub.bengkelX.faq4q": "My workshop is not listed?",
+  "pub.bengkelX.faq4a":
+    "Send it through the contact page in the footer. Workshops serving EVs — bikes or cars — go first.",
   "pub.artikelX.panduanD":
     "Original writing from the EVKita editors — not copied from the media. Every figure comes from the catalogue, every quoted story is cited at the foot of the piece.",
   "pub.artikelX.faqT": "Article FAQs",
@@ -2253,6 +2285,22 @@ const ZH = {
   "pub.spkluX.faq4q": "充电时可以离开车辆吗？",
   "pub.spkluX.faq4a":
     "可以，但充电结束后请立即移车——充电站不是停车场。不成文的规定见礼仪指南。",
+  "pub.bengkelX.panduanT": "如何阅读本页",
+  "pub.bengkelX.panduanD":
+    "每张卡片列出服务项目、营业时间与电话（若有）。位置按钮打开地图；若数据为空，则改为按维修店名称搜索。标为精选的卡片是推荐维修店。",
+  "pub.bengkelX.faqT": "维修店常见问题",
+  "pub.bengkelX.faq1q": "卡片照片从哪里来？",
+  "pub.bengkelX.faq1a":
+    "照片逐一取自各维修店官网。暂无照片的卡片仍以文字显示完整信息。",
+  "pub.bengkelX.faq2q": "如何观看视频？",
+  "pub.bengkelX.faq2a":
+    "部分卡片附有维修店官方频道的介绍视频。点击播放即可观看；视频为省流量加载，点击后才开始播放。",
+  "pub.bengkelX.faq3q": "这些是EVKita自己的维修店吗？",
+  "pub.bengkelX.faq3a":
+    "不是——本目录只收录服务电动车的第三方维修店，包括官方与综合店。排队与收费请直接联系维修店。",
+  "pub.bengkelX.faq4q": "我的维修店还没收录？",
+  "pub.bengkelX.faq4a":
+    "请通过页脚的联系页面提交。服务电动车（电动摩托或汽车）的维修店优先收录。",
   "pub.artikelX.panduanD":
     "EVKita编辑原创——非媒体转载。每个数字来自车型目录，每篇引用的新闻都在文末注明出处。",
   "pub.artikelX.faqT": "文章常见问题",

@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { compareVersions } from "../src/lib/releases";
 import { readJson, writeJsonAtomic } from "../src/lib/jsonfile";
+import { normalizeContent } from "../src/lib/store";
 
 /**
  * Keutuhan data: perbandingan versi (yang menentukan kapan tombol "perbarui"
@@ -110,5 +111,20 @@ describe("jsonfile", () => {
     const res = readJson<any>(file);
     assert.equal(res.status, "ok", "berkas lama harus tetap terbaca");
     assert.equal(res.status === "ok" && res.data.versi, "lama");
+  });
+});
+
+describe("normalisasi bengkel", () => {
+  it("video profil dipertahankan saat dokumen disimpan", () => {
+    // Regresi: field baru yang lupa didaftarkan di normalizeBengkel akan
+    // dibuang diam-diam oleh PUT /api/content setiap kali panel menyimpan.
+    const isi = normalizeContent({
+      bengkel: [
+        { name: "Bengkel A", video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        { name: "Bengkel B" },
+      ],
+    });
+    assert.equal(isi.bengkel[0].video, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    assert.equal(isi.bengkel[1].video, "");
   });
 });

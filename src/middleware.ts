@@ -87,8 +87,21 @@ function cspUntuk(pathname: string): string {
   if (panel) return CSP_DASAR.join("; ");
 
   const extra = hostCsp(bacaIntegrasi());
-  if (!extra.script.length && !extra.frame.length && !extra.connect.length) {
-    return CSP_DASAR.join("; ");
+  /*
+   * Video profil bengkel disematkan dari YouTube (mode hemat-privasi). Tanpa
+   * baris `frame-src` ini, `default-src 'self'` yang berlaku dan pemutarnya
+   * tampil sebagai kotak kosong — kegagalan yang hanya terlihat di konsol
+   * pembaca, tidak pernah di panel. `https:` milik AdSense sudah mencakup
+   * YouTube, jadi cukup pastikan sekali: dua baris `frame-src` berarti baris
+   * keduanyalah yang diabaikan peramban.
+   */
+  if (!extra.frame.length) {
+    extra.frame.push("'self'", "https://www.youtube-nocookie.com");
+  } else if (
+    !extra.frame.includes("https:") &&
+    !extra.frame.includes("https://www.youtube-nocookie.com")
+  ) {
+    extra.frame.push("https://www.youtube-nocookie.com");
   }
 
   const tambah = (baris: string, host: string[]) =>

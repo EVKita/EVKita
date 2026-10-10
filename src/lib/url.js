@@ -64,3 +64,27 @@ export function denganBase(base, tujuan) {
   if (t.startsWith("#")) return `/${t}`;
   return `/${t.replace(/^\/+/, "")}`;
 }
+
+/**
+ * Alamat semat untuk video profil (bengkel, kendaraan).
+ *
+ * Video resmi biasanya tinggal di YouTube — yang tidak bisa diputar lewat
+ * `<video src>`. Jadi YouTube diubah jadi sematan hemat-privasi
+ * (`youtube-nocookie`, perlu `frame-src` di CSP), sementara berkas video
+ * langsung (mp4) dibiarkan apa adanya untuk `<video>`. Selain keduanya
+ * (mis. `javascript:`) hasilnya kosong — tidak ada yang dirender.
+ *
+ * @param {unknown} value
+ * @returns {{ jenis: "youtube" | "langsung" | "", src: string }}
+ */
+export function sematVideo(value) {
+  const raw = String(value === null || value === undefined ? "" : value).trim();
+  if (!raw) return { jenis: "", src: "" };
+  const yt = raw.match(
+    /^(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?[^#]*?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i
+  );
+  if (yt) return { jenis: "youtube", src: `https://www.youtube-nocookie.com/embed/${yt[1]}` };
+  const langsung = safeUrl(raw);
+  if (langsung && /^https?:\/\//i.test(langsung)) return { jenis: "langsung", src: langsung };
+  return { jenis: "", src: "" };
+}

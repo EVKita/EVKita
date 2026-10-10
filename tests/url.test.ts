@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { denganBase, safeUrl } from "../src/lib/url.js";
+import { denganBase, safeUrl, sematVideo } from "../src/lib/url.js";
 
 /**
  * Regresi bug nyata: di semua subhalaman, menu "Artikel" mengarah ke
@@ -43,5 +43,35 @@ describe("denganBase", () => {
   it("masukan kosong menghasilkan string kosong, bukan '/'", () => {
     assert.equal(denganBase("", ""), "");
     assert.equal(denganBase("/", ""), "");
+  });
+});
+
+describe("sematVideo", () => {
+  it("YouTube jadi sematan hemat-privasi", () => {
+    for (const [masuk, id] of [
+      ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "dQw4w9WgXcQ"],
+      ["https://youtube.com/watch?v=dQw4w9WgXcQ&t=30s", "dQw4w9WgXcQ"],
+      ["https://youtu.be/dQw4w9WgXcQ", "dQw4w9WgXcQ"],
+      ["https://www.youtube.com/embed/dQw4w9WgXcQ", "dQw4w9WgXcQ"],
+      ["https://www.youtube.com/shorts/dQw4w9WgXcQ", "dQw4w9WgXcQ"],
+    ]) {
+      assert.deepEqual(sematVideo(masuk), {
+        jenis: "youtube",
+        src: `https://www.youtube-nocookie.com/embed/${id}`,
+      }, masuk);
+    }
+  });
+
+  it("berkas video langsung dibiarkan apa adanya", () => {
+    assert.deepEqual(sematVideo("https://resmi.bengkel.id/profil.mp4"), {
+      jenis: "langsung",
+      src: "https://resmi.bengkel.id/profil.mp4",
+    });
+  });
+
+  it("selain itu tidak ada yang dirender", () => {
+    for (const masuk of ["", "   ", "javascript:alert(1)", "/video/lokal.mp4", "bukan url"]) {
+      assert.deepEqual(sematVideo(masuk), { jenis: "", src: "" }, String(masuk));
+    }
   });
 });

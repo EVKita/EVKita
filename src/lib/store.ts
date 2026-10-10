@@ -304,6 +304,11 @@ function normalizeBengkel(v: any): any {
     /* Foto untuk kartu unggulan di beranda. Tanpa foto, kartu unggulan
        tampil tanpa gambar — tidak ada ilustrasi pengganti. */
     image: str(v?.image),
+    /* Video profil dari kanal/situs resmi bengkel. Halaman Bengkel menyematnya
+       di kartu (YouTube lewat iframe hemat-privasi, berkas langsung lewat
+       `<video>` — lihat `sematVideo()` di url.js); tanpa video, kartunya
+       tampil foto atau teks saja. */
+    video: str(v?.video),
     featured: !!v?.featured,
     status: str(v?.status) === "draft" ? "draft" : "published",
     publishAt: str(v?.publishAt),

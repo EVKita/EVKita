@@ -375,6 +375,7 @@ function dirGroups(col) {
         l: t("dir.sec.lainnya"), d: t("dir.sec.lainnya.d"), f: [
           { k: "website", l: t("field.website"), t: "url", full: true, ph: "https://" },
           { k: "image", l: t("field.bengkel.image"), t: "image", full: true, hint: t("field.bengkel.image.hint") },
+          { k: "video", l: t("field.videoUrl"), t: "url", full: true, ph: "https://youtube.com/watch?v=…", hint: t("field.bengkel.video.hint") },
           { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2, ph: t("field.note.ph") },
           { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
           { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
