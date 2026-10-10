@@ -188,6 +188,43 @@ describe("pemangkasan daftar", () => {
   });
 });
 
+describe("agregat geografi dan kunjungan", () => {
+  it("menggabungkan negara, kota, jaringan, ulang, dan anggota", () => {
+    const hasil = ringkas(
+      {
+        "2026-10-01": {
+          tampilan: 3,
+          pengunjung: 2,
+          bot: 0,
+          ulang: 1,
+          anggota: 1,
+          jam: new Array(24).fill(0),
+          halaman: {},
+          rujukan: {},
+          perangkat: {},
+          negara: { ID: 2, "": 1 },
+          kota: { "ID|Jawa Barat|Bandung": 2, "ID||": 1 },
+          jaringan: { Telkomsel: 2, "": 1 },
+          sidik: [],
+        },
+      },
+      ["2026-10-01"]
+    );
+    assert.equal(hasil.total.ulang, 1);
+    assert.equal(hasil.total.anggota, 1);
+    assert.deepEqual(hasil.negara[0], { label: "ID", n: 2 });
+    assert.deepEqual(hasil.kota[0], { label: "ID|Jawa Barat|Bandung", n: 2 });
+    assert.deepEqual(hasil.jaringan[0], { label: "Telkomsel", n: 2 });
+  });
+
+  it("dokumen lama tanpa field baru tetap terbaca", () => {
+    const hasil = ringkas({ "2026-10-01": { tampilan: 1 } }, ["2026-10-01"]);
+    assert.equal(hasil.total.ulang, 0);
+    assert.equal(hasil.total.anggota, 0);
+    assert.deepEqual(hasil.negara, []);
+  });
+});
+
 /* ------------------------------------------------------------------ *
  * Penyimpanan
  * ------------------------------------------------------------------ */
@@ -260,6 +297,44 @@ describe("pencatatan ke berkas", () => {
     const isi = fs.readFileSync(path.join(process.cwd(), "data", "trafik", `${bulan}.json`), "utf8");
     assert.equal(isi.includes("1.1.1.1"), false);
     assert.equal(isi.includes("2.2.2.2"), false);
+    assert.equal(isi.includes(PERAMBAN), false);
+  });
+});
+
+describe("geografi, anggota, dan kunjungan ulang", () => {
+  const sekarang = new Date();
+  const hari = hariWib(sekarang);
+  const bulan = hari.slice(0, 7);
+
+  it("mencatat negara, kota, jaringan, dan anggota sebagai angka", () => {
+    const sebelum = rekam.bacaRentang(7, hari).sekarang.total;
+    rekam.catatKunjungan({ pathname: "/", userAgent: PERAMBAN, ip: "9.9.9.1", host: "evkita.com", waktu: sekarang, negara: "AQ", provinsi: "Antarktis", kota: "Kutub", jaringan: "Riset", anggota: true });
+    rekam.catatKunjungan({ pathname: "/katalog", userAgent: PERAMBAN, ip: "9.9.9.2", host: "evkita.com", waktu: sekarang, negara: "AQ", kota: "Kutub" });
+    const sesudah = rekam.bacaRentang(7, hari).sekarang;
+    assert.equal(sesudah.total.tampilan - sebelum.tampilan, 2);
+    assert.equal(sesudah.total.pengunjung - sebelum.pengunjung, 2);
+    assert.equal(sesudah.total.anggota - sebelum.anggota, 1);
+    const negara = sesudah.negara.find((x: any) => x.label === "AQ");
+    assert.ok(negara && negara.n >= 2);
+    const kota = sesudah.kota.find((x: any) => x.label === "AQ|Antarktis|Kutub");
+    assert.ok(kota && kota.n >= 1);
+    const jaringan = sesudah.jaringan.find((x: any) => x.label === "Riset");
+    assert.ok(jaringan && jaringan.n >= 1);
+  });
+
+  it("kunjungan kedua di hari yang sama dihitung ulang, bukan pengunjung baru", () => {
+    const sebelum = rekam.bacaRentang(7, hari).sekarang.total;
+    rekam.catatKunjungan({ pathname: "/", userAgent: PERAMBAN, ip: "9.9.9.1", host: "evkita.com", waktu: sekarang });
+    const sesudah = rekam.bacaRentang(7, hari).sekarang.total;
+    assert.equal(sesudah.tampilan - sebelum.tampilan, 1);
+    assert.equal(sesudah.pengunjung - sebelum.pengunjung, 0);
+    assert.equal(sesudah.ulang - sebelum.ulang, 1);
+  });
+
+  it("tidak menyimpan IP meski ada data geografi", () => {
+    const isi = fs.readFileSync(path.join(process.cwd(), "data", "trafik", `${bulan}.json`), "utf8");
+    assert.equal(isi.includes("9.9.9.1"), false);
+    assert.equal(isi.includes("9.9.9.2"), false);
     assert.equal(isi.includes(PERAMBAN), false);
   });
 });

@@ -5,6 +5,9 @@ import { readJson, writeJsonAtomic } from "./jsonfile";
 import { getEnv } from "./env";
 import {
   BATAS_HALAMAN,
+  BATAS_JARINGAN,
+  BATAS_KOTA,
+  BATAS_NEGARA,
   BATAS_RUJUKAN,
   PANJANG_SIDIK,
   apakahBot,
@@ -104,6 +107,13 @@ export interface Kunjungan {
   ip?: string | null;
   host?: string | null;
   waktu?: Date;
+  /** Hasil pencarian GeoIP (sudah berupa kode/nama, bukan IP). */
+  negara?: string | null;
+  provinsi?: string | null;
+  kota?: string | null;
+  jaringan?: string | null;
+  /** Benar bila pembawa cookie akun anggota yang masuk. */
+  anggota?: boolean;
 }
 
 /**
@@ -135,6 +145,20 @@ export function catatKunjungan(k: Kunjungan): void {
     h.perangkat[perangkat] = (h.perangkat[perangkat] || 0) + 1;
 
     /*
+     * Geografi dan jaringan dijumlahkan seperti rujukan: kuncinya kode
+     * negara ("ID"), nama kota, dan nama jaringan — tidak ada IP, sidik,
+     * atau apa pun yang berbentuk satu baris per orang.
+     */
+    const kunci = (v: unknown) => String(v || "").trim().slice(0, 80);
+    h.negara[kunci(k.negara)] = (h.negara[kunci(k.negara)] || 0) + 1;
+    const wilayah = [kunci(k.negara).toUpperCase(), kunci(k.provinsi), kunci(k.kota)].filter(Boolean).join("|");
+    h.kota[wilayah] = (h.kota[wilayah] || 0) + 1;
+    h.jaringan[kunci(k.jaringan)] = (h.jaringan[kunci(k.jaringan)] || 0) + 1;
+
+    /* Kunjungan anggota: yang dihitung hanya jumlahnya, bukan siapa pun. */
+    if (k.anggota) h.anggota += 1;
+
+    /*
      * Pengunjung dihitung lewat sidik harian, bukan cookie. Konsekuensinya
      * disengaja: tidak ada apa pun yang ditanam di peramban pembaca, jadi
      * halaman ini tidak pernah membutuhkan izin cookie untuk statistiknya
@@ -144,6 +168,9 @@ export function catatKunjungan(k: Kunjungan): void {
     if (!h.sidik.includes(tanda)) {
       h.sidik.push(tanda);
       h.pengunjung += 1;
+    } else {
+      /* Sidiknya sudah ada hari ini: orang yang sama kembali lagi. */
+      h.ulang += 1;
     }
 
     jadwalTulis();
@@ -171,10 +198,15 @@ function gabungKe(tujuan: any, tambahan: Hari): Hari {
   const h = bacaHari(tujuan);
   h.tampilan += tambahan.tampilan;
   h.bot += tambahan.bot;
+  h.ulang += tambahan.ulang;
+  h.anggota += tambahan.anggota;
   for (let i = 0; i < 24; i++) h.jam[i] += tambahan.jam[i];
   for (const [k, v] of Object.entries(tambahan.halaman)) h.halaman[k] = (h.halaman[k] || 0) + v;
   for (const [k, v] of Object.entries(tambahan.rujukan)) h.rujukan[k] = (h.rujukan[k] || 0) + v;
   for (const [k, v] of Object.entries(tambahan.perangkat)) h.perangkat[k] = (h.perangkat[k] || 0) + v;
+  for (const [k, v] of Object.entries(tambahan.negara)) h.negara[k] = (h.negara[k] || 0) + v;
+  for (const [k, v] of Object.entries(tambahan.kota)) h.kota[k] = (h.kota[k] || 0) + v;
+  for (const [k, v] of Object.entries(tambahan.jaringan)) h.jaringan[k] = (h.jaringan[k] || 0) + v;
 
   /*
    * Pengunjung TIDAK dijumlahkan, melainkan dihitung ulang dari gabungan
@@ -220,6 +252,20 @@ export function simpanSekarang(): void {
   buffer.clear();
   terakhirTulis = Date.now();
 
+  /*
+   * Sidik hari INI dipertahankan di buffer yang baru: tanpa itu, kunjungan
+   * ulang setelah satu penulisan tidak dikenali (daftarnya kosong lagi) dan
+   * tercatat sebagai pengunjung baru + bukan-ulangan sekaligus — dua-duanya
+   * salah. Jumlah di berkas tetap benar karena penggabungan memakai gabungan
+   * sidik, tapi hitungan ulangannya yang rusak. Tanggal lain tidak ikut
+   * dipertahankan: berkasnya yang berwenang, dan menahannya berarti bocor
+   * memori lintas hari.
+   */
+  const hariIniAwal = hariWib();
+  for (const [tgl, h] of antre) {
+    if (tgl === hariIniAwal && h.sidik.length) buffer.set(tgl, { ...hariKosong(), sidik: h.sidik });
+  }
+
   try {
     fs.mkdirSync(DIR(), { recursive: true });
     const hariIni = hariWib();
@@ -239,6 +285,9 @@ export function simpanSekarang(): void {
         const gabung = gabungKe(peta[tgl], h);
         gabung.halaman = pangkas(gabung.halaman, BATAS_HALAMAN);
         gabung.rujukan = pangkas(gabung.rujukan, BATAS_RUJUKAN);
+        gabung.negara = pangkas(gabung.negara, BATAS_NEGARA);
+        gabung.kota = pangkas(gabung.kota, BATAS_KOTA);
+        gabung.jaringan = pangkas(gabung.jaringan, BATAS_JARINGAN);
         peta[tgl] = gabung;
       }
       buangSidikLama(peta, hariIni);

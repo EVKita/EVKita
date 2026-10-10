@@ -28,6 +28,10 @@ export const OFFSET_WIB_MENIT = 7 * 60;
 /** Berapa halaman dan rujukan teratas yang disimpan per hari. */
 export const BATAS_HALAMAN = 300;
 export const BATAS_RUJUKAN = 150;
+/** Batas peta geografi dan jaringan per hari — prinsipnya sama. */
+export const BATAS_NEGARA = 100;
+export const BATAS_KOTA = 300;
+export const BATAS_JARINGAN = 100;
 
 /** Panjang sidik pengunjung yang disimpan sementara. Lihat catatan di `sidik()`. */
 export const PANJANG_SIDIK = 12;
@@ -156,10 +160,21 @@ export function hariKosong() {
     tampilan: 0,
     pengunjung: 0,
     bot: 0,
+    /* Kunjungan ulang di hari yang sama: sidiknya sudah ada di daftar hari
+       ini, jadi tidak menambah pengunjung — tapi tetap satu kunjungan. */
+    ulang: 0,
+    /* Kunjungan dari akun anggota yang masuk. Yang disimpan hanya jumlahnya:
+       siapa anggotanya tidak pernah ikut tercatat. */
+    anggota: 0,
     jam: new Array(24).fill(0),
     halaman: {},
     rujukan: {},
     perangkat: {},
+    /* Geografi dan jaringan, dijumlahkan seperti rujukan. Kunci kosong berarti
+       "tidak diketahui" — pencariannya gagal atau basisnya belum ada. */
+    negara: {},
+    kota: {},
+    jaringan: {},
     sidik: [],
   };
 }
@@ -171,10 +186,15 @@ export function bacaHari(raw) {
   h.tampilan = Number(raw.tampilan) || 0;
   h.pengunjung = Number(raw.pengunjung) || 0;
   h.bot = Number(raw.bot) || 0;
+  h.ulang = Number(raw.ulang) || 0;
+  h.anggota = Number(raw.anggota) || 0;
   if (Array.isArray(raw.jam)) for (let i = 0; i < 24; i++) h.jam[i] = Number(raw.jam[i]) || 0;
   for (const [k, v] of Object.entries(raw.halaman || {})) h.halaman[k] = Number(v) || 0;
   for (const [k, v] of Object.entries(raw.rujukan || {})) h.rujukan[k] = Number(v) || 0;
   for (const [k, v] of Object.entries(raw.perangkat || {})) h.perangkat[k] = Number(v) || 0;
+  for (const [k, v] of Object.entries(raw.negara || {})) h.negara[k] = Number(v) || 0;
+  for (const [k, v] of Object.entries(raw.kota || {})) h.kota[k] = Number(v) || 0;
+  for (const [k, v] of Object.entries(raw.jaringan || {})) h.jaringan[k] = Number(v) || 0;
   h.sidik = Array.isArray(raw.sidik) ? raw.sidik.map(String) : [];
   return h;
 }
@@ -214,10 +234,15 @@ export function ringkas(peta, tanggalList) {
   const halaman = {};
   const rujukan = {};
   const perangkat = {};
+  const negara = {};
+  const kota = {};
+  const jaringan = {};
   const jam = new Array(24).fill(0);
   let tampilan = 0;
   let pengunjung = 0;
   let bot = 0;
+  let ulang = 0;
+  let anggota = 0;
 
   for (const tgl of tanggalList) {
     const h = bacaHari(peta[tgl]);
@@ -225,10 +250,15 @@ export function ringkas(peta, tanggalList) {
     tampilan += h.tampilan;
     pengunjung += h.pengunjung;
     bot += h.bot;
+    ulang += h.ulang;
+    anggota += h.anggota;
     for (let i = 0; i < 24; i++) jam[i] += h.jam[i];
     tambahPeta(halaman, h.halaman);
     tambahPeta(rujukan, h.rujukan);
     tambahPeta(perangkat, h.perangkat);
+    tambahPeta(negara, h.negara);
+    tambahPeta(kota, h.kota);
+    tambahPeta(jaringan, h.jaringan);
   }
 
   const puncak = hari.reduce((a, b) => (b.tampilan > (a ? a.tampilan : -1) ? b : a), null);
@@ -239,6 +269,8 @@ export function ringkas(peta, tanggalList) {
       tampilan,
       pengunjung,
       bot,
+      ulang,
+      anggota,
       // Dibulatkan dua angka: "1,8 halaman per pengunjung" adalah angka yang
       // dipakai untuk membandingkan, bukan untuk dijumlahkan lagi.
       perPengunjung: pengunjung ? Math.round((tampilan / pengunjung) * 100) / 100 : 0,
@@ -247,6 +279,9 @@ export function ringkas(peta, tanggalList) {
     halaman: urutkan(halaman, 15),
     rujukan: urutkan(rujukan, 10),
     perangkat: PERANGKAT.map((k) => ({ label: k, n: perangkat[k] || 0 })).filter((x) => x.n > 0),
+    negara: urutkan(negara, 15),
+    kota: urutkan(kota, 15),
+    jaringan: urutkan(jaringan, 15),
     jam,
   };
 }

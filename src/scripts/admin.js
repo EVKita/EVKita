@@ -5463,7 +5463,17 @@ function bindEvents() {
       // Memilih rentang berarti keluar dari mode "satu bulan penuh"; keduanya
       // menjawab pertanyaan yang sama dan tidak bisa aktif berbarengan.
       analitikView.bulan = "";
+      analitikView.negara = "";
       loadAnalitik();
+      return;
+    }
+    // Pengeboran negara → kota: datanya sudah ada di ringkasan, jadi tidak
+    // perlu memuat ulang — cukup menggambar ulang dengan filter berbeda.
+    const borNegara = e.target.closest("[data-analitik-negara]");
+    if (borNegara) {
+      const cc = borNegara.getAttribute("data-analitik-negara") || "";
+      analitikView.negara = analitikView.negara === cc ? "" : cc;
+      renderAnalitik();
       return;
     }
 
@@ -6001,6 +6011,7 @@ function bindEvents() {
     /* --- Analitik --- */
     if (el.getAttribute && el.getAttribute("data-analitik") === "bulan") {
       analitikView.bulan = el.value;
+      analitikView.negara = "";
       loadAnalitik();
       return;
     }
@@ -9265,7 +9276,7 @@ function renderActivityView() {
  */
 
 const RENTANG_HARI = [7, 14, 30, 90];
-const analitikView = { hari: 30, bulan: "" };
+const analitikView = { hari: 30, bulan: "", negara: "" };
 let analitikData = null;
 
 async function loadAnalitik() {
@@ -9467,6 +9478,8 @@ function renderAnalitik() {
       s.puncak ? `<span class="stat-delta is-flat">${esc(tanggalPendek(s.puncak.tanggal))}</span>` : "",
     ],
     [t("analitik.bots"), angka(total.bot), ""],
+    [t("analitik.repeat"), angka(total.ulang), ""],
+    [t("analitik.members"), angka(total.anggota), ""],
   ];
 
   const halaman = s.halaman.map((h) => ({
@@ -9482,6 +9495,47 @@ function renderAnalitik() {
   }));
 
   const perangkat = s.perangkat.map((p) => ({ label: t(`analitik.device.${p.label}`), n: p.n }));
+
+  /*
+   * Negara yang bisa diklik menelusuri kota — kuncinya "CC|Provinsi|Kota",
+   * jadi saringannya cukup awalan. Tanpa memuat ulang: seluruh ringkasan
+   * sudah ada di `analitikData`.
+   */
+  const ccPilih = analitikView.negara || "";
+  const namaNegara = (cc) => (cc ? cc : t("analitik.unknown"));
+  const barisNegara = (s.negara || []).map((r) => ({ ...r, tampil: namaNegara(r.label) }));
+  const cocokKota = (kunci) => {
+    const depan = String(kunci).split("|")[0];
+    return ccPilih ? depan === ccPilih : !String(kunci).includes("|");
+  };
+  const barisKota = (s.kota || [])
+    .filter((r) => cocokKota(r.label))
+    .map((r) => {
+      const bagian = String(r.label).split("|").slice(1).filter(Boolean);
+      const kota = bagian.length > 1 ? `${bagian[1]}, ${bagian[0]}` : bagian[0] || "";
+      return { label: kota || t("analitik.unknown"), n: r.n };
+    })
+    .sort((a, b) => b.n - a.n || String(a.label).localeCompare(String(b.label)))
+    .slice(0, 15);
+  const barisJaringan = (s.jaringan || []).map((r) => ({
+    label: r.label || t("analitik.unknown"),
+    n: r.n,
+  }));
+  const adaGeo = [...(s.negara || []), ...(s.kota || []), ...(s.jaringan || [])].some((r) => r.label);
+
+  const negaraHtml = ccPilih
+    ? `${analitikBarHtml(barisKota)}
+      <p><button type="button" class="btn btn-ghost btn-sm" data-analitik-negara="">${esc(t("analitik.allCountries"))}</button></p>`
+    : `<div class="bar-chart">${barisNegara
+        .map((r) => {
+          const max = barisNegara.reduce((m, x) => Math.max(m, x.n), 0) || 1;
+          return `<div class="bar-row">
+          <button type="button" class="bar-label-btn" data-analitik-negara="${esc(r.label)}" title="${esc(r.tampil)}">${esc(r.tampil)}</button>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.max(2, Math.round((r.n / max) * 100))}%"></div></div>
+          <div class="bar-value">${esc(angka(r.n))}</div>
+        </div>`;
+        })
+        .join("")}</div>`;
 
   root.innerHTML = `
     <div class="stat-grid analitik-stats">${kartu
@@ -9536,6 +9590,29 @@ function renderAnalitik() {
           ${jamHtml(s.jam)}
           <p class="hint">${esc(t("analitik.hoursHint"))}</p>
         </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">${esc(ccPilih ? t("analitik.citiesIn", { cc: namaNegara(ccPilih) }) : t("analitik.countries"))}</h2>
+        </div>
+        <div class="panel-body">
+          ${(ccPilih ? barisKota.length : barisNegara.length)
+            ? negaraHtml
+            : emptyStateHtml(t("analitik.emptyTitle"), t("analitik.emptyText"), "🌍")}
+          ${!adaGeo ? `<p class="hint">${esc(t("analitik.geoEmpty"))}</p>` : ""}
+          <p class="hint"><a href="https://db-ip.com" target="_blank" rel="noopener">${esc(t("analitik.atribusi"))}</a></p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2 class="panel-title">${esc(t("analitik.networks"))}</h2></div>
+        <div class="panel-body">${
+          barisJaringan.length
+            ? analitikBarHtml(barisJaringan)
+            : emptyStateHtml(t("analitik.emptyTitle"), t("analitik.emptyText"), "🔌")
+        }</div>
       </div>
     </div>
 

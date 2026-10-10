@@ -2,6 +2,8 @@ import type { MiddlewareHandler } from "astro";
 import { bacaIntegrasi } from "./lib/integrasi-simpan";
 import { hostCsp } from "./lib/integrasi.js";
 import { catatKunjungan } from "./lib/trafik-rekam";
+import { cari as cariGeo, jadwalkanGeoip } from "./lib/geoip";
+import { MEMBER_COOKIE } from "./lib/member.js";
 import { jadwalkanBerita } from "./lib/berita-harian";
 import { jadwalkanArtikel } from "./lib/artikel-harian";
 import { jadwalkanSegar } from "./lib/artikel-segar";
@@ -171,6 +173,7 @@ function mulaiPenjadwalInterval(): void {
         jadwalkanPeluncuran();
         jadwalkanPembaruan();
         jadwalkanPantauan();
+        jadwalkanGeoip();
       } catch {
         /* tidak ada yang boleh menjatuhkan proses */
       }
@@ -215,26 +218,43 @@ export const onRequest: MiddlewareHandler = async (context, next) => {  // Bahas
    *
    * Alamat IP dipakai sekejap untuk menghitung pengunjung unik lalu hilang;
    * yang tersimpan cuma sidik ber-garam harian, dan itu pun dibuang begitu
-   * harinya berganti. Lihat src/lib/trafik-rekam.ts.
+   * harinya berganti. Pencarian geografi (negara/kota/jaringan) juga dihitung
+   * dari IP saat itu juga dan yang disimpan hanya jumlah per kodenya.
+   * Lihat src/lib/trafik-rekam.ts dan src/lib/geoip.ts.
+   *
+   * Pencariannya TIDAK ditunggu: respons pembaca tidak boleh membayar
+   * pencarian basis data. Kunjungan beberapa milidetik kemudian tetap
+   * tercatat — hanya agregatnya yang bertambah.
    */
   if (layakDicatat(context, response)) {
     const diteruskan = context.request.headers.get("x-forwarded-for") || "";
-    catatKunjungan({
+    /*
+     * Alamat yang diteruskan reverse proxy lebih dulu — sama seperti
+     * `clientKey()` di ratelimit.ts. Tanpa itu SETIAP pembaca datang dari
+     * 127.0.0.1 di mata aplikasi, dan seluruh situs terhitung satu pengunjung.
+     *
+     * `clientAddress` dibungkus try/catch karena Astro melemparkannya pada
+     * halaman yang dirender saat build; statistik tidak boleh menjatuhkan
+     * apa pun, apalagi build.
+     */
+    const ip = diteruskan.split(",")[0]?.trim() || alamatKlien(context);
+    const anggota = !!context.cookies.get(MEMBER_COOKIE)?.value;
+    const dasar = {
       pathname: context.url.pathname,
       referrer: context.request.headers.get("referer"),
       userAgent: context.request.headers.get("user-agent"),
-      /*
-       * Alamat yang diteruskan reverse proxy lebih dulu — sama seperti
-       * `clientKey()` di ratelimit.ts. Tanpa itu SETIAP pembaca datang dari
-       * 127.0.0.1 di mata aplikasi, dan seluruh situs terhitung satu pengunjung.
-       *
-       * `clientAddress` dibungkus try/catch karena Astro melemparkannya pada
-       * halaman yang dirender saat build; statistik tidak boleh menjatuhkan
-       * apa pun, apalagi build.
-       */
-      ip: diteruskan.split(",")[0]?.trim() || alamatKlien(context),
+      ip,
       host: context.url.hostname,
-    });
+      anggota,
+    };
+    try {
+      void cariGeo(ip).then(
+        (g) => catatKunjungan({ ...dasar, ...g }),
+        () => catatKunjungan(dasar)
+      );
+    } catch {
+      catatKunjungan(dasar);
+    }
   }
 
   /*

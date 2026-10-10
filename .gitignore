@@ -16,6 +16,7 @@ data/backups/
 .claude/
 data/integrasi.json
 data/trafik/
+data/geo/
 data/berita-jadwal.json
 data/berita-gambar.json
 data/pantauan.json

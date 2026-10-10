@@ -506,6 +506,18 @@ saling menggantikan.
 - Angka `pengunjung` adalah pengunjung HARIAN yang dijumlahkan, bukan orang
   unik sepanjang rentang. Labelnya di panel menyebut itu; jangan mengubah
   labelnya tanpa mengubah cara menghitungnya.
+- **Geografi (negara/kota/jaringan) dihitung dari IP saat itu juga lewat
+  `src/lib/geoip.ts`, dan yang disimpan tetap angka agregat** — Sama
+  seperti sidik: IP dipakai sekejap lalu hilang. Basis DB-IP Lite (format
+  MMDB, dibaca pustaka `maxmind`) tinggal di `data/geo/` (diabaikan Git),
+  diunduh bebas tanpa kunci, dan disegarkan otomatis tiap bulan; tanpanya
+  geografi tercatat "tidak diketahui", bukan gagal. Syarat lisensinya hanya
+  atribusi DB-IP di panel. Aturan agregasinya (batas peta, penggabungan)
+  tetap di `trafik.js`.
+- **Kunjungan anggota vs tamu hanya berupa dua angka.** Cookie anggota
+  (`evkita_member`) dibaca untuk menambah penghitung, tidak pernah untuk
+  tahu siapa. Menampilkan email pengunjung berarti "satu baris per orang" —
+  tetap dilarang baris di atas.
 
 **Integrasi** (`/admin/integrasi`) memasang tag Google.
 
