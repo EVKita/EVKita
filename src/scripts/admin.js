@@ -304,6 +304,10 @@ function dirGroups(col) {
     ];
   }
 
+  /* Jenis arus SPKLU — himpunan tertutup, bukan teks bebas. "AC & DC" berarti
+     keduanya tersedia; kosong berarti belum diisi dan ikonnya tidak tampil. */
+  const ARUS_SPKLU = ["", "AC", "DC", "AC & DC"];
+
   if (col === "spklu") {
     return [
       {
@@ -324,6 +328,7 @@ function dirGroups(col) {
         l: t("dir.spklu.sec.pengisian"), d: t("dir.spklu.sec.pengisian.d"), f: [
           { k: "power", l: t("field.spklu.power"), t: "combo", src: "spkluPower", ph: t("field.spklu.power.ph") },
           { k: "connector", l: t("field.spklu.connector"), t: "combo", src: "spkluConnector", ph: t("field.spklu.connector.ph") },
+          { k: "arus", l: t("field.spklu.arus"), t: "select", opts: ARUS_SPKLU, hint: t("field.spklu.arus.hint") },
           { k: "count", l: t("field.spklu.count"), t: "number", ph: "2" },
           { k: "hours", l: t("field.hours"), t: "combo", src: "hours", ph: t("field.hours.phSpklu") },
           { k: "price", l: t("field.spklu.price"), t: "text", full: true, ph: t("field.spklu.price.ph") },
@@ -336,6 +341,7 @@ function dirGroups(col) {
           { k: "note", l: t("field.note"), t: "textarea", full: true, rows: 2, ph: t("field.note.ph") },
           { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
           { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
+          { k: "baruSampai", l: t("field.spklu.baruSampai"), t: "date", hint: t("field.spklu.baruSampai.hint") },
           { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
         ],
       },
@@ -414,11 +420,11 @@ function dirGroups(col) {
       ],
     },
     {
-      l: t("dir.berita.sec.penayangan"), d: t("dir.berita.sec.penayangan.d"), f: [
-        { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
-        { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
-        { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
-      ],
+        l: t("dir.berita.sec.penayangan"), d: t("dir.berita.sec.penayangan.d"), f: [
+          { k: "status", l: t("field.status"), t: "select", opts: statusOpts(), hint: t("field.status.hint") },
+          { k: "publishAt", l: t("field.publishAt"), t: "datetime", hint: t("field.publishAt.hint") },
+          { k: "featured", l: t("field.featured"), t: "switch", full: true, hint: t("field.featured.hint") },
+        ],
     },
   ];
 }

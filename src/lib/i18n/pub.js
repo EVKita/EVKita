@@ -768,7 +768,7 @@ const ID = {
     "Mobil umumnya CCS2 untuk DC dan Type 2 untuk AC; sebagian model Jepang memakai CHAdeMO. Bentuknya memang tidak saling masuk, jadi salah colok tidak merusak apa pun — hanya membuang waktu antre.",
   "pub.spkluX.faq2q": "Bagaimana cara membayar?",
   "pub.spkluX.faq2a":
-    "Hampir semua operator menjalankannya lewat aplikasi: cari lokasi, nyalakan sesi, dan bayar dari aplikasi yang sama. Unduh dan daftarkan akunnya sebelum berangkat.",
+    "Hampir semua operator menjalankannya lewat aplikasi: cari lokasi, nyalakan sesi, dan bayar dari aplikasi yang sama. Unduh dan daftarkan akunnya sebelum berangkat. Ketersediaan real-time belum tentu akurat — selalu konfirmasi di aplikasi operator sebelum berangkat.",
   "pub.spkluX.faq3q": "Berapa tarif ngecas di SPKLU?",
   "pub.spkluX.faq3a":
     "Berbeda tiap operator, sekitar Rp2.466/kWh sebagai patokan — hampir dua kali lipat tarif rumah. Sebagian lokasi menambah biaya layanan atau parkir.",
@@ -1546,7 +1546,7 @@ const EN = {
     "Cars generally use CCS2 for DC and Type 2 for AC; some Japanese models use CHAdeMO. The shapes do not fit each other, so a wrong plug damages nothing — it only wastes queue time.",
   "pub.spkluX.faq2q": "How do I pay?",
   "pub.spkluX.faq2a":
-    "Almost every operator runs through an app: find the location, start the session, and pay inside the same app. Download it and register before you leave.",
+    "Almost every operator runs through an app: find the location, start the session, and pay inside the same app. Download it and register before you leave. Real-time availability is not always accurate — always confirm in the operator's app before you set off.",
   "pub.spkluX.faq3q": "What does SPKLU charging cost?",
   "pub.spkluX.faq3a":
     "It differs per operator, around Rp2,466/kWh as a benchmark — almost double the home tariff. Some sites add a service or parking fee.",
@@ -2240,7 +2240,7 @@ const ZH = {
     "汽车一般直流用CCS2、交流用Type 2；部分日系车型用CHAdeMO。接口形状互不兼容，插错不会损坏任何东西——只会浪费排队时间。",
   "pub.spkluX.faq2q": "如何支付？",
   "pub.spkluX.faq2a":
-    "几乎所有运营商都通过App运行：在同一App内查找位置、启动充电并支付。出门前先下载并注册好。",
+    "几乎所有运营商都通过App运行：在同一App内查找位置、启动充电并支付。出门前先下载并注册好。实时空闲状态未必准确——出发前请务必在运营商App中确认。",
   "pub.spkluX.faq3q": "充电站充电多少钱？",
   "pub.spkluX.faq3a":
     "各运营商不同，约2,466印尼盾/度可作参考——几乎是家用电的两倍。部分站点另收服务费或停车费。",

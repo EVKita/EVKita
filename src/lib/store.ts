@@ -261,6 +261,15 @@ function normalizeSpklu(v: any): any {
     address: str(v?.address),
     power: str(v?.power),
     connector: str(v?.connector),
+    /* Jenis arus yang tersedia: "AC", "DC", atau "AC & DC". Ditentukan
+       penyunting per operator dari situs resminya — bukan ditebak dari angka
+       daya. Kosong berarti belum diisi, dan ikonnya tidak tampil. */
+    arus: ["AC", "DC", "AC & DC"].includes(v?.arus) ? v.arus : "",
+    /* Batas tampil lencana NEW (YYYY-MM-DD, WIB). Entri lama tidak punya
+       tanggal pembuatan, jadi NEW dihitung mundur dari tanggal yang diisi
+       saat entri baru ditambahkan — bukan dari updatedAt yang berubah setiap
+       suntingan. */
+    baruSampai: /^\d{4}-\d{2}-\d{2}$/.test(str(v?.baruSampai)) ? str(v?.baruSampai) : "",
     count: numOrNull(v?.count),
     hours: str(v?.hours),
     price: str(v?.price),

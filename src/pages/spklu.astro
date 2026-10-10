@@ -8,6 +8,7 @@ import { safeUrl } from "../lib/url.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
+import { hanyaTayang, masihBaru } from "../lib/tayang.js";
 
 /**
  * Direktori SPKLU penuh.
@@ -61,6 +62,11 @@ function spkluJenis(s: any) {
     motor: String(s.jenis || "").includes("Motor"),
   };
 }
+
+/** Ikon DC/AC: hijau yang tersedia, polos yang tidak. `arus` himpunan
+ *  tertutup ("AC"/"DC"/"AC & DC") jadi cocokkan substring aman. */
+const adaAc = (s: any) => String(s?.arus || "").includes("AC");
+const adaDc = (s: any) => String(s?.arus || "").includes("DC");
 
 /** Seluruh entri tayang — tidak dipangkas seperti di beranda. */
 const spkluList = byFeatured((content.spklu || []).filter(hanyaTayang()));
@@ -182,9 +188,15 @@ const jsonLd = {
       <div class="dir-grid">
         {spkluList.map((s: any) => (
           <article class={`dir-card${s.featured ? " is-featured" : ""}`}>
+            {s.image ? (
+              <div class="dir-visual">
+                <img class="dir-photo" src={safeUrl(s.image)} alt={s.name} loading="lazy" decoding="async" />
+              </div>
+            ) : null}
             <div class="dir-top">
               <span class="dir-badge">SPKLU</span>
               {s.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+              {masihBaru(s.baruSampai) ? <span class="badge badge-accent">NEW</span> : null}
             </div>
             <h3 class="dir-title">{s.name}</h3>
             {s.operator ? <p class="dir-sub">{s.operator}</p> : null}
@@ -207,6 +219,12 @@ const jsonLd = {
               <span class={`avail ${spkluJenis(s).mobil ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).mobil ? "✓" : "✗"} {t("pub.mobil")}</span>
               <span class={`avail ${spkluJenis(s).motor ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).motor ? "✓" : "✗"} {t("pub.motor")}</span>
             </div>
+            {s.arus ? (
+              <div class="spklu-avail">
+                <span class={`avail ${adaDc(s) ? "is-ya" : "is-tidak"}`}>{adaDc(s) ? "✓" : "✗"} DC</span>
+                <span class={`avail ${adaAc(s) ? "is-ya" : "is-tidak"}`}>{adaAc(s) ? "✓" : "✗"} AC</span>
+              </div>
+            ) : null}
             <div class="dir-actions">
               <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
             </div>

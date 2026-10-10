@@ -42,3 +42,32 @@ export function terjadwal(item, sekarang = Date.now()) {
 
 /** Penyaring siap pakai — `list.filter(hanyaTayang())`. */
 export const hanyaTayang = (sekarang = Date.now()) => (item) => tayang(item, sekarang);
+
+/**
+ * Apakah lencana NEW masih boleh tampil?
+ *
+ * Bukan soal tayang (itu urusan `tayang()` di atas), melainkan soal pajangan:
+ * entri direktori tidak punya tanggal pembuatan, jadi NEW dihitung dari
+ * `baruSampai` yang diisi penyunting saat entri baru ditambahkan. Batasnya
+ * akhir hari WIB pada tanggal itu — server berjalan di UTC, dan tanpa
+ * pergeseran ini lencana mati tujuh jam lebih awal dari yang dimaksud.
+ *
+ * Format selain YYYY-MM-DD selalu berarti tidak baru: tanggal rusak tidak
+ * boleh membuat seluruh direktori berlabel NEW selamanya.
+ */
+export function masihBaru(baruSampai, sekarang = Date.now()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(baruSampai || "").trim());
+  if (!m) return false;
+  // Date.UTC meluapkan yang tidak ada ("bulan 13", "30 Februari") jadi
+  // tanggal lain yang sah — cocokkan kembali komponennya.
+  const batas = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 16, 59, 59);
+  const cek = new Date(batas);
+  if (
+    cek.getUTCFullYear() !== Number(m[1]) ||
+    cek.getUTCMonth() !== Number(m[2]) - 1 ||
+    cek.getUTCDate() !== Number(m[3])
+  ) {
+    return false;
+  }
+  return Number(sekarang) <= batas;
+}

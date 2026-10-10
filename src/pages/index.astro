@@ -9,7 +9,7 @@ import { safeUrl } from "../lib/url.js";
 import { cardHTML, defaultSort, vehicleHref } from "../lib/card-html.js";
 import { siteOrigin } from "../lib/site-url";
 import { altMapFor, mediaAlt } from "../lib/media.js";
-import { hanyaTayang } from "../lib/tayang.js";
+import { hanyaTayang, masihBaru } from "../lib/tayang.js";
 import { menuBawaan } from "../lib/footer.js";
 import { tautanFooter } from "../lib/laman.js";
 import { artikelTayang } from "../lib/artikel.js";
@@ -192,6 +192,10 @@ const totalVoteMotor = voteMotor.reduce((n: number, r: any) => n + (Number(r.vot
 /** Sorotan SPKLU beranda: entri pertama tampil besar berfoto di kiri. */
 const spkluUnggulan = spkluList[0] || null;
 const spkluSisi = spkluList.slice(1, TEASER_DIR);
+
+/** Ikon DC/AC kartu SPKLU — sama dengan halaman /spklu. */
+const adaAc = (s: any) => String(s?.arus || "").includes("AC");
+const adaDc = (s: any) => String(s?.arus || "").includes("DC");
 
 /**
  * Tautan "Jelajahi" — dulu kolom menu di dalam footer, kini seksi sendiri di
@@ -769,6 +773,7 @@ const jsonLd = {
                 <div class="dir-top">
                   <span class="dir-badge">SPKLU</span>
                   {spkluUnggulan.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+                  {masihBaru(spkluUnggulan.baruSampai) ? <span class="badge badge-accent">NEW</span> : null}
                 </div>
                 <h3 class="dir-title">{spkluUnggulan.name}</h3>
                 {spkluUnggulan.operator ? <p class="dir-sub">{spkluUnggulan.operator}</p> : null}
@@ -791,6 +796,12 @@ const jsonLd = {
                   <span class={`avail ${spkluJenis(spkluUnggulan).mobil ? "is-ya" : "is-tidak"}`}>{spkluJenis(spkluUnggulan).mobil ? "✓" : "✗"} {t("pub.mobil")}</span>
                   <span class={`avail ${spkluJenis(spkluUnggulan).motor ? "is-ya" : "is-tidak"}`}>{spkluJenis(spkluUnggulan).motor ? "✓" : "✗"} {t("pub.motor")}</span>
                 </div>
+                {spkluUnggulan.arus ? (
+                  <div class="spklu-avail">
+                    <span class={`avail ${adaDc(spkluUnggulan) ? "is-ya" : "is-tidak"}`}>{adaDc(spkluUnggulan) ? "✓" : "✗"} DC</span>
+                    <span class={`avail ${adaAc(spkluUnggulan) ? "is-ya" : "is-tidak"}`}>{adaAc(spkluUnggulan) ? "✓" : "✗"} AC</span>
+                  </div>
+                ) : null}
                 <div class="dir-actions">
                   <a class="dir-link" href={spkluMapUrl(spkluUnggulan)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
                 </div>
@@ -799,9 +810,15 @@ const jsonLd = {
             <div class="dir-feat-side">
               {spkluSisi.map((s: any) => (
               <article class={`dir-card${s.featured ? " is-featured" : ""}`}>
+                {s.image ? (
+                  <div class="dir-visual">
+                    <img class="dir-photo" src={safeUrl(s.image)} alt={s.name} loading="lazy" decoding="async" />
+                  </div>
+                ) : null}
                 <div class="dir-top">
                   <span class="dir-badge">SPKLU</span>
                   {s.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
+                  {masihBaru(s.baruSampai) ? <span class="badge badge-accent">NEW</span> : null}
                 </div>
                 <h3 class="dir-title">{s.name}</h3>
                 {s.operator ? <p class="dir-sub">{s.operator}</p> : null}
@@ -824,6 +841,12 @@ const jsonLd = {
                   <span class={`avail ${spkluJenis(s).mobil ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).mobil ? "✓" : "✗"} {t("pub.mobil")}</span>
                   <span class={`avail ${spkluJenis(s).motor ? "is-ya" : "is-tidak"}`}>{spkluJenis(s).motor ? "✓" : "✗"} {t("pub.motor")}</span>
                 </div>
+                {s.arus ? (
+                  <div class="spklu-avail">
+                    <span class={`avail ${adaDc(s) ? "is-ya" : "is-tidak"}`}>{adaDc(s) ? "✓" : "✗"} DC</span>
+                    <span class={`avail ${adaAc(s) ? "is-ya" : "is-tidak"}`}>{adaAc(s) ? "✓" : "✗"} AC</span>
+                  </div>
+                ) : null}
                 <div class="dir-actions">
                   <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
                 </div>

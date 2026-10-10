@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { tayang, terjadwal, hanyaTayang } from "../src/lib/tayang.js";
+import { tayang, terjadwal, hanyaTayang, masihBaru } from "../src/lib/tayang.js";
 
 /**
  * Aturan "boleh dilihat pengunjung?".
@@ -74,5 +74,27 @@ describe("hanyaTayang", () => {
       { id: "d", status: "published" },
     ];
     assert.deepEqual(daftar.filter(hanyaTayang(SEKARANG)).map((x) => x.id), ["a", "d"]);
+  });
+});
+
+describe("masihBaru", () => {
+  it("baru sampai akhir hari WIB pada tanggalnya, bukan tengah malam UTC", () => {
+    // 28 Agu 2026 20:00 UTC = 29 Agu 03:00 WIB: hari WIB tanggal 28 sudah
+    // lewat (batasnya 16:59:59 UTC) — logika tengah malam UTC masih bilang baru.
+    const malam = Date.parse("2026-08-28T20:00:00Z");
+    assert.equal(masihBaru("2026-08-28", malam), false);
+    assert.equal(masihBaru("2026-08-29", malam), true);
+  });
+
+  it("tepat di batasnya masih baru, sedetik sesudahnya tidak", () => {
+    assert.equal(masihBaru("2026-08-28", Date.parse("2026-08-28T16:59:59Z")), true);
+    assert.equal(masihBaru("2026-08-28", Date.parse("2026-08-28T17:00:00Z")), false);
+  });
+
+  it("tanggal rusak tidak pernah berlabel NEW", () => {
+    assert.equal(masihBaru("", SEKARANG), false);
+    assert.equal(masihBaru("besok pagi", SEKARANG), false);
+    assert.equal(masihBaru(null, SEKARANG), false);
+    assert.equal(masihBaru("2026-13-40", SEKARANG), false);
   });
 });
