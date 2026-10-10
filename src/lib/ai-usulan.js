@@ -150,6 +150,21 @@ function bersihkanNilai(field, raw, kind) {
     return unik.length ? { nilai: unik } : { nilai: null };
   }
 
+  /*
+   * Bulan data (YYYY-MM, mis. penjualanBulan): satu-satunya field bertipe
+   * "bulan". Bentuk selain itu — "September 2026", "Q3", "09/26" — DIBUANG,
+   * bukan dibetulkan: mesin penjualan bulanan membandingkan bulan sebagai
+   * teks, dan teks yang tidak berbentuk YYYY-MM mengacaukan perbandingan
+   * tanpa satu pun pesan. Kunci tolaknya mengikuti gaya yang sudah ada
+   * ("bukanAngka", "bukanDaftar").
+   */
+  if (field.type === "bulan") {
+    const s = typeof raw === "string" ? raw.trim() : "";
+    if (!s) return { nilai: null };
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(s)) return { tolak: "bukanBulan" };
+    return { nilai: s };
+  }
+
   const v = teks(raw, field.max || MAX_TEKS);
   return v ? { nilai: v } : { nilai: null };
 }

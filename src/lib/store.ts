@@ -225,6 +225,11 @@ function normalizeCar(c: any, kind: "mobil" | "motor"): any {
       const n = numOrNull(c?.penjualan2026);
       return n !== null && n >= 0 ? Math.round(n) : null;
     })(),
+    /* Bulan rilis Gaikindo yang dicerminkan angka di atas (YYYY-MM). Mesin
+       penjualan bulanan memakainya untuk tahu angka siapa yang basi; panel
+       Laris menampilkannya sebagai "data bulan X". Bentuk selain itu
+       dianggap belum ada — klaim tanpa bulan tidak ikut menentukan kebasian. */
+    penjualanBulan: /^\d{4}-(0[1-9]|1[0-2])$/.test(str(c?.penjualanBulan)) ? str(c.penjualanBulan) : "",
     stale: !!c?.stale,
     /* Tanda mesin (pemantau berita, pendeteksi viral): "riset ulang ini".
        Sengaja terpisah dari `stale` — `stale` keputusan redaksi dan tampil

@@ -468,6 +468,8 @@ export default {
   "field.priceText": "Harga (teks tampil)",
   "field.penjualan2026": "Penjualan 2026 (unit)",
   "field.penjualan2026.hint": "Unit terjual sepanjang 2026. Kosongkan bila belum tahu — dipakai panel Mobil/Motor Kita di beranda.",
+  "field.penjualanBulan": "Bulan Data Penjualan",
+  "field.penjualanBulan.hint": "Rilis Gaikindo YYYY-MM yang dicerminkan angkanya, mis. 2026-09. Ditandai otomatis tiap bulan; kosong berarti angkanya belum tentu bulan terbaru.",
   "field.videoUrl": "URL Video",
   "field.sumberUrl": "Halaman Resmi Model",
   "field.sumberUrl.hint": "Alamat halaman resmi model. Dipakai tombol Ambil Media; tidak tampil di situs.",

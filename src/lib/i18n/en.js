@@ -452,6 +452,8 @@ export default {
   "field.priceText": "Price (display text)",
   "field.penjualan2026": "2026 sales (units)",
   "field.penjualan2026.hint": "Units sold in 2026. Leave empty if unknown — feeds the home Our Cars/Bikes panels.",
+  "field.penjualanBulan": "Sales Data Month",
+  "field.penjualanBulan.hint": "Gaikindo release (YYYY-MM) the figure reflects, e.g. 2026-09. Reflagged automatically every month; empty means the figure may not be the latest month.",
   "field.videoUrl": "Video URL",
   "field.sumberUrl": "Official Model Page",
   "field.sumberUrl.hint": "URL of the model's official page. Used by the Fetch Media button; not shown on the site.",

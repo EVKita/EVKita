@@ -11,6 +11,7 @@ import { jadwalkanModelBaru } from "./lib/model-baru";
 import { jadwalkanPeluncuran } from "./lib/peluncuran-rekam";
 import { jadwalkanPembaruan } from "./lib/pembaruan-kendaraan";
 import { jadwalkanPantauan } from "./lib/pemantau";
+import { jadwalkanPenjualan } from "./lib/penjualan-bulanan";
 import { SESSION_COOKIE } from "./lib/auth";
 import { normalizeLangParam, parseAcceptLanguage, PUB_COOKIE, PUB_DEFAULT } from "./lib/i18n/pub.js";
 import { apakahBot } from "./lib/trafik.js";
@@ -187,6 +188,7 @@ function mulaiPenjadwalInterval(): void {
         jadwalkanPeluncuran();
         jadwalkanPembaruan();
         jadwalkanPantauan();
+        jadwalkanPenjualan();
         jadwalkanGeoip();
       } catch {
         /* tidak ada yang boleh menjatuhkan proses */
@@ -327,6 +329,8 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   jadwalkanPembaruan();
   /* Pemantau sinyal per jam: gratis (RSS saja), antrean review di panel. */
   jadwalkanPantauan();
+  /* Penjualan bulanan: menandai angka Gaikindo yang basi untuk putaran riset. */
+  jadwalkanPenjualan();
 
   return response;
 };

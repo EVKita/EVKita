@@ -183,6 +183,7 @@ function vehicleFields(col) {
       { k: "price", l: t("field.price"), t: "number", ph: motor ? "22000000" : "415000000", hint: t("field.price.hint") },
       { k: "priceText", l: t("field.priceText"), t: "text", ph: motor ? "Rp 22 jt" : "Rp 415 jt" },
       { k: "penjualan2026", l: t("field.penjualan2026"), t: "number", ph: "12500", hint: t("field.penjualan2026.hint") },
+      { k: "penjualanBulan", l: t("field.penjualanBulan"), t: "text", ph: "2026-09", hint: t("field.penjualanBulan.hint") },
     ],
   };
 }

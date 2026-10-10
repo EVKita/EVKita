@@ -80,6 +80,12 @@ export const RESEARCHABLE = [
      baris ini tidak ada jalur otomatis yang menyentuhnya. */
   { key: "penjualan2026", type: "integer", car: true, motor: true, min: 0, max: 1000000, unit: "unit", desc: "Unit terjual di Indonesia sepanjang tahun 2026 (wholesales Gaikindo atau angka resmi pabrikan). Tulis angka tahun berjalan apa adanya; kosongkan kalau tidak ada sumber yang menyebut." },
 
+  /* Bulan angka di atas (YYYY-MM): yang membuat angka Gaikindo BISA disegarkan
+     tiap bulan. Tanpa bulan, tidak ada yang tahu angka siapa yang basi,
+     sehingga mesin penjualan bulanan tidak punya pegangan. Selalu ditulis
+     bersama penjualan2026 — kosong kalau penjualan2026 dikosongkan. */
+  { key: "penjualanBulan", type: "bulan", car: true, motor: true, desc: "Bulan yang dicerminkan angka penjualan2026, format YYYY-MM persis (mis. \"2026-09\" untuk data Gaikindo September 2026). Selalu isi bersama penjualan2026; kosongkan kalau penjualan2026 dikosongkan." },
+
   { key: "variantNames", type: "list", car: true, motor: true, maxItems: 12, maxLen: 60, desc: "Nama varian resmi yang dijual di Indonesia, mis. [\"Dynamic\", \"Premium\"]." },
   { key: "colors", type: "list", car: true, motor: true, maxItems: 20, maxLen: 40, desc: "Nama warna bodi yang tersedia." },
 ];

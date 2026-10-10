@@ -451,6 +451,8 @@ export default {
   "field.priceText": "价格（显示文字）",
   "field.penjualan2026": "2026年销量（辆）",
   "field.penjualan2026.hint": "2026年售出数量。未知请留空——用于首页“我们的汽车/摩托车”榜单。",
+  "field.penjualanBulan": "销量数据月份",
+  "field.penjualanBulan.hint": "数字对应的Gaikindo发布月份（YYYY-MM，如2026-09）。每月自动更新；为空表示数字未必是最新月份。",
   "field.videoUrl": "视频链接",
   "field.sumberUrl": "车型官方页面",
   "field.sumberUrl.hint": "车型官方页面链接，供“获取媒体”按钮使用；不会显示在网站上。",

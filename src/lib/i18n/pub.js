@@ -62,6 +62,7 @@ const ID = {
   "pub.kita.mobilBaru": "Mobil Terbaru Kita",
   "pub.kita.motor": "Motor Terbaru Kita",
   "pub.kita.sub": "5 penjualan terbanyak 2026",
+  "pub.kita.subBulan": "5 penjualan terbanyak 2026 · data {bulan}",
   "pub.kita.unit": "{n} unit",
   "pub.kita.beritaSub": "5 berita EV paling menarik",
 
@@ -858,6 +859,7 @@ const EN = {
   "pub.kita.mobilBaru": "Newest Cars",
   "pub.kita.motor": "Newest Bikes",
   "pub.kita.sub": "Top 5 best sellers of 2026",
+  "pub.kita.subBulan": "Top 5 best sellers of 2026 · {bulan} data",
   "pub.kita.unit": "{n} units",
   "pub.kita.beritaSub": "Top 5 most interesting EV news",
 
@@ -1652,6 +1654,7 @@ const ZH = {
   "pub.kita.mobilBaru": "最新汽车",
   "pub.kita.motor": "最新摩托车",
   "pub.kita.sub": "2026年最畅销的5款",
+  "pub.kita.subBulan": "2026年最畅销的5款 · {bulan}数据",
   "pub.kita.unit": "{n}辆",
   "pub.kita.beritaSub": "最值得关注的5条电动车新闻",
 

@@ -152,6 +152,29 @@ const motorBaru = site.showMotor ? byTerbaru(motors) : [];
 const metaBaru = (v: any) => (v.year ? String(v.year) : String(v.bodyType || ""));
 const fmtUnit = (n: any) => Number(n).toLocaleString(pubIntl(lang));
 
+/**
+ * Bulan data panel Laris: yang terbaru di antara peringkat ("2026-09").
+ * Ditampilkan sebagai "data September 2026" lewat `Intl` — tanpa kunci
+ * terjemahan nama bulan. Tanpa satu pun bulan yang sah, subjudulnya tetap
+ * yang lama.
+ */
+const bulanLaris =
+  mobilKita
+    .map((v: any) => String(v.penjualanBulan || ""))
+    .filter((s: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(s))
+    .sort()
+    .pop() || "";
+function namaBulan(ym: string) {
+  try {
+    return new Intl.DateTimeFormat(pubIntl(lang), { month: "long", year: "numeric" }).format(
+      new Date(`${ym}-01T00:00:00`)
+    );
+  } catch {
+    return ym;
+  }
+}
+const subLaris = bulanLaris ? t("pub.kita.subBulan", { bulan: namaBulan(bulanLaris) }) : t("pub.kita.sub");
+
 /** Panel berita: 5 berita pertama kurasi pemilik, lengkap dengan fotonya. */
 const beritaKita = beritaList.slice(0, 5);
 
@@ -1138,7 +1161,7 @@ const jsonLd = {
               {mobilKita.length ? (
                 <div class="kita-grup">
                   <h3 class="kita-sub-judul">{t("pub.kita.laris")}</h3>
-                  <p class="kita-sub">{t("pub.kita.sub")}</p>
+                  <p class="kita-sub">{subLaris}</p>
                   <ol class="kita-list">
                     {larisIsi.map((v: any, i: number) => (
                       <li hidden={i >= 5} data-kita-lebih={i >= 5 ? "true" : undefined}>
