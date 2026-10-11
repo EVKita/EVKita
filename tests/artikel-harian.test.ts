@@ -30,10 +30,14 @@ const SEKARANG = Date.parse("2026-10-03T00:00:00+07:00");
 const isoLalu = (hari: number) => new Date(SEKARANG - hari * HARI).toISOString();
 
 describe("pilihTopik", () => {
+  /* Tanggal relatif ke hari ini: pilihTopik memakai jam dinding asli
+     (umurHari tanpa argumen "sekarang"), jadi tanggal paten akan basi dan
+     tes ini mulai gagal sepuluh hari sesudah tanggalnya ditulis. */
+  const baruLalu = (hari: number) => new Date(Date.now() - hari * HARI).toISOString().slice(0, 10);
   const berita = [
-    { title: "Pabrik baterai baru di Karawang", excerpt: "baterai kendaraan", url: "https://a.id/1", source: "A", date: "2026-10-02" },
-    { title: "Harga baterai turun", excerpt: "baterai murah", url: "https://a.id/2", source: "A", date: "2026-10-01" },
-    { title: "Festival kuliner Jakarta", excerpt: "makanan enak", url: "https://a.id/3", source: "A", date: "2026-10-02" },
+    { title: "Pabrik baterai baru di Karawang", excerpt: "baterai kendaraan", url: "https://a.id/1", source: "A", date: baruLalu(1) },
+    { title: "Harga baterai turun", excerpt: "baterai murah", url: "https://a.id/2", source: "A", date: baruLalu(2) },
+    { title: "Festival kuliner Jakarta", excerpt: "makanan enak", url: "https://a.id/3", source: "A", date: baruLalu(1) },
   ];
 
   it("merangkum berita se-tema bila ada dua atau lebih", () => {
