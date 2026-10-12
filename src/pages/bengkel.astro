@@ -6,6 +6,7 @@ import { readContent } from "../lib/store";
 import { hanyaTayang } from "../lib/tayang.js";
 import { safeUrl, sematVideo } from "../lib/url.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
+import { filterWilayah } from "../lib/region.js";
 import { makePubT, normalizePubLocale, cms, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
 
@@ -59,7 +60,9 @@ function bengkelMapUrl(b: any) {
 }
 
 /** Seluruh entri tayang — tidak dipangkas seperti di beranda. */
-const bengkelList = byFeatured((content.bengkel || []).filter(hanyaTayang()));
+const region = Astro.url.searchParams.get("region") === "us" ? "us" : "id";
+const us = region === "us";
+const bengkelList = byFeatured(filterWilayah(content.bengkel, region).filter(hanyaTayang()));
 
 /**
  * Video tiap kartu, dihitung sekali. YouTube → iframe hemat-privasi, berkas
@@ -78,12 +81,14 @@ const bengkelGroups = [
   { title: t("pub.index.grupMotor"), items: bengkelList.filter((b: any) => b.type.includes("Motor")) },
 ].filter((g) => g.items.length);
 
-const judulHalaman = site.bengkelTitle || t("pub.dir.pageBengkel");
-const lead = site.bengkelNote || t("pub.dir.leadBengkel");
+const judulHalaman = us ? t("pub.region.bengkelTitle") : site.bengkelTitle || t("pub.dir.pageBengkel");
+const lead = us ? t("pub.region.bengkelLead") : site.bengkelNote || t("pub.dir.leadBengkel");
 const pageTitle = `${judulHalaman} — ${brandFull}`;
 
 const origin = siteOrigin(Astro.url);
-const canonical = canonicalUrl(Astro.url);
+/* Kanonis mempertahankan ?region=us — tanpanya edisi Amerika terindeks
+   sebagai halaman Indonesia. */
+const canonical = us ? `${origin}/bengkel?region=us` : canonicalUrl(Astro.url);
 
 /**
  * Alamat peta untuk JSON-LD. Hanya yang absolut yang dipakai — `safeUrl()`
@@ -138,19 +143,19 @@ const jsonLd = {
 >
   {!tutup ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base="/" active="" />
+  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="" region={us ? "us" : "id"} artikel="/artikel" />
 
   {tutup ? (
     <main class="container notfound" id="konten">
       <p class="notfound-code">404</p>
       <h1>{judulHalaman}</h1>
       <p class="notfound-text">{t("pub.laman.404Text")}</p>
-      <a class="btn btn-primary" href="/">{t("pub.laman.kembali")}</a>
+      <a class="btn btn-primary" href={us ? "/amerika" : "/"}>{t("pub.laman.kembali")}</a>
     </main>
   ) : (
     <main class="container katalog" id="konten">
       <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-        <a href="/">{t("pub.nav.beranda")}</a>
+        <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         <span class="breadcrumb-current">{judulHalaman}</span>
       </nav>
@@ -172,8 +177,25 @@ const jsonLd = {
       </section>
 
       <section class="kalk-section">
-        <h2>{t("pub.bengkelX.faqT")}</h2>
+        <h2>{us ? t("pub.bengkelX.usFaqT") : t("pub.bengkelX.faqT")}</h2>
         <div class="faq-list">
+          {us ? (
+            <>
+              <details class="faq-item">
+                <summary>{t("pub.bengkelX.usFaq1q")}</summary>
+                <p>{t("pub.bengkelX.usFaq1a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.bengkelX.usFaq2q")}</summary>
+                <p>{t("pub.bengkelX.usFaq2a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.bengkelX.usFaq3q")}</summary>
+                <p>{t("pub.bengkelX.usFaq3a")}</p>
+              </details>
+            </>
+          ) : (
+            <>
           <details class="faq-item">
             <summary>{t("pub.bengkelX.faq1q")}</summary>
             <p>{t("pub.bengkelX.faq1a")}</p>
@@ -190,6 +212,8 @@ const jsonLd = {
             <summary>{t("pub.bengkelX.faq4q")}</summary>
             <p>{t("pub.bengkelX.faq4a")}</p>
           </details>
+            </>
+          )}
         </div>
       </section>
 
@@ -239,7 +263,7 @@ const jsonLd = {
                   ) : null;
                 })()}
                 <div class="dir-top">
-                  <span class="dir-badge">{cms(b.type, lang) || t("pub.dir.bengkel")}</span>
+                  <span class="dir-badge">{us ? (String(b.type).includes("Motor") && !String(b.type).includes("Mobil") ? t("pub.motor") : t("pub.mobil")) : (cms(b.type, lang) || t("pub.dir.bengkel"))}</span>
                   {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
                 </div>
                 <h3 class="dir-title">{b.name}</h3>

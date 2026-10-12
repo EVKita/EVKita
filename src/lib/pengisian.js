@@ -1,4 +1,4 @@
-import { rupiahPenuh } from "./hemat.js";
+import { rupiahPenuh, dolarPenuh } from "./hemat.js";
 import { makePubT } from "./i18n/pub.js";
 
 const tId = makePubT("id");
@@ -46,6 +46,20 @@ export const DAYA_PRESETS = [
   { id: "ac-publik", label: "AC publik", value: 22, note: "AC, 3 fase" },
   { id: "dc-spklu", label: "DC SPKLU", value: 50, note: "isi cepat", i18nNote: "pub.peng.modeCepat" },
   { id: "dc-ultra", label: "DC ultra", value: 150, note: "isi sangat cepat", i18nNote: "pub.peng.modeSangatCepat" },
+];
+
+/**
+ * Daya yang lazim ditemui di Amerika, sebagai tombol pintas — pasangan
+ * `DAYA_PRESETS` untuk kalkulator edisi Amerika. Colokan 120 volt, Level 2
+ * rumahan, dan DC cepat sampai Supercharger: istilah yang dipakai pengemudi
+ * Amerika sehari-hari, bukan terjemahan istilah Indonesia.
+ */
+export const DAYA_PRESETS_US = [
+  { id: "level1", i18n: "pub.calc.usDaya1", value: 1.4 },
+  { id: "level2-rumah", i18n: "pub.calc.usDaya2", value: 9.6 },
+  { id: "level2-umum", i18n: "pub.calc.usDaya3", value: 19.2 },
+  { id: "dc-cepat", i18n: "pub.calc.usDaya4", value: 150 },
+  { id: "supercharger", i18n: "pub.calc.usDaya5", value: 250 },
 ];
 
 /**
@@ -282,15 +296,22 @@ export function teksDurasi(hasil, t = tId) {
 }
 
 /** "46,4 kWh" — satu desimal; kWh bulat menyembunyikan selisih yang berarti. */
-export function kwhKeTeks(n) {
+export function kwhKeTeks(n, locale = "id") {
   if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
-  return `${(Math.round(Number(n) * 10) / 10).toLocaleString("id-ID")} kWh`;
+  const tag = locale === "en" ? "en-US" : "id-ID";
+  return `${(Math.round(Number(n) * 10) / 10).toLocaleString(tag)} kWh`;
 }
 
 /** "≈ 372 km" atau "—". */
 export function kmKeTeks(n) {
   if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
   return `± ${Math.round(Number(n)).toLocaleString("id-ID")} km`;
+}
+
+/** "≈ 231 mi" atau "—" — pasangan `kmKeTeks` untuk edisi Amerika. */
+export function miKeTeks(n) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+  return `± ${Math.round(Number(n) / 1.60934).toLocaleString("en-US")} mi`;
 }
 
 /**
@@ -300,11 +321,15 @@ export function kmKeTeks(n) {
  * berbeda antara render server dan render browser sama merusaknya dengan angka
  * yang berbeda.
  */
-export function teksRingkasPengisian(hasil, t = tId) {
+export function teksRingkasPengisian(hasil, t = tId, o = {}) {
   if (hasil.socSalah) return t("pub.peng.ringkasSalah");
   if (!hasil.ok) return t("pub.peng.ringkasKosong");
 
-  const energi = kwhKeTeks(hasil.energiMasuk);
+  /* Edisi Amerika memakai dolar dan mil — mata uang dan satuan pembacanya.
+     Pemanggil lama yang tidak mengirim opsi tidak berubah artinya. */
+  const us = o && o.region === "us";
+  const uang = us ? dolarPenuh : rupiahPenuh;
+  const energi = kwhKeTeks(hasil.energiMasuk, us ? "en" : "id");
   const durasi = hasil.menitCepat !== null ? teksDurasi(hasil, t) : null;
   const soc = hasil.selisihSoc;
 
@@ -313,11 +338,11 @@ export function teksRingkasPengisian(hasil, t = tId) {
       soc,
       energi,
       durasi,
-      biaya: rupiahPenuh(hasil.biaya),
+      biaya: uang(hasil.biaya),
     });
   }
   if (hasil.biaya !== null) {
-    return t("pub.peng.ringkasBiaya", { soc, energi, biaya: rupiahPenuh(hasil.biaya) });
+    return t("pub.peng.ringkasBiaya", { soc, energi, biaya: uang(hasil.biaya) });
   }
   if (durasi) {
     return t("pub.peng.ringkasDurasi", { soc, energi, durasi });

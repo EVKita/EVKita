@@ -1,0 +1,32 @@
+---
+import BerandaRegion from "../components/BerandaRegion.astro";
+import { readContent } from "../lib/store";
+import { makePubT, normalizePubLocale, cmsSite } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
+
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(content.site, lang);
+/**
+ * Teks edisi Amerika menimpa setelan situs Indonesia: hero, judul katalog,
+ * dan judul direktori. Catatan berbahasa Indonesia dikosongkan supaya tidak
+ * bocor ke edisi ini.
+ */
+site.heroTitle = t("pub.region.heroTitle");
+site.heroSub = t("pub.region.heroSub");
+site.heroEyebrow = t("pub.region.heroEyebrow");
+site.katalogTitle = t("pub.region.katalogTitle");
+site.katalogNote = "";
+site.spkluTitle = t("pub.region.spkluTitle");
+site.spkluNote = "";
+site.bengkelTitle = t("pub.region.bengkelTitle");
+site.bengkelNote = "";
+site.aboutTitle = t("pub.region.aboutTitle");
+site.aboutText = t("pub.region.aboutText");
+site.seoTitle = t("pub.region.seoTitle");
+site.seoDescription = t("pub.region.seoDesc");
+site.seoKeywords = t("pub.region.seoKeywords");
+---
+
+<BerandaRegion content={content} site={site} lang={lang} t={t} region="us" base="/amerika" />

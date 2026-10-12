@@ -6,6 +6,7 @@ import { readContent } from "../lib/store";
 import { hanyaTayang } from "../lib/tayang.js";
 import { safeUrl } from "../lib/url.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
+import { filterWilayah } from "../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
 import { hanyaTayang, masihBaru } from "../lib/tayang.js";
@@ -51,8 +52,8 @@ function metaRows(pairs: [string, any][]) {
  * Tautan lokasi SPKLU. `mapUrl` diisi dari panel; selama kosong, tautannya
  * membuka pencarian Google Maps nama penyedia supaya tombol tidak pernah mati.
  */
-function spkluMapUrl(s: any) {
-  return safeUrl(s.mapUrl) || `https://www.google.com/maps/search/${encodeURIComponent(`${s.name} SPKLU`)}`;
+function spkluMapUrl(s: any, us = false) {
+  return safeUrl(s.mapUrl) || `https://www.google.com/maps/search/${encodeURIComponent(`${s.name} ${us ? "charging station" : "SPKLU"}`)}`;
 }
 
 /** Ketersediaan SPKLU untuk mobil dan motor. Jenis kosong dianggap Mobil. */
@@ -69,14 +70,18 @@ const adaAc = (s: any) => String(s?.arus || "").includes("AC");
 const adaDc = (s: any) => String(s?.arus || "").includes("DC");
 
 /** Seluruh entri tayang — tidak dipangkas seperti di beranda. */
-const spkluList = byFeatured((content.spklu || []).filter(hanyaTayang()));
+const region = Astro.url.searchParams.get("region") === "us" ? "us" : "id";
+const us = region === "us";
+const spkluList = byFeatured(filterWilayah(content.spklu, region).filter(hanyaTayang()));
 
-const judulHalaman = site.spkluTitle || t("pub.dir.pageSpklu");
-const lead = site.spkluNote || t("pub.dir.leadSpklu");
+const judulHalaman = us ? t("pub.region.spkluTitle") : site.spkluTitle || t("pub.dir.pageSpklu");
+const lead = us ? t("pub.region.spkluLead") : site.spkluNote || t("pub.dir.leadSpklu");
 const pageTitle = `${judulHalaman} — ${brandFull}`;
 
 const origin = siteOrigin(Astro.url);
-const canonical = canonicalUrl(Astro.url);
+/* Kanonis mempertahankan ?region=us — tanpanya edisi Amerika terindeks
+   sebagai halaman Indonesia. */
+const canonical = us ? `${origin}/spklu?region=us` : canonicalUrl(Astro.url);
 
 /**
  * Alamat peta untuk JSON-LD. Hanya yang absolut yang dipakai — `safeUrl()`
@@ -131,19 +136,19 @@ const jsonLd = {
 >
   {!tutup ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base="/" active="" />
+  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="" region={us ? "us" : "id"} artikel="/artikel" />
 
   {tutup ? (
     <main class="container notfound" id="konten">
       <p class="notfound-code">404</p>
       <h1>{judulHalaman}</h1>
       <p class="notfound-text">{t("pub.laman.404Text")}</p>
-      <a class="btn btn-primary" href="/">{t("pub.laman.kembali")}</a>
+      <a class="btn btn-primary" href={us ? "/amerika" : "/"}>{t("pub.laman.kembali")}</a>
     </main>
   ) : (
     <main class="container katalog" id="konten">
       <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-        <a href="/">{t("pub.nav.beranda")}</a>
+        <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         <span class="breadcrumb-current">{judulHalaman}</span>
       </nav>
@@ -164,8 +169,29 @@ const jsonLd = {
       </section>
 
       <section class="kalk-section">
-        <h2>{t("pub.spkluX.faqT")}</h2>
+        <h2>{us ? t("pub.spkluX.usFaqT") : t("pub.spkluX.faqT")}</h2>
         <div class="faq-list">
+          {us ? (
+            <>
+              <details class="faq-item">
+                <summary>{t("pub.spkluX.usFaq1q")}</summary>
+                <p>{t("pub.spkluX.usFaq1a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.spkluX.usFaq2q")}</summary>
+                <p>{t("pub.spkluX.usFaq2a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.spkluX.usFaq3q")}</summary>
+                <p>{t("pub.spkluX.usFaq3a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.spkluX.usFaq4q")}</summary>
+                <p>{t("pub.spkluX.usFaq4a")}</p>
+              </details>
+            </>
+          ) : (
+            <>
           <details class="faq-item">
             <summary>{t("pub.spkluX.faq1q")}</summary>
             <p>{t("pub.spkluX.faq1a")}</p>
@@ -182,6 +208,8 @@ const jsonLd = {
             <summary>{t("pub.spkluX.faq4q")}</summary>
             <p>{t("pub.spkluX.faq4a")} <a href="/etika-charging-spklu">{t("pub.spkluX.etika")} →</a></p>
           </details>
+            </>
+          )}
         </div>
       </section>
 
@@ -194,7 +222,7 @@ const jsonLd = {
               </div>
             ) : null}
             <div class="dir-top">
-              <span class="dir-badge">SPKLU</span>
+              <span class="dir-badge">{us ? t("pub.region.badge") : "SPKLU"}</span>
               {s.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
               {masihBaru(s.baruSampai) ? <span class="badge badge-accent">NEW</span> : null}
             </div>
@@ -226,7 +254,7 @@ const jsonLd = {
               </div>
             ) : null}
             <div class="dir-actions">
-              <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
+              <a class="dir-link" href={spkluMapUrl(s, us)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
             </div>
           </article>
         ))}

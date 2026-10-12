@@ -11,6 +11,7 @@ import {
   teksDurasi,
   kwhKeTeks,
   kmKeTeks,
+  miKeTeks,
   teksRingkasPengisian,
   catatanHasil,
 } from "../src/lib/pengisian.js";
@@ -320,5 +321,20 @@ describe("nilai bawaan", () => {
     // Bawaannya tidak boleh melewati batas taper: pembaca yang belum menyentuh
     // apa pun harus melihat angka yang paling bisa dipertanggungjawabkan.
     assert.ok(hitungPengisian({ ...DEFAULTS, batteryKwh: 60 }).lewatiTaper === false);
+  });
+});
+
+describe("satuan edisi Amerika", () => {
+  it("mil menggantikan km, koma desimal Amerika", () => {
+    assert.equal(miKeTeks(180), "± 112 mi");
+    assert.equal(miKeTeks(null), "—");
+    assert.equal(kwhKeTeks(46.9, "en"), "46.9 kWh");
+    assert.equal(kwhKeTeks(46.9), "46,9 kWh");
+  });
+
+  it("kalimat ringkas memakai dolar bila region us", () => {
+    const h = hitungPengisian({ batteryKwh: 60, socAwal: 20, socAkhir: 80, dayaKw: 50, tarif: 0.42 });
+    assert.match(teksRingkasPengisian(h, undefined, { region: "us" }), /US\$/);
+    assert.match(teksRingkasPengisian(h), /Rp /);
   });
 });

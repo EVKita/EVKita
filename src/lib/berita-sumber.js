@@ -15,12 +15,17 @@
  * (`tests/berita-rss.test.ts`) tanpa memuat penyimpan konten.
  */
 
-/** Penerbit berita yang feed resminya bisa dibaca server. */
+/** Penerbit berita yang feed resminya bisa dibaca server.
+ *
+ * Tiap sumber membawa `wilayah`: berita hasil tarikan ditandai edisinya
+ * masing-masing — sekali putaran harian menyegarkan Indonesia DAN Amerika.
+ * Tanpa wilayah berarti Indonesia (seluruh sumber lama tidak perlu diubah).
+ */
 export const SUMBER_BERITA = [
-  { id: "detikoto", nama: "detikOto", feed: "https://oto.detik.com/rss" },
-  { id: "autonetmagz", nama: "AutonetMagz", feed: "https://autonetmagz.com/feed/" },
-  { id: "cnnindonesia", nama: "CNN Indonesia", feed: "https://www.cnnindonesia.com/otomotif/rss" },
-  { id: "antaranews", nama: "Antara News", feed: "https://www.antaranews.com/rss/otomotif.xml" },
+  { id: "detikoto", nama: "detikOto", feed: "https://oto.detik.com/rss", wilayah: "id" },
+  { id: "autonetmagz", nama: "AutonetMagz", feed: "https://autonetmagz.com/feed/", wilayah: "id" },
+  { id: "cnnindonesia", nama: "CNN Indonesia", feed: "https://www.cnnindonesia.com/otomotif/rss", wilayah: "id" },
+  { id: "antaranews", nama: "Antara News", feed: "https://www.antaranews.com/rss/otomotif.xml", wilayah: "id" },
   /*
    * Kompas.com tidak lagi menyediakan RSS publik (`/getrss/*` sudah 404,
    * tidak ada tautan RSS di kanal otomotifnya) — jadi feed resminya tidak
@@ -37,7 +42,15 @@ export const SUMBER_BERITA = [
     nama: "Kompas.com",
     feed: "https://news.google.com/rss/search?q=site%3Akompas.com%20%28mobil%20listrik%20OR%20motor%20listrik%20OR%20kendaraan%20listrik%20OR%20bus%20listrik%20OR%20SPKLU%20OR%20swap%20baterai%29&hl=id&gl=ID&ceid=ID%3Aid",
     stripJudul: " - Kompas.com",
+    wilayah: "id",
   },
+  /*
+   * Edisi Amerika: dua penerbit EV Amerika yang feed RSS-nya terbuka dan
+   * sudah diverifikasi (Oktober 2026). Beritanya ditandai wilayah "us" saat
+   * ditarik, jadi putaran harian yang sama mengisi kedua edisi sekaligus.
+   */
+  { id: "insideevs", nama: "InsideEVs", feed: "https://insideevs.com/feed/", wilayah: "us" },
+  { id: "electrek", nama: "Electrek", feed: "https://electrek.co/feed/", wilayah: "us" },
 ];
 
 /**
@@ -68,6 +81,8 @@ export const POLA_EV = [
   /hybrid/i,
   /mobil listrik|motor listrik|skuter listrik|sepeda listrik/i,
   /\b(byd|wuling|hyundai|ioniq|vinfast|chery|omoda|jaecoo|geely|aion|polytron|alva|gesits|smoot|tesla|nio|xpeng|leapmotor|changan|gac|denza|jaecoo)\b/i,
+  /* Merek dan model khas Amerika — feed AS memakai kata ini, bukan "listrik". */
+  /\b(rivian|lucid|ford|chevrolet|f-150|silverado|equinox|blazer|bolt|mustang|mach-e|cybertruck|prologue|lyriq|model [3ysx])\b/i,
 ];
 
 /** Apakah judul/ringkasan ini membicarakan kendaraan listrik? */

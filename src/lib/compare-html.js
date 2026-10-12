@@ -28,13 +28,13 @@ export const MAX_COMPARE = 3;
  */
 export const COMPARE_ROWS = [
   { key: "price", labelKey: "pub.cmp.harga", text: (c, t, lang) => priceLabel(c, lang), num: (c) => c.price, best: "min" },
-  { key: "rangeKm", labelKey: "pub.cmp.range", text: (c) => (c.rangeKm != null ? c.rangeKm + " km" : ""), num: (c) => c.rangeKm, best: "max" },
+  { key: "rangeKm", labelKey: "pub.cmp.range", text: (c) => (c.rangeKm != null ? (c.wilayah === "us" ? Math.round(Number(c.rangeKm) / 1.60934) + " mi" : c.rangeKm + " km") : ""), num: (c) => c.rangeKm, best: "max" },
   { key: "rangeStandard", labelKey: "pub.cmp.standard", text: (c) => c.rangeStandard || "" },
   { key: "batteryKwh", labelKey: "pub.cmp.battery", text: (c) => (c.batteryKwh != null ? c.batteryKwh + " kWh" : ""), num: (c) => c.batteryKwh, best: "max" },
   { key: "powerHp", labelKey: "pub.cmp.power", text: (c) => (c.powerHp != null ? c.powerHp + " hp" : ""), num: (c) => c.powerHp, best: "max" },
   { key: "torqueNm", labelKey: "pub.cmp.torque", text: (c) => (c.torqueNm != null ? c.torqueNm + " Nm" : ""), num: (c) => c.torqueNm, best: "max" },
-  { key: "accelSec", labelKey: "pub.cmp.accel", text: (c, t) => (c.accelSec != null ? c.accelSec + " " + (t ? t("pub.unit.dtk") : "dtk") : ""), num: (c) => c.accelSec, best: "min" },
-  { key: "topSpeedKph", labelKey: "pub.cmp.topSpeed", text: (c, t) => (c.topSpeedKph != null ? c.topSpeedKph + " " + (t ? t("pub.unit.kmj") : "km/j") : ""), num: (c) => c.topSpeedKph, best: "max" },
+  { key: "accelSec", labelKey: "pub.cmp.accel", labelUs: "0–60 mph", text: (c, t) => (c.accelSec != null ? c.accelSec + " " + (t ? t("pub.unit.dtk") : "dtk") : ""), num: (c) => c.accelSec, best: "min" },
+  { key: "topSpeedKph", labelKey: "pub.cmp.topSpeed", text: (c, t) => (c.topSpeedKph != null ? (c.wilayah === "us" ? Math.round(Number(c.topSpeedKph) / 1.60934) + " mph" : c.topSpeedKph + " " + (t ? t("pub.unit.kmj") : "km/j")) : ""), num: (c) => c.topSpeedKph, best: "max" },
   { key: "chargeDcKw", labelKey: "pub.cmp.dc", text: (c) => (c.chargeDcKw != null ? c.chargeDcKw + " kW" : ""), num: (c) => c.chargeDcKw, best: "max" },
   { key: "chargeAcKw", labelKey: "pub.cmp.ac", text: (c) => (c.chargeAcKw != null ? c.chargeAcKw + " kW" : ""), num: (c) => c.chargeAcKw, best: "max" },
   { key: "chargeTime", labelKey: "pub.cmp.time", text: (c) => c.chargeTime || "" },
@@ -92,12 +92,15 @@ const VERDICT_KEYS = [
  */
 export function compareVerdicts(items, t, lang) {
   const tt = t || tId;
+  /* Label baris mengikuti edisi yang dibandingkan: semuanya Amerika berarti
+     "0–60 mph", bukan "0–100 km/j". */
+  const semuaUs = Array.isArray(items) && items.length > 0 && items.every((c) => c && c.wilayah === "us");
   return VERDICT_KEYS.map(({ key, phraseKey }) => {
     const row = COMPARE_ROWS.find((r) => r.key === key);
     if (!row) return null;
     const i = bestIndex(row, items);
     if (i < 0) return null;
-    return { key, label: tt(row.labelKey), phrase: tt(phraseKey), winner: items[i], value: row.text(items[i], tt, lang) };
+    return { key, label: semuaUs && row.labelUs ? row.labelUs : tt(row.labelKey), phrase: tt(phraseKey), winner: items[i], value: row.text(items[i], tt, lang) };
   }).filter(Boolean);
 }
 
@@ -182,7 +185,9 @@ export function compareTableHTML(items, opts) {
     const cells = texts
       .map((t, i) => `<td class="${i === winner ? "is-best" : ""}">${t ? esc(t) : "—"}</td>`)
       .join("");
-    return `<tr><th scope="row">${esc(t(row.labelKey))}</th>${cells}</tr>`;
+    const semuaUs = Array.isArray(items) && items.length > 0 && items.every((c) => c && c.wilayah === "us");
+    const label = semuaUs && row.labelUs ? row.labelUs : t(row.labelKey);
+    return `<tr><th scope="row">${esc(label)}</th>${cells}</tr>`;
   }).join("");
 
   return `<div class="compare-scroll"><table class="compare-table">

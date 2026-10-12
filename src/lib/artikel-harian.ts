@@ -66,6 +66,20 @@ export const TOPIK_PANDUAN = [
   "kesalahan umum pemilik EV baru",
 ];
 
+/**
+ * Topik panduan abadi edisi Amerika (Bahasa Inggris) — pasangan TOPIK_PANDUAN
+ * untuk putaran panduan edisi `us`. Istilahnya Amerika (charging station,
+ * Supercharger), bukan terjemahan istilah Indonesia.
+ */
+export const TOPIK_PANDUAN_US = [
+  "tips for making an EV battery last",
+  "first-time guide to DC fast charging in America",
+  "how home charging costs work in the US",
+  "choosing an electric motorcycle for commuting",
+  "choosing an electric car for families",
+  "common mistakes new EV owners make",
+];
+
 export interface TopikArtikel {
   strategi: "berita" | "banding" | "panduan";
   /** Kunci anti-ulang: kelompok berita, pasangan id, atau judul panduan. */
@@ -76,6 +90,8 @@ export interface TopikArtikel {
   sumberBoleh: string[];
   /** URL video YouTube dari berita sumber, untuk disematkan di artikel. */
   videoEmbed?: string;
+  /** Edisi tulisan: "us" berbahasa Inggris untuk Amerika. */
+  wilayah?: "id" | "us";
 }
 
 export interface StatusArtikelHarian {
@@ -93,6 +109,8 @@ export interface StatusArtikelHarian {
     biayaRupiah: number;
     errorKey: string;
   } | null;
+  /* Hasil edisi Amerika — panel lama yang hanya membaca `hasil` tidak terganggu. */
+  hasilUs?: StatusArtikelHarian["hasil"];
   riwayat: { tanggal: string; strategi: string; kunci: string }[];
 }
 
@@ -159,24 +177,33 @@ export function drafTunggu(daftar: any[]): any[] {
 /**
  * Memilih topik hari ini.
  *
- * Urutannya: rangkum berita terbaru yang se-tema → sandingkan dua kendaraan
- * sekelas → putar panduan abadi. Topik yang kuncinya dipakai 60 hari terakhir
+ * Urutannya: rangkum berita terbaru yang se-tema + sandingkan dua kendaraan
+ * sekelas + putar panduan abadi. Topik yang kuncinya dipakai 60 hari terakhir
  * dilewati supaya tidak menulis yang sama dua kali.
+ *
+ * `region` memilih edisinya: "us" memakai berita dan katalog Amerika,
+ * berbahasa Inggris, dengan kunci riwayat berawalan `us:` supaya tidak
+ * berebut topik dengan edisi Indonesia. Tanpa region berarti Indonesia
+ * seperti sebelumnya.
  */
-export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: string): TopikArtikel | null {
+export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: string, region: "id" | "us" = "id"): TopikArtikel | null {
+  const us = region === "us";
+  const awalan = us ? "us:" : "";
   const dipakai = new Set((riwayat || []).map((r) => String(r && r.kunci)));
   const bebas = (kunci: string) => !dipakai.has(kunci);
 
   const berita = (((content && content.berita) || []) as any[])
-    .filter((b) => b && b.title && b.url && umurHari(b.date || b.updatedAt) <= 10)
+    .filter((b) => b && b.title && b.url && (b.wilayah === "us") === us && umurHari(b.date || b.updatedAt) <= 10)
     .slice(0, 30);
 
+  const henti = ["listrik", "motor", "mobil", "indonesia", "hybrid", "yang", "untuk", "dengan", "dari"];
+  if (us) henti.push("america", "american", "states", "united", "electric", "with", "from", "that", "this");
   const kataKunci = (s: string) =>
     String(s || "")
       .toLowerCase()
-      .replace(/[^a-zà-ÿ0-9\s]/gi, " ")
+      .replace(/[^a-z0-9\s]/gi, " ")
       .split(/\s+/)
-      .filter((w) => w.length >= 5 && !["listrik", "motor", "mobil", "indonesia", "hybrid", "yang", "untuk", "dengan", "dari"].includes(w));
+      .filter((w) => w.length >= 5 && !henti.includes(w));
 
   const kelompok = new Map<string, any[]>();
   for (const b of berita) {
@@ -193,7 +220,7 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
     .sort((a, b) => b[1].length - a[1].length);
   for (const [kunci, items] of seTema) {
     const unik = [...new Map(items.map((b: any) => [String(b.url), b])).values()].slice(0, 4);
-    const kunciTopik = `berita:${kunci}`;
+    const kunciTopik = `${awalan}berita:${kunci}`;
     if (!bebas(kunciTopik)) continue;
     const bahan = unik.map((b: any) => `- ${b.title} (${b.source || "media"}): ${b.url}`).join("\n");
     /* Ambil video YouTube pertama dari berita sumber kalau ada — disematkan di artikel. */
@@ -201,15 +228,16 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
     return {
       strategi: "berita",
       kunci: kunciTopik,
-      judulKerja: `Rangkuman: ${unik[0].title}`,
-      bahan: `Berita terbaru seputar "${kunci}":\n${bahan}`,
+      judulKerja: us ? `Roundup: ${unik[0].title}` : `Rangkuman: ${unik[0].title}`,
+      bahan: us ? `Latest news about "${kunci}":\n${bahan}` : `Berita terbaru seputar "${kunci}":\n${bahan}`,
       sumberBoleh: unik.map((b: any) => String(b.url)),
       videoEmbed: videoEmbed || undefined,
+      wilayah: region,
     };
   }
 
   const semua = [...((content && content.cars) || []), ...((content && content.motors) || [])].filter(
-    (v: any) => v && v.id && v.brand && v.name
+    (v: any) => v && v.id && v.brand && v.name && (v.wilayah === "us") === us
   );
   const perBodi = new Map<string, any[]>();
   for (const v of semua) {
@@ -222,29 +250,38 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
   for (let i = 0; i < bodiUrut.length; i++) {
     const [bodi, items] = bodiUrut[(indeksHari + i) % bodiUrut.length];
     const dua = [...items].sort((a, b) => (b.rangeKm || 0) - (a.rangeKm || 0)).slice(0, 2);
-    const kunciTopik = `banding:${dua.map((v: any) => v.id).sort().join("+")}`;
+    const kunciTopik = `${awalan}banding:${dua.map((v: any) => v.id).sort().join("+")}`;
     if (!bebas(kunciTopik)) continue;
     const sebut = (v: any) =>
-      `- ${v.brand} ${v.name}: harga ${v.priceText || (v.price != null ? `Rp ${v.price}` : "-")}, jarak ${v.rangeKm != null ? `${v.rangeKm} km` : "-"}, baterai ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, tenaga ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`;
+      us
+        ? `- ${v.brand} ${v.name}: price ${v.priceText || (v.price != null ? `US$${v.price}` : "-")}, range ${v.rangeKm != null ? `${Math.round(Number(v.rangeKm) / 1.60934)} mi EPA` : "-"}, battery ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, power ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`
+        : `- ${v.brand} ${v.name}: harga ${v.priceText || (v.price != null ? `Rp ${v.price}` : "-")}, jarak ${v.rangeKm != null ? `${v.rangeKm} km` : "-"}, baterai ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, tenaga ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`;
     return {
       strategi: "banding",
       kunci: kunciTopik,
       judulKerja: `${dua[0].brand} ${dua[0].name} vs ${dua[1].brand} ${dua[1].name}`,
-      bahan: `Dua ${bodi} listrik dari katalog:\n${dua.map(sebut).join("\n")}\nTulis panduan memilih di antara keduanya memakai ANGKA DI ATAS SAJA.`,
+      bahan: us
+        ? `Two ${bodi} EVs from the catalog:\n${dua.map(sebut).join("\n")}\nWrite a buying guide choosing between them using ONLY the figures above.`
+        : `Dua ${bodi} listrik dari katalog:\n${dua.map(sebut).join("\n")}\nTulis panduan memilih di antara keduanya memakai ANGKA DI ATAS SAJA.`,
       sumberBoleh: [],
+      wilayah: region,
     };
   }
 
-  for (let i = 0; i < TOPIK_PANDUAN.length; i++) {
-    const panduan = TOPIK_PANDUAN[(indeksHari + i) % TOPIK_PANDUAN.length];
-    const kunciTopik = `panduan:${panduan}`;
+  const daftarPanduan = us ? TOPIK_PANDUAN_US : TOPIK_PANDUAN;
+  for (let i = 0; i < daftarPanduan.length; i++) {
+    const panduan = daftarPanduan[(indeksHari + i) % daftarPanduan.length];
+    const kunciTopik = `${awalan}panduan:${panduan}`;
     if (!bebas(kunciTopik)) continue;
     return {
       strategi: "panduan",
       kunci: kunciTopik,
       judulKerja: panduan,
-      bahan: `Topik panduan abadi: "${panduan}". Tulis dari pengetahuan umum yang mapan (tanpa angka spesifik model); kalau menyebut angka katalog, hanya yang umum dan beri rentang.`,
+      bahan: us
+        ? `Evergreen guide topic: "${panduan}". Write from established general knowledge (no model-specific figures); if citing catalog numbers, keep them general with ranges.`
+        : `Topik panduan abadi: "${panduan}". Tulis dari pengetahuan umum yang mapan (tanpa angka spesifik model); kalau menyebut angka katalog, hanya yang umum dan beri rentang.`,
       sumberBoleh: [],
+      wilayah: region,
     };
   }
   return null;
@@ -293,7 +330,11 @@ export function sampulArtikel(content: any, topik: TopikArtikel, hari: string): 
        membawa gambar) jatuh ke foto katalog di bawah — bukan ke sampul
        kosong — supaya artikel yang terbit otomatis selalu bersampul. */
   }
+  /* Sampul panduan diputar dari katalog edisinya sendiri — artikel Amerika
+     tidak bersampul foto Indonesia. */
+  const edisi = (topik as any)?.wilayah === "us" ? "us" : "id";
   const semuaGambar = [...((content && content.cars) || []), ...((content && content.motors) || [])]
+    .filter((v: any) => (v?.wilayah === "us") === (edisi === "us"))
     .map((v: any) => String((v && v.image) || "").trim())
     .filter((g) => g && (/^https?:\/\//i.test(g) || g.startsWith("/")));
   if (!semuaGambar.length) return "";
@@ -325,6 +366,18 @@ const SKEMA_DRAF = {
 };
 
 function instruksiTulis(topik: TopikArtikel): string {
+  /* Edisi Amerika ditulis dalam Bahasa Inggris — model, dolar, dan mil. */
+  if ((topik as any)?.wilayah === "us") {
+    return [
+      "You are an American EV guide writer for smart lay readers.",
+      "Write a Markdown manuscript: start with a 2-sentence ## summary, then 3-5 ## subheadings, no H1 title (the title is a separate field).",
+      "At least 350 words. Natural American English, no promotional fluff, no emoji.",
+      `Category must be exactly one of: ${KATEGORI_ARTIKEL.join(", ")}.`,
+      "HARD RULE: every specification/price figure ONLY from the materials. Anything not in the materials must NOT appear as a figure — write it in general words.",
+      "HARD RULE: the sources field ONLY contains addresses from the list given below (or empty). Writing any other address fails.",
+      `Topic: ${topik.judulKerja}.`,
+    ].join("\n");
+  }
   return [
     "Kamu penulis panduan kendaraan listrik berbahasa Indonesia untuk pembaca awam yang cerdas.",
     "Tulis naskah Markdown: diawali ## ringkasan 2 kalimat, lalu 3-5 subjudul ##, tanpa judul H1 (judul ada di field sendiri).",
@@ -458,53 +511,69 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
   tulisArtikelHarian(status);
 
   const hasil = { ...hasilKosong(), tanggal: tanggalWib() };
+  /* Hasil edisi Amerika dilaporkan terpisah supaya panel tetap membaca
+     `hasil` seperti sebelumnya. */
+  const hasilUs = { ...hasilKosong(), tanggal: hasil.tanggal };
   try {
-    const segar = readContent();
-    const tunggu = drafTunggu(segar.artikel).length;
-    hasil.drafTunggu = tunggu;
+    /* Satu putaran menulis DUA edisi: Indonesia lalu Amerika. Aturannya sama
+       (satu tulisan, langsung terbit, batas draf), bahannya dan bahasanya
+       mengikuti edisinya masing-masing. */
+    for (const edisi of ["id", "us"] as const) {
+      const target = edisi === "us" ? hasilUs : hasil;
+      const segar = readContent();
+      /* Batas draf dihitung per edisi — antrean Indonesia yang penuh tidak
+         boleh membungkam edisi Amerika, dan sebaliknya. */
+      const tunggu = drafTunggu(
+        (segar.artikel || []).filter((a: any) => (a?.wilayah === "us") === (edisi === "us"))
+      ).length;
+      if (edisi === "id") hasil.drafTunggu = drafTunggu(segar.artikel).length;
 
-    if (tunggu < MAKS_DRAF_TUNGGU) {
-      const topik = pilihTopik(segar, status.riwayat, hasil.tanggal);
-      if (!topik) {
-        hasil.errorKey = "topikHabis";
-      } else {
-        const tulis = await tulisSatu(apiKey, topik);
-        hasil.biayaRupiah = tulis.biayaRupiah;
-        if (tulis.draf && !tulis.errorKey) {
-          const kini = new Date().toISOString();
-          const id = `auto-${hasil.tanggal}-${crypto.randomBytes(3).toString("hex")}`;
-          const artikel = normalizeArtikel({
-            ...tulis.draf,
-            id,
-            slug: "",
-            author: "EVKita",
-            date: hasil.tanggal,
-            status: "published",
-            publishAt: "",
-            aiAssisted: true,
-            auto: true,
-            /* Sampul relevan otomatis supaya kartu artikel langsung terlihat
-               menarik di /artikel dan beranda. Gambar milik sendiri, tanpa
-               mengunduh apa pun. */
-            image: sampulArtikel(segar, topik, hasil.tanggal),
-            updatedAt: kini,
-            updatedBy: "auto",
-          });
-          const termuat = readContent();
-          termuat.artikel = [artikel, ...(termuat.artikel || [])];
-          writeContent(termuat);
-          hasil.ok = true;
-          hasil.strategi = topik.strategi;
-          hasil.judul = artikel.title;
-          hasil.id = artikel.id;
-          status.riwayat = [...status.riwayat, { tanggal: hasil.tanggal, strategi: topik.strategi, kunci: topik.kunci }].slice(-90);
+      if (tunggu < MAKS_DRAF_TUNGGU) {
+        const topik = pilihTopik(segar, status.riwayat, hasil.tanggal, edisi);
+        if (!topik) {
+          target.errorKey = "topikHabis";
         } else {
-          hasil.errorKey = tulis.errorKey;
+          const tulis = await tulisSatu(apiKey, topik);
+          target.biayaRupiah = tulis.biayaRupiah;
+          hasil.biayaRupiah += tulis.biayaRupiah;
+          if (tulis.draf && !tulis.errorKey) {
+            const kini = new Date().toISOString();
+            const id = `auto-${edisi}-${hasil.tanggal}-${crypto.randomBytes(3).toString("hex")}`;
+            const artikel = normalizeArtikel({
+              ...tulis.draf,
+              id,
+              slug: "",
+              author: "EVKita",
+              date: hasil.tanggal,
+              status: "published",
+              publishAt: "",
+              aiAssisted: true,
+              auto: true,
+              /* Edisi tulisan — tanpa ini artikel Amerika bocor ke Indonesia. */
+              wilayah: edisi,
+              /* Sampul relevan otomatis supaya kartu artikel langsung terlihat
+                 menarik di /artikel dan beranda. Gambar milik sendiri, tanpa
+                 mengunduh apa pun. */
+              image: sampulArtikel(segar, topik, hasil.tanggal),
+              updatedAt: kini,
+              updatedBy: "auto",
+            });
+            const termuat = readContent();
+            termuat.artikel = [artikel, ...(termuat.artikel || [])];
+            writeContent(termuat);
+            target.ok = true;
+            target.strategi = topik.strategi;
+            target.judul = artikel.title;
+            target.id = artikel.id;
+            status.riwayat = [...status.riwayat, { tanggal: hasil.tanggal, strategi: topik.strategi, kunci: topik.kunci }].slice(-90);
+          } else {
+            target.errorKey = tulis.errorKey;
+          }
         }
+      } else {
+        target.ok = true;
+        target.errorKey = "penuh";
       }
-    } else {
-      hasil.ok = true;
-      hasil.errorKey = "penuh";
     }
 
     /* Pembersihan jalan setiap putaran — murah, tanpa AI. */
@@ -519,11 +588,13 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
 
     status.tanggal = hasil.tanggal;
     status.hasil = hasil;
+    status.hasilUs = hasilUs;
     return { dilewati: false, ...hasil };
   } catch (e: any) {
     hasil.errorKey = String((e && e.message) || e);
     status.tanggal = hasil.tanggal;
     status.hasil = hasil;
+    status.hasilUs = hasilUs;
     return { dilewati: false, ...hasil };
   } finally {
     status.jalan = false;

@@ -168,7 +168,9 @@ export function visualHTML(c, opts) {
 export function extraSpecs(c, t) {
   const tt = t || tId;
   const rows = [];
-  if (c.accelSec != null) rows.push([tt("pub.cmp.accel"), c.accelSec + " " + tt("pub.unit.dtk")]);
+  /* Angka akselerasi kendaraan Amerika adalah 0–60 mph (bukan 0–100). */
+  const us = c && c.wilayah === "us";
+  if (c.accelSec != null) rows.push([us ? "0–60 mph" : tt("pub.cmp.accel"), c.accelSec + " " + tt("pub.unit.dtk")]);
   if (c.topSpeedKph != null) rows.push([tt("pub.card.topSpeed"), c.topSpeedKph + " " + tt("pub.unit.kmj")]);
   if (c.seats != null) rows.push([tt("pub.card.seats"), c.seats]);
   if (c.chargeDcKw != null) rows.push([tt("pub.card.dcFast"), c.chargeDcKw + " kW"]);
@@ -185,8 +187,12 @@ export function cardHTML(c, opts) {
      `app.js`) memakai bawaan Indonesia seperti sebelumnya. */
   const lang = o.lang;
 
+  /* Jarak edisi Amerika tampil dalam mil — satuannya orang Amerika.
+     `wilayah` ikut di objek kendaraan, jadi kartu tahu edisinya sendiri. */
   const range = c.rangeKm
-    ? `<span class="spec-value">${esc(c.rangeKm)} km</span>${c.rangeStandard ? `<span class="spec-note">${esc(c.rangeStandard)}</span>` : ""}`
+    ? c.wilayah === "us"
+      ? `<span class="spec-value">${esc(Math.round(Number(c.rangeKm) / 1.60934))} mi</span>${c.rangeStandard ? `<span class="spec-note">${esc(c.rangeStandard)}</span>` : ""}`
+      : `<span class="spec-value">${esc(c.rangeKm)} km</span>${c.rangeStandard ? `<span class="spec-note">${esc(c.rangeStandard)}</span>` : ""}`
     : '<span class="spec-value">—</span>';
 
   const price = priceLabel(c, lang)

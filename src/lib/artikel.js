@@ -37,6 +37,7 @@
  */
 
 import { tayang } from "./tayang.js";
+import { normalizeWilayah } from "./region.js";
 import { ringkasLaman, slugLaman } from "./laman.js";
 import { safeUrl } from "./url.js";
 
@@ -167,6 +168,10 @@ export function normalizeArtikel(v) {
     // Sumber. Barisnya boleh kosong; yang menentukan ia tampil atau tidak
     // adalah penyaring skema di halaman publik, bukan di sini.
     sources: normalizeSumberList(v && v.sources),
+
+    /* Edisi regional: artikel Indonesia atau Amerika. Kosong berarti
+       Indonesia, jadi seluruh artikel lama tidak perlu migrasi. */
+    wilayah: normalizeWilayah(v && v.wilayah),
 
     // Media & SEO
     image: teks(v && v.image).trim(),

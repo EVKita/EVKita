@@ -97,12 +97,19 @@ const kindWord = items.every(isMotor)
  * keunggulan yang paling sering jadi alasan orang memilih — jarak tempuh dan
  * harga — disebut lebih dulu supaya pembaca dapat jawaban sebelum tabelnya.
  */
+/* Seluruh yang dibandingkan Amerika berarti pembacanya di edisi Amerika. */
+const semuaUs = items.length >= 2 && items.every((v: any) => v && v.wilayah === "us");
+
 const lead = items.length >= 2
-  ? t("pub.banding.lead", {
+  ? (items.every((v: any) => v && v.wilayah === "us") ? t("pub.region.bandingLead", {
       names: joinPhrase(names, t),
       kind: kindWord,
       body: bodyPhrase ? ` ${bodyPhrase}` : "",
-    }) +
+    }) : t("pub.banding.lead", {
+      names: joinPhrase(names, t),
+      kind: kindWord,
+      body: bodyPhrase ? ` ${bodyPhrase}` : "",
+    })) +
     (verdicts.length
       ? `${verdictSentence(verdicts, 2, t)}.`
       : t("pub.banding.leadFallback"))
@@ -185,7 +192,7 @@ const jsonLd = items.length >= 2
 >
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base="/" active="mobil" />
+  <SiteHeader site={site} base={semuaUs ? "/amerika" : "/"} active="mobil" region={semuaUs ? "us" : "id"} artikel="/artikel" />
 
   {items.length < 2 ? (
     <main class="container notfound" id="konten">
@@ -194,14 +201,14 @@ const jsonLd = items.length >= 2
       <p class="notfound-text">
         {t("pub.banding.notFoundText")}
       </p>
-      <a class="btn btn-primary" href="/#daftar">{t("pub.detail.bukaKatalog")}</a>
+      <a class="btn btn-primary" href={semuaUs ? "/amerika#daftar" : "/#daftar"}>{t("pub.detail.bukaKatalog")}</a>
     </main>
   ) : (
     <main class="container cmp" id="konten">
       <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-        <a href="/">{t("pub.nav.beranda")}</a>
+        <a href={semuaUs ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
-        <a href="/#daftar">{t("pub.katalog")}</a>
+        <a href={semuaUs ? "/amerika#daftar" : "/#daftar"}>{t("pub.katalog")}</a>
         <span aria-hidden="true">/</span>
         <span class="breadcrumb-current">{heading}</span>
       </nav>

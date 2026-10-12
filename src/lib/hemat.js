@@ -52,6 +52,28 @@ export const TARIF_PRESETS = [
 ];
 
 /**
+ * Faktor satuan Amerika — mesin hitung TETAP metrik, konversi hanya di batas
+ * (halaman dan skrip mengubah isian tampilan ke metrik sebelum menghitung,
+ * dan mengubah hasilnya kembali sebelum menampilkan). Pola yang sama dengan
+ * mil di kalkulator pengisian.
+ */
+export const MIL_KM = 1.60934;
+export const GALON_LITER = 3.78541;
+/** 1 km/liter = 2,35215 mil/galon. */
+export const MPG_PER_KML = 2.35215;
+
+/**
+ * Tarif Amerika ($ per kWh) — tarif publikasi jaringan, April–Juni 2026.
+ * Polanya sama dengan `TARIF_PRESETS`: angka perkiraan sebagai tombol pintas.
+ */
+export const TARIF_PRESETS_US = [
+  { id: "rumah", i18n: "pub.calc.usRumah", value: 0.17, i18nNote: "pub.calc.usRataNasional" },
+  { id: "supercharger", i18n: "pub.calc.usSupercharger", value: 0.42, i18nNote: "pub.calc.usBayarTempat" },
+  { id: "electrify", i18n: "pub.calc.usElectrify", value: 0.48, i18nNote: "pub.calc.usBayarTempat" },
+  { id: "evgo", i18n: "pub.calc.usEvgo", value: 0.45, i18nNote: "pub.calc.usBayarTempat" },
+];
+
+/**
  * Konsumsi listrik kendaraan, kWh per 100 km.
  *
  * Diturunkan dari kapasitas baterai dibagi jarak tempuh klaim pabrik, karena
@@ -192,6 +214,25 @@ export function rupiahHalus(n) {
 }
 
 /**
+ * Dolar AS untuk kalkulator edisi Amerika — pasangan `rupiahPenuh`.
+ * "US$12.75", "US$1,500". Awalan "US$" dipakai di ketiga bahasa supaya tidak
+ * tertukar dengan satuan lain di halaman berbahasa Indonesia/Mandarin.
+ */
+export function dolarPenuh(n) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+  const v = Number(n);
+  return "US$" + (v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2));
+}
+
+/** Dolar dengan sen — pasangan `rupiahHalus`, untuk biaya per kWh. */
+export function dolarHalus(n) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+  const v = Number(n);
+  if (v >= 100) return dolarPenuh(v);
+  return "US$" + v.toFixed(2);
+}
+
+/**
  * Lama balik modal dalam kalimat manusia: "2 tahun 3 bulan".
  *
  * Dibulatkan ke atas ke bulan penuh — bulan yang belum lewat belum menghemat
@@ -228,16 +269,19 @@ export function teksBalikModal(hasil, t = tId) {
 }
 
 /** Kalimat ringkas di atas kartu hasil. */
-export function teksRingkas(hasil, t = tId) {
+export function teksRingkas(hasil, t = tId, o = {}) {
+  /* Edisi Amerika memakai dolar — mata uang pembacanya. Pemanggil lama yang
+     tidak mengirim opsi tidak berubah artinya. */
+  const uang = o && o.region === "us" ? dolarPenuh : rupiahPenuh;
   if (hasil.savingMonthly === null) return t("pub.hemat.isiAngka");
   if (hasil.savingMonthly > 0) {
     return t("pub.hemat.hematBulan", {
-      bulan: rupiahPenuh(hasil.savingMonthly),
-      tahun: rupiahPenuh(hasil.savingYearly),
+      bulan: uang(hasil.savingMonthly),
+      tahun: uang(hasil.savingYearly),
     });
   }
   if (hasil.savingMonthly < 0) {
-    return t("pub.hemat.lebihMahal", { bulan: rupiahPenuh(Math.abs(hasil.savingMonthly)) });
+    return t("pub.hemat.lebihMahal", { bulan: uang(Math.abs(hasil.savingMonthly)) });
   }
   return t("pub.hemat.sama");
 }

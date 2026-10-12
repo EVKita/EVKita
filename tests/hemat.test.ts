@@ -5,6 +5,8 @@ import {
   hitungHemat,
   rupiahPenuh,
   rupiahHalus,
+  dolarPenuh,
+  dolarHalus,
   lamaBalikModal,
   teksBalikModal,
   teksRingkas,
@@ -198,5 +200,18 @@ describe("nilai bawaan", () => {
     // yang salah hampir pasti nilai bawaannya, bukan mobilnya.
     const h = hitungHemat({ ...DEFAULTS, kwhPer100: 17 });
     assert.ok(h.savingMonthly! > 0);
+  });
+});
+
+describe("dolar edisi Amerika", () => {
+  it("menulis dolar dengan sen, ribuan dipisah koma", () => {
+    assert.equal(dolarPenuh(12.75), "US$12.75");
+    assert.equal(dolarPenuh(1500), "US$1,500");
+    assert.equal(dolarPenuh(null), "—");
+  });
+
+  it("halus untuk per kWh, penuh di atas seratus", () => {
+    assert.equal(dolarHalus(0.42), "US$0.42");
+    assert.equal(dolarHalus(250), "US$250");
   });
 });

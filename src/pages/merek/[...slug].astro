@@ -3,6 +3,8 @@ import KoleksiPage from "../../components/KoleksiPage.astro";
 import { readContent } from "../../lib/store";
 import { groupByField, findGroup } from "../../lib/taxonomy.js";
 import { hanyaTayang } from "../../lib/tayang.js";
+import { filterWilayah } from "../../lib/region.js";
+import { filterWilayah } from "../../lib/region.js";
 import { terjemahContent } from "../../lib/terjemahan.js";
 
 /**
@@ -19,10 +21,14 @@ import { terjemahContent } from "../../lib/terjemahan.js";
 const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 const site = content.site;
 
-const pool = [
+/* Edisi kelompok: `?region=us` hanya memuat kendaraan Amerika. */
+const region = Astro.url.searchParams.get("region") === "us" ? "us" : "id";
+const us = region === "us";
+
+const pool = filterWilayah([
   ...(content.cars || []).filter(hanyaTayang()),
   ...(site.showMotor ? (content.motors || []).filter(hanyaTayang()) : []),
-];
+], region);
 
 const raw = Astro.params.slug;
 const segmen = raw === undefined || raw === "" ? [] : String(raw).split("/");
@@ -35,7 +41,7 @@ const group = segmen.length === 1 ? findGroup(groups, segmen[0]) : null;
  * jadi yang bukan bentuk baku dialihkan permanen ke bentuk bakunya.
  */
 if (group && segmen[0] !== group.slug) {
-  return Astro.redirect(`/merek/${group.slug}`, 301);
+  return Astro.redirect(us ? `/merek/${group.slug}?region=us` : `/merek/${group.slug}`, 301);
 }
 
 /* Alamat berlapis seperti "/merek/byd/seal" bukan merek yang salah eja,
@@ -46,4 +52,4 @@ if (mode === "hilang") {
 }
 ---
 
-<KoleksiPage site={site} jenis="merek" pool={pool} mode={mode} group={group} media={content.media} />
+<KoleksiPage site={site} jenis="merek" pool={pool} mode={mode} group={group} media={content.media} region={region} />

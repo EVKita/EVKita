@@ -208,7 +208,14 @@ export function bersihkanUsulan(raw, opts) {
     if (!fieldsFor(kind).some((f) => f.key === key)) continue;
     if (!isi || typeof isi !== "object") continue;
 
-    const hasil = bersihkanNilai(field, isi.nilai, kind);
+    /* Batas harga mengikuti pasar kendaraan: Dolar AS angkanya puluhan ribu,
+       bukan ratusan juta — tanpa ini setiap harga Amerika dibuang sebagai
+       "di luar batas". */
+    const fEff =
+      key === "price" && vehicle && vehicle.wilayah === "us"
+        ? { ...field, min: 5000, max: 300000, unit: "US$" }
+        : field;
+    const hasil = bersihkanNilai(fEff, isi.nilai, kind);
     if (hasil.tolak) {
       peringatan.push(`${key}: ${hasil.tolak}`);
       continue;

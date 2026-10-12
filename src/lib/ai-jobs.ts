@@ -294,7 +294,7 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     if (!only.length) return gagalMulai("err.ai.tidakAdaYangKosong");
   }
 
-  const schema = buildSchema(kind, only);
+  const schema = buildSchema(kind, only, (vehicle as any)?.wilayah);
   const instructions = buildInstructions({
     kind,
     brand,
@@ -302,6 +302,9 @@ export function mulaiRiset(opts: MulaiOpts): MulaiHasil {
     hint: opts.hint,
     only,
     today: new Date().toISOString().slice(0, 10),
+    /* Riset kendaraan Amerika memakai pasar Amerika (Dolar, EPA, NACS) —
+       tanpa ini tombol Riset di kendaraan AS mengusulkan angka Indonesia. */
+    wilayah: (vehicle as any)?.wilayah,
   });
 
   const job: Job = {

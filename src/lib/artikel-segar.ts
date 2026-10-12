@@ -181,20 +181,28 @@ export function pilihSegar(
  * Bahan segar untuk satu artikel: kendaraan yang disebut di isi (maksimal 12,
  * kalau tidak ada yang disebut pakai 8 jarak terjauh) plus 6 berita terbaru.
  * Alamat berita ikut menjadi sumber yang boleh dikutip.
+ *
+ * Bahannya se-wilayah dengan artikelnya: artikel Amerika disegarkan dari
+ * katalog dan berita Amerika (harga Dolar, mil EPA), bukan dari Indonesia.
  */
 export function bahanSegar(content: any, artikel: any): { bahan: string; sumberBoleh: string[] } {
+  const us = (artikel as any)?.wilayah === "us";
   const isi = `${artikel?.title || ""}\n${artikel?.body || ""}`.toLowerCase();
   const semua = [...((content && content.cars) || []), ...((content && content.motors) || [])].filter(
-    (v: any) => v && v.id && v.brand && v.name
+    (v: any) => v && v.id && v.brand && v.name && (v.wilayah === "us") === us
   );
   const sebut = (v: any) =>
-    `- ${v.brand} ${v.name}: harga ${v.priceText || (v.price != null ? `Rp ${v.price}` : "-")}, jarak ${v.rangeKm != null ? `${v.rangeKm} km` : "-"}, baterai ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, tenaga ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`;
+    us
+      ? `- ${v.brand} ${v.name}: price ${v.priceText || (v.price != null ? `US$${v.price}` : "-")}, range ${v.rangeKm != null ? `${Math.round(Number(v.rangeKm) / 1.60934)} mi EPA` : "-"}, battery ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, power ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`
+      : `- ${v.brand} ${v.name}: harga ${v.priceText || (v.price != null ? `Rp ${v.price}` : "-")}, jarak ${v.rangeKm != null ? `${v.rangeKm} km` : "-"}, baterai ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, tenaga ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`;
   let pilih = semua.filter((v: any) => isi.includes(`${String(v.brand).toLowerCase()} ${String(v.name).toLowerCase()}`)).slice(0, 12);
   if (!pilih.length) pilih = [...semua].sort((a: any, b: any) => (b.rangeKm || 0) - (a.rangeKm || 0)).slice(0, 8);
-  const berita = (((content && content.berita) || []) as any[]).filter((b) => b && b.title && b.url).slice(0, 6);
+  const berita = (((content && content.berita) || []) as any[])
+    .filter((b) => b && b.title && b.url && (b.wilayah === "us") === us)
+    .slice(0, 6);
   const baris = [...pilih.map(sebut)];
   if (berita.length) {
-    baris.push("Berita terbaru:");
+    baris.push(us ? "Latest news:" : "Berita terbaru:");
     for (const b of berita) baris.push(`- ${b.title} (${b.source || "media"}): ${b.url}`);
   }
   return {
@@ -225,6 +233,18 @@ const SKEMA_SEGAR = {
 };
 
 function instruksiSegar(artikel: any): string {
+  /* Artikel Amerika disegarkan dalam Bahasa Inggris — instruksi Indonesia
+     akan menulis ulang naskah Inggris menjadi Indonesia. */
+  if ((artikel as any)?.wilayah === "us") {
+    return [
+      "You are an American EV guide editor. Your task is to REFRESH the given manuscript, not write a new one.",
+      "Keep the original structure, subheadings, length, and style. The title does not change (it is not included here).",
+      "Update ONLY outdated facts (prices, specs, availability, model status) using FIGURES FROM THE MATERIALS. Anything not in the materials must NOT appear as a new figure.",
+      "If nothing is outdated, return the content as is and write a summary containing the word 'unchanged'.",
+      "HARD RULE: the sources field ONLY contains addresses from the list given below, or from the article's existing list (also given). Writing any other address fails.",
+      "Answer only with JSON per schema: body (full Markdown manuscript), excerpt (2 sentences), ringkasan (one sentence on the change), sources.",
+    ].join("\n");
+  }
   return [
     "Kamu penyunting panduan kendaraan listrik berbahasa Indonesia. Tugasmu MENYEGARKAN naskah yang diberikan, bukan menulis baru.",
     "Pertahankan struktur, subjudul, panjang, dan gaya tulisan aslinya. Judul tidak berubah (tidak ada di sini).",

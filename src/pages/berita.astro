@@ -6,6 +6,7 @@ import { readContent } from "../lib/store";
 import { hanyaTayang } from "../lib/tayang.js";
 import { safeUrl } from "../lib/url.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
+import { filterWilayah } from "../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
 import { gambarBerita, kunciKanonik, petaGambarBerita } from "../lib/berita-gambar";
@@ -41,7 +42,9 @@ if (!site.showBerita) Astro.response.status = 404;
 const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
 
 /** Draf dan yang belum tiba jadwalnya tidak boleh bocor ke halaman publik. */
-const beritaList = site.showBerita ? byFeatured((content.berita || []).filter(hanyaTayang())) : [];
+const region = Astro.url.searchParams.get("region") === "us" ? "us" : "id";
+const us = region === "us";
+const beritaList = site.showBerita ? byFeatured(filterWilayah(content.berita, region).filter(hanyaTayang())) : [];
 
 /**
  * Foto tiap kartu: `n.image` (bawaan feed RSS) diutamakan; yang kosong
@@ -52,11 +55,13 @@ const thumbBerita = await petaGambarBerita(beritaList.map((n: any) => String(n?.
 const fotoBerita = (n: any) =>
   safeUrl(n.image) || thumbBerita[kunciKanonik(String(n?.url || ""))] || "";
 
-const judul = site.beritaTitle || t("pub.dir.pageBerita");
-const lead = site.beritaNote || t("pub.dir.leadBerita");
+const judul = us ? t("pub.region.beritaTitle") : site.beritaTitle || t("pub.dir.pageBerita");
+const lead = us ? t("pub.region.beritaLead") : site.beritaNote || t("pub.dir.leadBerita");
 
 const origin = siteOrigin(Astro.url);
-const canonical = canonicalUrl(Astro.url);
+/* Kanonis mempertahankan ?region=us — tanpanya edisi Amerika terindeks
+   sebagai halaman Indonesia. */
+const canonical = us ? `${origin}/berita?region=us` : canonicalUrl(Astro.url);
 
 const pageTitle = site.showBerita ? `${judul} — ${brandFull}` : `${t("pub.koleksi.notFound")} — ${brand}`;
 const metaDesc = site.showBerita ? lead : t("pub.laman.404Text");
@@ -107,7 +112,7 @@ const jsonLd = site.showBerita
 >
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base="/" active="" />
+  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="" region={us ? "us" : "id"} artikel="/artikel" />
 
   {!site.showBerita ? (
     <main class="container notfound" id="konten">
@@ -116,12 +121,12 @@ const jsonLd = site.showBerita
       <p class="notfound-text">
         {t("pub.laman.404Text")}
       </p>
-      <a class="btn btn-primary" href="/">{t("pub.laman.kembali")}</a>
+      <a class="btn btn-primary" href={us ? "/amerika" : "/"}>{t("pub.laman.kembali")}</a>
     </main>
   ) : (
     <main class="container katalog" id="konten">
       <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-        <a href="/">{t("pub.nav.beranda")}</a>
+        <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         <span class="breadcrumb-current">{judul}</span>
       </nav>
@@ -139,8 +144,8 @@ const jsonLd = site.showBerita
       */}
       <section class="kalk-section">
         <h2>{t("pub.beritaX.panduanT")}</h2>
-        <p class="section-note">{t("pub.beritaX.panduanD")}</p>
-        <p class="section-note"><strong>{t("pub.beritaX.sumberT")}:</strong> {SUMBER_BERITA.map((s: any) => s.nama).join(" · ")}</p>
+        <p class="section-note">{us ? t("pub.region.beritaPanduanD") : t("pub.beritaX.panduanD")}</p>
+        <p class="section-note"><strong>{t("pub.beritaX.sumberT")}:</strong> {us ? t("pub.region.sumberBeritaUS") : SUMBER_BERITA.map((s: any) => s.nama).join(" · ")}</p>
       </section>
 
       <section class="kalk-section">

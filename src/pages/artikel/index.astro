@@ -6,6 +6,7 @@ import ArtikelCard from "../../components/ArtikelCard.astro";
 import { readContent } from "../../lib/store";
 import { artikelTayang, tanggalArtikel, hrefArtikel } from "../../lib/artikel.js";
 import { siteOrigin, canonicalUrl, absoluteUrl } from "../../lib/site-url";
+import { filterWilayah } from "../../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
 import { terjemahContent } from "../../lib/terjemahan.js";
 
@@ -30,7 +31,10 @@ const site = cmsSite(content.site, lang);
 const brand = site.brandText || "EVKita";
 const brandFull = `${brand}${site.brandSuffix || ""}`;
 
-const daftar = artikelTayang(content.artikel);
+/* Edisi indeks: `?region=us` hanya memuat artikel Amerika. */
+const region = Astro.url.searchParams.get("region") === "us" ? "us" : "id";
+const us = region === "us";
+const daftar = artikelTayang(filterWilayah(content.artikel, region));
 
 /** Kelompok per tahun terbit, tahun terbaru lebih dulu. */
 const kelompok: { tahun: string; items: any[] }[] = [];
@@ -42,9 +46,11 @@ for (const a of daftar) {
 }
 
 const origin = siteOrigin(Astro.url);
-const canonical = canonicalUrl(Astro.url);
+/* Kanonis mempertahankan ?region=us — tanpanya edisi Amerika terindeks
+   sebagai halaman Indonesia. */
+const canonical = us ? `${origin}/artikel?region=us` : canonicalUrl(Astro.url);
 
-const pageTitle = `${t("pub.artikel.pageTitle")} — ${brandFull}`;
+const pageTitle = us ? `${t("pub.region.artikelTitle")} — ${brandFull}` : `${t("pub.artikel.pageTitle")} — ${brandFull}`;
 const metaDesc = daftar.length
   ? t("pub.artikel.metaDesc", { n: daftar.length })
   : t("pub.artikel.metaDescEmpty", { brand });
@@ -76,7 +82,7 @@ const jsonLd = daftar.length
         {
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+            { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: us ? `${origin}/amerika` : `${origin}/` },
             { "@type": "ListItem", position: 2, name: t("pub.nav.artikel"), item: canonical },
           ],
         },
@@ -95,17 +101,17 @@ const jsonLd = daftar.length
   <link slot="head" rel="alternate" type="application/rss+xml" title={`${t("pub.artikel.kategori")} ${brandFull}`} href="/artikel/rss.xml" />
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base="/" active="artikel" />
+  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="artikel" region={us ? "us" : "id"} artikel={us ? "/artikel?region=us" : "/artikel"} />
 
   <main class="container katalog" id="konten">
     <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-      <a href="/">{t("pub.nav.beranda")}</a>
+      <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
       <span aria-hidden="true">/</span>
-      <span class="breadcrumb-current">{t("pub.nav.artikel")}</span>
+      <span class="breadcrumb-current">{us ? t("pub.region.artikelTitle") : t("pub.nav.artikel")}</span>
     </nav>
 
     <header class="katalog-head">
-      <h1>{t("pub.artikel.title")}</h1>
+      <h1>{us ? t("pub.region.artikelTitle") : t("pub.artikel.title")}</h1>
       <p class="katalog-lead">
         {t("pub.artikel.lead", { brand })}
       </p>
@@ -143,7 +149,7 @@ const jsonLd = daftar.length
       <div class="empty">
         <p class="empty-title">{t("pub.artikel.empty")}</p>
         <p>{t("pub.artikel.emptyText")}</p>
-        <a class="btn btn-primary btn-sm" href="/">{t("pub.artikel.back")}</a>
+        <a class="btn btn-primary btn-sm" href={us ? "/amerika" : "/"}>{t("pub.artikel.back")}</a>
       </div>
     )}
   </main>

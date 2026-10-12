@@ -6,11 +6,15 @@ import { MAX_COMPARE, compareTableHTML, compareSlug } from "../lib/compare-html.
 import { hargaWajar } from "../lib/vehicle-spec.js";
 import { makePubT, normalizePubLocale } from "../lib/i18n/pub.js";
 
-/* Bahasa situs publik dibaca dari cookie yang ditulis LanguageToggle. */
+/* Bahasa situs publik: cookie pilihan pembaca menang; tanpanya ikuti bahasa
+   halaman yang dirender server (`<html lang>`). Urutan ini sama dengan
+   middleware — tanpanya, kunjungan pertama ke /amerika (bawaan Inggris)
+   digambar ulang dalam Bahasa Indonesia oleh skrip ini. */
 function readPubLang() {
   try {
     const m = document.cookie.match(/(?:^|;\s*)evkita_pub_lang=([^;]+)/);
-    return normalizePubLocale(m ? m[1] : "");
+    if (m && m[1]) return normalizePubLocale(m[1]);
+    return normalizePubLocale(document.documentElement.getAttribute("lang"));
   } catch {
     return "id";
   }
@@ -313,13 +317,24 @@ function renderHeroStats() {
   const minPrice = priced.length ? Math.min(...priced.map((c) => c.price)) : null;
   const ranged = all.filter((c) => c.rangeKm);
   const maxRange = ranged.length ? Math.max(...ranged.map((c) => c.rangeKm)) : 0;
+  /* Edisi Amerika tidak punya harga rupiah — pil ketiganya jarak terpendek,
+     bukan harga terendah. Edisinya dibaca dari atribut yang dipasang server. */
+  const edisiUS = el && el.getAttribute("data-region") === "us";
+  const minRange = ranged.length ? Math.min(...ranged.map((c) => c.rangeKm)) : 0;
 
-  const pills = [
-    [all.length, t("pub.stat.models")],
-    [brandCount, t("pub.stat.brands")],
-    [minPrice !== null ? rupiah(minPrice) : "—", t("pub.stat.minPrice")],
-    [maxRange ? maxRange + " km" : "—", t("pub.stat.maxRange")],
-  ];
+  const pills = edisiUS
+    ? [
+        [all.length, t("pub.stat.models")],
+        [brandCount, t("pub.stat.brands")],
+        [minRange ? Math.round(minRange / 1.60934) + " mi" : "—", t("pub.region.statMinRange")],
+        [maxRange ? Math.round(maxRange / 1.60934) + " mi" : "—", t("pub.stat.maxRange")],
+      ]
+    : [
+        [all.length, t("pub.stat.models")],
+        [brandCount, t("pub.stat.brands")],
+        [minPrice !== null ? rupiah(minPrice) : "—", t("pub.stat.minPrice")],
+        [maxRange ? maxRange + " km" : "—", t("pub.stat.maxRange")],
+      ];
   el.innerHTML = pills
     .map(([n, l]) => `<div class="stat-pill"><span class="num">${esc(n)}</span><span class="label">${esc(l)}</span></div>`)
     .join("");

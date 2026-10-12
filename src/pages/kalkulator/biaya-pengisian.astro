@@ -4,22 +4,25 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import { readContent } from "../../lib/store";
 import { vehicleHref } from "../../lib/card-html.js";
-import { TARIF_PRESETS } from "../../lib/hemat.js";
+import { TARIF_PRESETS, TARIF_PRESETS_US } from "../../lib/hemat.js";
 import {
   DEFAULTS,
   DAYA_PRESETS,
+  DAYA_PRESETS_US,
   BATAS_TAPER,
   hitungPengisian,
   modePengisian,
   teksDurasi,
   kwhKeTeks,
   kmKeTeks,
+  miKeTeks,
   teksRingkasPengisian,
   catatanHasil,
 } from "../../lib/pengisian.js";
-import { rupiahPenuh, rupiahHalus } from "../../lib/hemat.js";
+import { rupiahPenuh, rupiahHalus, dolarPenuh, dolarHalus } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
+import { filterWilayah } from "../../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
 
 /**
@@ -45,8 +48,20 @@ const site = cmsSite(content.site, lang);
 const t = makePubT(lang);
 const intl = pubIntl(lang);
 
-const cars = (content.cars || []).filter(hanyaTayang());
-const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [];
+const q = Astro.url.searchParams;
+
+/**
+ * Edisi kalkulator: `?region=us` memakai mobil Amerika, tarif dolar, dan
+ * istilah Amerika. Tanpa parameter berarti Indonesia — seluruh pemanggil lama
+ * (tautan, perayap) tidak berubah artinya.
+ */
+const region = q.get("region") === "us" ? "us" : "id";
+const us = region === "us";
+
+const semuaCars = filterWilayah(content.cars, region);
+const semuaMotors = filterWilayah(content.motors, region);
+const cars = (semuaCars || []).filter(hanyaTayang());
+const motors = site.showMotor ? (semuaMotors || []).filter(hanyaTayang()) : [];
 
 /** Hanya kendaraan yang kapasitas baterainya tercatat — tanpa itu tak ada yang bisa dihitung. */
 const punyaBaterai = (v: any) => v.batteryKwh !== null && v.batteryKwh !== undefined && Number(v.batteryKwh) > 0;
@@ -54,7 +69,9 @@ const pilihanMobil = cars.filter(punyaBaterai);
 const pilihanMotor = motors.filter(punyaBaterai);
 const pilihan = [...pilihanMobil, ...pilihanMotor];
 
-const q = Astro.url.searchParams;
+/* Tombol pintas mengikuti edisi: tarif dolar & daya Amerika vs rupiah & daya Indonesia. */
+const dayaPresets = us ? DAYA_PRESETS_US : DAYA_PRESETS;
+const tarifPresets = us ? TARIF_PRESETS_US : TARIF_PRESETS;
 
 /**
  * Membaca satu parameter URL.
@@ -81,8 +98,8 @@ const form = {
   batteryKwh: num("baterai", terpilih ? terpilih.batteryKwh : 60),
   socAwal: num("awal", DEFAULTS.socAwal),
   socAkhir: num("akhir", DEFAULTS.socAkhir),
-  dayaKw: num("daya", DEFAULTS.dayaKw),
-  tarif: num("tarif", DEFAULTS.tarif),
+  dayaKw: num("daya", us ? 150 : DEFAULTS.dayaKw),
+  tarif: num("tarif", us ? 0.42 : DEFAULTS.tarif),
 };
 
 const mode = modePengisian(form.dayaKw);
@@ -121,7 +138,9 @@ const pageTitle = `${t("pub.kalk.pageBiaya")} — ${brand}`;
 const metaDesc = t("pub.kalk.descBiaya");
 
 const origin = siteOrigin(Astro.url);
-const canonical = canonicalUrl(Astro.url);
+/* Kanonis mempertahankan ?region=us — tanpanya edisi Amerika terindeks
+   sebagai halaman Indonesia. */
+const canonical = us ? `${origin}/kalkulator/biaya-pengisian?region=us` : canonicalUrl(Astro.url);
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -133,12 +152,12 @@ const jsonLd = {
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Web",
       description: metaDesc,
-      offers: { "@type": "Offer", price: 0, priceCurrency: "IDR" },
+      offers: { "@type": "Offer", price: 0, priceCurrency: us ? "USD" : "IDR" },
     },
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
+        { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: us ? `${origin}/amerika` : `${origin}/` },
         { "@type": "ListItem", position: 2, name: t("pub.kalk.titleBiaya") },
       ],
     },
@@ -146,24 +165,31 @@ const jsonLd = {
 };
 
 /** Teks hasil yang dirender server; skrip browser menghitung ulang dengan fungsi yang sama. */
+const uangPenuh = us ? dolarPenuh : rupiahPenuh;
+const uangHalus = us ? dolarHalus : rupiahHalus;
 const teks = {
   durasi: teksDurasi(hasil, t),
-  biaya: rupiahPenuh(hasil.biaya),
-  perKwh: hasil.biayaPerKwh !== null ? rupiahHalus(hasil.biayaPerKwh) : "—",
-  energiMasuk: kwhKeTeks(hasil.energiMasuk),
-  energiDitagih: kwhKeTeks(hasil.energiDitagih),
-  km: kmKeTeks(hasil.kmDidapat),
+  biaya: uangPenuh(hasil.biaya),
+  perKwh: hasil.biayaPerKwh !== null ? uangHalus(hasil.biayaPerKwh) : "—",
+  energiMasuk: kwhKeTeks(hasil.energiMasuk, us ? "en" : "id"),
+  energiDitagih: kwhKeTeks(hasil.energiDitagih, us ? "en" : "id"),
+  km: us ? miKeTeks(hasil.kmDidapat) : kmKeTeks(hasil.kmDidapat),
 };
 
-const ringkas = teksRingkasPengisian(hasil, t);
+const ringkas = teksRingkasPengisian(hasil, t, { region });
 
 /**
  * Contoh yang sudah dihitung: tiga terlaris berk baterai tercatat, skenario
  * sama (20→80%, DC 50 kW, tarif SPKLU). Dihitung fungsi yang sama dengan
  * kalkulator di atas — bukan angka yang diketik tangan — jadi tidak bisa
  * berselisih dengan hasil form. Entri yang hilang dari katalog gugur sendiri.
+ *
+ * Edisi Amerika memakai tiga mobil AS, DC 150 kW, dan tarif Supercharger.
  */
-const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
+const contohIds = us ? ["us-tesla-model-y", "us-tesla-model-3", "us-hyundai-ioniq-5"] : ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"];
+const contohTarif = us ? 0.42 : 2466;
+const contohDaya = us ? 150 : 50;
+const contohIsi = contohIds
   .map((id) => pilihan.find((c: any) => c.id === id))
   .filter((v: any) => v && Number(v.batteryKwh) > 0)
   .map((v: any) => {
@@ -171,16 +197,16 @@ const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
       batteryKwh: v.batteryKwh,
       socAwal: 20,
       socAkhir: 80,
-      dayaKw: 50,
-      tarif: 2466,
+      dayaKw: contohDaya,
+      tarif: contohTarif,
       dayaMaksKendaraan: null,
       rangeKm: v.rangeKm ?? null,
     });
     return {
       nama: `${v.brand} ${v.name}`,
-      masuk: kwhKeTeks(r.energiMasuk),
+      masuk: kwhKeTeks(r.energiMasuk, us ? "en" : "id"),
       waktu: teksDurasi(r, t),
-      biaya: rupiahPenuh(r.biaya),
+      biaya: uangPenuh(r.biaya),
     };
   });
 ---
@@ -194,11 +220,11 @@ const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
 >
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
-  <SiteHeader site={site} base="/" active="" />
+  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="" region={us ? "us" : "id"} artikel="/artikel" />
 
   <main class="container kalk" id="konten">
     <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-      <a href="/">{t("pub.nav.beranda")}</a>
+      <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
       <span aria-hidden="true">/</span>
       <span class="breadcrumb-current">{t("pub.kalk.titleBiaya")}</span>
     </nav>
@@ -208,7 +234,8 @@ const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
       <p class="kalk-lead">{t("pub.kalk.leadBiaya")}</p>
     </header>
 
-    <form class="kalk-form" id="pengisianForm" method="get" autocomplete="off">
+    <form class="kalk-form" id="pengisianForm" method="get" autocomplete="off" data-region={region}>
+      {us ? <input type="hidden" name="region" value="us" /> : null}
       <div class="kalk-grid">
         <div class="kalk-field kalk-field-wide">
           <label for="f-kendaraan">{t("pub.kalk.kendaraan")}</label>
@@ -251,7 +278,7 @@ const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
           <label for="f-daya">{t("pub.kalk.daya")} <span class="kalk-unit">kW</span></label>
           <input id="f-daya" name="daya" type="number" min="0.1" step="0.1" value={form.dayaKw} />
           <div class="kalk-presets">
-            {DAYA_PRESETS.map((p) => (
+            {dayaPresets.map((p) => (
               <button type="button" class="kalk-preset" data-target="f-daya" data-value={p.value}>
                 {p.i18n ? t(p.i18n) : p.label} <span>{p.value} kW</span>
               </button>
@@ -260,12 +287,13 @@ const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
         </div>
 
         <div class="kalk-field">
-          <label for="f-tarif">{t("pub.kalk.tarif")} <span class="kalk-unit">Rp / kWh</span></label>
+          <label for="f-tarif">{t("pub.kalk.tarif")} <span class="kalk-unit">{us ? "US$ / kWh" : "Rp / kWh"}</span></label>
           <input id="f-tarif" name="tarif" type="number" min="1" step="0.01" value={form.tarif} />
           <div class="kalk-presets">
-            {TARIF_PRESETS.map((p) => (
+            {tarifPresets.map((p) => (
               <button type="button" class="kalk-preset" data-target="f-tarif" data-value={p.value}>
-                {p.i18n ? t(p.i18n) : p.label} <span>≈{Math.round(p.value).toLocaleString(intl)}</span>
+                {p.i18n ? t(p.i18n) : p.label}{" "}
+                <span>≈{us ? `US$${Number(p.value).toFixed(2)}` : Math.round(p.value).toLocaleString(intl)}</span>
               </button>
             ))}
           </div>
@@ -320,7 +348,7 @@ const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
 
     <section class="kalk-section">
       <h2>{t("pub.isiX.contohT")}</h2>
-      <p class="section-note">{t("pub.isiX.contohD")}</p>
+      <p class="section-note">{us ? t("pub.region.contohDBiaya") : t("pub.isiX.contohD")}</p>
       {contohIsi.length ? (
         <div class="compare-scroll">
           <table class="compare-table">
@@ -350,22 +378,45 @@ const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
     <section class="kalk-section">
       <h2>{t("pub.isiX.faqT")}</h2>
       <div class="faq-list">
-        <details class="faq-item">
-          <summary>{t("pub.isiX.faq1q")}</summary>
-          <p>{t("pub.isiX.faq1a")}</p>
-        </details>
-        <details class="faq-item">
-          <summary>{t("pub.isiX.faq2q")}</summary>
-          <p>{t("pub.isiX.faq2a")}</p>
-        </details>
-        <details class="faq-item">
-          <summary>{t("pub.isiX.faq3q")}</summary>
-          <p>{t("pub.isiX.faq3a")}</p>
-        </details>
-        <details class="faq-item">
-          <summary>{t("pub.isiX.faq4q")}</summary>
-          <p>{t("pub.isiX.faq4a")}</p>
-        </details>
+        {us ? (
+          <>
+            <details class="faq-item">
+              <summary>{t("pub.kalk.usFaq1q")}</summary>
+              <p>{t("pub.kalk.usFaq1a")}</p>
+            </details>
+            <details class="faq-item">
+              <summary>{t("pub.kalk.usFaq2q")}</summary>
+              <p>{t("pub.kalk.usFaq2a")}</p>
+            </details>
+            <details class="faq-item">
+              <summary>{t("pub.kalk.usFaq3q")}</summary>
+              <p>{t("pub.kalk.usFaq3a")}</p>
+            </details>
+            <details class="faq-item">
+              <summary>{t("pub.kalk.usFaq4q")}</summary>
+              <p>{t("pub.kalk.usFaq4a")}</p>
+            </details>
+          </>
+        ) : (
+          <>
+            <details class="faq-item">
+              <summary>{t("pub.isiX.faq1q")}</summary>
+              <p>{t("pub.isiX.faq1a")}</p>
+            </details>
+            <details class="faq-item">
+              <summary>{t("pub.isiX.faq2q")}</summary>
+              <p>{t("pub.isiX.faq2a")}</p>
+            </details>
+            <details class="faq-item">
+              <summary>{t("pub.isiX.faq3q")}</summary>
+              <p>{t("pub.isiX.faq3a")}</p>
+            </details>
+            <details class="faq-item">
+              <summary>{t("pub.isiX.faq4q")}</summary>
+              <p>{t("pub.isiX.faq4a")}</p>
+            </details>
+          </>
+        )}
       </div>
     </section>
 
@@ -382,9 +433,9 @@ const contohIsi = ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"]
     <section class="kalk-section">
       <h2>{t("pub.kalk.lanjut")}</h2>
       <div class="tag-row">
-        <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">{t("pub.kalk.kalkulatorHemat")}</a>
-        {site.showSpklu ? <a class="tag-pill" href="/#spklu">{t("pub.kalk.daftarSpklu")}</a> : null}
-        <a class="tag-pill" href="/katalog">{t("pub.koleksi.katalogLengkap")}</a>
+        <a class="tag-pill" href={us ? "/kalkulator/hemat-listrik-vs-bensin?region=us" : "/kalkulator/hemat-listrik-vs-bensin"}>{t("pub.kalk.kalkulatorHemat")}</a>
+        {site.showSpklu ? <a class="tag-pill" href={us ? "/amerika#spklu" : "/#spklu"}>{us ? t("pub.nav.spklu") : t("pub.kalk.daftarSpklu")}</a> : null}
+        <a class="tag-pill" href={us ? "/amerika#daftar" : "/katalog"}>{t("pub.koleksi.katalogLengkap")}</a>
       </div>
     </section>
   </main>

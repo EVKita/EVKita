@@ -12,8 +12,10 @@ import { jadwalkanPeluncuran } from "./lib/peluncuran-rekam";
 import { jadwalkanPembaruan } from "./lib/pembaruan-kendaraan";
 import { jadwalkanPantauan } from "./lib/pemantau";
 import { jadwalkanPenjualan } from "./lib/penjualan-bulanan";
+import { jadwalkanPenjualanAmerika } from "./lib/penjualan-amerika";
 import { SESSION_COOKIE } from "./lib/auth";
 import { normalizeLangParam, parseAcceptLanguage, PUB_COOKIE, PUB_DEFAULT } from "./lib/i18n/pub.js";
+import { wilayahDariPath } from "./lib/region.js";
 import { apakahBot } from "./lib/trafik.js";
 
 /**
@@ -189,6 +191,8 @@ function mulaiPenjadwalInterval(): void {
         jadwalkanPembaruan();
         jadwalkanPantauan();
         jadwalkanPenjualan();
+        /* Penjualan Amerika kuartalan: menandai angka Cox yang basi. */
+        jadwalkanPenjualanAmerika();
         jadwalkanGeoip();
       } catch {
         /* tidak ada yang boleh menjatuhkan proses */
@@ -218,6 +222,11 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
     const langCookie = normalizeLangParam(context.cookies.get(PUB_COOKIE)?.value);
     if (langCookie) {
       context.locals.pubLang = langCookie;
+    } else if (wilayahDariPath(context.url.pathname) === "us") {
+      /* Edisi Amerika berbahasa Inggris bila pengunjung belum memilih bahasa —
+         robot included, supaya yang terindeks versi Inggrisnya. Pilihan
+         eksplisit (?lang=/cookie) di atas tetap menang. */
+      context.locals.pubLang = "en";
     } else if (apakahBot(context.request.headers.get("user-agent") || "")) {
       context.locals.pubLang = PUB_DEFAULT;
     } else {
@@ -331,6 +340,8 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   jadwalkanPantauan();
   /* Penjualan bulanan: menandai angka Gaikindo yang basi untuk putaran riset. */
   jadwalkanPenjualan();
+  /* Penjualan Amerika kuartalan: menandai angka Cox yang basi untuk putaran riset. */
+  jadwalkanPenjualanAmerika();
 
   return response;
 };

@@ -7,15 +7,22 @@ import { vehicleHref } from "../../lib/card-html.js";
 import {
   DEFAULTS,
   TARIF_PRESETS,
+  TARIF_PRESETS_US,
+  MIL_KM,
+  GALON_LITER,
+  MPG_PER_KML,
   consumptionKwhPer100,
   hitungHemat,
   rupiahPenuh,
   rupiahHalus,
+  dolarPenuh,
+  dolarHalus,
   teksBalikModal,
   teksRingkas,
 } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
+import { filterWilayah } from "../../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
 
 /**
@@ -40,14 +47,22 @@ const site = cmsSite(content.site, lang);
 const t = makePubT(lang);
 const intl = pubIntl(lang);
 
-const cars = (content.cars || []).filter(hanyaTayang());
+const q = Astro.url.searchParams;
+
+/**
+ * Edisi kalkulator: `?region=us` memakai mobil Amerika, dolar, galon, dan
+ * mil. Mesin hitung tetap metrik — isian tampilan dikonversi ke metrik
+ * sebelum dihitung, hasilnya dikonversi kembali sebelum ditampilkan.
+ */
+const region = q.get("region") === "us" ? "us" : "id";
+const us = region === "us";
+
+const cars = filterWilayah(content.cars, region).filter(hanyaTayang());
 
 /** Hanya mobil yang datanya cukup untuk dihitung yang boleh muncul di pilihan. */
 const pilihan = cars
   .map((c: any) => ({ ...c, kwhPer100: consumptionKwhPer100(c) }))
   .filter((c: any) => c.kwhPer100 !== null);
-
-const q = Astro.url.searchParams;
 
 /**
  * Membaca satu parameter URL, atau memakai nilai bawaannya.
@@ -67,18 +82,35 @@ const num = (key: string, fallback: number | "") => {
 const mobilId = q.get("mobil") || "";
 const terpilih = pilihan.find((c: any) => c.id === mobilId) || pilihan[0] || null;
 
+/* Isian tampil dalam satuan edisi; mesin di bawah menerima metrik. */
+const bulat1 = (n: number) => Math.round(n * 10) / 10;
 const form = {
   mobil: terpilih ? terpilih.id : "",
-  kwhPer100: num("kwh", terpilih ? terpilih.kwhPer100 : 17),
-  elecPrice: num("listrik", DEFAULTS.elecPrice),
-  fuelPrice: num("bbm", DEFAULTS.fuelPrice),
-  kmPerLiter: num("kml", DEFAULTS.kmPerLiter),
-  kmPerMonth: num("km", DEFAULTS.kmPerMonth),
+  kwhPer100: num("kwh", terpilih ? bulat1(terpilih.kwhPer100 * (us ? MIL_KM : 1)) : us ? 27 : 17),
+  elecPrice: num("listrik", us ? 0.17 : DEFAULTS.elecPrice),
+  fuelPrice: num("bbm", us ? 3.5 : DEFAULTS.fuelPrice),
+  kmPerLiter: num("kml", us ? 30 : DEFAULTS.kmPerLiter),
+  kmPerMonth: num("km", us ? 1000 : DEFAULTS.kmPerMonth),
   evPrice: num("hargaEv", terpilih && terpilih.price ? terpilih.price : ""),
   icePrice: num("hargaBensin", ""),
 };
 
-const hasil = hitungHemat(form);
+/* "": isian yang dikosongkan tetap kosong — jangan diubah jadi 0 oleh konversi. */
+const cvBagi = (v: number | "", f: number) => (v === "" ? "" : v / f);
+const cvKali = (v: number | "", f: number) => (v === "" ? "" : v * f);
+const hasil = hitungHemat(
+  us
+    ? {
+        kwhPer100: cvBagi(form.kwhPer100, MIL_KM),
+        elecPrice: form.elecPrice,
+        kmPerLiter: cvKali(form.kmPerLiter, 1 / MPG_PER_KML),
+        fuelPrice: cvBagi(form.fuelPrice, GALON_LITER),
+        kmPerMonth: cvKali(form.kmPerMonth, MIL_KM),
+        evPrice: form.evPrice,
+        icePrice: form.icePrice,
+      }
+    : form
+);
 
 /**
  * Data mobil yang disuntik ke browser dipangkas ke tiga field yang benar-benar
@@ -96,7 +128,7 @@ const pageTitle = `${t("pub.kalk.pageHemat")} — ${brand}`;
 const metaDesc = t("pub.kalk.descHemat");
 
 const origin = siteOrigin(Astro.url);
-const canonical = canonicalUrl(Astro.url);
+const canonical = us ? `${origin}/kalkulator/hemat-listrik-vs-bensin?region=us` : canonicalUrl(Astro.url);
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -108,7 +140,7 @@ const jsonLd = {
       applicationCategory: "FinanceApplication",
       operatingSystem: "Web",
       description: metaDesc,
-      offers: { "@type": "Offer", price: 0, priceCurrency: "IDR" },
+      offers: { "@type": "Offer", price: 0, priceCurrency: us ? "USD" : "IDR" },
     },
     {
       "@type": "BreadcrumbList",
@@ -125,46 +157,64 @@ const jsonLd = {
  * fungsi yang sama persis, jadi tidak ada satu pun kalimat di sini yang
  * dirakit dua kali di dua tempat.
  */
+const uangPenuh = us ? dolarPenuh : rupiahPenuh;
+const uangHalus = us ? dolarHalus : rupiahHalus;
+/* Biaya per km mesin dikali mil untuk edisi Amerika. */
+const perJarak = (n: number | null) => (n === null ? null : us ? n * MIL_KM : n);
 const teks = {
-  evMonthly: rupiahPenuh(hasil.evMonthly),
-  iceMonthly: rupiahPenuh(hasil.iceMonthly),
-  evPerKm: rupiahHalus(hasil.evPerKm),
-  icePerKm: rupiahHalus(hasil.icePerKm),
-  savingMonthly: rupiahPenuh(hasil.savingMonthly),
-  savingYearly: rupiahPenuh(hasil.savingYearly),
+  evMonthly: uangPenuh(hasil.evMonthly),
+  iceMonthly: uangPenuh(hasil.iceMonthly),
+  evPerKm: uangHalus(perJarak(hasil.evPerKm)),
+  icePerKm: uangHalus(perJarak(hasil.icePerKm)),
+  savingMonthly: uangPenuh(hasil.savingMonthly),
+  savingYearly: uangPenuh(hasil.savingYearly),
   payback: teksBalikModal(hasil, t),
 };
 
-const ringkas = teksRingkas(hasil, t);
+const ringkas = teksRingkas(hasil, t, { region });
 
 /**
  * Contoh menurut jarak tempuh: asumsi bawaan (Atto 1 10 kWh/100 km, listrik
  * rumah, bensin 13 rb @ 12 km/l) dengan contoh selisih harga Rp45 jt.
  * Dihitung `hitungHemat()` yang sama dengan form di atas — bukan angka
  * ketikan — jadi tidak bisa berselisih dengan kalkulatornya.
+ *
+ * Edisi Amerika memakai mil, dolar, dan galon — polanya sama, angkanya Amerika.
  */
-const contohProfil = [1000, 2000, 3000].map((km) => {
-  const r = hitungHemat({
-    kwhPer100: 10,
-    elecPrice: 1444.7,
-    fuelPrice: 13000,
-    kmPerLiter: 12,
-    kmPerMonth: km,
-    evPrice: 195000000,
-    icePrice: 150000000,
-  });
-  return { km: km.toLocaleString(intl), hemat: rupiahPenuh(r.savingMonthly), kembali: teksBalikModal(r, t) };
+const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) => {
+  const r = hitungHemat(
+    us
+      ? {
+          kwhPer100: 40 / MIL_KM,
+          elecPrice: 0.17,
+          fuelPrice: 3.5 / GALON_LITER,
+          kmPerLiter: 30 / MPG_PER_KML,
+          kmPerMonth: jarak * MIL_KM,
+          evPrice: 45000,
+          icePrice: 38000,
+        }
+      : {
+          kwhPer100: 10,
+          elecPrice: 1444.7,
+          fuelPrice: 13000,
+          kmPerLiter: 12,
+          kmPerMonth: jarak,
+          evPrice: 195000000,
+          icePrice: 150000000,
+        }
+  );
+  return { km: us ? jarak.toLocaleString("en-US") : jarak.toLocaleString(intl), hemat: uangPenuh(r.savingMonthly), kembali: teksBalikModal(r, t) };
 });
 ---
 
 <Base title={pageTitle} description={metaDesc} keywords={t("pub.kalk.keywordHemat")} ogImage={site.seoOgImage} site={site}>
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
-  <SiteHeader site={site} base="/" active="" />
+  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="" region={us ? "us" : "id"} artikel="/artikel" />
 
   <main class="container kalk" id="konten">
     <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-      <a href="/">{t("pub.nav.beranda")}</a>
+      <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
       <span aria-hidden="true">/</span>
       <span class="breadcrumb-current">{t("pub.kalk.titleHemat")}</span>
     </nav>
@@ -174,7 +224,8 @@ const contohProfil = [1000, 2000, 3000].map((km) => {
       <p class="kalk-lead">{t("pub.kalk.leadHemat")}</p>
     </header>
 
-    <form class="kalk-form" id="kalkForm" method="get" autocomplete="off">
+    <form class="kalk-form" id="kalkForm" method="get" autocomplete="off" data-region={region}>
+      {us ? <input type="hidden" name="region" value="us" /> : null}
       <div class="kalk-grid">
         <div class="kalk-field kalk-field-wide">
           <label for="f-mobil">{t("pub.kalk.mobilListrik")}</label>
@@ -187,45 +238,46 @@ const contohProfil = [1000, 2000, 3000].map((km) => {
         </div>
 
         <div class="kalk-field">
-          <label for="f-kwh">{t("pub.kalk.konsumsi")} <span class="kalk-unit">kWh / 100 km</span></label>
+          <label for="f-kwh">{t("pub.kalk.konsumsi")} <span class="kalk-unit">{us ? t("pub.region.unitKwh100mi") : "kWh / 100 km"}</span></label>
           <input id="f-kwh" name="kwh" type="number" min="1" step="0.1" value={form.kwhPer100} />
           <p class="kalk-hint">{t("pub.kalk.hintKonsumsi")}</p>
         </div>
 
         <div class="kalk-field">
-          <label for="f-listrik">{t("pub.kalk.tarif")} <span class="kalk-unit">Rp / kWh</span></label>
+          <label for="f-listrik">{t("pub.kalk.tarif")} <span class="kalk-unit">{us ? "US$ / kWh" : "Rp / kWh"}</span></label>
           <input id="f-listrik" name="listrik" type="number" min="1" step="0.01" value={form.elecPrice} />
           <div class="kalk-presets">
-            {TARIF_PRESETS.map((p) => (
+            {(us ? TARIF_PRESETS_US : TARIF_PRESETS).map((p) => (
               <button type="button" class="kalk-preset" data-target="f-listrik" data-value={p.value}>
-                {p.i18n ? t(p.i18n) : p.label} <span>≈{Math.round(p.value).toLocaleString(intl)}</span>
+                {p.i18n ? t(p.i18n) : p.label}{" "}
+                <span>≈{us ? `US$${Number(p.value).toFixed(2)}` : Math.round(p.value).toLocaleString(intl)}</span>
               </button>
             ))}
           </div>
         </div>
 
         <div class="kalk-field">
-          <label for="f-bbm">{t("pub.kalk.hargaBbm")} <span class="kalk-unit">Rp / liter</span></label>
+          <label for="f-bbm">{t("pub.kalk.hargaBbm")} <span class="kalk-unit">{us ? t("pub.region.unitGalon") : "Rp / liter"}</span></label>
           <input id="f-bbm" name="bbm" type="number" min="1" step="100" value={form.fuelPrice} />
         </div>
 
         <div class="kalk-field">
-          <label for="f-kml">{t("pub.kalk.konsumsiBensin")} <span class="kalk-unit">km / liter</span></label>
+          <label for="f-kml">{t("pub.kalk.konsumsiBensin")} <span class="kalk-unit">{us ? t("pub.region.unitMpg") : "km / liter"}</span></label>
           <input id="f-kml" name="kml" type="number" min="1" step="0.1" value={form.kmPerLiter} />
         </div>
 
         <div class="kalk-field">
-          <label for="f-km">{t("pub.kalk.jarakBulan")} <span class="kalk-unit">{t("pub.kalk.kmBulan")}</span></label>
+          <label for="f-km">{t("pub.kalk.jarakBulan")} <span class="kalk-unit">{us ? t("pub.region.unitMilBulan") : t("pub.kalk.kmBulan")}</span></label>
           <input id="f-km" name="km" type="number" min="1" step="50" value={form.kmPerMonth} />
         </div>
 
         <div class="kalk-field">
-          <label for="f-harga-ev">{t("pub.kalk.hargaEv")} <span class="kalk-unit">Rp</span></label>
+          <label for="f-harga-ev">{t("pub.kalk.hargaEv")} <span class="kalk-unit">{us ? "US$" : "Rp"}</span></label>
           <input id="f-harga-ev" name="hargaEv" type="number" min="0" step="1000000" value={form.evPrice || ""} />
         </div>
 
         <div class="kalk-field">
-          <label for="f-harga-bensin">{t("pub.kalk.hargaBensin")} <span class="kalk-unit">Rp</span></label>
+          <label for="f-harga-bensin">{t("pub.kalk.hargaBensin")} <span class="kalk-unit">{us ? "US$" : "Rp"}</span></label>
           <input id="f-harga-bensin" name="hargaBensin" type="number" min="0" step="1000000" value={form.icePrice || ""} placeholder={t("pub.kalk.opsional")} />
           <p class="kalk-hint">{t("pub.kalk.hintHargaBensin")}</p>
         </div>
@@ -245,12 +297,12 @@ const contohProfil = [1000, 2000, 3000].map((km) => {
         <div class="kalk-card">
           <span class="kalk-card-label">{t("pub.kalk.listrikBulan")}</span>
           <strong class="kalk-card-value" id="r-ev">{teks.evMonthly}</strong>
-          <span class="kalk-card-sub"><span id="r-ev-km">{teks.evPerKm}</span> {t("pub.kalk.perKm")}</span>
+          <span class="kalk-card-sub"><span id="r-ev-km">{teks.evPerKm}</span> {us ? t("pub.region.perMile") : t("pub.kalk.perKm")}</span>
         </div>
         <div class="kalk-card">
           <span class="kalk-card-label">{t("pub.kalk.bensinBulan")}</span>
           <strong class="kalk-card-value" id="r-ice">{teks.iceMonthly}</strong>
-          <span class="kalk-card-sub"><span id="r-ice-km">{teks.icePerKm}</span> {t("pub.kalk.perKm")}</span>
+          <span class="kalk-card-sub"><span id="r-ice-km">{teks.icePerKm}</span> {us ? t("pub.region.perMile") : t("pub.kalk.perKm")}</span>
         </div>
         <div class="kalk-card kalk-card-accent">
           <span class="kalk-card-label">{t("pub.kalk.selisih")}</span>
@@ -273,7 +325,7 @@ const contohProfil = [1000, 2000, 3000].map((km) => {
 
     <section class="kalk-section">
       <h2>{t("pub.hemX.profilT")}</h2>
-      <p class="section-note">{t("pub.hemX.profilD")}</p>
+      <p class="section-note">{us ? t("pub.region.usProfilD") : t("pub.hemX.profilD")}</p>
       <div class="compare-scroll">
         <table class="compare-table">
           <thead>
@@ -286,7 +338,7 @@ const contohProfil = [1000, 2000, 3000].map((km) => {
           <tbody>
             {contohProfil.map((c: any) => (
               <tr>
-                <th scope="row">{c.km} km</th>
+                <th scope="row">{c.km} {us ? "mi" : "km"}</th>
                 <td>{c.hemat}</td>
                 <td>{c.kembali}</td>
               </tr>
@@ -294,7 +346,7 @@ const contohProfil = [1000, 2000, 3000].map((km) => {
           </tbody>
         </table>
       </div>
-      <p class="kalk-hint">{t("pub.hemX.acuan")}</p>
+      <p class="kalk-hint">{us ? t("pub.region.usAcuan") : t("pub.hemX.acuan")}</p>
       <h3 class="mulai-faq-title">{t("pub.hemX.caraT")}</h3>
       <p class="section-note">{t("pub.hemX.caraD")}</p>
     </section>
@@ -311,8 +363,8 @@ const contohProfil = [1000, 2000, 3000].map((km) => {
           <p>{t("pub.hemX.faq2a")}</p>
         </details>
         <details class="faq-item">
-          <summary>{t("pub.hemX.faq3q")}</summary>
-          <p>{t("pub.hemX.faq3a")}</p>
+          <summary>{us ? t("pub.hemX.usFaq3q") : t("pub.hemX.faq3q")}</summary>
+          <p>{us ? t("pub.hemX.usFaq3a") : t("pub.hemX.faq3a")}</p>
         </details>
       </div>
     </section>
@@ -332,9 +384,9 @@ const contohProfil = [1000, 2000, 3000].map((km) => {
     <section class="kalk-section">
       <h2>{t("pub.kalk.lanjut")}</h2>
       <div class="tag-row">
-        <a class="tag-pill" href="/kalkulator/biaya-pengisian">{t("pub.kalk.titleBiaya")}</a>
-        <a class="tag-pill" href="/katalog">{t("pub.koleksi.katalogLengkap")}</a>
-        <a class="tag-pill" href="/merek">{t("pub.koleksi.semua", { jenis: t("pub.koleksi.jenisMerek") })}</a>
+        <a class="tag-pill" href={us ? "/kalkulator/biaya-pengisian?region=us" : "/kalkulator/biaya-pengisian"}>{t("pub.kalk.titleBiaya")}</a>
+        <a class="tag-pill" href={us ? "/katalog?region=us" : "/katalog"}>{t("pub.koleksi.katalogLengkap")}</a>
+        <a class="tag-pill" href={us ? "/merek?region=us" : "/merek"}>{t("pub.koleksi.semua", { jenis: t("pub.koleksi.jenisMerek") })}</a>
       </div>
     </section>
   </main>

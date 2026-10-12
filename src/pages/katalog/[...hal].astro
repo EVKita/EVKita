@@ -7,6 +7,7 @@ import { cardHTML, defaultSort } from "../../lib/card-html.js";
 import { PER_PAGE, pageCount, pageSlice, pageHref, pageWindow } from "../../lib/pagination.js";
 import { siteOrigin, canonicalUrl, absoluteUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
+import { filterWilayah } from "../../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
 import { terjemahContent } from "../../lib/terjemahan.js";
 
@@ -34,7 +35,10 @@ const t = makePubT(lang);
 const content = await terjemahContent(readContent(), lang);
 const site = cmsSite(content.site, lang);
 
-const cars = defaultSort((content.cars || []).filter(hanyaTayang()));
+/* Edisi katalog: `?region=us` hanya memuat mobil Amerika. */
+const region = Astro.url.searchParams.get("region") === "us" ? "us" : "id";
+const us = region === "us";
+const cars = defaultSort(filterWilayah(content.cars, region).filter(hanyaTayang()));
 
 const total = cars.length;
 const jumlahHalaman = pageCount(total, PER_PAGE);
@@ -54,9 +58,9 @@ if (segmen.length === 0) {
   halaman = Number(segmen[0]);
 }
 
-/* Satu halaman, satu alamat: "/katalog/1" adalah "/katalog". */
+/* Satu halaman, satu alamat: "/katalog/1" adalah "/katalog" — edisinya ikut. */
 if (halaman === 1 && segmen.length === 1) {
-  return Astro.redirect("/katalog", 301);
+  return Astro.redirect(us ? "/katalog?region=us" : "/katalog", 301);
 }
 
 const adaHalaman = halaman !== null && halaman >= 1 && halaman <= jumlahHalaman;
@@ -69,10 +73,21 @@ const daftar = adaHalaman ? pageSlice(cars, nomor, PER_PAGE) : [];
 const gridHtml = daftar.map((c: any) => cardHTML(c, { linkable: true, media: content.media, t, lang })).join("");
 
 const origin = siteOrigin(Astro.url);
-const canonical = canonicalUrl(Astro.url);
+/* Kanonis mempertahankan ?region=us — tanpanya edisi Amerika terindeks
+   sebagai halaman Indonesia. */
+const canonical = us
+  ? `${origin}/katalog${nomor > 1 ? `/${nomor}` : ""}?region=us`
+  : canonicalUrl(Astro.url);
 
-const prevHref = adaHalaman && nomor > 1 ? pageHref(nomor - 1) : "";
-const nextHref = adaHalaman && nomor < jumlahHalaman ? pageHref(nomor + 1) : "";
+/* Tautan halaman mempertahankan edisinya — tanpanya mengeklik nomor halaman
+   menendang pembaca Amerika kembali ke katalog Indonesia. */
+const hrefHal = (n: number) => {
+  const h = pageHref(n);
+  return us ? `${h}?region=us` : h;
+};
+
+const prevHref = adaHalaman && nomor > 1 ? hrefHal(nomor - 1) : "";
+const nextHref = adaHalaman && nomor < jumlahHalaman ? hrefHal(nomor + 1) : "";
 const window = adaHalaman ? pageWindow(nomor, jumlahHalaman) : [];
 
 /** Nomor urut kartu pertama dan terakhir di halaman ini, untuk "1–12 dari 28". */
@@ -82,14 +97,14 @@ const sampai = Math.min(nomor * PER_PAGE, total);
 const brand = site.brandText || "EVKita";
 const pageTitle = adaHalaman
   ? nomor === 1
-    ? t("pub.katalog.pageTitle1", { brand })
-    : t("pub.katalog.pageTitleN", { nomor, jumlahHalaman, brand })
+    ? us ? t("pub.region.katalogPageTitle", { brand }) : t("pub.katalog.pageTitle1", { brand })
+    : us ? t("pub.region.katalogPageTitleN", { nomor, jumlahHalaman, brand }) : t("pub.katalog.pageTitleN", { nomor, jumlahHalaman, brand })
   : `${t("pub.koleksi.notFound")} — ${brand}`;
 
 const metaDesc = adaHalaman
   ? nomor === 1
-    ? t("pub.katalog.meta1", { total })
-    : t("pub.katalog.metaN", { dari, sampai, total })
+    ? us ? t("pub.region.katalogMeta", { total }) : t("pub.katalog.meta1", { total })
+    : us ? t("pub.region.katalogMetaN", { dari, sampai, total }) : t("pub.katalog.metaN", { dari, sampai, total })
   : t("pub.notFound.desc");
 
 const jsonLd = adaHalaman
@@ -98,7 +113,7 @@ const jsonLd = adaHalaman
       "@graph": [
         {
           "@type": "ItemList",
-          name: t("pub.katalog.halamanJudul", { nomor }),
+          name: us ? t("pub.region.katalogHalaman", { nomor }) : t("pub.katalog.halamanJudul", { nomor }),
           url: canonical,
           numberOfItems: daftar.length,
           itemListElement: daftar.map((c: any, i: number) => ({
@@ -114,7 +129,7 @@ const jsonLd = adaHalaman
           "@type": "BreadcrumbList",
           itemListElement: [
             { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}/` },
-            { "@type": "ListItem", position: 2, name: t("pub.katalog"), item: `${origin}/katalog` },
+            { "@type": "ListItem", position: 2, name: us ? t("pub.region.katalogJudul") : t("pub.katalog"), item: us ? `${origin}/katalog?region=us` : `${origin}/katalog` },
             ...(nomor > 1
               ? [{ "@type": "ListItem", position: 3, name: t("pub.katalog.crumbHalaman", { nomor }) }]
               : []),
@@ -133,7 +148,7 @@ const jsonLd = adaHalaman
   {nextHref ? <link slot="head" rel="next" href={absoluteUrl(Astro.url, nextHref)} /> : null}
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base="/" active="mobil" />
+  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="mobil" region={us ? "us" : "id"} artikel="/artikel" />
 
   {!adaHalaman ? (
     <main class="container notfound" id="konten">
@@ -142,18 +157,18 @@ const jsonLd = adaHalaman
       <p class="notfound-text">
         {t("pub.katalog.404Text", { jumlahHalaman })}
       </p>
-      <a class="btn btn-primary" href="/katalog">{t("pub.detail.bukaKatalog")}</a>
+      <a class="btn btn-primary" href={us ? "/katalog?region=us" : "/katalog"}>{t("pub.detail.bukaKatalog")}</a>
     </main>
   ) : (
     <main class="container katalog" id="konten">
       <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-        <a href="/">{t("pub.nav.beranda")}</a>
+        <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         {nomor === 1 ? (
           <span class="breadcrumb-current">{t("pub.katalog")}</span>
         ) : (
           <>
-            <a href="/katalog">{t("pub.katalog")}</a>
+            <a href={us ? "/katalog?region=us" : "/katalog"}>{us ? t("pub.region.katalogJudul") : t("pub.katalog")}</a>
             <span aria-hidden="true">/</span>
             <span class="breadcrumb-current">{t("pub.katalog.crumbHalaman", { nomor })}</span>
           </>
@@ -161,10 +176,10 @@ const jsonLd = adaHalaman
       </nav>
 
       <header class="katalog-head">
-        <h1>{nomor === 1 ? t("pub.katalog.judul") : t("pub.katalog.halamanJudul", { nomor })}</h1>
+        <h1>{nomor === 1 ? (us ? t("pub.region.katalogJudul") : t("pub.katalog.judul")) : (us ? t("pub.region.katalogHalaman", { nomor }) : t("pub.katalog.halamanJudul", { nomor }))}</h1>
         <p class="katalog-lead">
           <Fragment set:html={t("pub.katalog.lead", { dari, sampai, total })} />
-          {" "}<a href="/#daftar">{t("pub.katalog.leadLink")}</a>
+          {" "}<a href={us ? "/amerika#daftar" : "/#daftar"}>{us ? t("pub.region.katalogLeadLink") : t("pub.katalog.leadLink")}</a>
         </p>
       </header>
 
@@ -187,7 +202,7 @@ const jsonLd = adaHalaman
                   {n === nomor ? (
                     <span class="pager-num is-current" aria-current="page">{n}</span>
                   ) : (
-                    <a class="pager-num" href={pageHref(n as number)}>{n}</a>
+                    <a class="pager-num" href={hrefHal(n as number)}>{n}</a>
                   )}
                 </li>
               )

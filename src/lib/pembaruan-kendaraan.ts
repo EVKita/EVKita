@@ -155,15 +155,19 @@ export function aktif(): boolean {
  */
 async function risetSatu(
   apiKey: string,
-  kendaraan: { col: string; kind: "mobil" | "motor"; brand: string; name: string }
+  kendaraan: { col: string; kind: "mobil" | "motor"; brand: string; name: string; wilayah?: string }
 ): Promise<{ usulan: any[]; biayaRupiah: number; errorKey: string }> {
   const model = modelBawaan();
-  const schema = buildSchema(kendaraan.kind, null);
+  const schema = buildSchema(kendaraan.kind, null, (kendaraan as any)?.wilayah);
+  const us = (kendaraan as any)?.wilayah === "us";
   const instructions = buildInstructions({
     kind: kendaraan.kind,
     brand: kendaraan.brand,
     name: kendaraan.name,
     today: tanggalWib(),
+    /* Kendaraan Amerika diriset untuk pasar Amerika — tanpa ini angkanya
+       memakai konteks Indonesia. */
+    wilayah: (kendaraan as any)?.wilayah,
   });
 
   const ac = new AbortController();
@@ -180,7 +184,9 @@ async function risetSatu(
       effort: "high",
       maxOutputTokens: 64_000,
       instructions,
-      input: `Riset ${kendaraan.brand} ${kendaraan.name} untuk pasar Indonesia. Jawab hanya dengan JSON sesuai skema.`,
+      input: us
+        ? `Riset ${kendaraan.brand} ${kendaraan.name} untuk pasar Amerika Serikat. Jawab hanya dengan JSON sesuai skema.`
+        : `Riset ${kendaraan.brand} ${kendaraan.name} untuk pasar Indonesia. Jawab hanya dengan JSON sesuai skema.`,
       schema,
       signal: ac.signal,
     });
@@ -320,7 +326,7 @@ export async function jalankanPembaruan({ paksa = false }: { paksa?: boolean } =
       const daftarKolom = (content as any)[k.col] || [];
       const vehicle = daftarKolom.find((v: any) => v.id === k.id) || null;
 
-      const hasil = await risetSatu(apiKey, k);
+      const hasil = await risetSatu(apiKey, { ...k, wilayah: (vehicle as any)?.wilayah });
       biayaTotal += hasil.biayaRupiah;
 
       // Nilai null sudah dibuang di ai-usulan; patch otomatis hanya menerapkan

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { readContent, writeContent } from "./store";
 import { SUMBER_BERITA, relevanBerita, judulBersih } from "./berita-sumber.js";
+import { normalizeWilayah } from "./region.js";
 import { gabungBerita, parseFeed, urlKunci } from "./berita-rss.js";
 
 /**
@@ -25,6 +26,8 @@ import { gabungBerita, parseFeed, urlKunci } from "./berita-rss.js";
 const JADWAL = path.resolve(process.cwd(), "data/berita-jadwal.json");
 /** Batas kewajaran jumlah kartu di Berita Terkini. */
 const MAKS_BERITA = 30;
+/** Edisi Amerika baru seumur jagung — 10 kartu cukup, Indonesia tetap 30. */
+const MAKS_BERITA_US = 10;
 const UA = "Mozilla/5.0 (compatible; EVKitaBot/1.0; +https://evkita.com)";
 
 /** Tanggal menurut WIB, bukan zona waktu server (produksi berjalan di UTC). */
@@ -50,7 +53,7 @@ function tulisJadwal(v: any): void {
 }
 
 /** Mengambil satu feed, menyaring yang relevan, memetakan ke bentuk berita. */
-async function ambilSumber(sumber: { id: string; nama: string; feed: string; stripJudul?: string }): Promise<{ items: any[]; error: string }> {
+async function ambilSumber(sumber: { id: string; nama: string; feed: string; stripJudul?: string; wilayah?: string }): Promise<{ items: any[]; error: string }> {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), 15000);
   try {
@@ -80,6 +83,9 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string; str
         featured: false,
         status: "published",
         publishAt: "",
+        /* Edisi berita mengikuti edisi sumbernya — satu tarikan mengisi
+           Indonesia dan Amerika sekaligus. */
+        wilayah: (sumber.wilayah === "us" ? "us" : "id") as string,
         updatedAt: new Date().toISOString(),
         updatedBy: "",
       }));
@@ -137,9 +143,24 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
   try {
     const hasil = await Promise.all(SUMBER_BERITA.map((s) => ambilSumber(s)));
     const gagal = SUMBER_BERITA.filter((_, i) => hasil[i].error).map((s) => s.nama);
-    const baru = hasil.map((h) => h.items).flat();
+    /* Gabung per edisi supaya jatah Indonesia tidak dimakan Amerika dan
+       sebaliknya — masing-masing punya batasnya sendiri. */
+    const baruId: any[] = [];
+    const baruUs: any[] = [];
+    hasil.forEach((h, i) => {
+      const us = (SUMBER_BERITA[i] as any)?.wilayah === "us";
+      for (const b of h.items || []) (us ? baruUs : baruId).push(b);
+    });
     const content = readContent();
-    const { daftar, ditambah } = gabungBerita(content.berita || [], baru, MAKS_BERITA);
+    const lama = content.berita || [];
+    const lamaId = lama.filter((b: any) => normalizeWilayah(b && b.wilayah) !== "us");
+    const lamaUs = lama.filter((b: any) => normalizeWilayah(b && b.wilayah) === "us");
+    const gId = gabungBerita(lamaId, baruId, MAKS_BERITA);
+    const gUs = gabungBerita(lamaUs, baruUs, MAKS_BERITA_US);
+    const daftar = [...gId.daftar, ...gUs.daftar].sort((a: any, b: any) =>
+      String((b && b.date) || "").localeCompare(String((a && a.date) || ""))
+    );
+    const ditambah = gId.ditambah + gUs.ditambah;
     if (ditambah > 0) {
       const segar = { ...content, berita: daftar };
       writeContent(segar);

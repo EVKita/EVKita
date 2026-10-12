@@ -32,6 +32,7 @@
  */
 
 import { tayang } from "./tayang.js";
+import { normalizeWilayah } from "./region.js";
 
 /** Batas panjang. Semuanya batas kewarasan, bukan batas teknis. */
 export const BATAS_LAMAN = {
@@ -71,6 +72,7 @@ export const SLUG_TERPAKAI = [
   "bandingkan",
   "kalkulator",
   "artikel",
+  "amerika",
   "gambar",
   "sitemap",
   "robots",
@@ -147,6 +149,10 @@ export function normalizeLaman(v) {
     showInFooter: bool(v && v.showInFooter, true),
     footerSlot: letak,
     footerLabel: potong(v && v.footerLabel, BATAS_LAMAN.label),
+
+    /* Edisi regional: halaman Indonesia atau Amerika. Kosong berarti
+       Indonesia, jadi seluruh halaman lama tidak perlu migrasi. */
+    wilayah: normalizeWilayah(v && v.wilayah),
 
     // Penayangan — aturannya sama dengan koleksi lain, lihat tayang.js.
     status: teks(v && v.status) === "draft" ? "draft" : "published",

@@ -146,16 +146,17 @@ export function koleksiTitle(jenis, label, s, t) {
  * @param {string} [lang] bahasa harga ("zh" memakai 亿/万, tanpa itu bawaan)
  * @returns {string} satu kalimat lengkap dengan titiknya
  */
-export function koleksiLead(jenis, label, items, t, lang) {
+export function koleksiLead(jenis, label, items, t, lang, region = "id") {
   const tt = t || tId;
+  const us = region === "us";
   const s = summarize(items);
   if (!s.total) return "";
 
   const count = countPhrase(s, tt);
   const pokok =
     jenis === "tipe"
-      ? tt("pub.tax.pokokTipe", { count, label })
-      : tt("pub.tax.pokokMerek", { count, label });
+      ? tt(us ? "pub.region.pokokTipe" : "pub.tax.pokokTipe", { count, label })
+      : tt(us ? "pub.region.pokokMerek" : "pub.tax.pokokMerek", { count, label });
 
   const klausa = [];
 
@@ -173,10 +174,13 @@ export function koleksiLead(jenis, label, items, t, lang) {
   }
 
   if (s.jarakMin !== null) {
+    /* Nilai jarak mengikuti edisi (mil untuk Amerika), satuannya sekali di ujung. */
+    const jarak = (n) => (us ? Math.round(Number(n) / 1.60934) : n);
+    const satuan = us ? "mi" : "km";
     const nilai =
       s.jarakMin === s.jarakMaks
-        ? `${s.jarakMin} km`
-        : `${s.jarakMin}–${s.jarakMaks} km`;
+        ? `${jarak(s.jarakMin)} ${satuan}`
+        : `${jarak(s.jarakMin)}–${jarak(s.jarakMaks)} ${satuan}`;
     klausa.push(tt(s.jarakLengkap ? "pub.tax.jaraknya" : "pub.tax.jarakTercatat", { nilai }));
   }
 
@@ -184,8 +188,9 @@ export function koleksiLead(jenis, label, items, t, lang) {
 }
 
 /** Deskripsi meta — sengaja berbeda dari kalimat pembuka, bukan salinannya. */
-export function koleksiDescription(jenis, label, items, t, lang) {
+export function koleksiDescription(jenis, label, items, t, lang, region = "id") {
   const tt = t || tId;
+  const us = region === "us";
   const s = summarize(items);
   const count = countPhrase(s, tt);
   const apa =
@@ -196,5 +201,5 @@ export function koleksiDescription(jenis, label, items, t, lang) {
       : s.hargaMin !== null
         ? tt("pub.tax.harga", { nilai: rupiah(s.hargaMin, lang) })
         : "";
-  return tt("pub.tax.daftar", { count, apa }) + harga;
+  return tt(us ? "pub.region.daftar" : "pub.tax.daftar", { count, apa }) + harga;
 }

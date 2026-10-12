@@ -5,6 +5,7 @@ import { readJson, writeJsonAtomic, readCached, invalidateCache } from "./jsonfi
 import { APPEARANCE_DEFAULTS, APPEARANCE_FLAGS } from "./theme.js";
 import { MAX_LEGAL_LINKS, normalizeLinks, normalizeMenus } from "./footer.js";
 import { lamanBawaan, normalizeLaman, slugLaman } from "./laman.js";
+import { normalizeWilayah } from "./region.js";
 import { normalizeArtikel } from "./artikel.js";
 import { normalizeMediaMap } from "./media.js";
 
@@ -238,6 +239,10 @@ function normalizeCar(c: any, kind: "mobil" | "motor"): any {
     perluCek: !!c?.perluCek,
     featured: !!c?.featured,
     status,
+    /* Edisi regional (Indonesia/Amerika). Kosong berarti Indonesia — seluruh
+       isi lama otomatis menjadi edisi Indonesia tanpa migrasi. Aturannya di
+       `src/lib/region.js`, satu-satunya tempat yang tahu soal wilayah. */
+    wilayah: normalizeWilayah((c as any)?.wilayah),
     /* Waktu tayang berlaku untuk kelima koleksi lewat `src/lib/tayang.js`.
        Menyediakannya di sini saja tanpa kendaraan akan membuat satu aturan
        berlaku setengah — dan setengah penjadwalan lebih membingungkan daripada
@@ -286,6 +291,8 @@ function normalizeSpklu(v: any): any {
     image: str(v?.image),
     featured: !!v?.featured,
     status: str(v?.status) === "draft" ? "draft" : "published",
+    /* Edisi regional — lihat catatan yang sama di `normalizeCar()`. */
+    wilayah: normalizeWilayah((v as any)?.wilayah),
     publishAt: str(v?.publishAt),
     updatedAt: str(v?.updatedAt),
     updatedBy: str(v?.updatedBy),
@@ -316,6 +323,8 @@ function normalizeBengkel(v: any): any {
     video: str(v?.video),
     featured: !!v?.featured,
     status: str(v?.status) === "draft" ? "draft" : "published",
+    /* Edisi regional — lihat catatan yang sama di `normalizeCar()`. */
+    wilayah: normalizeWilayah((v as any)?.wilayah),
     publishAt: str(v?.publishAt),
     updatedAt: str(v?.updatedAt),
     updatedBy: str(v?.updatedBy),
@@ -331,6 +340,8 @@ function normalizeKomunitas(v: any): any {
     note: str(v?.note),
     featured: !!v?.featured,
     status: str(v?.status) === "draft" ? "draft" : "published",
+    /* Edisi regional — lihat catatan yang sama di `normalizeCar()`. */
+    wilayah: normalizeWilayah((v as any)?.wilayah),
     publishAt: str(v?.publishAt),
     updatedAt: str(v?.updatedAt),
     updatedBy: str(v?.updatedBy),
@@ -351,6 +362,8 @@ function normalizeBerita(v: any): any {
     excerpt: str(v?.excerpt),
     featured: !!v?.featured,
     status: str(v?.status) === "draft" ? "draft" : "published",
+    /* Edisi regional — lihat catatan yang sama di `normalizeCar()`. */
+    wilayah: normalizeWilayah((v as any)?.wilayah),
     publishAt: str(v?.publishAt),
     updatedAt: str(v?.updatedAt),
     updatedBy: str(v?.updatedBy),

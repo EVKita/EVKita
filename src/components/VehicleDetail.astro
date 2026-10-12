@@ -49,6 +49,10 @@ const site = cmsSite(siteProp, lang);
 const intl = pubIntl(lang);
 
 const isMotor = kind === "motor";
+/* Kendaraan terkait tetap se-wilayah: halaman Amerika tidak mengusulkan
+   model Indonesia, dan sebaliknya. */
+const us = car && car.wilayah === "us";
+const suffix = us ? "?region=us" : "";
 const noun = isMotor ? t("pub.tax.motor") : t("pub.tax.mobil");
 const nounSatu = isMotor ? t("pub.tax.motorSatu") : t("pub.tax.mobilSatu");
 const nounCap = isMotor ? t("pub.detail.motorCap") : t("pub.detail.mobilCap");
@@ -58,13 +62,13 @@ const nounCap = isMotor ? t("pub.detail.motorCap") : t("pub.detail.mobilCap");
  * motor kini punya yang sama di /katalog-motor.
  */
 const induk = isMotor
-  ? { label: t("pub.tax.titleMotor"), href: "/katalog-motor" }
-  : { label: t("pub.katalog"), href: "/katalog" };
+  ? { label: t("pub.tax.titleMotor"), href: us ? `/katalog-motor?region=us` : "/katalog-motor" }
+  : { label: t("pub.katalog"), href: us ? `/katalog?region=us` : "/katalog" };
 
 const lower = (s: any) => String(s || "").toLowerCase();
 const fmt = (v: any, unit: string) => (v !== null && v !== undefined && v !== "" ? `${v} ${unit}`.trim() : "");
 
-const fmtRange = car ? fmt(car.rangeKm, "km") : "";
+const fmtRange = car ? (us ? (car.rangeKm != null ? `± ${Math.round(Number(car.rangeKm) / 1.60934)} mi` : "") : fmt(car.rangeKm, "km")) : "";
 const fmtBattery = car ? fmt(car.batteryKwh, "kWh") : "";
 const fmtPower = car ? fmt(car.powerHp, "hp") : "";
 
@@ -94,11 +98,11 @@ const highlights = car
 
 const related = car
   ? pool
-      .filter((c: any) => c.id !== car.id && (c.brand === car.brand || c.bodyType === car.bodyType))
+      .filter((c: any) => c.id !== car.id && (c.brand === car.brand || c.bodyType === car.bodyType) && (!us || c.wilayah === "us") && (us || c.wilayah !== "us"))
       .slice(0, 4)
   : [];
 
-const priceText = car ? car.priceText || (car.price != null ? "Rp " + Number(car.price).toLocaleString(intl) : "") : "";
+const priceText = car ? car.priceText || (car.price != null ? (us ? "US$" : "Rp ") + Number(car.price).toLocaleString(intl) : "") : "";
 
 /**
  * Alamat halaman kelompok. Merek dan tipe bodi kini punya halamannya sendiri,
@@ -106,8 +110,8 @@ const priceText = car ? car.priceText || (car.price != null ? "Rp " + Number(car
  * berikutnya yang paling wajar setelah membaca satu model, dan sebelum ini
  * satu-satunya jalannya adalah kembali ke beranda lalu memfilter lagi.
  */
-const merekHref = car && taxoSlug(car.brand) ? `/merek/${taxoSlug(car.brand)}` : "";
-const tipeHref = car && taxoSlug(car.bodyType) ? `/tipe/${taxoSlug(car.bodyType)}` : "";
+const merekHref = car && taxoSlug(car.brand) ? `/merek/${taxoSlug(car.brand)}${suffix}` : "";
+const tipeHref = car && taxoSlug(car.bodyType) ? `/tipe/${taxoSlug(car.bodyType)}${suffix}` : "";
 
 /* Kalkulator hemat hanya mengenal mobil — daftar pilihannya dirakit dari
    `content.cars`. Menautkannya dari halaman motor akan berujung di kalkulator
@@ -213,9 +217,11 @@ const jsonLd = car
               ? { torque: { "@type": "QuantitativeValue", value: car.torqueNm, unitCode: "NU" } }
               : {}),
           },
-          ...(car.rangeKm != null
-            ? { vehicleRange: { "@type": "QuantitativeValue", value: car.rangeKm, unitCode: "KMT" } }
-            : {}),
+            ...(car.rangeKm != null
+              ? us
+                ? { vehicleRange: { "@type": "QuantitativeValue", value: Math.round(Number(car.rangeKm) / 1.60934), unitCode: "SMI" } }
+                : { vehicleRange: { "@type": "QuantitativeValue", value: car.rangeKm, unitCode: "KMT" } }
+              : {}),
           ...(car.seats != null ? { seatingCapacity: car.seats } : {}),
           ...(car.year ? { modelDate: String(car.year) } : {}),
           ...(car.driveType ? { driveWheelConfiguration: car.driveType } : {}),
@@ -228,19 +234,19 @@ const jsonLd = car
                   "@type": "QuantitativeValue",
                   value: car.accelSec,
                   unitCode: "SEC",
-                  name: "0–100 km/j",
+                  name: us ? "0–60 mph" : "0–100 km/j",
                 },
               }
             : {}),
-          ...(car.price != null
-            ? {
-                offers: {
-                  "@type": "Offer",
-                  price: car.price,
-                  priceCurrency: "IDR",
-                  availability: "https://schema.org/InStock",
-                  url: canonical,
-                },
+            ...(car.price != null
+              ? {
+                  offers: {
+                    "@type": "Offer",
+                    price: car.price,
+                    priceCurrency: us ? "USD" : "IDR",
+                    availability: "https://schema.org/InStock",
+                    url: canonical,
+                  },
               }
             : {}),
           additionalProperty: [
@@ -393,13 +399,14 @@ const pageTitle = car
               {t("pub.detail.share")}
             </button>
             <button type="button" class="btn btn-ghost btn-sm" id="copyBtn">{t("pub.detail.copy")}</button>
+            {/* Kalkulator hemat kini punya edisi dolar untuk kendaraan Amerika. */}
             {bisaDihitung ? (
-              <a class="btn btn-ghost btn-sm" href={`/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}`}>
+              <a class="btn btn-ghost btn-sm" href={us ? `/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}&region=us` : `/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}`}>
                 {t("pub.detail.hitungHemat")}
               </a>
             ) : null}
             {bisaHitungPengisian ? (
-              <a class="btn btn-ghost btn-sm" href={`/kalkulator/biaya-pengisian?kendaraan=${car.id}`}>
+              <a class="btn btn-ghost btn-sm" href={`/kalkulator/biaya-pengisian?kendaraan=${car.id}${suffix ? `&region=us` : ""}`}>
                 {t("pub.detail.hitungIsi")}
               </a>
             ) : null}
@@ -494,7 +501,7 @@ const pageTitle = car
                 <span class="related-brand">{r.brand}</span>
                 <span class="related-name">{r.name}</span>
                 <span class="related-meta">
-                  {[r.bodyType, r.rangeKm != null ? `${r.rangeKm} km` : null].filter(Boolean).join(" · ")}
+                  {[r.bodyType, r.rangeKm != null ? (us ? `${Math.round(Number(r.rangeKm) / 1.60934)} mi` : `${r.rangeKm} km`) : null].filter(Boolean).join(" · ")}
                 </span>
               </a>
             ))}

@@ -7,6 +7,7 @@ import { hanyaTayang } from "../../lib/tayang.js";
 import { hrefLaman, labelFooter } from "../../lib/laman.js";
 import { artikelTayang, hrefArtikel } from "../../lib/artikel.js";
 import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
+import { filterWilayah } from "../../lib/region.js";
 
 /**
  * Indeks pencarian situs untuk kotak cari di header.
@@ -29,18 +30,24 @@ export const GET: APIRoute = async ({ url }) => {
   const lang = normalizePubLocale(url.searchParams.get("lang"));
   const t = makePubT(lang);
 
+  /* Edisi pencarian: `?region=us` hanya memuat kendaraan dan halaman Amerika —
+     kotak cari di edisi Amerika tidak mengusulkan model Indonesia. */
+  const region = url.searchParams.get("region") === "us" ? "us" : "id";
+  const us = region === "us";
+  const suf = us ? "?region=us" : "";
+
   const content = await terjemahContent(readContent(), lang);
   const site = cmsSite(content.site, lang);
 
-  const cars = (content.cars || []).filter(hanyaTayang());
-  const motors = site.showMotor ? (content.motors || []).filter(hanyaTayang()) : [];
+  const cars = filterWilayah(content.cars, region).filter(hanyaTayang());
+  const motors = site.showMotor ? filterWilayah(content.motors, region).filter(hanyaTayang()) : [];
   const semua = [...cars, ...motors];
 
   const kendaraan = semua.map((v: any) => ({
     brand: v.brand || "",
     name: v.name || "",
     body: v.bodyType || "",
-    meta: [v.rangeKm != null ? `${v.rangeKm} km` : "", priceLabel(v, lang)].filter(Boolean).join(" · "),
+    meta: [v.rangeKm != null ? (us ? `${Math.round(Number(v.rangeKm) / 1.60934)} mi` : `${v.rangeKm} km`) : "", priceLabel(v, lang)].filter(Boolean).join(" · "),
     image: v.image || "",
     url: vehicleHref(v),
   }));
@@ -48,32 +55,32 @@ export const GET: APIRoute = async ({ url }) => {
   const merek = groupByField(semua, "brand").map((g) => ({
     label: g.label,
     meta: countPhrase(summarize(g.items), t),
-    url: `/merek/${encodeURIComponent(g.slug)}`,
+    url: `/merek/${encodeURIComponent(g.slug)}${suf}`,
   }));
 
   /* Menu dan halaman: labelnya mengikuti bahasa, kata kuncinya dua bahasa
      (Indonesia + label itu sendiri) supaya tetap ketemu disilang bahasa. */
   const bagian: { label: string; kunci: string; meta: string; url: string }[] = [
-    { label: t("pub.katalog"), kunci: "katalog mobil", meta: "", url: "/katalog" },
+    { label: t("pub.katalog"), kunci: "katalog mobil", meta: "", url: `/katalog${suf}` },
   ];
   if (site.showMotor) {
-    bagian.push({ label: t("pub.katalogMotor.judul"), kunci: "katalog motor", meta: "", url: "/katalog-motor" });
+    bagian.push({ label: t("pub.katalogMotor.judul"), kunci: "katalog motor", meta: "", url: `/katalog-motor${suf}` });
   }
   if (site.showSpklu) {
-    bagian.push({ label: t("pub.nav.spklu"), kunci: "spklu cas charger stasiun pengisian", meta: "", url: "/spklu" });
+    bagian.push({ label: t("pub.nav.spklu"), kunci: "spklu cas charger stasiun pengisian", meta: "", url: `/spklu${suf}` });
   }
   if (site.showBengkel) {
-    bagian.push({ label: t("pub.nav.bengkel"), kunci: "bengkel servis service perawatan", meta: "", url: "/bengkel" });
+    bagian.push({ label: t("pub.nav.bengkel"), kunci: "bengkel servis service perawatan", meta: "", url: `/bengkel${suf}` });
   }
   if (site.showBerita) {
-    bagian.push({ label: t("pub.nav.berita"), kunci: "berita komunitas kabar", meta: "", url: "/berita" });
+    bagian.push({ label: t("pub.nav.berita"), kunci: "berita komunitas kabar", meta: "", url: `/berita${suf}` });
   }
-  if (artikelTayang(content.artikel).length) {
-    bagian.push({ label: t("pub.nav.artikel"), kunci: "artikel panduan edukasi", meta: "", url: "/artikel" });
+  if (artikelTayang(filterWilayah(content.artikel, region)).length) {
+    bagian.push({ label: t("pub.nav.artikel"), kunci: "artikel panduan edukasi", meta: "", url: `/artikel${suf}` });
   }
   bagian.push(
-    { label: t("pub.kalk.titleHemat"), kunci: "kalkulator hemat bensin bbm hitung", meta: "", url: "/kalkulator/hemat-listrik-vs-bensin" },
-    { label: t("pub.kalk.titleBiaya"), kunci: "kalkulator biaya pengisian cas hitung", meta: "", url: "/kalkulator/biaya-pengisian" },
+    { label: t("pub.kalk.titleHemat"), kunci: "kalkulator hemat bensin bbm hitung", meta: "", url: `/kalkulator/hemat-listrik-vs-bensin${suf}` },
+    { label: t("pub.kalk.titleBiaya"), kunci: "kalkulator biaya pengisian cas hitung", meta: "", url: `/kalkulator/biaya-pengisian${suf}` },
   );
 
   /* Halaman statis (Tentang, Kebijakan Privasi, …) dan artikel orisinal. */
@@ -83,7 +90,7 @@ export const GET: APIRoute = async ({ url }) => {
       .filter(hanyaTayang())
       .filter((l: any) => !l.noindex && hrefLaman(l) && labelFooter(l))
       .map((l: any) => ({ label: labelFooter(l), kunci: "", meta: "", url: hrefLaman(l) })),
-    ...(artikelTayang(content.artikel) || [])
+    ...(artikelTayang(filterWilayah(content.artikel, region)) || [])
       .filter((a: any) => !a.noindex && hrefArtikel(a) && a.title)
       .map((a: any) => ({ label: String(a.title), kunci: "", meta: "", url: hrefArtikel(a) })),
   ];

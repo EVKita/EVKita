@@ -6,17 +6,21 @@ import {
   teksDurasi,
   kwhKeTeks,
   kmKeTeks,
+  miKeTeks,
   teksRingkasPengisian,
   catatanHasil,
 } from "../lib/pengisian.js";
-import { rupiahPenuh, rupiahHalus } from "../lib/hemat.js";
+import { rupiahPenuh, rupiahHalus, dolarPenuh, dolarHalus } from "../lib/hemat.js";
 import { makePubT, normalizePubLocale } from "../lib/i18n/pub.js";
 
-/* Bahasa situs publik dibaca dari cookie yang ditulis LanguageToggle. */
+/* Bahasa situs publik: cookie pilihan pembaca menang; tanpanya ikuti bahasa
+   halaman yang dirender server (`<html lang>`). Urutan ini sama dengan
+   middleware — lihat catatan yang sama di `app.js`. */
 function readPubLang() {
   try {
     const m = document.cookie.match(/(?:^|;\s*)evkita_pub_lang=([^;]+)/);
-    return normalizePubLocale(m ? m[1] : "");
+    if (m && m[1]) return normalizePubLocale(m[1]);
+    return normalizePubLocale(document.documentElement.getAttribute("lang"));
   } catch {
     return "id";
   }
@@ -37,6 +41,10 @@ const $ = (id) => document.getElementById(id);
 const form = $("pengisianForm");
 if (form) {
   const KENDARAAN = Array.isArray(window.__EV_PENGISIAN__) ? window.__EV_PENGISIAN__ : [];
+  /* Edisi kalkulator dari atribut yang dipasang server — dolar & mil bila us. */
+  const REGION_US = form.dataset.region === "us";
+  const uangPenuh = REGION_US ? dolarPenuh : rupiahPenuh;
+  const uangHalus = REGION_US ? dolarHalus : rupiahHalus;
 
   const fields = {
     kendaraan: $("f-kendaraan"),
@@ -82,13 +90,13 @@ if (form) {
       rangeKm: v ? v.rangeKm : null,
     });
 
-    if (out.summary) out.summary.textContent = teksRingkasPengisian(h, t);
+    if (out.summary) out.summary.textContent = teksRingkasPengisian(h, t, { region: REGION_US ? "us" : "id" });
     if (out.durasi) out.durasi.textContent = teksDurasi(h, t);
-    if (out.biaya) out.biaya.textContent = rupiahPenuh(h.biaya);
-    if (out.perKwh) out.perKwh.textContent = h.biayaPerKwh !== null ? rupiahHalus(h.biayaPerKwh) : "—";
-    if (out.energi) out.energi.textContent = kwhKeTeks(h.energiMasuk);
-    if (out.ditagih) out.ditagih.textContent = kwhKeTeks(h.energiDitagih);
-    if (out.km) out.km.textContent = kmKeTeks(h.kmDidapat);
+    if (out.biaya) out.biaya.textContent = uangPenuh(h.biaya);
+    if (out.perKwh) out.perKwh.textContent = h.biayaPerKwh !== null ? uangHalus(h.biayaPerKwh) : "—";
+    if (out.energi) out.energi.textContent = kwhKeTeks(h.energiMasuk, REGION_US ? "en" : "id");
+    if (out.ditagih) out.ditagih.textContent = kwhKeTeks(h.energiDitagih, REGION_US ? "en" : "id");
+    if (out.km) out.km.textContent = REGION_US ? miKeTeks(h.kmDidapat) : kmKeTeks(h.kmDidapat);
 
     if (out.catatan) {
       // Dibangun ulang setiap render: catatan yang tertinggal dari hitungan
@@ -124,6 +132,9 @@ if (form) {
     put("akhir", fields.socAkhir);
     put("daya", fields.dayaKw);
     put("tarif", fields.tarif);
+    /* Edisinya ikut di URL — tanpanya interaksi pertama menendang pembaca
+       edisi Amerika kembali ke kalkulator Indonesia. */
+    if (REGION_US) p.set("region", "us");
     history.replaceState(null, "", `${location.pathname}?${p.toString()}`);
   };
 
