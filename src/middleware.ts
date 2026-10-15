@@ -15,7 +15,7 @@ import { jadwalkanPenjualan } from "./lib/penjualan-bulanan";
 import { jadwalkanPenjualanAmerika } from "./lib/penjualan-amerika";
 import { jadwalkanPenjualanChina } from "./lib/penjualan-china";
 import { SESSION_COOKIE } from "./lib/auth";
-import { normalizeLangParam, PUB_COOKIE, PUB_DEFAULT } from "./lib/i18n/pub.js";
+import { bahasaDariNegara, normalizeLangParam, PUB_COOKIE } from "./lib/i18n/pub.js";
 import { wilayahDariPath } from "./lib/region.js";
 import { apakahBot } from "./lib/trafik.js";
 
@@ -160,6 +160,32 @@ function alamatKlien(context: Parameters<MiddlewareHandler>[0]): string {
 }
 
 /**
+ * Bahasa dari lokasi pengunjung — atau null kalau tidak bisa ditentukan.
+ *
+ * Indonesia → Indonesia; China, Taiwan, Hong Kong → Mandarin; negara lain →
+ * Inggris. Robot dilewati (mendapat bawaan edisi di URL kanonis — menyajikan
+ * isi negosiasi ke perayap adalah penyelubungan di mata mesin pencari), dan
+ * IP yang tidak terlacak (pribadi, basis belum terunduh) jatuh ke bawaan
+ * edisi. Tidak pernah melempar: geo hanya memberi saran bahasa, dan
+ * kegagalannya tidak boleh menjatuhkan permintaan.
+ *
+ * Privasi sama seperti pencatatan: IP dipakai sekejap untuk pencarian lokal
+ * dan tidak ada satu pun yang disimpan karenanya.
+ */
+async function bahasaPengunjung(context: Parameters<MiddlewareHandler>[0]): Promise<string | null> {
+  try {
+    if (apakahBot(context.request.headers.get("user-agent") || "")) return null;
+    const diteruskan = context.request.headers.get("x-forwarded-for") || "";
+    const ip = diteruskan.split(",")[0]?.trim() || alamatKlien(context);
+    if (!ip) return null;
+    const geo = await cariGeo(ip);
+    return bahasaDariNegara(geo.negara);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Jaring pengaman penjadwalan: interval sekali per proses.
  *
  * Semua `jadwalkan*()` di atas juga dipanggil di setiap permintaan — tapi
@@ -211,15 +237,16 @@ mulaiPenjadwalInterval();
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
   /*
-   * Bahasa situs publik — KETETAPAN: edisi menentukan bahasa bawaannya.
-   * Indonesia selalu Indonesia, Amerika selalu Inggris, China selalu Mandarin.
+   * Bahasa situs publik — KETETAPAN: pilihan pembaca dulu, lokasi sesudahnya,
+   * edisi paling akhir.
    * Urutan: `?lang=` eksplisit (URL yang bisa dirayapi Google/Baidu) > cookie
-   * pilihan pembaca (tombol bendera) > bawaan edisi. Bahasa peramban SENGAJA
-   * tidak dipakai — pengunjung edisi Indonesia selalu melihat Bahasa Indonesia
-   * walau perambannya Inggris, dan sebaliknya. Robot selalu dapat bawaan di
-   * URL kanonis: menyajikan isi negosiasi ke perayap adalah penyelubungan
-   * (cloaking) di mata mesin pencari. Dipakai halaman dan komponen lewat
-   * `Astro.locals.pubLang` tanpa harus diteruskan sebagai prop.
+   * pilihan pembaca (tombol bendera) > negara pengunjung (Indonesia →
+   * Indonesia; China, Taiwan, Hong Kong → Mandarin; selainnya → Inggris) >
+   * bawaan edisi. Bahasa peramban SENGAJA tidak dipakai — yang menentukan
+   * adalah LOKASI membuka, bukan bahasa peramban. Robot selalu dapat bawaan
+   * edisi di URL kanonis: menyajikan isi negosiasi ke perayap adalah
+   * penyelubungan (cloaking) di mata mesin pencari. Dipakai halaman dan
+   * komponen lewat `Astro.locals.pubLang` tanpa harus diteruskan sebagai prop.
    */
   const langParam = normalizeLangParam(context.url.searchParams.get("lang"));
   if (langParam) {
@@ -228,21 +255,23 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
     const langCookie = normalizeLangParam(context.cookies.get(PUB_COOKIE)?.value);
     if (langCookie) {
       context.locals.pubLang = langCookie;
-    } else if (wilayahDariPath(context.url.pathname) === "us") {
-      /* Edisi Amerika berbahasa Inggris bila pengunjung belum memilih bahasa —
-         robot included, supaya yang terindeks versi Inggrisnya. Pilihan
-         eksplisit (?lang=/cookie) di atas tetap menang. */
-      context.locals.pubLang = "en";
-    } else if (wilayahDariPath(context.url.pathname) === "cn") {
-      /* Edisi China berbahasa Mandarin dengan aturan yang sama. */
-      context.locals.pubLang = "zh";
-    } else if (apakahBot(context.request.headers.get("user-agent") || "")) {
-      context.locals.pubLang = PUB_DEFAULT;
     } else {
-      // Bawaan edisi: / dan halaman Indonesia berbahasa Indonesia — bahasa
-      // peramban tidak ikut menentukan (lihat ketetapan di atas). Peramban
-      // Huawei/Xiaomi di China membuka /china yang memang sudah Mandarin.
-      context.locals.pubLang = "id";
+      /* Lokasi menang atas bawaan edisi: pengunjung di Jakarta yang membuka
+         /amerika melihat katalog Amerika dalam Bahasa Indonesia, dan
+         pengunjung di Shanghai yang membuka / melihat Indonesia dalam
+         Mandarin. Tanpa lokasi yang terlacak (atau untuk robot), edisi yang
+         menentukan — robot included, supaya yang terindeks versi kanonisnya. */
+      const geoLang = await bahasaPengunjung(context);
+      if (geoLang) {
+        context.locals.pubLang = geoLang;
+      } else if (wilayahDariPath(context.url.pathname) === "us") {
+        context.locals.pubLang = "en";
+      } else if (wilayahDariPath(context.url.pathname) === "cn") {
+        context.locals.pubLang = "zh";
+      } else {
+        // Bawaan edisi: / dan halaman Indonesia berbahasa Indonesia.
+        context.locals.pubLang = "id";
+      }
     }
   }
 

@@ -3052,6 +3052,25 @@ export function normalizePubLocale(value) {
   return DICTS[s] ? s : PUB_DEFAULT;
 }
 
+/** Negara yang bahasanya Mandarin — Tiongkok, Taiwan, dan Hong Kong. */
+const NEGARA_MANDARIN = new Set(["CN", "TW", "HK"]);
+
+/**
+ * Bahasa bawaan dari kode negara pengunjung (dua huruf, mis. `"ID"`).
+ *
+ * Indonesia → Indonesia; China, Taiwan, Hong Kong → Mandarin; negara lain
+ * yang dikenal → Inggris. Kode kosong (pencarian gagal, basis belum
+ * terunduh, IP pribadi) berarti null — pemanggil jatuh ke bawaan edisi,
+ * bukan menebak. Murni supaya bisa diuji tanpa basis data.
+ */
+export function bahasaDariNegara(negara) {
+  const kode = String(negara || "").trim().toUpperCase();
+  if (!kode) return null;
+  if (kode === "ID") return "id";
+  if (NEGARA_MANDARIN.has(kode)) return "zh";
+  return "en";
+}
+
 /** Locale `Intl` per bahasa publik — untuk tanggal dan angka. */
 export function pubIntl(locale) {
   const code = normalizePubLocale(locale);

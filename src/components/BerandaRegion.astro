@@ -625,36 +625,84 @@ const jsonLd = {
                 dua baris, jadi tinggi kolom kanan stabil.
               */}
               <aside class="regional-card regional-combined" aria-label={t("pub.region.eyebrow")}>
-                <p class="jelajahi-eyebrow">{t("pub.region.eyebrow")}</p>
+                <p class="jelajahi-eyebrow regional-eyebrow">
+                  <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M1.5 8h13M8 1.5c-3.6 3.6-3.6 9.4 0 13 3.6-3.6 3.6-9.4 0-13Z" fill="none" stroke="currentColor" stroke-width="1.2" />
+                  </svg>
+                  <span>{t("pub.region.eyebrow")}</span>
+                </p>
                 <div class="regional-rows">
                 {region !== "id" ? (
                   <a class="regional-row" href="/">
-                    <span class="regional-badge" aria-hidden="true">ID</span>
+                    <span class="regional-flag" aria-hidden="true">
+                      <svg viewBox="0 0 21 14" focusable="false">
+                        <rect width="21" height="7" fill="#CE1126" />
+                        <rect y="7" width="21" height="7" fill="#FFFFFF" />
+                      </svg>
+                    </span>
                     <span class="regional-row-text">
                       <strong class="regional-row-title">{t("pub.region.id")}</strong>
                       <span class="regional-row-desc">{t("pub.region.idDesc")}</span>
                     </span>
-                    <span class="regional-row-arrow" aria-hidden="true">→</span>
+                    <span class="regional-go" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" focusable="false">
+                        <path d="M2 8h10.5M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
                   </a>
                 ) : null}
                 {region !== "us" ? (
                   <a class="regional-row" href="/amerika">
-                    <span class="regional-badge" aria-hidden="true">US</span>
+                    <span class="regional-flag" aria-hidden="true">
+                      <svg viewBox="0 0 21 14" focusable="false">
+                        <rect width="21" height="14" fill="#FFFFFF" />
+                        <g fill="#B22234">
+                          <rect width="21" height="1.08" />
+                          <rect y="2.15" width="21" height="1.08" />
+                          <rect y="4.31" width="21" height="1.08" />
+                          <rect y="6.46" width="21" height="1.08" />
+                          <rect y="8.62" width="21" height="1.08" />
+                          <rect y="10.77" width="21" height="1.08" />
+                          <rect y="12.92" width="21" height="1.08" />
+                        </g>
+                        <rect width="8.4" height="7.54" fill="#3C3B6E" />
+                      </svg>
+                    </span>
                     <span class="regional-row-text">
                       <strong class="regional-row-title">{t("pub.region.us")}</strong>
                       <span class="regional-row-desc">{t("pub.region.usDesc")}</span>
                     </span>
-                    <span class="regional-row-arrow" aria-hidden="true">→</span>
+                    <span class="regional-go" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" focusable="false">
+                        <path d="M2 8h10.5M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
                   </a>
                 ) : null}
                 {region !== "cn" ? (
                   <a class="regional-row" href="/china">
-                    <span class="regional-badge" aria-hidden="true">CN</span>
+                    <span class="regional-flag" aria-hidden="true">
+                      <svg viewBox="0 0 21 14" focusable="false">
+                        <rect width="21" height="14" fill="#DE2910" />
+                        <g fill="#FFDE00">
+                          <polygon points="3.5,1.4 3.99,2.82 5.5,2.85 4.3,3.76 4.73,5.2 3.5,4.34 2.27,5.2 2.7,3.76 1.5,2.85 3.01,2.82" />
+                          <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(7,1.4) scale(0.7) rotate(23)" />
+                          <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(8.4,2.8) scale(0.7) rotate(46)" />
+                          <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(8.4,4.9) scale(0.7) rotate(23)" />
+                          <polygon points="0,-1 0.24,-0.32 0.95,-0.31 0.38,0.12 0.59,0.81 0,0.4 -0.59,0.81 -0.38,0.12 -0.95,-0.31 -0.24,-0.32" transform="translate(7,6.3) scale(0.7) rotate(46)" />
+                        </g>
+                      </svg>
+                    </span>
                     <span class="regional-row-text">
                       <strong class="regional-row-title">{t("pub.region.cn")}</strong>
                       <span class="regional-row-desc">{t("pub.region.cnDesc")}</span>
                     </span>
-                    <span class="regional-row-arrow" aria-hidden="true">→</span>
+                    <span class="regional-go" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" focusable="false">
+                        <path d="M2 8h10.5M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
                   </a>
                 ) : null}
                 </div>
