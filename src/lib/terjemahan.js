@@ -31,7 +31,7 @@
 
 import crypto from "node:crypto";
 import path from "node:path";
-import { normalizePubLocale } from "./i18n/pub.js";
+import { bersihSitusId, normalizePubLocale } from "./i18n/pub.js";
 import { readJson, writeJsonAtomic } from "./jsonfile";
 import { terjemahkanBerteks } from "./ai-mesin";
 import { GalatTerjemahan } from "./deepseek";
@@ -589,6 +589,11 @@ export async function terjemahContent(content, lang, opsi = {}) {
 
   try {
     const klon = structuredClone(content);
+    // Bocoran edisi regional di `site.*` dibersihkan SEBELUM dikumpulkan:
+    // tanpa ini kuota AI habis menerjemahkan "Panduan Kendaraan Listrik
+    // Amerika" dan hasilnya (yang benar untuk edisi yang salah) menempel di
+    // cache. `cmsSite()` di hilir membersihkan jalur `id` dan cadangan gagal.
+    if (klon && typeof klon === "object") klon.site = bersihSitusId(klon.site);
     const sumber = kumpulkanTeks(klon, opsi);
     if (!sumber.length) return klon;
 

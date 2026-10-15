@@ -3124,6 +3124,12 @@ const CMS_EN = {
     "Prices and specifications may change at any time. Always confirm with an authorised dealer.",
   "Halaman ini adalah situs referensi mandiri untuk mobil listrik yang tersedia di pasar Indonesia. Data spesifikasi (jarak tempuh, kapasitas baterai, tenaga, varian, dan harga) dirangkum dari EVdata.id. Standar pengukuran jarak tempuh dapat berbeda antar model (WLTP, NEDC, CLTC, atau klaim pabrikan), sehingga angka antar model tidak selalu dapat dibandingkan langsung.":
     "This page is an independent reference site for electric cars available on the Indonesian market. Specification data (range, battery capacity, power, variants and price) is compiled from EVdata.id. Range test standards differ between models (WLTP, NEDC, CLTC or manufacturer claims), so figures are not always directly comparable.",
+  // Meta SEO edisi Indonesia — tanpa ini bendera Inggris menampilkan meta Indonesia.
+  "EVKita.com — Panduan Kendaraan Listrik Indonesia": "EVKita.com — Indonesia Electric Vehicle Guide",
+  "Katalog mobil dan motor listrik di Indonesia: harga, jarak tempuh, baterai, lokasi SPKLU, bengkel, berita terbaru, dan panduan kepemilikan.":
+    "Electric cars and motorbikes in Indonesia: prices, range, batteries, charging locations, workshops, latest news, and ownership guides.",
+  "mobil listrik, motor listrik, harga mobil listrik, SPKLU, kendaraan listrik Indonesia, EV Indonesia":
+    "electric cars, electric motorcycles, electric car prices, charging stations, Indonesia electric vehicles, Indonesia EV",
   // Judul halaman statis yang tampil di Jelajahi, footer, dan remah roti.
   "Edukasi Dasar: Belum Punya EV": "EV basics: before you own one",
   "Edukasi Dasar": "EV basics",
@@ -3153,17 +3159,123 @@ export function cms(teks, locale) {
 }
 
 /**
+ * Nilai kanon setelan situs edisi Indonesia — tempat `data/content.json`
+ * dikembalikan ketika isinya ternyata teks edisi regional.
+ *
+ * `site.*` adalah setelan GLOBAL milik edisi Indonesia. Halaman `/amerika`
+ * dan `/china` menimpa hero/katalog/direktori dari kamus saat dirender, jadi
+ * teks "Amerika"/"China" tidak pernah sah di dalam berkas — kalau ada di
+ * sana, itu bocoran komitmen edisi regional (atau suntingan panel yang
+ * nyasar), dan beranda Indonesia ikut menampilkan "Panduan Kendaraan
+ * Listrik Amerika". Nilainya sama dengan bawaan Pengaturan Situs, supaya
+ * `cms()`/`terjemahContent()` tetap menerjemahkannya seperti biasa.
+ */
+const SITUS_ID = {
+  heroEyebrow: "Basis data kendaraan listrik Indonesia",
+  heroTitle: "Kendaraan Listrik Indonesia",
+  heroSub: "Panduan Lengkap Kendaraan Listrik",
+  katalogTitle: "Katalog Kendaraan Listrik",
+  katalogNote: "Bandingkan spesifikasi dan harga",
+  spkluTitle: "SPKLU Indonesia",
+  spkluNote: "Jaringan pengisian daya publik",
+  bengkelTitle: "Bengkel & Servis EV",
+  bengkelNote: "Mobil & motor listrik",
+  aboutTitle: "Tentang",
+  aboutText:
+    "Halaman ini adalah situs referensi mandiri untuk mobil listrik yang tersedia di pasar Indonesia. Data spesifikasi (jarak tempuh, kapasitas baterai, tenaga, varian, dan harga) dirangkum dari EVdata.id. Standar pengukuran jarak tempuh dapat berbeda antar model (WLTP, NEDC, CLTC, atau klaim pabrikan), sehingga angka antar model tidak selalu dapat dibandingkan langsung.",
+  seoTitle: "EVKita.com — Panduan Kendaraan Listrik Indonesia",
+  seoDescription:
+    "Katalog mobil dan motor listrik di Indonesia: harga, jarak tempuh, baterai, lokasi SPKLU, bengkel, berita terbaru, dan panduan kepemilikan.",
+  seoKeywords: "mobil listrik, motor listrik, harga mobil listrik, SPKLU, kendaraan listrik Indonesia, EV Indonesia",
+};
+
+/** Catatan yang ikut dikosongkan oleh timpaan edisi regional. */
+const CATATAN_PASANGAN = {
+  katalogTitle: "katalogNote",
+  spkluTitle: "spkluNote",
+  bengkelTitle: "bengkelNote",
+};
+const KUNCI_CATATAN = new Set(Object.values(CATATAN_PASANGAN));
+
+/**
+ * Seluruh teks edisi regional yang tidak pernah sah di `site.*` — kunci
+ * `pub.region.*` edisi Amerika/China dalam Bahasa Indonesia, yaitu persis
+ * seperti ia tertulis bila bocor ke `data/content.json`.
+ */
+const SITUS_BOCOR = new Set([
+  "Basis Data Kendaraan Listrik Amerika",
+  "Panduan Kendaraan Listrik Amerika",
+  "Katalog, berita, dan artikel seputar EV di Amerika.",
+  "Katalog Kendaraan Listrik Amerika",
+  "Stasiun Pengisian Amerika",
+  "Bengkel & Servis EV Amerika",
+  "Tentang EVKita di Amerika",
+  "EVKita di Amerika memandu pembeli EV Amerika: katalog, berita, dan artikel — dalam Bahasa Inggris, dengan harga dolar, jarak EPA, dan jaringan pengisian Amerika.",
+  "EVKita di Amerika — Panduan Kendaraan Listrik Amerika",
+  "Katalog mobil dan motor listrik di Amerika: harga dolar, jarak EPA, charging station, berita terbaru, dan panduan membeli.",
+  "mobil listrik Amerika, motor listrik Amerika, charging station, harga EV Amerika",
+  "Basis Data Kendaraan Listrik China",
+  "Panduan Kendaraan Listrik China",
+  "Katalog, berita, dan artikel seputar EV di China.",
+  "Katalog Kendaraan Listrik China",
+  "Stasiun Pengisian China",
+  "Bengkel & Servis EV China",
+  "Tentang EVKita di China",
+  "EVKita di China memandu pembeli EV China: katalog, berita, dan artikel — dalam Bahasa Mandarin, dengan harga yuan, jarak CLTC, dan jaringan pengisian China.",
+  "EVKita di China — Panduan Kendaraan Listrik China",
+  "Katalog mobil dan motor listrik di China: harga yuan, jarak CLTC, charging station, berita terbaru, dan panduan membeli.",
+  "mobil listrik China, motor listrik China, charging station, harga EV China",
+]);
+
+/**
+ * Salinan `site` yang teks edisi regionalnya sudah dikembalikan ke kanon
+ * Indonesia. Murni: masukan tidak pernah diubah, bukan objek berarti
+ * dikembalikan apa adanya.
+ *
+ * Suntingan admin yang ASLI tetap lolos — hanya 22 string bocoran persis di
+ * atas yang diganti. Catatan (`katalogNote` dkk.) yang dikosongkan timpaan
+ * regional ikut dipulihkan, tapi catatan yang dikosongkan pemiliknya sendiri
+ * (judulnya bersih) dibiarkan kosong.
+ */
+export function bersihSitusId(site) {
+  if (!site || typeof site !== "object" || Array.isArray(site)) return site;
+  const out = { ...site };
+  let tercemar = false;
+  for (const k of Object.keys(SITUS_ID)) {
+    if (KUNCI_CATATAN.has(k)) continue;
+    const v = out[k];
+    if (typeof v === "string" && SITUS_BOCOR.has(v)) {
+      out[k] = SITUS_ID[k];
+      tercemar = true;
+    }
+  }
+  if (tercemar) {
+    for (const note of Object.values(CATATAN_PASANGAN)) {
+      if (out[note] === "") out[note] = SITUS_ID[note];
+    }
+  }
+  return out;
+}
+
+/**
  * Salinan objek `site` dengan seluruh nilai string-nya sudah diterjemahkan.
  * Dipanggil sekali di tiap halaman publik, supaya baris-baris di bawahnya cukup
  * membaca `site.x` tanpa perlu tahu soal bahasa.
+ *
+ * Bocoran edisi regional dibersihkan DULU (`bersihSitusId`), jadi beranda
+ * Indonesia tidak pernah menampilkan teks Amerika/China walau berkasnya
+ * tercemar. Selalu mengembalikan objek BARU — pemanggil edisi regional
+ * (`amerika.astro`, `china.astro`) menimpa hasilnya, dan tanpa salinan itu
+ * timpaannya merembes ke cache `readContent()` yang dipakai bersama.
  */
 export function cmsSite(site, locale) {
   if (!site) return site;
+  const bersih = bersihSitusId(site);
   const code = normalizePubLocale(locale);
-  if (code !== "en" && code !== "zh") return site;
+  if (code !== "en" && code !== "zh") return bersih;
   const out = {};
-  for (const k of Object.keys(site)) {
-    const v = site[k];
+  for (const k of Object.keys(bersih)) {
+    const v = bersih[k];
     out[k] = typeof v === "string" ? cms(v, locale) : v;
   }
   return out;
@@ -3201,6 +3313,12 @@ const CMS_ZH = {
     "价格与参数可能随时变化，请务必向官方经销商确认。",
   "Halaman ini adalah situs referensi mandiri untuk mobil listrik yang tersedia di pasar Indonesia. Data spesifikasi (jarak tempuh, kapasitas baterai, tenaga, varian, dan harga) dirangkum dari EVdata.id. Standar pengukuran jarak tempuh dapat berbeda antar model (WLTP, NEDC, CLTC, atau klaim pabrikan), sehingga angka antar model tidak selalu dapat dibandingkan langsung.":
     "本站是面向印度尼西亚市场在售电动汽车的独立参考站。参数数据（续航里程、电池容量、动力、版本与价格）汇总自EVdata.id。各车型的续航测试标准可能不同（WLTP、NEDC、CLTC或厂家宣传值），因此车型之间的数据并不总能直接对比。",
+  // Meta SEO edisi Indonesia — tanpa ini bendera Mandarin menampilkan meta Indonesia.
+  "EVKita.com — Panduan Kendaraan Listrik Indonesia": "EVKita.com——印度尼西亚电动车指南",
+  "Katalog mobil dan motor listrik di Indonesia: harga, jarak tempuh, baterai, lokasi SPKLU, bengkel, berita terbaru, dan panduan kepemilikan.":
+    "印度尼西亚电动汽车和电动摩托车：价格、续航里程、电池、充电站位置、维修店、最新新闻和用车指南。",
+  "mobil listrik, motor listrik, harga mobil listrik, SPKLU, kendaraan listrik Indonesia, EV Indonesia":
+    "电动车，电动摩托车，电动车价格，充电站，印度尼西亚电动车",
   // Judul halaman statis yang tampil di Jelajahi, footer, dan remah roti.
   "Edukasi Dasar: Belum Punya EV": "EV基础知识：购车前必读",
   "Edukasi Dasar": "EV基础知识",
