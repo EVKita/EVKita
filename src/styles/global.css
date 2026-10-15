@@ -2502,17 +2502,22 @@ body.nav-open .nav-drawer-link {
   aspect-ratio: 16 / 10;
   display: grid;
   place-items: center;
+  background: var(--bg-tint);
 }
 
+/* KETETAPAN FOTO: foto kendaraan tampil UTUH, tidak pernah dipotong.
+   Bingkai boleh berbingkai (letterbox di atas latar tint), tapi tidak boleh
+   memangkas atap, roda, atau pelat nomor lewat `cover`. Berlaku untuk kartu,
+   galeri detail, thumbnail, dan kartu terkait — di semua edisi. */
 .car-photo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.4s var(--ease);
 }
 
 .card-media-link:hover .car-photo {
-  transform: scale(1.04);
+  transform: none;
 }
 
 .mini-label {
@@ -3448,10 +3453,12 @@ body.nav-open .nav-drawer-link {
 }
 
 /* ===== Gerbang regional (beranda) =====
-   Kolom kanan di dalam kartu Jelajahi: pintu ke edisi Amerika. Desktop
-   berdampingan (kiri 1,55 bagian, kanan 1 bagian); layar sempit menumpuk.
-   Gayanya meminjam variabel tema dan tombol yang sudah ada — tanpa warna
-   baru di luar tema, supaya pratinjau menu Tampilan tetap jujur. */
+   Kolom kanan di dalam kartu Jelajahi: satu kartu berisi baris tautan ke
+   edisi selain yang dibuka. Desktop berdampingan (kiri 1,55 bagian, kanan 1
+   bagian); layar sempit menumpuk. Tiap barisnya tautan selebar kartu supaya
+   mudah ditekan di HP. Gayanya meminjam variabel tema dan tombol yang sudah
+   ada — tanpa warna baru di luar tema, supaya pratinjau menu Tampilan tetap
+   jujur. */
 .jelajahi-grid {
   display: grid;
   grid-template-columns: 1.55fr 1fr;
@@ -3475,32 +3482,79 @@ body.nav-open .nav-drawer-link {
 .regional-card {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: stretch;
+  gap: 4px;
   padding: clamp(20px, 2.5vw, 28px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: linear-gradient(150deg, var(--accent-soft), transparent 60%), var(--bg-card);
   box-shadow: var(--shadow);
-  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
 }
 
-.regional-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+/* Baris edisi: lencana + judul/deskripsi + panah. Seluruh baris satu tautan
+   dengan tinggi sentuh minimum supaya nyaman ditekan ibu jari. */
+.regional-rows {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
 }
 
-.regional-title,
-.regional-judul {
+.regional-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 2px;
+  border-top: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
 }
 
-.regional-title {
-  font-size: clamp(18px, 2.2vw, 22px);
-  line-height: 1.25;
+.regional-row:first-child {
+  border-top: 0;
+}
+
+.regional-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.regional-row-title {
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.regional-row-desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.regional-row-arrow {
+  flex: none;
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 18px;
+  transition: transform 0.2s var(--ease);
+}
+
+.regional-row:hover .regional-row-title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.regional-row:hover .regional-row-arrow {
+  transform: translateX(4px);
+}
+
+.regional-row:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .regional-badge {
@@ -3517,35 +3571,9 @@ body.nav-open .nav-drawer-link {
   letter-spacing: 0.06em;
 }
 
-.regional-desc {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-.regional-cta {
-  margin-top: 4px;
-  /* Target sentuh minimum 44px — tombolnya satu-satunya jalan ke edisi
-     regional, jadi harus mudah ditekan di HP. */
-  min-height: 44px;
-  align-items: center;
-}
-
-.regional-next {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
 @media (max-width: 900px) {
   .jelajahi-grid {
     grid-template-columns: 1fr;
-  }
-
-  /* Di HP tombolnya selebar kartu — lebih mudah ditekan ibu jari. */
-  .regional-cta {
-    align-self: stretch;
-    justify-content: center;
   }
 }
 
@@ -4243,7 +4271,7 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
 .detail-video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .zoom-hint {
@@ -4301,7 +4329,7 @@ body:has(.compare-dock:not([hidden])) .back-to-top {
 .detail-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .detail-thumb:hover {
@@ -4588,7 +4616,7 @@ a.badge-accent {
 .related-media img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .related-svg {

@@ -73,6 +73,7 @@ export const SLUG_TERPAKAI = [
   "kalkulator",
   "artikel",
   "amerika",
+  "china",
   "gambar",
   "sitemap",
   "robots",

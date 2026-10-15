@@ -6,7 +6,7 @@ import { readContent } from "../lib/store";
 import { hanyaTayang } from "../lib/tayang.js";
 import { safeUrl } from "../lib/url.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
-import { filterWilayah } from "../lib/region.js";
+import { filterWilayah, regionDariParam } from "../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
 
@@ -40,7 +40,7 @@ if (!site.showBerita) Astro.response.status = 404;
 const byFeatured = (list: any[]) => [...list].sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
 
 /** Draf dan yang belum tiba jadwalnya tidak boleh bocor ke halaman publik. */
-const region = Astro.url.searchParams.get("region") === "us" ? "us" : "id";
+const region = regionDariParam(Astro.url.searchParams.get("region"));
 const us = region === "us";
 const komunitasList = site.showBerita ? byFeatured(filterWilayah(content.komunitas, region).filter(hanyaTayang())) : [];
 
@@ -48,9 +48,9 @@ const judul = t("pub.dir.pageKomunitas");
 const lead = t("pub.dir.leadKomunitas");
 
 const origin = siteOrigin(Astro.url);
-/* Kanonis mempertahankan ?region=us — tanpanya edisi Amerika terindeks
+/* Kanonis mempertahankan ?region=${region} — tanpanya edisi regional terindeks
    sebagai halaman Indonesia. */
-const canonical = us ? `${origin}/komunitas?region=us` : canonicalUrl(Astro.url);
+const canonical = region === "id" ? canonicalUrl(Astro.url) : `${origin}/komunitas?region=${region}`;
 
 const pageTitle = site.showBerita ? `${judul} — ${brandFull}` : `${t("pub.koleksi.notFound")} — ${brand}`;
 const metaDesc = site.showBerita ? lead : t("pub.laman.404Text");
@@ -101,7 +101,7 @@ const jsonLd = site.showBerita
 >
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="" region={us ? "us" : "id"} artikel="/artikel" />
+  <SiteHeader site={site} base={(region === "id" ? "/" : region === "us" ? "/amerika" : "/china")} active="" region={region} artikel="/artikel" />
 
   {!site.showBerita ? (
     <main class="container notfound" id="konten">
@@ -110,12 +110,12 @@ const jsonLd = site.showBerita
       <p class="notfound-text">
         {t("pub.laman.404Text")}
       </p>
-      <a class="btn btn-primary" href={us ? "/amerika" : "/"}>{t("pub.laman.kembali")}</a>
+      <a class="btn btn-primary" href={(region === "id" ? "/" : region === "us" ? "/amerika" : "/china")}>{t("pub.laman.kembali")}</a>
     </main>
   ) : (
     <main class="container katalog" id="konten">
       <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-        <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
+        <a href={(region === "id" ? "/" : region === "us" ? "/amerika" : "/china")}>{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         <span class="breadcrumb-current">{judul}</span>
       </nav>

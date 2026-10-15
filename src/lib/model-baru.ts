@@ -90,6 +90,14 @@ export function umurHariIso(iso: string, sekarang: number = Date.now()): number 
 export interface KabarModel {
   title: string;
   url: string;
+  /** Edisi berita asalnya — menentukan pasar riset kandidat ini. */
+  wilayah?: "id" | "us" | "cn";
+}
+
+/** Edisi kabar dinormalkan ke tiga pasar yang dikenal. */
+function edisiKabar(v: any): "id" | "us" | "cn" {
+  const s = String(v || "").trim().toLowerCase();
+  return s === "us" || s === "cn" ? (s as "id" | "us" | "cn") : "id";
 }
 
 /**
@@ -110,7 +118,7 @@ export function kandidatPeluncuran(
     if (jenisSinyal(`${judul} ${String(b?.excerpt || "")}`) !== "model") continue;
     const dikenal = (armada || []).some((v) => v && cocokModel(judul, String(v.brand), String(v.name)));
     if (dikenal) continue;
-    keluar.push({ title: judul, url });
+    keluar.push({ title: judul, url, wilayah: edisiKabar((b as any)?.wilayah) });
   }
   return keluar.slice(0, 25);
 }
@@ -120,6 +128,8 @@ export interface KandidatModel {
   model: string;
   kind: "mobil" | "motor";
   urls: string[];
+  /** Pasar peluncurannya — riset dan entri baru mengikuti edisi ini. */
+  wilayah?: "id" | "us" | "cn";
 }
 
 const SKEMA_EKSTRAK = {
@@ -135,8 +145,13 @@ const SKEMA_EKSTRAK = {
           model: { type: "string", maxLength: 80 },
           kind: { type: "string", enum: ["mobil", "motor"] },
           urls: { type: "array", maxItems: 6, items: { type: "string", maxLength: 500 } },
+          wilayah: {
+            type: "string",
+            enum: ["id", "us", "cn"],
+            description: "Pasar tempat model ini diluncurkan menurut beritanya: id Indonesia, us Amerika Serikat, cn China.",
+          },
         },
-        required: ["brand", "model", "kind", "urls"],
+        required: ["brand", "model", "kind", "urls", "wilayah"],
         additionalProperties: false,
       },
     },
@@ -184,7 +199,11 @@ export function saringKandidat(
     const model = String(k?.model || "").trim().slice(0, 80);
     const kind = k?.kind === "motor" ? "motor" : k?.kind === "mobil" ? "mobil" : "";
     if (!brand || !model || !kind) continue;
-    const kunci = kunciKandidat(brand, model);
+    const wilayah = edisiKabar((k as any)?.wilayah);
+    /* Kunci anti-ulang namespaced per pasar — model yang sama boleh diluncurkan
+       di dua pasar dan diriset untuk keduanya. Tanpa wilayah berarti Indonesia
+       seperti sebelumnya, jadi kunci lama tetap cocok. */
+    const kunci = wilayah === "id" ? kunciKandidat(brand, model) : `${wilayah}|${kunciKandidat(brand, model)}`;
     if (lihat.has(kunci) || pernah.has(kunci)) continue;
     const urls = [...new Set((Array.isArray(k?.urls) ? k.urls : []).map((u: any) => String(u || "").trim()).filter(Boolean))];
     const host = new Set(urls.map(hostDari).filter(Boolean));
@@ -192,7 +211,7 @@ export function saringKandidat(
     if (host.size < 2) continue;
     if (sudahAda(armada, brand, model)) continue;
     lihat.add(kunci);
-    keluar.push({ brand, model, kind: kind as "mobil" | "motor", urls });
+    keluar.push({ brand, model, kind: kind as "mobil" | "motor", urls, wilayah });
   }
   return keluar;
 }
@@ -257,9 +276,10 @@ async function ekstrakKandidat(apiKey: string, kabar: KabarModel[]): Promise<{ e
       effort: "low",
       maxOutputTokens: 4000,
       instructions: [
-        "Kamu mengekstrak model kendaraan listrik yang BARU diluncurkan dari daftar judul berita berbahasa Indonesia.",
-        "Keluarkan HANYA model yang beritanya bertanda peluncuran (meluncur, diluncurkan, resmi hadir, diperkenalkan, all new, harga resmi, pre-booking).",
+        "Kamu mengekstrak model kendaraan listrik yang BARU diluncurkan dari daftar judul berita (Indonesia, Inggris, dan Mandarin).",
+        "Keluarkan HANYA model yang beritanya bertanda peluncuran (meluncur, diluncurkan, resmi hadir, diperkenalkan, all new, harga resmi, pre-booking, launched, debuts, 上市, 发布).",
         "kind: 'mobil' untuk mobil, 'motor' untuk motor/sepeda motor/skuter. Ragu-ragu berarti jangan keluarkan.",
+        "wilayah: pasar tempat model itu diluncurkan menurut beritanya — 'cn' untuk berita China, 'us' untuk berita Amerika, 'id' untuk berita Indonesia.",
         "urls: alamat berita yang menyebut model itu (dari daftar yang diberikan, JANGAN tulis yang lain).",
         "Jawab hanya dengan JSON sesuai skema.",
       ].join("\n"),
@@ -288,7 +308,22 @@ async function risetModelBaru(
   kandidat: KandidatModel
 ): Promise<{ nilai: Record<string, any>; biayaRupiah: number; errorKey: string }> {
   const model = modelBawaan();
-  const schema = buildSchema(kandidat.kind, null);
+  /* Riset mengikuti pasar peluncurannya — model China diriset dengan harga
+     yuan dan jarak CLTC, bukan Rupiah. */
+  const wilayah = edisiKabar((kandidat as any)?.wilayah);
+  const schema = buildSchema(kandidat.kind, null, wilayah);
+  const pasarHint =
+    wilayah === "us"
+      ? "Model yang baru diluncurkan dan belum ada di katalog — prioritaskan harga dan spesifikasi versi Amerika Serikat dari pemberitaan peluncuran dan situs resmi."
+      : wilayah === "cn"
+        ? "Model yang baru diluncurkan dan belum ada di katalog — prioritaskan harga dan spesifikasi versi China dari pemberitaan peluncuran dan situs resmi."
+        : "Model yang baru diluncurkan dan belum ada di katalog — prioritaskan harga dan spesifikasi versi Indonesia dari pemberitaan peluncuran dan situs resmi.";
+  const pasarInput =
+    wilayah === "us"
+      ? `Riset ${kandidat.brand} ${kandidat.model} untuk pasar Amerika Serikat. Jawab hanya dengan JSON sesuai skema.`
+      : wilayah === "cn"
+        ? `Riset ${kandidat.brand} ${kandidat.model} untuk pasar China. Jawab hanya dengan JSON sesuai skema.`
+        : `Riset ${kandidat.brand} ${kandidat.model} untuk pasar Indonesia. Jawab hanya dengan JSON sesuai skema.`;
   const ac = new AbortController();
   const batas = setTimeout(() => ac.abort(), BATAS_MS_MODEL);
   let biaya = 0;
@@ -303,21 +338,22 @@ async function risetModelBaru(
         brand: kandidat.brand,
         name: kandidat.model,
         today: tanggalWib(),
-        hint: "Model yang baru diluncurkan dan belum ada di katalog — prioritaskan harga dan spesifikasi versi Indonesia dari pemberitaan peluncuran dan situs resmi.",
+        hint: pasarHint,
+        wilayah,
       }),
-      input: `Riset ${kandidat.brand} ${kandidat.model} untuk pasar Indonesia. Jawab hanya dengan JSON sesuai skema.`,
+      input: pasarInput,
       schema,
       signal: ac.signal,
     });
     if (res.usage) biaya += biayaDariUsage(res.usage, model, new Date()).rupiah;
     const bersih = res.ok
-      ? bersihkanUsulan(res.hasil, { kind: kandidat.kind }).usulan
+      ? bersihkanUsulan(res.hasil, { kind: kandidat.kind, wilayah }).usulan
       : res.mentah && res.errorKey && BISA_DIRAPIKAN.has(res.errorKey)
         ? await (async () => {
             const rapi = await rapikanJadiJson({ apiKey, schema, mentah: res.mentah, signal: ac.signal });
             if (rapi.usage) biaya += biayaDariUsage(rapi.usage, model, new Date()).rupiah;
             if (!rapi.ok) return null;
-            return bersihkanUsulan(rapi.hasil, { kind: kandidat.kind }).usulan;
+            return bersihkanUsulan(rapi.hasil, { kind: kandidat.kind, wilayah }).usulan;
           })()
         : null;
     if (!bersih) return { nilai: {}, biayaRupiah: biaya, errorKey: res.errorKey || "err.ai.jawabanTidakTerbaca" };
@@ -380,7 +416,9 @@ export async function jalankanModelBaru({ paksa = false }: { paksa?: boolean } =
         for (const kandidat of saring) {
           const riset = await risetModelBaru(apiKey, kandidat);
           hasil.biayaRupiah += riset.biayaRupiah;
-          const kunci = kunciKandidat(kandidat.brand, kandidat.model);
+          /* Kunci namespaced pasar — sama dengan yang dipakai saringKandidat. */
+          const edisi = edisiKabar((kandidat as any)?.wilayah);
+          const kunci = edisi === "id" ? kunciKandidat(kandidat.brand, kandidat.model) : `${edisi}|${kunciKandidat(kandidat.brand, kandidat.model)}`;
           if (riset.errorKey || !Object.keys(riset.nilai).length) {
             hasil.ditolak += 1;
             if (!hasil.errorKey) hasil.errorKey = riset.errorKey;
@@ -391,14 +429,24 @@ export async function jalankanModelBaru({ paksa = false }: { paksa?: boolean } =
           const terpakai = new Set<string>();
           for (const c of ["cars", "motors"]) for (const v of (termuat[c] || []) as any[]) if (v?.id) terpakai.add(String(v.id));
           const kini = new Date().toISOString();
+          /* Entri regional berawalan edisinya (cn-/us-) seperti isi katalog
+             yang ditulis tangan — tanpa ini model China terbit sebagai
+             Indonesia dan mengotori edisi yang salah. */
+          const dasar = idUnik(kandidat.brand, kandidat.model, terpakai);
+          /* Pastikan bentuk berawalan pun unik — "x" yang bebas tidak berarti
+             "cn-x" bebas. */
+          let finalId = edisi === "id" ? dasar : `${edisi}-${dasar}`;
+          for (let n = 2; terpakai.has(finalId); n++) finalId = `${edisi === "id" ? dasar : `${edisi}-${dasar}`}-${n}`;
+          terpakai.add(finalId);
           const entri = {
-            id: idUnik(kandidat.brand, kandidat.model, terpakai),
+            id: finalId,
             brand: kandidat.brand,
             name: kandidat.model,
             ...riset.nilai,
             year: Number(tanggalWib().slice(0, 4)),
             status: "published",
             aiAssisted: true,
+            wilayah: edisi,
             updatedAt: kini,
             updatedBy: "auto",
           };

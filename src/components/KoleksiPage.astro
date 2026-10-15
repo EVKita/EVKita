@@ -47,8 +47,8 @@ interface Props {
 const { site: siteProp, jenis, pool, mode, group = null, media = {}, region = "id" } = Astro.props;
 const us = region === "us";
 /* Akhiran edisi untuk seluruh tautan internal — tanpanya mengeklik merek
-   menendang pembaca Amerika kembali ke daftar Indonesia. */
-const suffix = us ? "?region=us" : "";
+   menendang pembaca edisi regional kembali ke daftar Indonesia. */
+const suffix = region === "id" ? "" : `?region=${region}`;
 
 const lang = normalizePubLocale(Astro.locals?.pubLang);
 const t = makePubT(lang);
@@ -82,7 +82,7 @@ const gridHtml = items.map((c: any) => cardHTML(c, { linkable: true, media, t, l
 
 const brand = site.brandText || "EVKita";
 const origin = siteOrigin(Astro.url);
-const canonical = us ? `${origin}${basis}${mode === "kelompok" && group ? `/${group.slug}` : ""}?region=us` : canonicalUrl(Astro.url);
+const canonical = region === "id" ? canonicalUrl(Astro.url) : `${origin}${basis}${mode === "kelompok" && group ? `/${group.slug}` : ""}?region=${region}`;
 
 const jenisKata = isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe");
 
@@ -97,7 +97,7 @@ const lead =
   mode === "kelompok" && group
     ? koleksiLead(jenis, group.label, group.items, t, lang, region)
     : mode === "indeks"
-      ? (us ? t("pub.region.indeksLead", { count: countPhrase(s, t), n: groups.length, jenis: jenisKata }) : t("pub.koleksi.indeksLead", { count: countPhrase(s, t), n: groups.length, jenis: jenisKata }))
+      ? (region === "id" ? t("pub.koleksi.indeksLead", { count: countPhrase(s, t), n: groups.length, jenis: jenisKata }) : t(region === "us" ? "pub.region.indeksLead" : "pub.region.cnIndeksLead", { count: countPhrase(s, t), n: groups.length, jenis: jenisKata }))
       : "";
 
 const pageTitle =
@@ -111,7 +111,7 @@ const metaDesc =
   mode === "kelompok" && group
     ? koleksiDescription(jenis, group.label, group.items, t, lang, region)
     : mode === "indeks"
-      ? (us ? t("pub.region.metaIndeks", { jenis: jenisKata }) : t("pub.koleksi.metaIndeks", { jenis: jenisKata }))
+      ? (region === "id" ? t("pub.koleksi.metaIndeks", { jenis: jenisKata }) : t(region === "us" ? "pub.region.metaIndeks" : "pub.region.cnMetaIndeks", { jenis: jenisKata }))
       : t("pub.notFound.desc");
 
 const jsonLd =
@@ -153,7 +153,7 @@ const jsonLd =
             "@type": "ListItem",
             position: i + 1,
             name: g.label,
-            url: absoluteUrl(Astro.url, us ? `${basis}/${g.slug}?region=us` : `${basis}/${g.slug}`),
+            url: absoluteUrl(Astro.url, `${basis}/${g.slug}${suffix}`),
           })),
         }
       : null;
@@ -173,7 +173,7 @@ const ringkasan = (g: { items: any[] }) => {
 <Base title={pageTitle} description={metaDesc} keywords={site.seoKeywords} ogImage={site.seoOgImage} site={site}>
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="mobil" region={us ? "us" : "id"} artikel="/artikel" />
+  <SiteHeader site={site} base={region === "id" ? "/" : region === "us" ? "/amerika" : "/china"} active="mobil" region={region} artikel="/artikel" />
 
   {mode === "hilang" ? (
     <main class="container notfound" id="konten">
@@ -182,18 +182,18 @@ const ringkasan = (g: { items: any[] }) => {
       <p class="notfound-text">
         {isMerek ? t("pub.koleksi.notFoundMerekText") : t("pub.koleksi.notFoundTipeText")}
       </p>
-      <a class="btn btn-primary" href={us ? `${basis}?region=us` : basis}>{t("pub.koleksi.lihatSemua", { jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })}</a>
+      <a class="btn btn-primary" href={`${basis}${suffix}`}>{t("pub.koleksi.lihatSemua", { jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })}</a>
     </main>
   ) : (
     <main class="container katalog" id="konten">
       <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-        <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
+        <a href={region === "id" ? "/" : region === "us" ? "/amerika" : "/china"}>{t("pub.nav.beranda")}</a>
         <span aria-hidden="true">/</span>
         {mode === "indeks" ? (
           <span class="breadcrumb-current">{judulIndeks}</span>
         ) : (
           <>
-            <a href={us ? `${basis}?region=us` : basis}>{judulIndeks}</a>
+            <a href={`${basis}${suffix}`}>{judulIndeks}</a>
             <span aria-hidden="true">/</span>
             <span class="breadcrumb-current">{group?.label}</span>
           </>
@@ -208,7 +208,7 @@ const ringkasan = (g: { items: any[] }) => {
       {mode === "indeks" ? (
         <div class="koleksi-grid">
           {groups.map((g) => (
-            <a class="koleksi-card" href={us ? `${basis}/${g.slug}?region=us` : `${basis}/${g.slug}`}>
+            <a class="koleksi-card" href={`${basis}/${g.slug}${suffix}`}>
               <span class="koleksi-card-label">{g.label}</span>
               <span class="koleksi-card-meta">{ringkasan(g)}</span>
             </a>
@@ -223,7 +223,7 @@ const ringkasan = (g: { items: any[] }) => {
               <h2>{t("pub.koleksi.diHalaman", { judul: judulLawan })}</h2>
               <div class="tag-row">
                 {silang.map((g) => (
-                  <a class="tag-pill" href={us ? `/${lawan}/${g.slug}?region=us` : `/${lawan}/${g.slug}`}>{g.label} ({g.items.length})</a>
+                  <a class="tag-pill" href={`/${lawan}/${g.slug}${suffix}`}>{g.label} ({g.items.length})</a>
                 ))}
               </div>
             </section>
@@ -234,11 +234,11 @@ const ringkasan = (g: { items: any[] }) => {
               <h2>{isMerek ? t("pub.koleksi.merekLain") : t("pub.koleksi.tipeLain")}</h2>
               <div class="tag-row">
                 {tetangga.map((g) => (
-                  <a class="tag-pill" href={us ? `${basis}/${g.slug}?region=us` : `${basis}/${g.slug}`}>{g.label} ({g.items.length})</a>
+                  <a class="tag-pill" href={`${basis}/${g.slug}${suffix}`}>{g.label} ({g.items.length})</a>
                 ))}
               </div>
               {groups.length - 1 > tetangga.length ? (
-                <p class="katalog-lead"><a href={us ? `${basis}?region=us` : basis}>{t("pub.koleksi.lihatSeluruh", { n: groups.length, jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })} →</a></p>
+                <p class="katalog-lead"><a href={`${basis}${suffix}`}>{t("pub.koleksi.lihatSeluruh", { n: groups.length, jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })} →</a></p>
               ) : null}
             </section>
           ) : null}
@@ -246,8 +246,8 @@ const ringkasan = (g: { items: any[] }) => {
           <section class="koleksi-section">
             <h2>{t("pub.koleksi.lanjut")}</h2>
             <div class="tag-row">
-              <a class="tag-pill" href={us ? "/katalog?region=us" : "/katalog"}>{t("pub.koleksi.katalogLengkap")}</a>
-              <a class="tag-pill" href={us ? `${basis}?region=us` : basis}>{t("pub.koleksi.semua", { jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })}</a>
+              <a class="tag-pill" href={`/katalog${suffix}`}>{t("pub.koleksi.katalogLengkap")}</a>
+              <a class="tag-pill" href={`${basis}${suffix}`}>{t("pub.koleksi.semua", { jenis: isMerek ? t("pub.koleksi.jenisMerek") : t("pub.koleksi.jenisTipe") })}</a>
               <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">{t("pub.koleksi.kalkulator")}</a>
             </div>
           </section>

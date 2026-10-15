@@ -159,14 +159,16 @@ async function risetSatu(
 ): Promise<{ usulan: any[]; biayaRupiah: number; errorKey: string }> {
   const model = modelBawaan();
   const schema = buildSchema(kendaraan.kind, null, (kendaraan as any)?.wilayah);
-  const us = (kendaraan as any)?.wilayah === "us";
+  const wilayah = String((kendaraan as any)?.wilayah || "id").toLowerCase();
+  const us = wilayah === "us";
+  const cn = wilayah === "cn";
   const instructions = buildInstructions({
     kind: kendaraan.kind,
     brand: kendaraan.brand,
     name: kendaraan.name,
     today: tanggalWib(),
-    /* Kendaraan Amerika diriset untuk pasar Amerika — tanpa ini angkanya
-       memakai konteks Indonesia. */
+    /* Kendaraan edisi regional diriset untuk pasarnya sendiri — tanpa ini
+       angkanya memakai konteks Indonesia. */
     wilayah: (kendaraan as any)?.wilayah,
   });
 
@@ -186,7 +188,9 @@ async function risetSatu(
       instructions,
       input: us
         ? `Riset ${kendaraan.brand} ${kendaraan.name} untuk pasar Amerika Serikat. Jawab hanya dengan JSON sesuai skema.`
-        : `Riset ${kendaraan.brand} ${kendaraan.name} untuk pasar Indonesia. Jawab hanya dengan JSON sesuai skema.`,
+        : cn
+          ? `Riset ${kendaraan.brand} ${kendaraan.name} untuk pasar China. Jawab hanya dengan JSON sesuai skema.`
+          : `Riset ${kendaraan.brand} ${kendaraan.name} untuk pasar Indonesia. Jawab hanya dengan JSON sesuai skema.`,
       schema,
       signal: ac.signal,
     });

@@ -182,27 +182,32 @@ export function pilihSegar(
  * kalau tidak ada yang disebut pakai 8 jarak terjauh) plus 6 berita terbaru.
  * Alamat berita ikut menjadi sumber yang boleh dikutip.
  *
- * Bahannya se-wilayah dengan artikelnya: artikel Amerika disegarkan dari
- * katalog dan berita Amerika (harga Dolar, mil EPA), bukan dari Indonesia.
+ * Bahannya se-wilayah dengan artikelnya: artikel edisi regional disegarkan
+ * dari katalog dan berita edisinya sendiri (Amerika: Dolar/mil EPA, China:
+ * yuan/km CLTC), bukan dari Indonesia.
  */
 export function bahanSegar(content: any, artikel: any): { bahan: string; sumberBoleh: string[] } {
-  const us = (artikel as any)?.wilayah === "us";
+  const wilayah = String((artikel as any)?.wilayah || "id").toLowerCase();
+  const us = wilayah === "us";
+  const cn = wilayah === "cn";
   const isi = `${artikel?.title || ""}\n${artikel?.body || ""}`.toLowerCase();
   const semua = [...((content && content.cars) || []), ...((content && content.motors) || [])].filter(
-    (v: any) => v && v.id && v.brand && v.name && (v.wilayah === "us") === us
+    (v: any) => v && v.id && v.brand && v.name && String(v.wilayah || "id").toLowerCase() === wilayah
   );
   const sebut = (v: any) =>
     us
       ? `- ${v.brand} ${v.name}: price ${v.priceText || (v.price != null ? `US$${v.price}` : "-")}, range ${v.rangeKm != null ? `${Math.round(Number(v.rangeKm) / 1.60934)} mi EPA` : "-"}, battery ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, power ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`
-      : `- ${v.brand} ${v.name}: harga ${v.priceText || (v.price != null ? `Rp ${v.price}` : "-")}, jarak ${v.rangeKm != null ? `${v.rangeKm} km` : "-"}, baterai ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, tenaga ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`;
+      : cn
+        ? `- ${v.brand} ${v.name}：售价 ${v.priceText || (v.price != null ? `¥${v.price}` : "-")}，续航 ${v.rangeKm != null ? `${v.rangeKm} km CLTC` : "-"}，电池 ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}，动力 ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`
+        : `- ${v.brand} ${v.name}: harga ${v.priceText || (v.price != null ? `Rp ${v.price}` : "-")}, jarak ${v.rangeKm != null ? `${v.rangeKm} km` : "-"}, baterai ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, tenaga ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`;
   let pilih = semua.filter((v: any) => isi.includes(`${String(v.brand).toLowerCase()} ${String(v.name).toLowerCase()}`)).slice(0, 12);
   if (!pilih.length) pilih = [...semua].sort((a: any, b: any) => (b.rangeKm || 0) - (a.rangeKm || 0)).slice(0, 8);
   const berita = (((content && content.berita) || []) as any[])
-    .filter((b) => b && b.title && b.url && (b.wilayah === "us") === us)
+    .filter((b) => b && b.title && b.url && String(b.wilayah || "id").toLowerCase() === wilayah)
     .slice(0, 6);
   const baris = [...pilih.map(sebut)];
   if (berita.length) {
-    baris.push(us ? "Latest news:" : "Berita terbaru:");
+    baris.push(us ? "Latest news:" : cn ? "最新消息：" : "Berita terbaru:");
     for (const b of berita) baris.push(`- ${b.title} (${b.source || "media"}): ${b.url}`);
   }
   return {
@@ -243,6 +248,18 @@ function instruksiSegar(artikel: any): string {
       "If nothing is outdated, return the content as is and write a summary containing the word 'unchanged'.",
       "HARD RULE: the sources field ONLY contains addresses from the list given below, or from the article's existing list (also given). Writing any other address fails.",
       "Answer only with JSON per schema: body (full Markdown manuscript), excerpt (2 sentences), ringkasan (one sentence on the change), sources.",
+    ].join("\n");
+  }
+  /* Artikel China disegarkan dalam Mandarin — instruksi Indonesia/Inggris
+     akan menulis ulang naskah Mandarin ke bahasa lain. */
+  if (String((artikel as any)?.wilayah || "").toLowerCase() === "cn") {
+    return [
+      "你是中国电动车指南编辑。你的任务是刷新给定的稿件，而不是重写。",
+      "保持原文结构、小标题、篇幅和风格。标题不变（此处不含标题）。",
+      "只更新过时的事实（价格、规格、供应、车型状态），数字只能来自材料。材料中没有的数字绝不能作为新数字出现。",
+      "如无过时内容，原样返回，并在摘要中写明“无变化”。",
+      "硬性规则：sources 字段只能包含下面给定列表或文章原有列表中的地址。写其他地址即失败。",
+      "只按模式用 JSON 回答：body（完整 Markdown 稿件）、excerpt（2句）、ringkasan（一句变化说明）、sources。",
     ].join("\n");
   }
   return [

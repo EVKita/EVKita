@@ -93,7 +93,7 @@ const VERDICT_KEYS = [
 export function compareVerdicts(items, t, lang) {
   const tt = t || tId;
   /* Label baris mengikuti edisi yang dibandingkan: semuanya Amerika berarti
-     "0–60 mph", bukan "0–100 km/j". */
+     "0–60 mph", bukan "0–100 km/j". China memakai km seperti Indonesia. */
   const semuaUs = Array.isArray(items) && items.length > 0 && items.every((c) => c && c.wilayah === "us");
   return VERDICT_KEYS.map(({ key, phraseKey }) => {
     const row = COMPARE_ROWS.find((r) => r.key === key);

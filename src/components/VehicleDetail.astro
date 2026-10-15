@@ -49,10 +49,11 @@ const site = cmsSite(siteProp, lang);
 const intl = pubIntl(lang);
 
 const isMotor = kind === "motor";
-/* Kendaraan terkait tetap se-wilayah: halaman Amerika tidak mengusulkan
-   model Indonesia, dan sebaliknya. */
-const us = car && car.wilayah === "us";
-const suffix = us ? "?region=us" : "";
+/* Kendaraan terkait tetap se-wilayah: halaman edisi regional tidak mengusulkan
+   model edisi lain, dan sebaliknya. */
+const wilayah = car && car.wilayah ? car.wilayah : "id";
+const us = wilayah === "us";
+const suffix = wilayah === "id" ? "" : `?region=${wilayah}`;
 const noun = isMotor ? t("pub.tax.motor") : t("pub.tax.mobil");
 const nounSatu = isMotor ? t("pub.tax.motorSatu") : t("pub.tax.mobilSatu");
 const nounCap = isMotor ? t("pub.detail.motorCap") : t("pub.detail.mobilCap");
@@ -62,8 +63,8 @@ const nounCap = isMotor ? t("pub.detail.motorCap") : t("pub.detail.mobilCap");
  * motor kini punya yang sama di /katalog-motor.
  */
 const induk = isMotor
-  ? { label: t("pub.tax.titleMotor"), href: us ? `/katalog-motor?region=us` : "/katalog-motor" }
-  : { label: t("pub.katalog"), href: us ? `/katalog?region=us` : "/katalog" };
+  ? { label: t("pub.tax.titleMotor"), href: `/katalog-motor${suffix}` }
+  : { label: t("pub.katalog"), href: `/katalog${suffix}` };
 
 const lower = (s: any) => String(s || "").toLowerCase();
 const fmt = (v: any, unit: string) => (v !== null && v !== undefined && v !== "" ? `${v} ${unit}`.trim() : "");
@@ -98,11 +99,11 @@ const highlights = car
 
 const related = car
   ? pool
-      .filter((c: any) => c.id !== car.id && (c.brand === car.brand || c.bodyType === car.bodyType) && (!us || c.wilayah === "us") && (us || c.wilayah !== "us"))
+      .filter((c: any) => c.id !== car.id && (c.brand === car.brand || c.bodyType === car.bodyType) && (c.wilayah || "id") === wilayah)
       .slice(0, 4)
   : [];
 
-const priceText = car ? car.priceText || (car.price != null ? (us ? "US$" : "Rp ") + Number(car.price).toLocaleString(intl) : "") : "";
+const priceText = car ? car.priceText || (car.price != null ? (us ? "US$" : car.wilayah === "cn" ? "¥" : "Rp ") + Number(car.price).toLocaleString(intl) : "") : "";
 
 /**
  * Alamat halaman kelompok. Merek dan tipe bodi kini punya halamannya sendiri,
@@ -243,7 +244,7 @@ const jsonLd = car
                   offers: {
                     "@type": "Offer",
                     price: car.price,
-                    priceCurrency: us ? "USD" : "IDR",
+                    priceCurrency: us ? "USD" : wilayah === "cn" ? "CNY" : "IDR",
                     availability: "https://schema.org/InStock",
                     url: canonical,
                   },
@@ -296,7 +297,7 @@ const pageTitle = car
       tayang tetap tidak ada gunanya bagi siapa pun. */}
   {jsonLd && !pratinjau ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base="/" active={kind} />
+  <SiteHeader site={site} base={wilayah === "id" ? "/" : wilayah === "us" ? "/amerika" : "/china"} active={kind} region={wilayah} />
 
   {!car ? (
     <main class="container notfound" id="konten">
@@ -399,14 +400,14 @@ const pageTitle = car
               {t("pub.detail.share")}
             </button>
             <button type="button" class="btn btn-ghost btn-sm" id="copyBtn">{t("pub.detail.copy")}</button>
-            {/* Kalkulator hemat kini punya edisi dolar untuk kendaraan Amerika. */}
+            {/* Kalkulator hemat kini punya edisi dolar dan yuan untuk kendaraan regional. */}
             {bisaDihitung ? (
-              <a class="btn btn-ghost btn-sm" href={us ? `/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}&region=us` : `/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}`}>
+              <a class="btn btn-ghost btn-sm" href={`/kalkulator/hemat-listrik-vs-bensin?mobil=${car.id}${suffix ? `&region=${wilayah}` : ""}`}>
                 {t("pub.detail.hitungHemat")}
               </a>
             ) : null}
             {bisaHitungPengisian ? (
-              <a class="btn btn-ghost btn-sm" href={`/kalkulator/biaya-pengisian?kendaraan=${car.id}${suffix ? `&region=us` : ""}`}>
+              <a class="btn btn-ghost btn-sm" href={`/kalkulator/biaya-pengisian?kendaraan=${car.id}${suffix ? `&region=${wilayah}` : ""}`}>
                 {t("pub.detail.hitungIsi")}
               </a>
             ) : null}

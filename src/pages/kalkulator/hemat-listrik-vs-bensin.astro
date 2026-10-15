@@ -8,6 +8,7 @@ import {
   DEFAULTS,
   TARIF_PRESETS,
   TARIF_PRESETS_US,
+  TARIF_PRESETS_CN,
   MIL_KM,
   GALON_LITER,
   MPG_PER_KML,
@@ -17,12 +18,14 @@ import {
   rupiahHalus,
   dolarPenuh,
   dolarHalus,
+  yuanPenuh,
+  yuanHalus,
   teksBalikModal,
   teksRingkas,
 } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
-import { filterWilayah } from "../../lib/region.js";
+import { filterWilayah, regionDariParam } from "../../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
 
 /**
@@ -54,8 +57,11 @@ const q = Astro.url.searchParams;
  * mil. Mesin hitung tetap metrik — isian tampilan dikonversi ke metrik
  * sebelum dihitung, hasilnya dikonversi kembali sebelum ditampilkan.
  */
-const region = q.get("region") === "us" ? "us" : "id";
+const region = regionDariParam(q.get("region"));
 const us = region === "us";
+const cn = region === "cn";
+const edisiBase = region === "id" ? "" : region === "us" ? "/amerika" : "/china";
+const edisiParam = region === "id" ? "" : `?region=${region}`;
 
 const cars = filterWilayah(content.cars, region).filter(hanyaTayang());
 
@@ -82,15 +88,16 @@ const num = (key: string, fallback: number | "") => {
 const mobilId = q.get("mobil") || "";
 const terpilih = pilihan.find((c: any) => c.id === mobilId) || pilihan[0] || null;
 
-/* Isian tampil dalam satuan edisi; mesin di bawah menerima metrik. */
+/* Isian tampil dalam satuan edisi; mesin di bawah menerima metrik. China
+   metrik seperti Indonesia, hanya mata uang dan bawaannya yang beda. */
 const bulat1 = (n: number) => Math.round(n * 10) / 10;
 const form = {
   mobil: terpilih ? terpilih.id : "",
   kwhPer100: num("kwh", terpilih ? bulat1(terpilih.kwhPer100 * (us ? MIL_KM : 1)) : us ? 27 : 17),
-  elecPrice: num("listrik", us ? 0.17 : DEFAULTS.elecPrice),
-  fuelPrice: num("bbm", us ? 3.5 : DEFAULTS.fuelPrice),
+  elecPrice: num("listrik", us ? 0.17 : cn ? 0.6 : DEFAULTS.elecPrice),
+  fuelPrice: num("bbm", us ? 3.5 : cn ? 7.8 : DEFAULTS.fuelPrice),
   kmPerLiter: num("kml", us ? 30 : DEFAULTS.kmPerLiter),
-  kmPerMonth: num("km", us ? 1000 : DEFAULTS.kmPerMonth),
+  kmPerMonth: num("km", us ? 1000 : cn ? 1500 : DEFAULTS.kmPerMonth),
   evPrice: num("hargaEv", terpilih && terpilih.price ? terpilih.price : ""),
   icePrice: num("hargaBensin", ""),
 };
@@ -128,7 +135,7 @@ const pageTitle = `${t("pub.kalk.pageHemat")} — ${brand}`;
 const metaDesc = t("pub.kalk.descHemat");
 
 const origin = siteOrigin(Astro.url);
-const canonical = us ? `${origin}/kalkulator/hemat-listrik-vs-bensin?region=us` : canonicalUrl(Astro.url);
+const canonical = region === "id" ? canonicalUrl(Astro.url) : `${origin}/kalkulator/hemat-listrik-vs-bensin?region=${region}`;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -140,7 +147,7 @@ const jsonLd = {
       applicationCategory: "FinanceApplication",
       operatingSystem: "Web",
       description: metaDesc,
-      offers: { "@type": "Offer", price: 0, priceCurrency: us ? "USD" : "IDR" },
+      offers: { "@type": "Offer", price: 0, priceCurrency: us ? "USD" : cn ? "CNY" : "IDR" },
     },
     {
       "@type": "BreadcrumbList",
@@ -157,8 +164,8 @@ const jsonLd = {
  * fungsi yang sama persis, jadi tidak ada satu pun kalimat di sini yang
  * dirakit dua kali di dua tempat.
  */
-const uangPenuh = us ? dolarPenuh : rupiahPenuh;
-const uangHalus = us ? dolarHalus : rupiahHalus;
+const uangPenuh = us ? dolarPenuh : cn ? yuanPenuh : rupiahPenuh;
+const uangHalus = us ? dolarHalus : cn ? yuanHalus : rupiahHalus;
 /* Biaya per km mesin dikali mil untuk edisi Amerika. */
 const perJarak = (n: number | null) => (n === null ? null : us ? n * MIL_KM : n);
 const teks = {
@@ -180,8 +187,9 @@ const ringkas = teksRingkas(hasil, t, { region });
  * ketikan — jadi tidak bisa berselisih dengan kalkulatornya.
  *
  * Edisi Amerika memakai mil, dolar, dan galon — polanya sama, angkanya Amerika.
+ * Edisi China memakai yuan dengan satuan metrik.
  */
-const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) => {
+const contohProfil = (us ? [1000, 1500, 2000] : cn ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) => {
   const r = hitungHemat(
     us
       ? {
@@ -193,28 +201,38 @@ const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) 
           evPrice: 45000,
           icePrice: 38000,
         }
-      : {
-          kwhPer100: 10,
-          elecPrice: 1444.7,
-          fuelPrice: 13000,
-          kmPerLiter: 12,
-          kmPerMonth: jarak,
-          evPrice: 195000000,
-          icePrice: 150000000,
-        }
+      : cn
+        ? {
+            kwhPer100: 12,
+            elecPrice: 0.6,
+            fuelPrice: 7.8,
+            kmPerLiter: 12,
+            kmPerMonth: jarak,
+            evPrice: 219900,
+            icePrice: 150000,
+          }
+        : {
+            kwhPer100: 10,
+            elecPrice: 1444.7,
+            fuelPrice: 13000,
+            kmPerLiter: 12,
+            kmPerMonth: jarak,
+            evPrice: 195000000,
+            icePrice: 150000000,
+          }
   );
-  return { km: us ? jarak.toLocaleString("en-US") : jarak.toLocaleString(intl), hemat: uangPenuh(r.savingMonthly), kembali: teksBalikModal(r, t) };
+  return { km: us ? jarak.toLocaleString("en-US") : cn ? jarak.toLocaleString("zh-CN") : jarak.toLocaleString(intl), hemat: uangPenuh(r.savingMonthly), kembali: teksBalikModal(r, t) };
 });
 ---
 
 <Base title={pageTitle} description={metaDesc} keywords={t("pub.kalk.keywordHemat")} ogImage={site.seoOgImage} site={site}>
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
-  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="" region={us ? "us" : "id"} artikel="/artikel" />
+  <SiteHeader site={site} base={edisiBase || "/"} active="" region={region} artikel="/artikel" />
 
   <main class="container kalk" id="konten">
     <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-      <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
+      <a href={edisiBase || "/"}>{t("pub.nav.beranda")}</a>
       <span aria-hidden="true">/</span>
       <span class="breadcrumb-current">{t("pub.kalk.titleHemat")}</span>
     </nav>
@@ -225,7 +243,7 @@ const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) 
     </header>
 
     <form class="kalk-form" id="kalkForm" method="get" autocomplete="off" data-region={region}>
-      {us ? <input type="hidden" name="region" value="us" /> : null}
+      {region !== "id" ? <input type="hidden" name="region" value={region} /> : null}
       <div class="kalk-grid">
         <div class="kalk-field kalk-field-wide">
           <label for="f-mobil">{t("pub.kalk.mobilListrik")}</label>
@@ -244,20 +262,20 @@ const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) 
         </div>
 
         <div class="kalk-field">
-          <label for="f-listrik">{t("pub.kalk.tarif")} <span class="kalk-unit">{us ? "US$ / kWh" : "Rp / kWh"}</span></label>
+          <label for="f-listrik">{t("pub.kalk.tarif")} <span class="kalk-unit">{us ? "US$ / kWh" : cn ? t("pub.region.unitYuanKwh") : "Rp / kWh"}</span></label>
           <input id="f-listrik" name="listrik" type="number" min="1" step="0.01" value={form.elecPrice} />
           <div class="kalk-presets">
-            {(us ? TARIF_PRESETS_US : TARIF_PRESETS).map((p) => (
+            {(us ? TARIF_PRESETS_US : cn ? TARIF_PRESETS_CN : TARIF_PRESETS).map((p) => (
               <button type="button" class="kalk-preset" data-target="f-listrik" data-value={p.value}>
                 {p.i18n ? t(p.i18n) : p.label}{" "}
-                <span>≈{us ? `US$${Number(p.value).toFixed(2)}` : Math.round(p.value).toLocaleString(intl)}</span>
+                <span>≈{us ? `US$${Number(p.value).toFixed(2)}` : cn ? `¥${Number(p.value).toFixed(2)}` : Math.round(p.value).toLocaleString(intl)}</span>
               </button>
             ))}
           </div>
         </div>
 
         <div class="kalk-field">
-          <label for="f-bbm">{t("pub.kalk.hargaBbm")} <span class="kalk-unit">{us ? t("pub.region.unitGalon") : "Rp / liter"}</span></label>
+          <label for="f-bbm">{t("pub.kalk.hargaBbm")} <span class="kalk-unit">{us ? t("pub.region.unitGalon") : cn ? t("pub.region.unitYuanLiter") : "Rp / liter"}</span></label>
           <input id="f-bbm" name="bbm" type="number" min="1" step="100" value={form.fuelPrice} />
         </div>
 
@@ -272,12 +290,12 @@ const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) 
         </div>
 
         <div class="kalk-field">
-          <label for="f-harga-ev">{t("pub.kalk.hargaEv")} <span class="kalk-unit">{us ? "US$" : "Rp"}</span></label>
+          <label for="f-harga-ev">{t("pub.kalk.hargaEv")} <span class="kalk-unit">{us ? "US$" : cn ? "¥" : "Rp"}</span></label>
           <input id="f-harga-ev" name="hargaEv" type="number" min="0" step="1000000" value={form.evPrice || ""} />
         </div>
 
         <div class="kalk-field">
-          <label for="f-harga-bensin">{t("pub.kalk.hargaBensin")} <span class="kalk-unit">{us ? "US$" : "Rp"}</span></label>
+          <label for="f-harga-bensin">{t("pub.kalk.hargaBensin")} <span class="kalk-unit">{us ? "US$" : cn ? "¥" : "Rp"}</span></label>
           <input id="f-harga-bensin" name="hargaBensin" type="number" min="0" step="1000000" value={form.icePrice || ""} placeholder={t("pub.kalk.opsional")} />
           <p class="kalk-hint">{t("pub.kalk.hintHargaBensin")}</p>
         </div>
@@ -325,7 +343,7 @@ const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) 
 
     <section class="kalk-section">
       <h2>{t("pub.hemX.profilT")}</h2>
-      <p class="section-note">{us ? t("pub.region.usProfilD") : t("pub.hemX.profilD")}</p>
+      <p class="section-note">{us ? t("pub.region.usProfilD") : cn ? t("pub.region.cnProfilD") : t("pub.hemX.profilD")}</p>
       <div class="compare-scroll">
         <table class="compare-table">
           <thead>
@@ -346,7 +364,7 @@ const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) 
           </tbody>
         </table>
       </div>
-      <p class="kalk-hint">{us ? t("pub.region.usAcuan") : t("pub.hemX.acuan")}</p>
+      <p class="kalk-hint">{us ? t("pub.region.usAcuan") : cn ? t("pub.region.cnAcuan") : t("pub.hemX.acuan")}</p>
       <h3 class="mulai-faq-title">{t("pub.hemX.caraT")}</h3>
       <p class="section-note">{t("pub.hemX.caraD")}</p>
     </section>
@@ -363,8 +381,8 @@ const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) 
           <p>{t("pub.hemX.faq2a")}</p>
         </details>
         <details class="faq-item">
-          <summary>{us ? t("pub.hemX.usFaq3q") : t("pub.hemX.faq3q")}</summary>
-          <p>{us ? t("pub.hemX.usFaq3a") : t("pub.hemX.faq3a")}</p>
+          <summary>{us ? t("pub.hemX.usFaq3q") : cn ? t("pub.hemX.cnFaq3q") : t("pub.hemX.faq3q")}</summary>
+          <p>{us ? t("pub.hemX.usFaq3a") : cn ? t("pub.hemX.cnFaq3a") : t("pub.hemX.faq3a")}</p>
         </details>
       </div>
     </section>
@@ -384,9 +402,9 @@ const contohProfil = (us ? [1000, 1500, 2000] : [1000, 2000, 3000]).map((jarak) 
     <section class="kalk-section">
       <h2>{t("pub.kalk.lanjut")}</h2>
       <div class="tag-row">
-        <a class="tag-pill" href={us ? "/kalkulator/biaya-pengisian?region=us" : "/kalkulator/biaya-pengisian"}>{t("pub.kalk.titleBiaya")}</a>
-        <a class="tag-pill" href={us ? "/katalog?region=us" : "/katalog"}>{t("pub.koleksi.katalogLengkap")}</a>
-        <a class="tag-pill" href={us ? "/merek?region=us" : "/merek"}>{t("pub.koleksi.semua", { jenis: t("pub.koleksi.jenisMerek") })}</a>
+        <a class="tag-pill" href={region === "id" ? "/kalkulator/biaya-pengisian" : `/kalkulator/biaya-pengisian?region=${region}`}>{t("pub.kalk.titleBiaya")}</a>
+        <a class="tag-pill" href={region === "id" ? "/katalog" : `/katalog?region=${region}`}>{t("pub.koleksi.katalogLengkap")}</a>
+        <a class="tag-pill" href={region === "id" ? "/merek" : `/merek?region=${region}`}>{t("pub.koleksi.semua", { jenis: t("pub.koleksi.jenisMerek") })}</a>
       </div>
     </section>
   </main>

@@ -13,8 +13,9 @@ import { jadwalkanPembaruan } from "./lib/pembaruan-kendaraan";
 import { jadwalkanPantauan } from "./lib/pemantau";
 import { jadwalkanPenjualan } from "./lib/penjualan-bulanan";
 import { jadwalkanPenjualanAmerika } from "./lib/penjualan-amerika";
+import { jadwalkanPenjualanChina } from "./lib/penjualan-china";
 import { SESSION_COOKIE } from "./lib/auth";
-import { normalizeLangParam, parseAcceptLanguage, PUB_COOKIE, PUB_DEFAULT } from "./lib/i18n/pub.js";
+import { normalizeLangParam, PUB_COOKIE, PUB_DEFAULT } from "./lib/i18n/pub.js";
 import { wilayahDariPath } from "./lib/region.js";
 import { apakahBot } from "./lib/trafik.js";
 
@@ -193,6 +194,8 @@ function mulaiPenjadwalInterval(): void {
         jadwalkanPenjualan();
         /* Penjualan Amerika kuartalan: menandai angka Cox yang basi. */
         jadwalkanPenjualanAmerika();
+        /* Penjualan China bulanan: menandai angka CPCA yang basi. */
+        jadwalkanPenjualanChina();
         jadwalkanGeoip();
       } catch {
         /* tidak ada yang boleh menjatuhkan proses */
@@ -208,12 +211,15 @@ mulaiPenjadwalInterval();
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
   /*
-   * Bahasa situs publik. Urutan: `?lang=` eksplisit (URL yang bisa dirayapi
-   * Google/Baidu) > cookie pilihan pembaca > bahasa peramban pada kunjungan
-   * pertama. Robot selalu dapat bawaan di URL kanonis: menyajikan isi
-   * negosiasi ke perayap adalah penyelubungan (cloaking) di mata mesin
-   * pencari. Dipakai halaman dan komponen lewat `Astro.locals.pubLang` tanpa
-   * harus diteruskan sebagai prop.
+   * Bahasa situs publik — KETETAPAN: edisi menentukan bahasa bawaannya.
+   * Indonesia selalu Indonesia, Amerika selalu Inggris, China selalu Mandarin.
+   * Urutan: `?lang=` eksplisit (URL yang bisa dirayapi Google/Baidu) > cookie
+   * pilihan pembaca (tombol bendera) > bawaan edisi. Bahasa peramban SENGAJA
+   * tidak dipakai — pengunjung edisi Indonesia selalu melihat Bahasa Indonesia
+   * walau perambannya Inggris, dan sebaliknya. Robot selalu dapat bawaan di
+   * URL kanonis: menyajikan isi negosiasi ke perayap adalah penyelubungan
+   * (cloaking) di mata mesin pencari. Dipakai halaman dan komponen lewat
+   * `Astro.locals.pubLang` tanpa harus diteruskan sebagai prop.
    */
   const langParam = normalizeLangParam(context.url.searchParams.get("lang"));
   if (langParam) {
@@ -227,12 +233,16 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
          robot included, supaya yang terindeks versi Inggrisnya. Pilihan
          eksplisit (?lang=/cookie) di atas tetap menang. */
       context.locals.pubLang = "en";
+    } else if (wilayahDariPath(context.url.pathname) === "cn") {
+      /* Edisi China berbahasa Mandarin dengan aturan yang sama. */
+      context.locals.pubLang = "zh";
     } else if (apakahBot(context.request.headers.get("user-agent") || "")) {
       context.locals.pubLang = PUB_DEFAULT;
     } else {
-      // Kunjungan pertama manusia: ikuti bahasa perambannya. Peramban
-      // Huawei/Xiaomi di China mengirim `zh-CN` → langsung Mandarin.
-      context.locals.pubLang = parseAcceptLanguage(context.request.headers.get("accept-language"));
+      // Bawaan edisi: / dan halaman Indonesia berbahasa Indonesia — bahasa
+      // peramban tidak ikut menentukan (lihat ketetapan di atas). Peramban
+      // Huawei/Xiaomi di China membuka /china yang memang sudah Mandarin.
+      context.locals.pubLang = "id";
     }
   }
 
@@ -342,6 +352,8 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   jadwalkanPenjualan();
   /* Penjualan Amerika kuartalan: menandai angka Cox yang basi untuk putaran riset. */
   jadwalkanPenjualanAmerika();
+  /* Penjualan China bulanan: menandai angka CPCA yang basi untuk putaran riset. */
+  jadwalkanPenjualanChina();
 
   return response;
 };

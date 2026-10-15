@@ -7,7 +7,7 @@ import { carSVG, defaultColor } from "../lib/cars-ui.js";
 import { safeUrl } from "../lib/url.js";
 import { cardHTML, defaultSort, vehicleHref } from "../lib/card-html.js";
 import { siteOrigin, canonicalUrl } from "../lib/site-url";
-import { filterWilayah } from "../lib/region.js";
+import { filterWilayah, istilahCas } from "../lib/region.js";
 import { altMapFor, mediaAlt } from "../lib/media.js";
 import { hanyaTayang, masihBaru } from "../lib/tayang.js";
 import { menuBawaan } from "../lib/footer.js";
@@ -301,6 +301,22 @@ function spkluJenis(s: any) {
  */
 const canonical = canonicalUrl(Astro.url);
 
+/**
+ * Penolong edisi: tautan dalam edisi memakai awalan edisinya (`/amerika`,
+ * `/china`), edisi Indonesia memakai alamat global. Satu tempat supaya
+ * menambah edisi keempat tidak berarti menyisir puluhan tautan.
+ */
+const edisiBase = region === "us" ? "/amerika" : region === "cn" ? "/china" : "";
+const edisiParam = region === "id" ? "" : `?region=${region}`;
+const panduanSlug =
+  region === "cn"
+    ? "/artikel/panduan-membeli-mobil-listrik-di-china"
+    : region === "us"
+      ? "/artikel/panduan-membeli-mobil-listrik-di-amerika"
+      : "";
+const panduanLabel =
+  region === "cn" ? t("pub.region.cnPanduan") : region === "us" ? t("pub.region.usPanduan") : "";
+
 /* Beranda etalase empat kartu — mengisi penuh baris grid, tidak menyisakan
    slot kosong. Angka 4 ini disamakan dengan HOME_TEASER di src/scripts/app.js. */
 const HOME_CARDS = 4;
@@ -377,7 +393,7 @@ const jsonLd = {
 >
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
-  <SiteHeader site={site} base={base} active="beranda" artikel={region === "us" ? "/artikel" : undefined} region={region} />
+  <SiteHeader site={site} base={base} active="beranda" artikel={region === "id" ? undefined : `/artikel?region=${region}`} region={region} />
 
   <section class={`hero${site.heroImage ? " has-image" : ""}`}>
     {site.heroImage ? (
@@ -399,7 +415,7 @@ const jsonLd = {
         global.css). Teks dinamis lewat atribut `data-*` (pola yang sama
          dengan SiteSearch): skrip klien tidak boleh tahu bahasa.
        */}
-      {region !== "us" && (
+      {region === "id" && (
       <div
         class="tanya tanya-wide enter"
         id="tanyaEvkita"
@@ -568,52 +584,81 @@ const jsonLd = {
     {jelajahi.length ? (
       <section class="section jelajahi-section" id="jelajahi">
         <div class="container">
-          {/*
-            Gerbang dua kolom: kiri isi Jelajahi Indonesia yang sudah ada
-            (sumber yang bisa dijelajahi di EVKita Indonesia), kanan kartu
-            edisi regional (pintu ke EVKita di Amerika). Di layar sempit
-            keduanya menumpuk ke bawah — lihat .jelajahi-grid di global.css.
-          */}
+            {/*
+              Gerbang dua kolom: kiri isi Jelajahi edisi yang dibuka, kanan satu
+              kartu berisi dua edisi lainnya. Di layar sempit semuanya menumpuk
+              ke bawah — lihat .jelajahi-grid di global.css.
+            */}
           <div class="jelajahi-card">
             <div class="jelajahi-grid">
               <div class="jelajahi-lokal">
-                <p class="jelajahi-eyebrow">{region === "us" ? t("pub.region.us") : t("pub.region.id")}</p>
+                <p class="jelajahi-eyebrow">{region === "us" ? t("pub.region.us") : region === "cn" ? t("pub.region.cn") : t("pub.region.id")}</p>
                 <h2 class="section-title">{site.footerMenuTitle || t("pub.jelajahi")}</h2>
-                {region === "us" ? (
-                  /* Menu Indonesia (merek, tipe bodi, kalkulator rupiah) tidak
-                     dibawa ke edisi Amerika — yang ada hanya tujuan Amerika. */
-                  <nav class="tag-row" aria-label={site.footerMenuTitle || t("pub.jelajahi")}>
-                    <a class="tag-pill" href="/amerika">{t("pub.nav.beranda")}</a>
-                    <a class="tag-pill" href="/amerika#daftar">{t("pub.katalog")}</a>
-                    <a class="tag-pill" href="/amerika#spklu">{t("pub.nav.spklu")}</a>
-                    <a class="tag-pill" href="/amerika#bengkel">{t("pub.nav.bengkel")}</a>
-                    <a class="tag-pill" href="/amerika#berita">{t("pub.nav.berita")}</a>
-                    <a class="tag-pill" href="/amerika#artikel">{t("pub.nav.artikel")}</a>
-                    <a class="tag-pill" href="/artikel/panduan-membeli-mobil-listrik-di-amerika">{t("pub.region.usPanduan")}</a>
-                    <a class="tag-pill" href="/amerika#tentang">{t("pub.nav.tentang")}</a>
-                  </nav>
-                ) : (
+                {region === "id" ? (
                   <nav class="tag-row" aria-label={site.footerMenuTitle || t("pub.jelajahi")}>
                     {jelajahi.map((l: any) => <a class="tag-pill" href={l.href}>{l.label}</a>)}
                   </nav>
+                ) : (
+                  /* Menu Indonesia tidak dibawa ke edisi regional — yang ada
+                     hanya tujuan di dalam edisinya sendiri. */
+                  <nav class="tag-row" aria-label={site.footerMenuTitle || t("pub.jelajahi")}>
+                    <a class="tag-pill" href={region === "cn" ? "/china" : "/amerika"}>{t("pub.nav.beranda")}</a>
+                    <a class="tag-pill" href={region === "cn" ? "/china#daftar" : "/amerika#daftar"}>{t("pub.katalog")}</a>
+                    {/* Di China tidak ada istilah SPKLU — menu memakai bahasa setempat. */}
+                    <a class="tag-pill" href={region === "cn" ? "/china#spklu" : "/amerika#spklu"}>{t(istilahCas(region, "nav"))}</a>
+                    <a class="tag-pill" href={region === "cn" ? "/china#bengkel" : "/amerika#bengkel"}>{region === "cn" ? t("pub.region.cnWorkshop") : t("pub.nav.bengkel")}</a>
+                    <a class="tag-pill" href={region === "cn" ? "/china#berita" : "/amerika#berita"}>{t("pub.nav.berita")}</a>
+                    <a class="tag-pill" href={region === "cn" ? "/china#artikel" : "/amerika#artikel"}>{t("pub.nav.artikel")}</a>
+                    {region === "us" ? (
+                      <a class="tag-pill" href="/artikel/panduan-membeli-mobil-listrik-di-amerika">{t("pub.region.usPanduan")}</a>
+                    ) : (
+                      <a class="tag-pill" href="/artikel/panduan-membeli-mobil-listrik-di-china">{t("pub.region.cnPanduan")}</a>
+                    )}
+                    <a class="tag-pill" href={region === "cn" ? "/china#tentang" : "/amerika#tentang"}>{t("pub.nav.tentang")}</a>
+                  </nav>
                 )}
               </div>
-              {region === "us" ? (
-              <aside class="regional-card" aria-label={t("pub.region.eyebrow")}>
+              {/*
+                Satu kartu untuk semua edisi selain yang dibuka: tiap barisnya
+                tautan selebar kartu (target sentuh besar di HP), tanpa tombol
+                dan tanpa eyebrow yang diulang. Di ketiga edisi daftarnya selalu
+                dua baris, jadi tinggi kolom kanan stabil.
+              */}
+              <aside class="regional-card regional-combined" aria-label={t("pub.region.eyebrow")}>
                 <p class="jelajahi-eyebrow">{t("pub.region.eyebrow")}</p>
-                <h3 class="regional-title"><span class="regional-badge" aria-hidden="true">ID</span>{t("pub.region.id")}</h3>
-                <p class="regional-desc">{t("pub.region.idDesc")}</p>
-                <a class="btn btn-primary regional-cta" href="/">{t("pub.region.kembali")} →</a>
+                <div class="regional-rows">
+                {region !== "id" ? (
+                  <a class="regional-row" href="/">
+                    <span class="regional-badge" aria-hidden="true">ID</span>
+                    <span class="regional-row-text">
+                      <strong class="regional-row-title">{t("pub.region.id")}</strong>
+                      <span class="regional-row-desc">{t("pub.region.idDesc")}</span>
+                    </span>
+                    <span class="regional-row-arrow" aria-hidden="true">→</span>
+                  </a>
+                ) : null}
+                {region !== "us" ? (
+                  <a class="regional-row" href="/amerika">
+                    <span class="regional-badge" aria-hidden="true">US</span>
+                    <span class="regional-row-text">
+                      <strong class="regional-row-title">{t("pub.region.us")}</strong>
+                      <span class="regional-row-desc">{t("pub.region.usDesc")}</span>
+                    </span>
+                    <span class="regional-row-arrow" aria-hidden="true">→</span>
+                  </a>
+                ) : null}
+                {region !== "cn" ? (
+                  <a class="regional-row" href="/china">
+                    <span class="regional-badge" aria-hidden="true">CN</span>
+                    <span class="regional-row-text">
+                      <strong class="regional-row-title">{t("pub.region.cn")}</strong>
+                      <span class="regional-row-desc">{t("pub.region.cnDesc")}</span>
+                    </span>
+                    <span class="regional-row-arrow" aria-hidden="true">→</span>
+                  </a>
+                ) : null}
+                </div>
               </aside>
-              ) : (
-              <aside class="regional-card" aria-label={t("pub.region.eyebrow")}>
-                <p class="jelajahi-eyebrow">{t("pub.region.eyebrow")}</p>
-                <h3 class="regional-title"><span class="regional-badge" aria-hidden="true">US</span>{t("pub.region.us")}</h3>
-                <p class="regional-desc">{t("pub.region.usDesc")}</p>
-                <a class="btn btn-primary regional-cta" href="/amerika">{t("pub.region.buka")} →</a>
-                <p class="regional-next">{t("pub.region.segera")}</p>
-              </aside>
-              )}
             </div>
           </div>
         </div>
@@ -637,20 +682,20 @@ const jsonLd = {
           <div class="mulai-card">
             <h3>{t("pub.mulai.baruT")}</h3>
             <p>{t("pub.mulai.baruD")}</p>
-            {/* Edisi Amerika menautkan di dalam edisinya sendiri — kalkulator
-                rupiah dan halaman panduan Indonesia tidak dibawa ke sini. */}
+            {/* Edisi regional menautkan di dalam edisinya sendiri — kalkulator
+                dan halaman panduan Indonesia tidak dibawa ke sini. */}
             <nav class="tag-row" aria-label={t("pub.mulai.baruT")}>
-              {region === "us" ? (
-                <>
-                  <a class="tag-pill" href="/amerika#daftar">{t("pub.koleksi.katalogLengkap")}</a>
-                  <a class="tag-pill" href="/artikel/panduan-membeli-mobil-listrik-di-amerika">{t("pub.region.usPanduan")}</a>
-                  <a class="tag-pill" href="/amerika#berita">{t("pub.nav.berita")}</a>
-                </>
-              ) : (
+              {region === "id" ? (
                 <>
                   <a class="tag-pill" href="/edukasi-dasar">{t("pub.mulai.edukasi")}</a>
                   <a class="tag-pill" href="/apa-itu-ev-bev-phev-hev">{t("pub.mulai.glosa")}</a>
                   <a class="tag-pill" href="/mitos-fakta-ev">{t("pub.mulai.mitos")}</a>
+                </>
+              ) : (
+                <>
+                  <a class="tag-pill" href={`${edisiBase}#daftar`}>{t("pub.koleksi.katalogLengkap")}</a>
+                  <a class="tag-pill" href={panduanSlug}>{panduanLabel}</a>
+                  <a class="tag-pill" href={`${edisiBase}#berita`}>{t("pub.nav.berita")}</a>
                 </>
               )}
             </nav>
@@ -659,17 +704,17 @@ const jsonLd = {
             <h3>{t("pub.mulai.beliT")}</h3>
             <p>{t("pub.mulai.beliD")}</p>
             <nav class="tag-row" aria-label={t("pub.mulai.beliT")}>
-              {region === "us" ? (
-                <>
-                  <a class="tag-pill" href="/amerika#daftar">{t("pub.koleksi.katalogLengkap")}</a>
-                  <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin?region=us">{t("pub.kalk.titleHemat")}</a>
-                  <a class="tag-pill" href="/artikel/panduan-membeli-mobil-listrik-di-amerika">{t("pub.region.usPanduan")}</a>
-                </>
-              ) : (
+              {region === "id" ? (
                 <>
                   <a class="tag-pill" href="/katalog">{t("pub.koleksi.katalogLengkap")}</a>
                   <a class="tag-pill" href="/kalkulator/hemat-listrik-vs-bensin">{t("pub.kalk.titleHemat")}</a>
                   <a class="tag-pill" href="/artikel/mobil-listrik-bawah-200-juta-pilihan-jarak">{t("pub.mulai.bawah200")}</a>
+                </>
+              ) : (
+                <>
+                  <a class="tag-pill" href={`${edisiBase}#daftar`}>{t("pub.koleksi.katalogLengkap")}</a>
+                  <a class="tag-pill" href={`/kalkulator/hemat-listrik-vs-bensin${edisiParam}`}>{t("pub.kalk.titleHemat")}</a>
+                  <a class="tag-pill" href={panduanSlug}>{panduanLabel}</a>
                 </>
               )}
             </nav>
@@ -678,17 +723,17 @@ const jsonLd = {
             <h3>{t("pub.mulai.punyaT")}</h3>
             <p>{t("pub.mulai.punyaD")}</p>
             <nav class="tag-row" aria-label={t("pub.mulai.punyaT")}>
-              {region === "us" ? (
-                <>
-                  <a class="tag-pill" href="/amerika#spklu">{t("pub.nav.spklu")}</a>
-                  <a class="tag-pill" href="/artikel/panduan-membeli-mobil-listrik-di-amerika">{t("pub.region.usPanduan")}</a>
-                  <a class="tag-pill" href="/amerika#bengkel">{t("pub.nav.bengkel")}</a>
-                </>
-              ) : (
+              {region === "id" ? (
                 <>
                   <a class="tag-pill" href="/spklu">{t("pub.nav.spklu")}</a>
                   <a class="tag-pill" href="/kalkulator/biaya-pengisian">{t("pub.kalk.titleBiaya")}</a>
                   <a class="tag-pill" href="/bengkel">{t("pub.nav.bengkel")}</a>
+                </>
+              ) : (
+                <>
+                  <a class="tag-pill" href={`${edisiBase}#spklu`}>{t(istilahCas(region, "nav"))}</a>
+                  <a class="tag-pill" href={panduanSlug}>{panduanLabel}</a>
+                  <a class="tag-pill" href={`${edisiBase}#bengkel`}>{region === "cn" ? t("pub.region.cnWorkshop") : t("pub.nav.bengkel")}</a>
                 </>
               )}
             </nav>
@@ -696,13 +741,36 @@ const jsonLd = {
         </div>
         <h3 class="mulai-faq-title">{t("pub.mulai.faqT")}</h3>
         <div class="faq-list">
-          {/* Edisi Amerika memakai tanya-jawab Amerika — FAQ Indonesia
-              (kalkulator rupiah, panduan SPKLU) tidak dibawa ke sini. */}
-          {region === "us" ? (
+          {/* Tiap edisi memakai tanya-jawabnya sendiri — FAQ Indonesia
+              tidak dibawa ke edisi regional. */}
+          {region === "cn" ? (
+            <>
+              <details class="faq-item">
+                <summary>{t("pub.region.cnFaq1q")}</summary>
+                <p>{t("pub.region.cnFaq1a")} <a href={`${edisiBase}#spklu`}>{t("pub.region.cnBadge")} →</a></p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.region.cnFaq2q")}</summary>
+                <p>{t("pub.region.cnFaq2a")} <a href={panduanSlug}>{panduanLabel} →</a></p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.region.cnFaq3q")}</summary>
+                <p>{t("pub.region.cnFaq3a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.region.cnFaq4q")}</summary>
+                <p>{t("pub.region.cnFaq4a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.region.cnFaq5q")}</summary>
+                <p>{t("pub.region.cnFaq5a")} <a href={panduanSlug}>{panduanLabel} →</a></p>
+              </details>
+            </>
+          ) : region === "us" ? (
             <>
               <details class="faq-item">
                 <summary>{t("pub.region.faq1q")}</summary>
-                <p>{t("pub.region.faq1a")} <a href="/amerika#spklu">{t("pub.nav.spklu")} →</a></p>
+                <p>{t("pub.region.faq1a")} <a href="/amerika#spklu">{t(istilahCas(region, "nav"))} →</a></p>
               </details>
               <details class="faq-item">
                 <summary>{t("pub.region.faq2q")}</summary>
@@ -853,7 +921,7 @@ const jsonLd = {
             bawahnya akan berbohong. */}
         {cars.length > HOME_CARDS || motors.length > HOME_CARDS ? (
           <p class="catalog-all">
-            <a class="btn btn-outline" id="catalogAll" href={region === "us" ? "/katalog?region=us" : "/katalog"}>{t("pub.catalog.all")} →</a>
+            <a class="btn btn-outline" id="catalogAll" href={region === "id" ? "/katalog" : `/katalog?region=${region}`}>{t("pub.catalog.all")} →</a>
           </p>
         ) : null}
       </div>
@@ -870,7 +938,7 @@ const jsonLd = {
             {/* Direktori ini menyebut DI MANA bisa mengisi; yang belum pernah
                 dijawabnya adalah berapa lama dan habis berapa. */}
             {/* Edisi Amerika memakai kalkulator dolarnya sendiri. */}
-            <a class="section-link" href={region === "us" ? "/kalkulator/biaya-pengisian?region=us" : "/kalkulator/biaya-pengisian"}>{t("pub.index.hitungIsi")} →</a>
+            <a class="section-link" href={region === "id" ? "/kalkulator/biaya-pengisian" : `/kalkulator/biaya-pengisian?region=${region}`}>{t("pub.index.hitungIsi")} →</a>
           </div>
           {/* Sorotan: satu unggulan berfoto di kiri, sisanya di kanan.
               Isinya sama persis dengan kartu biasa — yang beda hanya
@@ -913,7 +981,7 @@ const jsonLd = {
                   )}
                 </div>
                 <div class="dir-top">
-                  <span class="dir-badge">{region === "us" ? t("pub.region.badge") : "SPKLU"}</span>
+                  <span class="dir-badge">{region === "id" ? "SPKLU" : region === "us" ? t("pub.region.badge") : t("pub.region.cnBadge")}</span>
                   {spkluUnggulan.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
                   {masihBaru(spkluUnggulan.baruSampai) ? <span class="badge badge-accent">NEW</span> : null}
                 </div>
@@ -945,7 +1013,7 @@ const jsonLd = {
                   </div>
                 ) : null}
                 <div class="dir-actions">
-                  <a class="dir-link" href={spkluMapUrl(spkluUnggulan)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
+                  <a class="dir-link" href={spkluMapUrl(spkluUnggulan)} target="_blank" rel="noopener">{t(istilahCas(region, "peta"))} →</a>
                 </div>
               </article>
             ) : null}
@@ -958,7 +1026,7 @@ const jsonLd = {
                   </div>
                 ) : null}
                 <div class="dir-top">
-                  <span class="dir-badge">{region === "us" ? t("pub.region.badge") : "SPKLU"}</span>
+                  <span class="dir-badge">{region === "id" ? "SPKLU" : region === "us" ? t("pub.region.badge") : t("pub.region.cnBadge")}</span>
                   {s.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
                   {masihBaru(s.baruSampai) ? <span class="badge badge-accent">NEW</span> : null}
                 </div>
@@ -990,7 +1058,7 @@ const jsonLd = {
                   </div>
                 ) : null}
                 <div class="dir-actions">
-                  <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">{t("pub.dir.lokasiSpklu")} →</a>
+                  <a class="dir-link" href={spkluMapUrl(s)} target="_blank" rel="noopener">{t(istilahCas(region, "peta"))} →</a>
                 </div>
               </article>
               ))}
@@ -998,7 +1066,7 @@ const jsonLd = {
           </div>
           {spkluList.length > TEASER_DIR ? (
             <p class="catalog-all">
-              <a class="btn btn-outline" href={region === "us" ? "/spklu?region=us" : "/spklu"}>{t("pub.dir.semuaSpklu")} →</a>
+              <a class="btn btn-outline" href={region === "id" ? "/spklu" : `/spklu?region=${region}`}>{t(istilahCas(region, "semua"))} →</a>
             </p>
           ) : null}
         </div>
@@ -1031,7 +1099,7 @@ const jsonLd = {
                     </div>
                     ) : null}
                     <div class="dir-top">
-                      <span class="dir-badge">{region === "us" ? (String(b.type).includes("Motor") && !String(b.type).includes("Mobil") ? t("pub.motor") : t("pub.mobil")) : (cms(b.type, lang) || t("pub.dir.bengkel"))}</span>
+                      <span class="dir-badge">{region !== "id" ? (String(b.type).includes("Motor") && !String(b.type).includes("Mobil") ? t("pub.motor") : t("pub.mobil")) : (cms(b.type, lang) || t("pub.dir.bengkel"))}</span>
                       {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
                     </div>
                     <h3 class="dir-title">{b.name}</h3>
@@ -1058,7 +1126,7 @@ const jsonLd = {
                   {g.items.slice(1, TEASER_DIR).map((b: any) => (
                   <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
                     <div class="dir-top">
-                      <span class="dir-badge">{region === "us" ? (String(b.type).includes("Motor") && !String(b.type).includes("Mobil") ? t("pub.motor") : t("pub.mobil")) : (cms(b.type, lang) || t("pub.dir.bengkel"))}</span>
+                      <span class="dir-badge">{region !== "id" ? (String(b.type).includes("Motor") && !String(b.type).includes("Mobil") ? t("pub.motor") : t("pub.mobil")) : (cms(b.type, lang) || t("pub.dir.bengkel"))}</span>
                       {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
                     </div>
                     <h3 class="dir-title">{b.name}</h3>
@@ -1088,7 +1156,7 @@ const jsonLd = {
                 {g.items.slice(0, TEASER_DIR).map((b: any) => (
                   <article class={`dir-card${b.featured ? " is-featured" : ""}`}>
                     <div class="dir-top">
-                      <span class="dir-badge">{region === "us" ? (String(b.type).includes("Motor") && !String(b.type).includes("Mobil") ? t("pub.motor") : t("pub.mobil")) : (cms(b.type, lang) || t("pub.dir.bengkel"))}</span>
+                      <span class="dir-badge">{region !== "id" ? (String(b.type).includes("Motor") && !String(b.type).includes("Mobil") ? t("pub.motor") : t("pub.mobil")) : (cms(b.type, lang) || t("pub.dir.bengkel"))}</span>
                       {b.featured ? <span class="badge badge-featured">{t("pub.pilihan")}</span> : null}
                     </div>
                     <h3 class="dir-title">{b.name}</h3>
@@ -1115,7 +1183,7 @@ const jsonLd = {
               )}
               {g.items.length > TEASER_DIR ? (
                 <p class="catalog-all">
-                  <a class="btn btn-outline" href={region === "us" ? "/bengkel?region=us" : "/bengkel"}>{t("pub.dir.semuaBengkel")} →</a>
+                  <a class="btn btn-outline" href={region === "id" ? "/bengkel" : `/bengkel?region=${region}`}>{t("pub.dir.semuaBengkel")} →</a>
                 </p>
               ) : null}
             </div>
@@ -1183,7 +1251,7 @@ const jsonLd = {
               </div>
               {beritaList.length > TEASER_DIR ? (
                 <p class="catalog-all">
-                  <a class="btn btn-outline" href={region === "us" ? "/berita?region=us" : "/berita"}>{t("pub.dir.semuaBerita")} →</a>
+                  <a class="btn btn-outline" href={region === "id" ? "/berita" : `/berita?region=${region}`}>{t("pub.dir.semuaBerita")} →</a>
                 </p>
               ) : null}
             </div>
@@ -1229,7 +1297,7 @@ const jsonLd = {
               </div>
               {komunitasList.length ? (
                 <p class="catalog-all">
-                  <a class="btn btn-outline" href={region === "us" ? "/komunitas?region=us" : "/komunitas"}>{t("pub.dir.semuaKomunitas")} →</a>
+                  <a class="btn btn-outline" href={region === "id" ? "/komunitas" : `/komunitas?region=${region}`}>{t("pub.dir.semuaKomunitas")} →</a>
                 </p>
               ) : null}
             </div>
@@ -1246,7 +1314,7 @@ const jsonLd = {
               <h2 class="section-title">{t("pub.artikel")}</h2>
               <p class="section-note">{t("pub.artikel.note")}</p>
             </div>
-            <a class="section-link" href={region === "us" ? "/artikel?region=us" : "/artikel"}>{t("pub.artikel.all")} →</a>
+            <a class="section-link" href={region === "id" ? "/artikel" : `/artikel?region=${region}`}>{t("pub.artikel.all")} →</a>
           </div>
           {/* Sorotan artikel: satu kartu berfoto memanjang di kiri, dua kartu
               teks tanpa gambar di kanan — pola yang sama dengan sorotan

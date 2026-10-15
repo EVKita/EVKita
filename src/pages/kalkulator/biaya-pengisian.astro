@@ -4,11 +4,12 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import { readContent } from "../../lib/store";
 import { vehicleHref } from "../../lib/card-html.js";
-import { TARIF_PRESETS, TARIF_PRESETS_US } from "../../lib/hemat.js";
+import { TARIF_PRESETS, TARIF_PRESETS_US, TARIF_PRESETS_CN } from "../../lib/hemat.js";
 import {
   DEFAULTS,
   DAYA_PRESETS,
   DAYA_PRESETS_US,
+  DAYA_PRESETS_CN,
   BATAS_TAPER,
   hitungPengisian,
   modePengisian,
@@ -19,10 +20,10 @@ import {
   teksRingkasPengisian,
   catatanHasil,
 } from "../../lib/pengisian.js";
-import { rupiahPenuh, rupiahHalus, dolarPenuh, dolarHalus } from "../../lib/hemat.js";
+import { rupiahPenuh, rupiahHalus, dolarPenuh, dolarHalus, yuanPenuh, yuanHalus } from "../../lib/hemat.js";
 import { siteOrigin, canonicalUrl } from "../../lib/site-url";
 import { hanyaTayang } from "../../lib/tayang.js";
-import { filterWilayah } from "../../lib/region.js";
+import { filterWilayah, regionDariParam, istilahCas } from "../../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite, pubIntl } from "../../lib/i18n/pub.js";
 
 /**
@@ -55,8 +56,11 @@ const q = Astro.url.searchParams;
  * istilah Amerika. Tanpa parameter berarti Indonesia — seluruh pemanggil lama
  * (tautan, perayap) tidak berubah artinya.
  */
-const region = q.get("region") === "us" ? "us" : "id";
+const region = regionDariParam(q.get("region"));
 const us = region === "us";
+const cn = region === "cn";
+const edisiBase = region === "id" ? "" : region === "us" ? "/amerika" : "/china";
+const edisiParam = region === "id" ? "" : `?region=${region}`;
 
 const semuaCars = filterWilayah(content.cars, region);
 const semuaMotors = filterWilayah(content.motors, region);
@@ -70,8 +74,8 @@ const pilihanMotor = motors.filter(punyaBaterai);
 const pilihan = [...pilihanMobil, ...pilihanMotor];
 
 /* Tombol pintas mengikuti edisi: tarif dolar & daya Amerika vs rupiah & daya Indonesia. */
-const dayaPresets = us ? DAYA_PRESETS_US : DAYA_PRESETS;
-const tarifPresets = us ? TARIF_PRESETS_US : TARIF_PRESETS;
+const dayaPresets = us ? DAYA_PRESETS_US : cn ? DAYA_PRESETS_CN : DAYA_PRESETS;
+const tarifPresets = us ? TARIF_PRESETS_US : cn ? TARIF_PRESETS_CN : TARIF_PRESETS;
 
 /**
  * Membaca satu parameter URL.
@@ -98,8 +102,8 @@ const form = {
   batteryKwh: num("baterai", terpilih ? terpilih.batteryKwh : 60),
   socAwal: num("awal", DEFAULTS.socAwal),
   socAkhir: num("akhir", DEFAULTS.socAkhir),
-  dayaKw: num("daya", us ? 150 : DEFAULTS.dayaKw),
-  tarif: num("tarif", us ? 0.42 : DEFAULTS.tarif),
+  dayaKw: num("daya", us ? 150 : cn ? 120 : DEFAULTS.dayaKw),
+  tarif: num("tarif", us ? 0.42 : cn ? 1.8 : DEFAULTS.tarif),
 };
 
 const mode = modePengisian(form.dayaKw);
@@ -135,12 +139,13 @@ const kendaraanLite = pilihan.map((c: any) => ({
 
 const brand = site.brandText || "EVKita";
 const pageTitle = `${t("pub.kalk.pageBiaya")} — ${brand}`;
-const metaDesc = t("pub.kalk.descBiaya");
+const metaDesc = region === "id" ? t("pub.kalk.descBiaya") : t(region === "us" ? "pub.kalk.descBiayaUs" : "pub.kalk.descBiayaCn");
+const metaKeywords = region === "id" ? t("pub.kalk.keywordBiaya") : t(region === "us" ? "pub.kalk.keywordBiayaUs" : "pub.kalk.keywordBiayaCn");
 
 const origin = siteOrigin(Astro.url);
-/* Kanonis mempertahankan ?region=us — tanpanya edisi Amerika terindeks
+/* Kanonis mempertahankan ?region — tanpanya edisi regional terindeks
    sebagai halaman Indonesia. */
-const canonical = us ? `${origin}/kalkulator/biaya-pengisian?region=us` : canonicalUrl(Astro.url);
+const canonical = region === "id" ? canonicalUrl(Astro.url) : `${origin}/kalkulator/biaya-pengisian${edisiParam}`;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -152,12 +157,12 @@ const jsonLd = {
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Web",
       description: metaDesc,
-      offers: { "@type": "Offer", price: 0, priceCurrency: us ? "USD" : "IDR" },
+      offers: { "@type": "Offer", price: 0, priceCurrency: region === "id" ? "IDR" : region === "us" ? "USD" : "CNY" },
     },
     {
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: us ? `${origin}/amerika` : `${origin}/` },
+        { "@type": "ListItem", position: 1, name: t("pub.nav.beranda"), item: `${origin}${edisiBase || "/"}` },
         { "@type": "ListItem", position: 2, name: t("pub.kalk.titleBiaya") },
       ],
     },
@@ -165,8 +170,8 @@ const jsonLd = {
 };
 
 /** Teks hasil yang dirender server; skrip browser menghitung ulang dengan fungsi yang sama. */
-const uangPenuh = us ? dolarPenuh : rupiahPenuh;
-const uangHalus = us ? dolarHalus : rupiahHalus;
+const uangPenuh = us ? dolarPenuh : cn ? yuanPenuh : rupiahPenuh;
+const uangHalus = us ? dolarHalus : cn ? yuanHalus : rupiahHalus;
 const teks = {
   durasi: teksDurasi(hasil, t),
   biaya: uangPenuh(hasil.biaya),
@@ -185,10 +190,14 @@ const ringkas = teksRingkasPengisian(hasil, t, { region });
  * berselisih dengan hasil form. Entri yang hilang dari katalog gugur sendiri.
  *
  * Edisi Amerika memakai tiga mobil AS, DC 150 kW, dan tarif Supercharger.
+ * Edisi China memakai tiga mobil China, DC 120 kW, dan tarif DC umum.
  */
-const contohIds = us ? ["us-tesla-model-y", "us-tesla-model-3", "us-hyundai-ioniq-5"] : ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"];
-const contohTarif = us ? 0.42 : 2466;
-const contohDaya = us ? 150 : 50;
+const contohIds =
+  us ? ["us-tesla-model-y", "us-tesla-model-3", "us-hyundai-ioniq-5"]
+  : cn ? ["cn-xiaomi-su7", "cn-xpeng-p7plus", "cn-byd-seal"]
+  : ["byd-atto-1", "jaecoo-j5-ev", "byd-m6"];
+const contohTarif = us ? 0.42 : cn ? 1.8 : 2466;
+const contohDaya = us ? 150 : cn ? 120 : 50;
 const contohIsi = contohIds
   .map((id) => pilihan.find((c: any) => c.id === id))
   .filter((v: any) => v && Number(v.batteryKwh) > 0)
@@ -214,17 +223,17 @@ const contohIsi = contohIds
 <Base
   title={pageTitle}
   description={metaDesc}
-  keywords={t("pub.kalk.keywordBiaya")}
+  keywords={metaKeywords}
   ogImage={site.seoOgImage}
   site={site}
 >
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
-  <SiteHeader site={site} base={us ? "/amerika" : "/"} active="" region={us ? "us" : "id"} artikel="/artikel" />
+  <SiteHeader site={site} base={edisiBase || "/"} active="" region={region} artikel={region === "id" ? "/artikel" : `/artikel?region=${region}`} />
 
   <main class="container kalk" id="konten">
     <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-      <a href={us ? "/amerika" : "/"}>{t("pub.nav.beranda")}</a>
+      <a href={edisiBase || "/"}>{t("pub.nav.beranda")}</a>
       <span aria-hidden="true">/</span>
       <span class="breadcrumb-current">{t("pub.kalk.titleBiaya")}</span>
     </nav>
@@ -235,7 +244,7 @@ const contohIsi = contohIds
     </header>
 
     <form class="kalk-form" id="pengisianForm" method="get" autocomplete="off" data-region={region}>
-      {us ? <input type="hidden" name="region" value="us" /> : null}
+      {region === "id" ? null : <input type="hidden" name="region" value={region} />}
       <div class="kalk-grid">
         <div class="kalk-field kalk-field-wide">
           <label for="f-kendaraan">{t("pub.kalk.kendaraan")}</label>
@@ -287,7 +296,7 @@ const contohIsi = contohIds
         </div>
 
         <div class="kalk-field">
-          <label for="f-tarif">{t("pub.kalk.tarif")} <span class="kalk-unit">{us ? "US$ / kWh" : "Rp / kWh"}</span></label>
+          <label for="f-tarif">{t("pub.kalk.tarif")} <span class="kalk-unit">{us ? "US$ / kWh" : cn ? "¥ / kWh" : "Rp / kWh"}</span></label>
           <input id="f-tarif" name="tarif" type="number" min="1" step="0.01" value={form.tarif} />
           <div class="kalk-presets">
             {tarifPresets.map((p) => (
@@ -348,7 +357,7 @@ const contohIsi = contohIds
 
     <section class="kalk-section">
       <h2>{t("pub.isiX.contohT")}</h2>
-      <p class="section-note">{us ? t("pub.region.contohDBiaya") : t("pub.isiX.contohD")}</p>
+      <p class="section-note">{region === "id" ? t("pub.isiX.contohD") : region === "us" ? t("pub.region.contohDBiaya") : t("pub.region.cnContohDBiaya")}</p>
       {contohIsi.length ? (
         <div class="compare-scroll">
           <table class="compare-table">
@@ -377,8 +386,27 @@ const contohIsi = contohIds
 
     <section class="kalk-section">
       <h2>{t("pub.isiX.faqT")}</h2>
-      <div class="faq-list">
-        {us ? (
+        <div class="faq-list">
+          {region === "cn" ? (
+            <>
+              <details class="faq-item">
+                <summary>{t("pub.kalk.cnFaq1q")}</summary>
+                <p>{t("pub.kalk.cnFaq1a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.kalk.cnFaq2q")}</summary>
+                <p>{t("pub.kalk.cnFaq2a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.kalk.cnFaq3q")}</summary>
+                <p>{t("pub.kalk.cnFaq3a")}</p>
+              </details>
+              <details class="faq-item">
+                <summary>{t("pub.kalk.cnFaq4q")}</summary>
+                <p>{t("pub.kalk.cnFaq4a")}</p>
+              </details>
+            </>
+          ) : us ? (
           <>
             <details class="faq-item">
               <summary>{t("pub.kalk.usFaq1q")}</summary>
@@ -426,16 +454,16 @@ const contohIsi = contohIds
         <li>{t("pub.kalk.tidakDihitungIsi1")}</li>
         <li>{t("pub.kalk.tidakDihitungIsi2")}</li>
         <li>{t("pub.kalk.tidakDihitungIsi3")}</li>
-        <li>{t("pub.kalk.tidakDihitungIsi4")}</li>
+        <li>{region === "id" ? t("pub.kalk.tidakDihitungIsi4") : t(region === "us" ? "pub.kalk.tidakDihitungIsi4Us" : "pub.kalk.tidakDihitungIsi4Cn")}</li>
       </ul>
     </section>
 
     <section class="kalk-section">
       <h2>{t("pub.kalk.lanjut")}</h2>
       <div class="tag-row">
-        <a class="tag-pill" href={us ? "/kalkulator/hemat-listrik-vs-bensin?region=us" : "/kalkulator/hemat-listrik-vs-bensin"}>{t("pub.kalk.kalkulatorHemat")}</a>
-        {site.showSpklu ? <a class="tag-pill" href={us ? "/amerika#spklu" : "/#spklu"}>{us ? t("pub.nav.spklu") : t("pub.kalk.daftarSpklu")}</a> : null}
-        <a class="tag-pill" href={us ? "/amerika#daftar" : "/katalog"}>{t("pub.koleksi.katalogLengkap")}</a>
+        <a class="tag-pill" href={region === "id" ? "/kalkulator/hemat-listrik-vs-bensin" : `/kalkulator/hemat-listrik-vs-bensin?region=${region}`}>{t("pub.kalk.kalkulatorHemat")}</a>
+        {site.showSpklu ? <a class="tag-pill" href={region === "id" ? "/#spklu" : `${edisiBase}#spklu`}>{region === "id" ? t("pub.kalk.daftarSpklu") : t(istilahCas(region, "nav"))}</a> : null}
+        <a class="tag-pill" href={region === "id" ? "/katalog" : `${edisiBase}#daftar`}>{t("pub.koleksi.katalogLengkap")}</a>
       </div>
     </section>
   </main>

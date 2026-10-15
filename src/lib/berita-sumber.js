@@ -51,6 +51,27 @@ export const SUMBER_BERITA = [
    */
   { id: "insideevs", nama: "InsideEVs", feed: "https://insideevs.com/feed/", wilayah: "us" },
   { id: "electrek", nama: "Electrek", feed: "https://electrek.co/feed/", wilayah: "us" },
+  /*
+   * Edisi China: liputan EV China berbahasa Inggris lewat feed pencarian
+   * Google News yang dibatasi ke situsnya — pola yang sama dengan Kompas.com
+   * di atas. CnEVPost dan Gasgoo tidak menyediakan RSS publik yang stabil,
+   * jadi kanal resmi Google News yang dipakai; yang disimpan tetap sama —
+   * hanya judul, ringkasan, tanggal, dan TAUTAN ke artikel aslinya.
+   */
+  {
+    id: "cnevpost",
+    nama: "CnEVPost",
+    feed: "https://news.google.com/rss/search?q=site%3Acnevpost.com%20%28EV%20OR%20electric%20OR%20battery%20OR%20NIO%20OR%20XPeng%20OR%20BYD%20OR%20Xiaomi%29&hl=en&gl=SG&ceid=SG%3Aen",
+    stripJudul: " - CnEVPost",
+    wilayah: "cn",
+  },
+  {
+    id: "gasgoo",
+    nama: "Gasgoo",
+    feed: "https://news.google.com/rss/search?q=site%3Agasgoo.com%20%28EV%20OR%20electric%20OR%20battery%20OR%20NEV%29&hl=en&gl=SG&ceid=SG%3Aen",
+    stripJudul: " - Gasgoo",
+    wilayah: "cn",
+  },
 ];
 
 /**
@@ -83,6 +104,8 @@ export const POLA_EV = [
   /\b(byd|wuling|hyundai|ioniq|vinfast|chery|omoda|jaecoo|geely|aion|polytron|alva|gesits|smoot|tesla|nio|xpeng|leapmotor|changan|gac|denza|jaecoo)\b/i,
   /* Merek dan model khas Amerika — feed AS memakai kata ini, bukan "listrik". */
   /\b(rivian|lucid|ford|chevrolet|f-150|silverado|equinox|blazer|bolt|mustang|mach-e|cybertruck|prologue|lyriq|model [3ysx])\b/i,
+  /* Merek dan model khas China — feed CnEVPost/Gasgoo memakai kata ini. */
+  /\b(xiaomi|su7|yu7|nio|et5|et7|es6|ec6|onvo|xpeng|p7|g6|g9|mona|zeekr|007|009|li auto|lixiang|l9|l8|l7|mega|avatr|deepal|fangchengbao|yangwang|denza|hongqi|Leapmotor|cneu|cltc|catl|byd yuan|seal 06|song plus|qin plus)\b/i,
 ];
 
 /** Apakah judul/ringkasan ini membicarakan kendaraan listrik? */

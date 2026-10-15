@@ -27,6 +27,8 @@ export const GET: APIRoute = ({ url }) => {
     { loc: `${origin}/`, priority: "1.0" },
     /* Edisi Amerika: struktur sama dengan beranda, isi konten Amerika. */
     { loc: `${origin}/amerika`, priority: "0.9" },
+    /* Edisi China: sama, isi konten China. */
+    { loc: `${origin}/china`, priority: "0.9" },
     { loc: `${origin}/kalkulator/hemat-listrik-vs-bensin`, priority: "0.7" },
     { loc: `${origin}/kalkulator/biaya-pengisian`, priority: "0.7" },
     { loc: `${origin}/spklu`, priority: "0.7" },

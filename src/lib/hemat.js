@@ -74,6 +74,17 @@ export const TARIF_PRESETS_US = [
 ];
 
 /**
+ * Tarif China (¥ per kWh) — tarif publikasi operator, Juni 2026: rumah 0,60,
+ * valley malam 0,32, AC umum 1,20, DC umum 1,80.
+ */
+export const TARIF_PRESETS_CN = [
+  { id: "rumah", i18n: "pub.calc.cnRumah", value: 0.6, i18nNote: "pub.calc.cnRataNasional" },
+  { id: "malam", i18n: "pub.calc.cnMalam", value: 0.32, i18nNote: "pub.calc.cnRataNasional" },
+  { id: "ac-umum", i18n: "pub.calc.cnAcUmum", value: 1.2, i18nNote: "pub.calc.cnBayarTempat" },
+  { id: "dc-umum", i18n: "pub.calc.cnDcUmum", value: 1.8, i18nNote: "pub.calc.cnBayarTempat" },
+];
+
+/**
  * Konsumsi listrik kendaraan, kWh per 100 km.
  *
  * Diturunkan dari kapasitas baterai dibagi jarak tempuh klaim pabrik, karena
@@ -233,6 +244,24 @@ export function dolarHalus(n) {
 }
 
 /**
+ * Yuan untuk kalkulator edisi China — pasangan `rupiahPenuh`/`dolarPenuh`.
+ * "¥12.75", "¥1,500". Awalan "¥" dipakai di ketiga bahasa.
+ */
+export function yuanPenuh(n) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+  const v = Number(n);
+  return "¥" + (v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2));
+}
+
+/** Yuan dengan sen — pasangan `rupiahHalus`/`dolarHalus`, untuk biaya per kWh. */
+export function yuanHalus(n) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+  const v = Number(n);
+  if (v >= 100) return yuanPenuh(v);
+  return "¥" + v.toFixed(2);
+}
+
+/**
  * Lama balik modal dalam kalimat manusia: "2 tahun 3 bulan".
  *
  * Dibulatkan ke atas ke bulan penuh — bulan yang belum lewat belum menghemat
@@ -270,9 +299,9 @@ export function teksBalikModal(hasil, t = tId) {
 
 /** Kalimat ringkas di atas kartu hasil. */
 export function teksRingkas(hasil, t = tId, o = {}) {
-  /* Edisi Amerika memakai dolar — mata uang pembacanya. Pemanggil lama yang
+  /* Edisi regional memakai mata uangnya sendiri. Pemanggil lama yang
      tidak mengirim opsi tidak berubah artinya. */
-  const uang = o && o.region === "us" ? dolarPenuh : rupiahPenuh;
+  const uang = o && o.region === "us" ? dolarPenuh : o && o.region === "cn" ? yuanPenuh : rupiahPenuh;
   if (hasil.savingMonthly === null) return t("pub.hemat.isiAngka");
   if (hasil.savingMonthly > 0) {
     return t("pub.hemat.hematBulan", {

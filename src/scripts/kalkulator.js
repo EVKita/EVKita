@@ -1,6 +1,6 @@
 "use strict";
 
-import { hitungHemat, rupiahPenuh, rupiahHalus, dolarPenuh, dolarHalus, teksBalikModal, teksRingkas, MIL_KM, GALON_LITER, MPG_PER_KML } from "../lib/hemat.js";
+import { hitungHemat, rupiahPenuh, rupiahHalus, dolarPenuh, dolarHalus, yuanPenuh, yuanHalus, teksBalikModal, teksRingkas, MIL_KM, GALON_LITER, MPG_PER_KML } from "../lib/hemat.js";
 import { makePubT, normalizePubLocale } from "../lib/i18n/pub.js";
 
 /* Bahasa situs publik: cookie pilihan pembaca menang; tanpanya ikuti bahasa
@@ -32,10 +32,11 @@ const form = $("kalkForm");
 if (form) {
   const MOBIL = Array.isArray(window.__EV_KALK__) ? window.__EV_KALK__ : [];
   /* Edisi kalkulator dari atribut yang dipasang server — dolar, galon, dan
-     mil bila us. Mesin hitung tetap metrik: konversi di batas, dua arah. */
-  const REGION_US = form.dataset.region === "us";
-  const uangPenuh = REGION_US ? dolarPenuh : rupiahPenuh;
-  const uangHalus = REGION_US ? dolarHalus : rupiahHalus;
+     mil bila us; yuan bila cn. Mesin hitung tetap metrik: konversi di batas, dua arah. */
+  const REGION = form.dataset.region === "us" || form.dataset.region === "cn" ? form.dataset.region : "id";
+  const REGION_US = REGION === "us";
+  const uangPenuh = REGION === "us" ? dolarPenuh : REGION === "cn" ? yuanPenuh : rupiahPenuh;
+  const uangHalus = REGION === "us" ? dolarHalus : REGION === "cn" ? yuanHalus : rupiahHalus;
   const bagi = (v, f) => (v === "" ? "" : v / f);
   const kali = (v, f) => (v === "" ? "" : v * f);
 
@@ -88,7 +89,7 @@ if (form) {
     /* Biaya per km mesin dikali mil untuk edisi Amerika. */
     const perMil = (n) => (n === null || n === undefined ? null : n * MIL_KM);
 
-    if (out.summary) out.summary.textContent = teksRingkas(h, t, { region: REGION_US ? "us" : "id" });
+    if (out.summary) out.summary.textContent = teksRingkas(h, t, { region: REGION });
     if (out.ev) out.ev.textContent = uangPenuh(h.evMonthly);
     if (out.evKm) out.evKm.textContent = uangHalus(REGION_US ? perMil(h.evPerKm) : h.evPerKm);
     if (out.ice) out.ice.textContent = uangPenuh(h.iceMonthly);
@@ -122,8 +123,8 @@ if (form) {
     put("hargaEv", fields.evPrice);
     put("hargaBensin", fields.icePrice);
     /* Edisinya ikut di URL — tanpanya interaksi pertama menendang pembaca
-       edisi Amerika kembali ke kalkulator Indonesia. */
-    if (REGION_US) p.set("region", "us");
+       edisi regional kembali ke kalkulator Indonesia. */
+    if (REGION !== "id") p.set("region", REGION);
     history.replaceState(null, "", `${location.pathname}?${p.toString()}`);
   };
 

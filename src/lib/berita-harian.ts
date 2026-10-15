@@ -84,8 +84,8 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string; str
         status: "published",
         publishAt: "",
         /* Edisi berita mengikuti edisi sumbernya — satu tarikan mengisi
-           Indonesia dan Amerika sekaligus. */
-        wilayah: (sumber.wilayah === "us" ? "us" : "id") as string,
+           Indonesia, Amerika, dan China sekaligus. */
+        wilayah: ((sumber as any).wilayah === "us" ? "us" : (sumber as any).wilayah === "cn" ? "cn" : "id") as string,
         updatedAt: new Date().toISOString(),
         updatedBy: "",
       }));
@@ -143,24 +143,27 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
   try {
     const hasil = await Promise.all(SUMBER_BERITA.map((s) => ambilSumber(s)));
     const gagal = SUMBER_BERITA.filter((_, i) => hasil[i].error).map((s) => s.nama);
-    /* Gabung per edisi supaya jatah Indonesia tidak dimakan Amerika dan
-       sebaliknya — masing-masing punya batasnya sendiri. */
+    /* Gabung per edisi supaya jatah Indonesia tidak dimakan Amerika atau
+       China dan sebaliknya — masing-masing punya batasnya sendiri. */
     const baruId: any[] = [];
     const baruUs: any[] = [];
+    const baruCn: any[] = [];
     hasil.forEach((h, i) => {
-      const us = (SUMBER_BERITA[i] as any)?.wilayah === "us";
-      for (const b of h.items || []) (us ? baruUs : baruId).push(b);
+      const w = (SUMBER_BERITA[i] as any)?.wilayah;
+      for (const b of h.items || []) (w === "us" ? baruUs : w === "cn" ? baruCn : baruId).push(b);
     });
     const content = readContent();
     const lama = content.berita || [];
-    const lamaId = lama.filter((b: any) => normalizeWilayah(b && b.wilayah) !== "us");
+    const lamaId = lama.filter((b: any) => normalizeWilayah(b && b.wilayah) === "id");
     const lamaUs = lama.filter((b: any) => normalizeWilayah(b && b.wilayah) === "us");
+    const lamaCn = lama.filter((b: any) => normalizeWilayah(b && b.wilayah) === "cn");
     const gId = gabungBerita(lamaId, baruId, MAKS_BERITA);
     const gUs = gabungBerita(lamaUs, baruUs, MAKS_BERITA_US);
-    const daftar = [...gId.daftar, ...gUs.daftar].sort((a: any, b: any) =>
+    const gCn = gabungBerita(lamaCn, baruCn, MAKS_BERITA_US);
+    const daftar = [...gId.daftar, ...gUs.daftar, ...gCn.daftar].sort((a: any, b: any) =>
       String((b && b.date) || "").localeCompare(String((a && a.date) || ""))
     );
-    const ditambah = gId.ditambah + gUs.ditambah;
+    const ditambah = gId.ditambah + gUs.ditambah + gCn.ditambah;
     if (ditambah > 0) {
       const segar = { ...content, berita: daftar };
       writeContent(segar);

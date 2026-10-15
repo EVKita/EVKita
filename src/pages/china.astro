@@ -1,0 +1,32 @@
+---
+import BerandaRegion from "../components/BerandaRegion.astro";
+import { readContent } from "../lib/store";
+import { makePubT, normalizePubLocale, cmsSite } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
+
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(content.site, lang);
+/**
+ * Teks edisi China menimpa setelan situs Indonesia: hero, judul katalog,
+ * dan judul direktori. Catatan berbahasa Indonesia dikosongkan supaya tidak
+ * bocor ke edisi ini.
+ */
+site.heroTitle = t("pub.region.cnHeroTitle");
+site.heroSub = t("pub.region.cnHeroSub");
+site.heroEyebrow = t("pub.region.cnHeroEyebrow");
+site.katalogTitle = t("pub.region.cnKatalogTitle");
+site.katalogNote = "";
+site.spkluTitle = t("pub.region.cnSpkluTitle");
+site.spkluNote = "";
+site.bengkelTitle = t("pub.region.cnBengkelTitle");
+site.bengkelNote = "";
+site.aboutTitle = t("pub.region.cnAboutTitle");
+site.aboutText = t("pub.region.cnAboutText");
+site.seoTitle = t("pub.region.cnSeoTitle");
+site.seoDescription = t("pub.region.cnSeoDesc");
+site.seoKeywords = t("pub.region.cnSeoKeywords");
+---
+
+<BerandaRegion content={content} site={site} lang={lang} t={t} region="cn" base="/china" />

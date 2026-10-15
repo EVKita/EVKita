@@ -80,6 +80,20 @@ export const TOPIK_PANDUAN_US = [
   "common mistakes new EV owners make",
 ];
 
+/**
+ * Topik panduan abadi edisi China (Mandarin) — pasangan TOPIK_PANDUAN
+ * untuk putaran panduan edisi `cn`. Istilahnya China (充电桩, 换电, CLTC),
+ * bukan terjemahan istilah Indonesia.
+ */
+export const TOPIK_PANDUAN_CN = [
+  "延长电动车电池寿命的技巧",
+  "在中国首次使用公共充电桩指南",
+  "家用充电费用如何计算",
+  "如何选择日常通勤电动车",
+  "如何为家庭选择电动汽车",
+  "新手车主常见误区",
+];
+
 export interface TopikArtikel {
   strategi: "berita" | "banding" | "panduan";
   /** Kunci anti-ulang: kelompok berita, pasangan id, atau judul panduan. */
@@ -90,8 +104,8 @@ export interface TopikArtikel {
   sumberBoleh: string[];
   /** URL video YouTube dari berita sumber, untuk disematkan di artikel. */
   videoEmbed?: string;
-  /** Edisi tulisan: "us" berbahasa Inggris untuk Amerika. */
-  wilayah?: "id" | "us";
+  /** Edisi tulisan: "us" berbahasa Inggris untuk Amerika, "cn" Mandarin untuk China. */
+  wilayah?: "id" | "us" | "cn";
 }
 
 export interface StatusArtikelHarian {
@@ -109,8 +123,9 @@ export interface StatusArtikelHarian {
     biayaRupiah: number;
     errorKey: string;
   } | null;
-  /* Hasil edisi Amerika — panel lama yang hanya membaca `hasil` tidak terganggu. */
+  /* Hasil edisi regional — panel lama yang hanya membaca `hasil` tidak terganggu. */
   hasilUs?: StatusArtikelHarian["hasil"];
+  hasilCn?: StatusArtikelHarian["hasil"];
   riwayat: { tanggal: string; strategi: string; kunci: string }[];
 }
 
@@ -183,21 +198,25 @@ export function drafTunggu(daftar: any[]): any[] {
  *
  * `region` memilih edisinya: "us" memakai berita dan katalog Amerika,
  * berbahasa Inggris, dengan kunci riwayat berawalan `us:` supaya tidak
- * berebut topik dengan edisi Indonesia. Tanpa region berarti Indonesia
+ * berebut topik dengan edisi lain. "cn" memakai berita dan katalog China,
+ * berbahasa Mandarin, berawalan `cn:`. Tanpa region berarti Indonesia
  * seperti sebelumnya.
  */
-export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: string, region: "id" | "us" = "id"): TopikArtikel | null {
+export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: string, region: "id" | "us" | "cn" = "id"): TopikArtikel | null {
   const us = region === "us";
-  const awalan = us ? "us:" : "";
+  const cn = region === "cn";
+  const awalan = us ? "us:" : cn ? "cn:" : "";
   const dipakai = new Set((riwayat || []).map((r) => String(r && r.kunci)));
   const bebas = (kunci: string) => !dipakai.has(kunci);
+  const samaEdisi = (w: any) => String(w || "id").toLowerCase() === region;
 
   const berita = (((content && content.berita) || []) as any[])
-    .filter((b) => b && b.title && b.url && (b.wilayah === "us") === us && umurHari(b.date || b.updatedAt) <= 10)
+    .filter((b) => b && b.title && b.url && samaEdisi(b.wilayah) && umurHari(b.date || b.updatedAt) <= 10)
     .slice(0, 30);
 
   const henti = ["listrik", "motor", "mobil", "indonesia", "hybrid", "yang", "untuk", "dengan", "dari"];
   if (us) henti.push("america", "american", "states", "united", "electric", "with", "from", "that", "this");
+  if (cn) henti.push("china", "chinese", "electric", "with", "from", "that", "this", "zhongguo");
   const kataKunci = (s: string) =>
     String(s || "")
       .toLowerCase()
@@ -228,8 +247,8 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
     return {
       strategi: "berita",
       kunci: kunciTopik,
-      judulKerja: us ? `Roundup: ${unik[0].title}` : `Rangkuman: ${unik[0].title}`,
-      bahan: us ? `Latest news about "${kunci}":\n${bahan}` : `Berita terbaru seputar "${kunci}":\n${bahan}`,
+      judulKerja: us ? `Roundup: ${unik[0].title}` : cn ? `速览：${unik[0].title}` : `Rangkuman: ${unik[0].title}`,
+      bahan: us ? `Latest news about "${kunci}":\n${bahan}` : cn ? `关于“${kunci}”的最新消息：\n${bahan}` : `Berita terbaru seputar "${kunci}":\n${bahan}`,
       sumberBoleh: unik.map((b: any) => String(b.url)),
       videoEmbed: videoEmbed || undefined,
       wilayah: region,
@@ -237,7 +256,7 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
   }
 
   const semua = [...((content && content.cars) || []), ...((content && content.motors) || [])].filter(
-    (v: any) => v && v.id && v.brand && v.name && (v.wilayah === "us") === us
+    (v: any) => v && v.id && v.brand && v.name && String(v.wilayah || "id").toLowerCase() === region
   );
   const perBodi = new Map<string, any[]>();
   for (const v of semua) {
@@ -255,20 +274,24 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
     const sebut = (v: any) =>
       us
         ? `- ${v.brand} ${v.name}: price ${v.priceText || (v.price != null ? `US$${v.price}` : "-")}, range ${v.rangeKm != null ? `${Math.round(Number(v.rangeKm) / 1.60934)} mi EPA` : "-"}, battery ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, power ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`
-        : `- ${v.brand} ${v.name}: harga ${v.priceText || (v.price != null ? `Rp ${v.price}` : "-")}, jarak ${v.rangeKm != null ? `${v.rangeKm} km` : "-"}, baterai ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, tenaga ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`;
+        : cn
+          ? `- ${v.brand} ${v.name}：售价 ${v.priceText || (v.price != null ? `¥${v.price}` : "-")}，续航 ${v.rangeKm != null ? `${v.rangeKm} km CLTC` : "-"}，电池 ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}，动力 ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`
+          : `- ${v.brand} ${v.name}: harga ${v.priceText || (v.price != null ? `Rp ${v.price}` : "-")}, jarak ${v.rangeKm != null ? `${v.rangeKm} km` : "-"}, baterai ${v.batteryKwh != null ? `${v.batteryKwh} kWh` : "-"}, tenaga ${v.powerHp != null ? `${v.powerHp} hp` : "-"}`;
     return {
       strategi: "banding",
       kunci: kunciTopik,
       judulKerja: `${dua[0].brand} ${dua[0].name} vs ${dua[1].brand} ${dua[1].name}`,
       bahan: us
         ? `Two ${bodi} EVs from the catalog:\n${dua.map(sebut).join("\n")}\nWrite a buying guide choosing between them using ONLY the figures above.`
-        : `Dua ${bodi} listrik dari katalog:\n${dua.map(sebut).join("\n")}\nTulis panduan memilih di antara keduanya memakai ANGKA DI ATAS SAJA.`,
+        : cn
+          ? `目录中两款${bodi}电动车：\n${dua.map(sebut).join("\n")}\n仅使用上述数字撰写选购指南。`
+          : `Dua ${bodi} listrik dari katalog:\n${dua.map(sebut).join("\n")}\nTulis panduan memilih di antara keduanya memakai ANGKA DI ATAS SAJA.`,
       sumberBoleh: [],
       wilayah: region,
     };
   }
 
-  const daftarPanduan = us ? TOPIK_PANDUAN_US : TOPIK_PANDUAN;
+  const daftarPanduan = us ? TOPIK_PANDUAN_US : cn ? TOPIK_PANDUAN_CN : TOPIK_PANDUAN;
   for (let i = 0; i < daftarPanduan.length; i++) {
     const panduan = daftarPanduan[(indeksHari + i) % daftarPanduan.length];
     const kunciTopik = `${awalan}panduan:${panduan}`;
@@ -279,7 +302,9 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
       judulKerja: panduan,
       bahan: us
         ? `Evergreen guide topic: "${panduan}". Write from established general knowledge (no model-specific figures); if citing catalog numbers, keep them general with ranges.`
-        : `Topik panduan abadi: "${panduan}". Tulis dari pengetahuan umum yang mapan (tanpa angka spesifik model); kalau menyebut angka katalog, hanya yang umum dan beri rentang.`,
+        : cn
+          ? `常青指南主题：“${panduan}”。根据公认常识撰写（不写具体车型数字）；如引用目录数字，只写大致范围。`
+          : `Topik panduan abadi: "${panduan}". Tulis dari pengetahuan umum yang mapan (tanpa angka spesifik model); kalau menyebut angka katalog, hanya yang umum dan beri rentang.`,
       sumberBoleh: [],
       wilayah: region,
     };
@@ -330,11 +355,11 @@ export function sampulArtikel(content: any, topik: TopikArtikel, hari: string): 
        membawa gambar) jatuh ke foto katalog di bawah — bukan ke sampul
        kosong — supaya artikel yang terbit otomatis selalu bersampul. */
   }
-  /* Sampul panduan diputar dari katalog edisinya sendiri — artikel Amerika
-     tidak bersampul foto Indonesia. */
-  const edisi = (topik as any)?.wilayah === "us" ? "us" : "id";
+  /* Sampul panduan diputar dari katalog edisinya sendiri — artikel edisi
+     regional tidak bersampul foto edisi lain. */
+  const edisi = String((topik as any)?.wilayah || "id").toLowerCase() === "us" ? "us" : String((topik as any)?.wilayah || "id").toLowerCase() === "cn" ? "cn" : "id";
   const semuaGambar = [...((content && content.cars) || []), ...((content && content.motors) || [])]
-    .filter((v: any) => (v?.wilayah === "us") === (edisi === "us"))
+    .filter((v: any) => String(v?.wilayah || "id").toLowerCase() === edisi)
     .map((v: any) => String((v && v.image) || "").trim())
     .filter((g) => g && (/^https?:\/\//i.test(g) || g.startsWith("/")));
   if (!semuaGambar.length) return "";
@@ -376,6 +401,18 @@ function instruksiTulis(topik: TopikArtikel): string {
       "HARD RULE: every specification/price figure ONLY from the materials. Anything not in the materials must NOT appear as a figure — write it in general words.",
       "HARD RULE: the sources field ONLY contains addresses from the list given below (or empty). Writing any other address fails.",
       `Topic: ${topik.judulKerja}.`,
+    ].join("\n");
+  }
+  /* Edisi China ditulis Mandarin sederhana — model, yuan, km/CLTC, GB/T. */
+  if ((topik as any)?.wilayah === "cn") {
+    return [
+      "你是面向普通读者的中国电动车指南作者。",
+      "写一篇 Markdown 稿件：先写2句 ## 摘要，再写3-5个 ## 小标题，不要 H1 标题（标题是单独字段）。",
+      "至少350字。自然简体中文，不要营销腔，不要 emoji。",
+      `分类必须是以下之一：${KATEGORI_ARTIKEL.join(", ")}。`,
+      "硬性规则：所有规格/价格数字只能来自提供的材料。材料中没有的数字绝不能写成数字——用笼统的说法。",
+      "硬性规则：sources 字段只能包含下面给定列表中的地址（或为空）。写其他地址即失败。",
+      `主题：${topik.judulKerja}。`,
     ].join("\n");
   }
   return [
@@ -511,20 +548,21 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
   tulisArtikelHarian(status);
 
   const hasil = { ...hasilKosong(), tanggal: tanggalWib() };
-  /* Hasil edisi Amerika dilaporkan terpisah supaya panel tetap membaca
+  /* Hasil edisi regional dilaporkan terpisah supaya panel tetap membaca
      `hasil` seperti sebelumnya. */
   const hasilUs = { ...hasilKosong(), tanggal: hasil.tanggal };
+  const hasilCn = { ...hasilKosong(), tanggal: hasil.tanggal };
   try {
-    /* Satu putaran menulis DUA edisi: Indonesia lalu Amerika. Aturannya sama
-       (satu tulisan, langsung terbit, batas draf), bahannya dan bahasanya
-       mengikuti edisinya masing-masing. */
-    for (const edisi of ["id", "us"] as const) {
-      const target = edisi === "us" ? hasilUs : hasil;
+    /* Satu putaran menulis TIGA edisi: Indonesia, Amerika, lalu China.
+       Aturannya sama (satu tulisan, langsung terbit, batas draf), bahannya
+       dan bahasanya mengikuti edisinya masing-masing. */
+    for (const edisi of ["id", "us", "cn"] as const) {
+      const target = edisi === "us" ? hasilUs : edisi === "cn" ? hasilCn : hasil;
       const segar = readContent();
-      /* Batas draf dihitung per edisi — antrean Indonesia yang penuh tidak
-         boleh membungkam edisi Amerika, dan sebaliknya. */
+      /* Batas draf dihitung per edisi — antrean satu edisi yang penuh tidak
+         boleh membungkam edisi lain. */
       const tunggu = drafTunggu(
-        (segar.artikel || []).filter((a: any) => (a?.wilayah === "us") === (edisi === "us"))
+        (segar.artikel || []).filter((a: any) => String(a?.wilayah || "id").toLowerCase() === edisi)
       ).length;
       if (edisi === "id") hasil.drafTunggu = drafTunggu(segar.artikel).length;
 
@@ -549,7 +587,7 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
               publishAt: "",
               aiAssisted: true,
               auto: true,
-              /* Edisi tulisan — tanpa ini artikel Amerika bocor ke Indonesia. */
+              /* Edisi tulisan — tanpa ini artikel edisi regional bocor ke Indonesia. */
               wilayah: edisi,
               /* Sampul relevan otomatis supaya kartu artikel langsung terlihat
                  menarik di /artikel dan beranda. Gambar milik sendiri, tanpa
@@ -589,12 +627,14 @@ export async function jalankanArtikel({ paksa = false }: { paksa?: boolean } = {
     status.tanggal = hasil.tanggal;
     status.hasil = hasil;
     status.hasilUs = hasilUs;
+    (status as any).hasilCn = hasilCn;
     return { dilewati: false, ...hasil };
   } catch (e: any) {
     hasil.errorKey = String((e && e.message) || e);
     status.tanggal = hasil.tanggal;
     status.hasil = hasil;
     status.hasilUs = hasilUs;
+    (status as any).hasilCn = hasilCn;
     return { dilewati: false, ...hasil };
   } finally {
     status.jalan = false;

@@ -21,6 +21,19 @@ function readPubLang() {
 }
 const t = makePubT(readPubLang());
 
+/* Sufiks edisi (?region=us/cn) dibaca sekali dari tautan "katalog lengkap"
+   yang dirender server — ganti tab Mobil/Motor tidak boleh menendang pembaca
+   edisi regional ke katalog Indonesia. */
+const EDISI_SUF = (() => {
+  try {
+    const a = document.getElementById("catalogAll");
+    const m = a && /[?&]region=(us|cn)/.exec(a.getAttribute("href") || "");
+    return m ? `?region=${m[1]}` : "";
+  } catch {
+    return "";
+  }
+})();
+
 let EV_CARS = [];
 let MOTORS = [];
 let dataset = [];
@@ -317,19 +330,27 @@ function renderHeroStats() {
   const minPrice = priced.length ? Math.min(...priced.map((c) => c.price)) : null;
   const ranged = all.filter((c) => c.rangeKm);
   const maxRange = ranged.length ? Math.max(...ranged.map((c) => c.rangeKm)) : 0;
-  /* Edisi Amerika tidak punya harga rupiah — pil ketiganya jarak terpendek,
-     bukan harga terendah. Edisinya dibaca dari atribut yang dipasang server. */
-  const edisiUS = el && el.getAttribute("data-region") === "us";
+  /* Edisi regional tidak punya harga rupiah — pil ketiganya jarak terpendek,
+     bukan harga terendah (mil untuk Amerika, km untuk China). Edisinya dibaca
+     dari atribut yang dipasang server. */
+  const edisi = el && el.getAttribute("data-region");
   const minRange = ranged.length ? Math.min(...ranged.map((c) => c.rangeKm)) : 0;
 
-  const pills = edisiUS
+  const pills = edisi === "us"
     ? [
         [all.length, t("pub.stat.models")],
         [brandCount, t("pub.stat.brands")],
         [minRange ? Math.round(minRange / 1.60934) + " mi" : "—", t("pub.region.statMinRange")],
         [maxRange ? Math.round(maxRange / 1.60934) + " mi" : "—", t("pub.stat.maxRange")],
       ]
-    : [
+    : edisi === "cn"
+      ? [
+          [all.length, t("pub.stat.models")],
+          [brandCount, t("pub.stat.brands")],
+          [minRange ? minRange + " km" : "—", t("pub.region.statMinRange")],
+          [maxRange ? maxRange + " km" : "—", t("pub.stat.maxRange")],
+        ]
+      : [
         [all.length, t("pub.stat.models")],
         [brandCount, t("pub.stat.brands")],
         [minPrice !== null ? rupiah(minPrice) : "—", t("pub.stat.minPrice")],
@@ -390,9 +411,9 @@ function render() {
   }
 
   /* Tombol "Buka katalog lengkap" mengikuti tab yang sedang dibuka: tab Motor
-     mengarah ke /katalog-motor, tab Mobil ke /katalog. */
+     mengarah ke /katalog-motor, tab Mobil ke /katalog — edisinya ikut. */
   const catalogAll = $("catalogAll");
-  if (catalogAll) catalogAll.href = state.mode === "motor" ? "/katalog-motor" : "/katalog";
+  if (catalogAll) catalogAll.href = (state.mode === "motor" ? "/katalog-motor" : "/katalog") + EDISI_SUF;
 
   updateCompareUI();
   observeReveals();

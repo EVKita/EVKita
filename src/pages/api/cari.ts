@@ -7,7 +7,7 @@ import { hanyaTayang } from "../../lib/tayang.js";
 import { hrefLaman, labelFooter } from "../../lib/laman.js";
 import { artikelTayang, hrefArtikel } from "../../lib/artikel.js";
 import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
-import { filterWilayah } from "../../lib/region.js";
+import { filterWilayah, regionDariParam } from "../../lib/region.js";
 
 /**
  * Indeks pencarian situs untuk kotak cari di header.
@@ -30,11 +30,11 @@ export const GET: APIRoute = async ({ url }) => {
   const lang = normalizePubLocale(url.searchParams.get("lang"));
   const t = makePubT(lang);
 
-  /* Edisi pencarian: `?region=us` hanya memuat kendaraan dan halaman Amerika —
-     kotak cari di edisi Amerika tidak mengusulkan model Indonesia. */
-  const region = url.searchParams.get("region") === "us" ? "us" : "id";
+  /* Edisi pencarian: `?region=us`/`?region=cn` hanya memuat kendaraan dan halaman edisinya —
+     kotak cari di edisi regional tidak mengusulkan model Indonesia. */
+  const region = regionDariParam(url.searchParams.get("region"));
   const us = region === "us";
-  const suf = us ? "?region=us" : "";
+  const suf = region === "id" ? "" : `?region=${region}`;
 
   const content = await terjemahContent(readContent(), lang);
   const site = cmsSite(content.site, lang);

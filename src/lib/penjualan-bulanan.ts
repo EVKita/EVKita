@@ -225,7 +225,14 @@ export function tandaiJualan({ paksa = false }: { paksa?: boolean } = {}): Hasil
     if (!paksa && state.terakhir === hari) return { ...kosong, bulan: target };
 
     const content = readContent();
-    const dipilih = pilihJualan(content, target, BATAS_TANDAI_SEHARI, state.tandai, hari);
+    /* Hanya armada Indonesia — edisi Amerika dan China ikut putaran
+       Cox/CPCA-nya sendiri. Tanpa ini angka Gaikindo menandai kendaraan
+       yang pasarnya tidak mengenal Gaikindo. */
+    const armadaId = {
+      cars: ((content as any).cars || []).filter((v: any) => String(v?.wilayah || "id").toLowerCase() === "id"),
+      motors: ((content as any).motors || []).filter((v: any) => String(v?.wilayah || "id").toLowerCase() === "id"),
+    };
+    const dipilih = pilihJualan(armadaId, target, BATAS_TANDAI_SEHARI, state.tandai, hari);
     if (!dipilih.length) {
       tulisState({ ...state, terakhir: hari });
       return { dilewati: true, bulan: target, ditandai: [] };

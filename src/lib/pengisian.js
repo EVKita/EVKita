@@ -1,4 +1,4 @@
-import { rupiahPenuh, dolarPenuh } from "./hemat.js";
+import { rupiahPenuh, dolarPenuh, yuanPenuh } from "./hemat.js";
 import { makePubT } from "./i18n/pub.js";
 
 const tId = makePubT("id");
@@ -60,6 +60,17 @@ export const DAYA_PRESETS_US = [
   { id: "level2-umum", i18n: "pub.calc.usDaya3", value: 19.2 },
   { id: "dc-cepat", i18n: "pub.calc.usDaya4", value: 150 },
   { id: "supercharger", i18n: "pub.calc.usDaya5", value: 250 },
+];
+
+/**
+ * Daya yang lazim ditemui di China — pasangan `DAYA_PRESETS_US` untuk
+ * kalkulator edisi China. Rumah 220V 7 kW, AC umum, DC cepat, ultra.
+ */
+export const DAYA_PRESETS_CN = [
+  { id: "rumah", i18n: "pub.calc.cnDaya1", value: 7 },
+  { id: "ac-umum", i18n: "pub.calc.cnDaya2", value: 22 },
+  { id: "dc-cepat", i18n: "pub.calc.cnDaya3", value: 120 },
+  { id: "dc-ultra", i18n: "pub.calc.cnDaya4", value: 250 },
 ];
 
 /**
@@ -325,11 +336,12 @@ export function teksRingkasPengisian(hasil, t = tId, o = {}) {
   if (hasil.socSalah) return t("pub.peng.ringkasSalah");
   if (!hasil.ok) return t("pub.peng.ringkasKosong");
 
-  /* Edisi Amerika memakai dolar dan mil — mata uang dan satuan pembacanya.
+  /* Edisi regional memakai mata uangnya sendiri — dolar untuk Amerika, yuan
+     untuk China. Mil hanya untuk Amerika (China metrik seperti Indonesia).
      Pemanggil lama yang tidak mengirim opsi tidak berubah artinya. */
-  const us = o && o.region === "us";
-  const uang = us ? dolarPenuh : rupiahPenuh;
-  const energi = kwhKeTeks(hasil.energiMasuk, us ? "en" : "id");
+  const uang =
+    o && o.region === "us" ? dolarPenuh : o && o.region === "cn" ? yuanPenuh : rupiahPenuh;
+  const energi = kwhKeTeks(hasil.energiMasuk, o && o.region === "us" ? "en" : "id");
   const durasi = hasil.menitCepat !== null ? teksDurasi(hasil, t) : null;
   const soc = hasil.selisihSoc;
 

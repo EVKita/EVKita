@@ -149,14 +149,15 @@ export function koleksiTitle(jenis, label, s, t) {
 export function koleksiLead(jenis, label, items, t, lang, region = "id") {
   const tt = t || tId;
   const us = region === "us";
+  const K = (kId, kUs, kCn) => (region === "id" ? kId : region === "us" ? kUs : kCn);
   const s = summarize(items);
   if (!s.total) return "";
 
   const count = countPhrase(s, tt);
   const pokok =
     jenis === "tipe"
-      ? tt(us ? "pub.region.pokokTipe" : "pub.tax.pokokTipe", { count, label })
-      : tt(us ? "pub.region.pokokMerek" : "pub.tax.pokokMerek", { count, label });
+      ? tt(K("pub.tax.pokokTipe", "pub.region.pokokTipe", "pub.region.cnPokokTipe"), { count, label })
+      : tt(K("pub.tax.pokokMerek", "pub.region.pokokMerek", "pub.region.cnPokokMerek"), { count, label });
 
   const klausa = [];
 
@@ -191,6 +192,7 @@ export function koleksiLead(jenis, label, items, t, lang, region = "id") {
 export function koleksiDescription(jenis, label, items, t, lang, region = "id") {
   const tt = t || tId;
   const us = region === "us";
+  const K = (kId, kUs, kCn) => (region === "id" ? kId : region === "us" ? kUs : kCn);
   const s = summarize(items);
   const count = countPhrase(s, tt);
   const apa =
@@ -201,5 +203,5 @@ export function koleksiDescription(jenis, label, items, t, lang, region = "id") 
       : s.hargaMin !== null
         ? tt("pub.tax.harga", { nilai: rupiah(s.hargaMin, lang) })
         : "";
-  return tt(us ? "pub.region.daftar" : "pub.tax.daftar", { count, apa }) + harga;
+  return tt(K("pub.tax.daftar", "pub.region.daftar", "pub.region.cnDaftar"), { count, apa }) + harga;
 }

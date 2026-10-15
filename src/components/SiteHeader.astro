@@ -3,6 +3,7 @@ import ThemeToggle from "./ThemeToggle.astro";
 import LanguageToggle from "./LanguageToggle.astro";
 import LogoMark from "./LogoMark.astro";
 import { safeUrl, denganBase } from "../lib/url.js";
+import { istilahCas } from "../lib/region.js";
 import { sessionUserId } from "../lib/auth";
 import { MEMBER_COOKIE } from "../lib/member.js";
 import { makePubT } from "../lib/i18n/pub.js";
@@ -51,20 +52,30 @@ const mark = typed.slice(0, 3);
    profil (UserButton) begitu pengunjungnya ternyata sudah masuk. */
 const anggotaMasuk = !bacaIntegrasi().clerkKey && !!sessionUserId(Astro.cookies.get(MEMBER_COOKIE)?.value);
 
-/* Edisi Amerika menautkan direktorinya ke jangkar di dalam edisi
-   (/amerika#spklu, …) — halaman /spklu & co. mencampur konten Indonesia yang
-   tidak ada di Amerika. */
+/* Edisi regional menautkan direktorinya ke jangkar di dalam edisinya
+   (/amerika#spklu, /china#spklu, …) — halaman /spklu & co. mencampur konten
+   Indonesia yang tidak ada di edisi itu. */
 const hrefEdisi = (jangkar: string, global: string) =>
-  region === "us" ? `${base || "/amerika"}${jangkar}` : global;
+  region === "id" ? global : `${base || (region === "cn" ? "/china" : "/amerika")}${jangkar}`;
+
+/* Label direktori pengisian memakai istilah tetap edisinya (tetapan, lihat
+   `istilahCas` di region.js) — tidak pernah "SPKLU" di /amerika dan /china. */
+const labelCas = t(istilahCas(region, "nav"));
+/* Tautan jangkar beranda (#daftar, #tentang) dan indeks artikel juga terkunci
+   di dalam edisi — denganBase() mengabsolutkan ke akar situs ("/#daftar"),
+   yang menendang pembaca regional ke beranda Indonesia. */
+const edisiBase = region === "id" ? "" : region === "cn" ? "/china" : "/amerika";
+const hrefBeranda = (jangkar: string, global: string) =>
+  region === "id" ? global : `${base || edisiBase}${jangkar}`;
 
 const links = [
   { id: "beranda", label: t("pub.nav.beranda"), href: base || "/", mode: "", note: t("pub.nav.beranda.note") },
-  { id: "mobil", label: t("pub.nav.mobil"), href: denganBase(base, "#daftar"), mode: "mobil", note: t("pub.nav.mobil.note") },
-  site.showSpklu ? { id: "spklu", label: t("pub.nav.spklu"), href: hrefEdisi("#spklu", "/spklu"), mode: "", note: t("pub.nav.spklu.note") } : null,
+  { id: "mobil", label: t("pub.nav.mobil"), href: hrefBeranda("#daftar", denganBase(base, "#daftar")), mode: "mobil", note: t("pub.nav.mobil.note") },
+  site.showSpklu ? { id: "spklu", label: labelCas, href: hrefEdisi("#spklu", "/spklu"), mode: "", note: t("pub.nav.spklu.note") } : null,
   site.showBengkel ? { id: "bengkel", label: t("pub.nav.bengkel"), href: hrefEdisi("#bengkel", "/bengkel"), mode: "", note: t("pub.nav.bengkel.note") } : null,
   site.showBerita ? { id: "berita", label: t("pub.nav.berita"), href: hrefEdisi("#berita", "/berita"), mode: "", note: t("pub.nav.berita.note") } : null,
-  { id: "artikel", label: t("pub.nav.artikel"), href: artikel || denganBase(base, "artikel"), mode: "", note: t("pub.nav.artikel.note") },
-  site.showAbout ? { id: "tentang", label: t("pub.nav.tentang"), href: denganBase(base, "#tentang"), mode: "", note: t("pub.nav.tentang.note") } : null,
+  { id: "artikel", label: t("pub.nav.artikel"), href: artikel || (region === "id" ? denganBase(base, "artikel") : `/artikel?region=${region}`), mode: "", note: t("pub.nav.artikel.note") },
+  site.showAbout ? { id: "tentang", label: t("pub.nav.tentang"), href: hrefBeranda("#tentang", denganBase(base, "#tentang")), mode: "", note: t("pub.nav.tentang.note") } : null,
 ].filter(Boolean) as { id: string; label: string; href: string; mode: string; note: string }[];
 
 /**

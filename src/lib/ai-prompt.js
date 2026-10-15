@@ -120,6 +120,7 @@ export const PRICE_FIELDS = ["price", "priceText", "variantNames"];
 function describeFields(kind, only, wilayah) {
   const wanted = only && only.length ? new Set(only) : null;
   const us = wilayah === "us";
+  const cn = wilayah === "cn";
   return fieldsFor(kind)
     .filter((f) => !wanted || wanted.has(f.key))
     .map((f) => {
@@ -127,7 +128,7 @@ function describeFields(kind, only, wilayah) {
         f.type === "number" || f.type === "integer"
           ? ` Nilai wajar antara ${f.min} dan ${f.max}${f.unit ? " " + f.unit : ""}.`
           : "";
-      const desc = us && US_DESC[f.key] ? US_DESC[f.key] : f.desc;
+      const desc = us && US_DESC[f.key] ? US_DESC[f.key] : cn && CN_DESC[f.key] ? CN_DESC[f.key] : f.desc;
       return `- ${f.key}: ${desc}${batas}`;
     })
     .join("\n");
@@ -154,16 +155,34 @@ const US_DESC = {
 };
 
 /**
+ * Deskripsi field yang satuannya beda pasar — dipakai `describeFields()`
+ * bila risetnya untuk China. Harga yuan, jarak CLTC dalam km, colokan GB/T.
+ */
+const CN_DESC = {
+  price: "Harga resmi di China dalam Yuan, sebagai angka bulat tanpa titik atau nama mata uang.",
+  priceText: 'Harga yang sama dalam bentuk singkat untuk ditampilkan, mis. "¥219.900".',
+  rangeKm: "Jarak tempuh sekali pengisian penuh, dalam KILOMETER (standar CLTC).",
+  rangeStandard: "Standar pengujian untuk angka jarak tempuh — untuk China isi CLTC.",
+  topSpeedKph: "Kecepatan maksimum dalam km/jam.",
+  accelSec: "Waktu akselerasi 0-100 km/jam, dalam detik.",
+  year: "Tahun model yang dijual di China.",
+  penjualan2026: "Unit terjual di China sepanjang tahun 2026 (angka resmi pabrikan atau estimasi CPCA). Tulis angka tahun berjalan apa adanya; kosongkan kalau tidak ada sumber yang menyebut.",
+  penjualanBulan: "Bulan yang dicerminkan angka penjualan2026, format YYYY-MM persis. Selalu isi bersama penjualan2026; kosongkan kalau penjualan2026 dikosongkan.",
+  variantNames: "Nama varian resmi yang dijual di China.",
+  warranty: "Ringkasan garansi, terutama garansi baterai, mis. garansi baterai 8 tahun / 160.000 km.",
+};
+
+/**
  * Instruksi sistem.
  *
  * Ditulis dalam Bahasa Indonesia karena seluruh sasarannya berbahasa Indonesia:
  * pasarnya, sumbernya, dan pembaca hasilnya.
  *
- * Pengecualian satu-satunya: kendaraan edisi Amerika (`opts.wilayah === "us").
- * Promptnya tetap Bahasa Indonesia (panelnya begitu), tetapi pasarnya Amerika
- * Serikat — harga Dolar AS, jarak EPA dalam mil, colokan NACS, dan sumber
- * resmi pabrikan versi Amerika. Tanpa ini riset kendaraan Amerika memakai
- * angka pasar Indonesia.
+ * Pengecualian: kendaraan edisi regional (`opts.wilayah === "us"` atau `"cn"`).
+ * Promptnya tetap Bahasa Indonesia (panelnya begitu), tetapi pasarnya mengikuti
+ * edisinya — Amerika: Dolar AS, mil EPA, colokan NACS, sumber Amerika;
+ * China: Yuan, km CLTC, colokan GB/T, sumber China. Tanpa ini riset kendaraan
+ * edisi regional memakai angka pasar Indonesia.
  *
  * @param {object} opts
  * @param {"mobil"|"motor"} opts.kind
@@ -173,11 +192,12 @@ const US_DESC = {
  * @param {string[]} [opts.only] Batasi ke field tertentu.
  * @param {string} opts.today Tanggal hari ini (YYYY-MM-DD). Diberikan pemanggil,
  *   bukan dibaca di sini, supaya fungsinya bisa diuji dengan hasil yang tetap.
- * @param {string} [opts.wilayah] "us" untuk pasar Amerika; selainnya Indonesia.
+ * @param {string} [opts.wilayah] "us" untuk pasar Amerika, "cn" untuk pasar China; selainnya Indonesia.
  */
 export function buildInstructions(opts) {
   const { kind, brand, name, hint, only, today } = opts;
   const us = opts && opts.wilayah === "us";
+  const cn = opts && opts.wilayah === "cn";
   const jenis = kind === "motor" ? "motor listrik" : "mobil listrik";
   const sebagian = only && only.length;
 
@@ -192,7 +212,18 @@ export function buildInstructions(opts) {
         "- Marketplace, iklan baris, dan forum BUKAN sumber harga maupun spesifikasi.",
         "- Sebutkan satu alamat halaman untuk tiap nilai yang kamu isi.",
       ]
-    : [
+    : cn
+      ? [
+          "PASAR",
+          "- Hanya versi yang dijual resmi di China. Kalau versi China berbeda dari versi global, pakai yang China.",
+          "- Harga dalam Yuan (angka saja, tanpa simbol). Jarak tempuh dalam KILOMETER (standar CLTC), bukan mil.",
+          "",
+          "SUMBER",
+          "- Dahulukan situs resmi pabrikan versi China (nio.com, xiaopeng.com, li-auto.com, zeekr.com, byd.com), lalu media otomotif China yang mapan (CnEVPost, Gasgoo, Autohome, Yiche).",
+          "- Marketplace, iklan baris, dan forum BUKAN sumber harga maupun spesifikasi.",
+          "- Sebutkan satu alamat halaman untuk tiap nilai yang kamu isi.",
+        ]
+      : [
         "PASAR",
         "- Hanya versi yang dijual resmi di Indonesia. Kalau versi Indonesia berbeda dari versi global, pakai yang Indonesia.",
         "- Harga dalam Rupiah, on the road. Sebutkan di catatan itu OTR kota mana dan per tanggal berapa.",

@@ -20,8 +20,13 @@ describe("normalizeWilayah", () => {
   });
 
   it("nilai asing jatuh ke Indonesia, bukan menyembunyikan entri", () => {
-    assert.equal(normalizeWilayah("cn"), "id");
     assert.equal(normalizeWilayah("eropa"), "id");
+    assert.equal(normalizeWilayah("xx"), "id");
+  });
+
+  it("mengenal tiga edisi", () => {
+    assert.equal(normalizeWilayah("cn"), "cn");
+    assert.equal(normalizeWilayah("CN"), "cn");
   });
 });
 
@@ -47,9 +52,11 @@ describe("isWilayah", () => {
 });
 
 describe("wilayahDariPath", () => {
-  it("/amerika dan turunannya edisi us, selainnya id", () => {
+  it("/amerika dan turunannya edisi us, /china edisi cn, selainnya id", () => {
     assert.equal(wilayahDariPath("/amerika"), "us");
     assert.equal(wilayahDariPath("/amerika/katalog"), "us");
+    assert.equal(wilayahDariPath("/china"), "cn");
+    assert.equal(wilayahDariPath("/china/katalog"), "cn");
     assert.equal(wilayahDariPath("/"), "id");
     assert.equal(wilayahDariPath("/katalog"), "id");
     assert.equal(wilayahDariPath(""), "id");

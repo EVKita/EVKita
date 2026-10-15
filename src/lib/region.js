@@ -14,10 +14,11 @@
 export const REGIONS = [
   { id: "id", slug: "", eyebrow: "EVKita di Indonesia" },
   { id: "us", slug: "amerika", eyebrow: "EVKita di Amerika" },
+  { id: "cn", slug: "china", eyebrow: "EVKita di China" },
 ];
 
 /** Bahasa bawaan tiap edisi saat pengunjung belum memilih bahasa. */
-export const REGION_LANG = { amerika: "en" };
+export const REGION_LANG = { amerika: "en", china: "zh" };
 
 /**
  * Membakukan nilai `wilayah` dari dokumen. Yang tidak dikenal jatuh ke
@@ -25,7 +26,9 @@ export const REGION_LANG = { amerika: "en" };
  */
 export function normalizeWilayah(v) {
   const s = String(v === null || v === undefined ? "" : v).trim().toLowerCase();
-  return s === "us" ? "us" : "id";
+  if (s === "us") return "us";
+  if (s === "cn") return "cn";
+  return "id";
 }
 
 /** Apakah item ini milik edisi yang diminta? */
@@ -40,9 +43,41 @@ export function filterWilayah(list, wilayah) {
   return list.filter((item) => normalizeWilayah(item && item.wilayah) === w);
 }
 
-/** Edisi dari alamat yang dibuka (`/amerika` → `us`, selainnya `id`). */
+/** Edisi dari alamat yang dibuka (`/amerika` → `us`, `/china` → `cn`). */
 export function wilayahDariPath(pathname) {
   const path = String(pathname || "");
   if (path === "/amerika" || path.startsWith("/amerika/")) return "us";
+  if (path === "/china" || path.startsWith("/china/")) return "cn";
   return "id";
+}
+
+/** Edisi dari parameter `?region=` (`us`, `cn`, selainnya `id`). */
+export function regionDariParam(value) {
+  const s = String(value === null || value === undefined ? "" : value);
+  return s === "us" || s === "cn" ? s : "id";
+}
+
+/**
+ * Istilah direktori pengisian per edisi — TETAPAN.
+ *
+ * Edisi regional memakai istilah TETAPnya sendiri dalam SEMUA bahasa, bukan
+ * terjemahan "SPKLU": Amerika selalu "Charging...", China selalu "充电站...".
+ * Auto-update (berita, artikel, riset, penjualan) hanya menulis
+ * `data/content.json` dan tidak pernah menyentuh kamus, jadi tetapan ini tidak
+ * bisa dibalikkan mesin. `tests/region-istilah.test.ts` menguncinya: nilai
+ * kunci us/cn di ketiga bahasa tidak boleh mengandung "SPKLU".
+ *
+ * `bentuk`: "nav" (pil menu/header), "peta" (tautan lokasi kartu), atau
+ * "semua" (tombol lihat-semua seksi).
+ */
+export const ISTILAH_CAS = {
+  nav: { id: "pub.nav.spklu", us: "pub.region.usCharging", cn: "pub.region.cnBadge" },
+  peta: { id: "pub.dir.lokasiSpklu", us: "pub.region.usChargingMap", cn: "pub.region.cnChargingMap" },
+  semua: { id: "pub.dir.semuaSpklu", us: "pub.region.usSemuaCharging", cn: "pub.region.cnSemuaCharging" },
+};
+
+export function istilahCas(region, bentuk) {
+  const daftar = ISTILAH_CAS[bentuk] || ISTILAH_CAS.nav;
+  const w = normalizeWilayah(region);
+  return daftar[w] || daftar.id;
 }

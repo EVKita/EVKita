@@ -285,10 +285,13 @@ const t = makePubT(lang);
       if (!indeks && !memuat) {
         memuat = true;
         var lang = (document.documentElement.getAttribute("lang") || "id").slice(0, 2);
-        /* Di edisi Amerika, indeks pencariannya pun edisi Amerika — tanpa ini
+        /* Di edisi regional, indeks pencariannya pun edisi itu — tanpa ini
            kotak cari mengusulkan model Indonesia. */
-        var diAmerika = location.pathname === "/amerika" || location.pathname.indexOf("/amerika/") === 0;
-        fetch("/api/cari?lang=" + encodeURIComponent(lang) + (diAmerika ? "&region=us" : ""), { headers: { Accept: "application/json" } })
+        var path = location.pathname;
+        var edisi = path === "/amerika" || path.indexOf("/amerika/") === 0 ? "us" : path === "/china" || path.indexOf("/china/") === 0 ? "cn" : "";
+        var q = new URLSearchParams(location.search).get("region");
+        if (!edisi && (q === "us" || q === "cn")) edisi = q;
+        fetch("/api/cari?lang=" + encodeURIComponent(lang) + (edisi ? "&region=" + edisi : ""), { headers: { Accept: "application/json" } })
           .then(function (r) { return r.json(); })
           .then(function (b) {
             indeks = b && typeof b === "object" ? b : { kendaraan: [], merek: [], halaman: [] };
