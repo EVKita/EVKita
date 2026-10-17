@@ -5820,6 +5820,54 @@
   ],
   "berita": [
     {
+      "id": "tesla-roadster-generasi-baru-resmi-meluncur",
+      "title": "Resmi Meluncur, Tesla Roadster Generasi Baru Bisa Terbang Pakai Pendorong SpaceX",
+      "source": "Tesla",
+      "url": "https://www.tesla.com/roadster",
+      "date": "2026-10-16",
+      "image": "https://cdn.motor1.com/images/mgl/lE4nn6/s3/2028-tesla-roadster-reveal.jpg",
+      "video": "https://www.youtube.com/watch?v=qt5p-_tE8d0",
+      "excerpt": "Tesla resmi menampilkan Roadster generasi kedua di fasilitas uji SpaceX McGregor, Texas. Dengan pendorong cold-gas, sport listrik ini diklaim 0-60 mil di bawah satu detik. Produksi dimulai 2028.",
+      "featured": true,
+      "status": "published",
+      "wilayah": "id",
+      "publishAt": "",
+      "updatedAt": "2026-10-17T05:01:18.836Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "us-tesla-roadster-unveiled-spacex-thrusters",
+      "title": "Tesla's New Roadster Is Here: SpaceX Thrusters and a Claimed 0-60 MPH in 0.81 Seconds",
+      "source": "Tesla",
+      "url": "https://www.tesla.com/roadster",
+      "date": "2026-10-16",
+      "image": "https://cdn.motor1.com/images/mgl/lE4nn6/s3/2028-tesla-roadster-reveal.jpg",
+      "video": "https://www.youtube.com/watch?v=qt5p-_tE8d0",
+      "excerpt": "Tesla unveiled the next-generation Roadster at SpaceX's McGregor, Texas test site. The thruster-equipped EV posted a claimed 0-60 mph in 0.81 seconds. Production starts in 2028.",
+      "featured": true,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "updatedAt": "2026-10-17T05:01:18.836Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-tesla-roadster-2026-fabu",
+      "title": "特斯拉第二代Roadster正式发布 搭载SpaceX冷气推进器",
+      "source": "Tesla",
+      "url": "https://www.tesla.cn/roadster",
+      "date": "2026-10-16",
+      "image": "https://cdn.motor1.com/images/mgl/lE4nn6/s3/2028-tesla-roadster-reveal.jpg",
+      "video": "https://www.youtube.com/watch?v=qt5p-_tE8d0",
+      "excerpt": "特斯拉在得克萨斯州SpaceX麦克格雷戈试验场正式发布第二代Roadster。这款搭载冷气推进器的电动跑车官方宣称0-60英里加速0.81秒，计划2028年投产。",
+      "featured": true,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-10-17T05:01:18.836Z",
+      "updatedBy": ""
+    },
+    {
       "id": "5-motor-listrik-goda-meluncur-di-ri-harga-mulai-rp-4-jutaan",
       "title": "5 Motor Listrik Goda Meluncur di RI, Harga Mulai Rp 4 Jutaan",
       "source": "detikOto",
@@ -6596,7 +6644,7 @@
       "image": "",
       "video": "",
       "excerpt": "Seal 06 sedan starts at ¥99,900 with up to 630 km CLTC and 10–70% flash charging in five minutes.",
-      "featured": true,
+      "featured": false,
       "status": "published",
       "wilayah": "cn",
       "publishAt": "",
@@ -6612,7 +6660,7 @@
       "image": "",
       "video": "",
       "excerpt": "The Ioniq 5 sold 20,730 units this year, up 9% — passing the Equinox EV and Mach-E, whose sales fell more than 40%.",
-      "featured": true,
+      "featured": false,
       "status": "published",
       "wilayah": "us",
       "publishAt": "",
@@ -7324,6 +7372,155 @@
     }
   ],
   "artikel": [
+    {
+      "id": "tesla-roadster-generasi-baru-2026",
+      "title": "Tesla Roadster Generasi Baru Resmi Diluncurkan: 0-100 km/j di Bawah Satu Detik",
+      "slug": "tesla-roadster-generasi-baru-2026",
+      "excerpt": "Setelah hampir sembilan tahun, Tesla menampilkan Roadster generasi kedua di fasilitas SpaceX. Tiga varian, pendorong cold-gas, dan produksi 2028.",
+      "body": "Tesla akhirnya menampilkan wajah baru Roadster. Setelah hampir sembilan tahun sejak konsep generasi kedua muncul di acara Tesla Semi pada 2017, sport listrik itu resmi diperkenalkan di fasilitas uji roket SpaceX di McGregor, Texas, Rabu malam waktu setempat. Acara yang sempat mundur dari 1 Oktober karena cuaca ini disiarkan langsung dari lokasi uji SpaceX dekat Waco.\n\n## Mobil yang \"bisa terbang\"\n\nDalam demonstrasi yang disiarkan langsung, Roadster memanjat landai miring dengan sistem hisap, melakukan putaran di udara, lalu melompati barisan kendaraan Tesla — mulai dari Semi, Cybercab, Cybertruck, Model Y, sampai Model 3. Manuver itu memakai pendorong cold-gas (gas dingin) yang dikembangkan bersama SpaceX. Demonstrasi dijalankan tanpa pengemudi di kursi.\n\n\"Kendaraan terbang itu nyata,\" kata Lars Moravy, wakil presiden rekayasa kendaraan Tesla, seusai satu adegan. Elon Musk menyebut Roadster \"mobil yang dikemudikan manusia terbaik yang terakhir\" dan mengakui mobil ini \"bukan mobil yang dioptimalkan untuk keselamatan\" — yang penting, katanya, keseruannya maksimal.\n\n## Tiga varian, satu mobil\n\nTesla mencantumkan tiga konfigurasi di halaman resminya:\n\n- **Performance** — siap jalan, dua kursi, dengan aerodinamika aktif dan sistem hisap multi-mode untuk downforce.\n- **Thrust** — siap balap, menambahkan pendorong cold-gas di belakang. Dalam demo, akselerasi 0-60 mil per jam (0-97 km/j) diklaim hanya 0,81 detik.\n- **Rocket** — hanya dengan undangan, satu kursi, membawa sepuluh pendorong di sekeliling bodi untuk angkat dan putaran. Versi ini tidak disetujui untuk jalan umum.\n\nPada varian Thrust, bagasi diisi tangki nitrogen 200 liter bertekanan sekitar 10.000 psi. Sekali isi cukup untuk sekitar lima detik dorongan, dan pengisian ulang saat ini butuh dua sampai enam jam.\n\n## Spesifikasi yang diungkap\n\nTesla tidak menampilkan lembar spesifikasi resmi di panggung, tapi tim rekayasa dan desainnya — Lars Moravy dan Franz von Holzhausen — menjelaskan detail platformnya seusai acara:\n\n- Daya lebih dari 1.073 hp untuk varian dasar dan lebih dari 1.341 hp (1.000 kW) untuk varian kuat. Semua varian penggerak roda belakang, dengan dua motor di poros belakang dan torque vectoring.\n- Baterai 800-1.000 volt dengan sel berbasis nikel, pengisian DC lebih dari 500 kW di Supercharger V4, dan pengisian 15-85 persen ditempuh dalam sekitar 10 menit.\n- Jarak tempuh sekitar 500-510 km (310-320 mil) — jauh di bawah klaim 1.000 km yang pernah dijanjikan pada 2017.\n- Kecepatan awal 214 mph (345 km/j) dengan target jangka panjang 330 mph.\n- Bobot di bawah 1.700 kg, sasis aluminium dan serat karbon, setir yoke steer-by-wire, rem cakram karbon-keramik, serta pintu kupu-kupu dengan panel atap yang bisa dilepas.\n\n## Harga dan produksi\n\nHarga jual final belum diumumkan di acara. Pemesanan dibuka ulang dengan deposit 50.000 dolar AS untuk varian Performance dan 250.000 dolar AS untuk Thrust, sedangkan Rocket hanya lewat undangan. Musk menegaskan produksi dimulai pada 2028 di Gigafactory Texas — kali ini dengan kalimat, \"Benar-benar. Sungguhan.\"\n\n## Video resmi\n\n[Rekaman lengkap acara peluncuran Roadster (saluran Tesla) di YouTube](https://www.youtube.com/watch?v=qt5p-_tE8d0)\n",
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "tags": [
+        "Tesla",
+        "Roadster",
+        "peluncuran",
+        "mobil listrik",
+        "SpaceX"
+      ],
+      "sources": [
+        {
+          "label": "Situs resmi Tesla Roadster",
+          "url": "https://www.tesla.com/roadster"
+        },
+        {
+          "label": "Rekaman resmi acara peluncuran (YouTube Tesla)",
+          "url": "https://www.youtube.com/watch?v=qt5p-_tE8d0"
+        },
+        {
+          "label": "InsideEVs — spesifikasi lengkap Roadster 2026",
+          "url": "https://insideevs.com/news/812242/tesla-roadster-2026-specs/"
+        },
+        {
+          "label": "CBS News — debut Tesla Roadster",
+          "url": "https://www.cbsnews.com/news/tesla-roadster-debut-elon-musk-flying-cars-are-real/"
+        },
+        {
+          "label": "CNBC — Tesla Roadster reveal",
+          "url": "https://www.cnbc.com/2026/10/15/tesla-roadster-reveal-what-to-know-about-the-delayed-ev.html"
+        }
+      ],
+      "wilayah": "id",
+      "image": "https://cdn.motor1.com/images/mgl/lE4nn6/s3/2028-tesla-roadster-reveal.jpg",
+      "seoTitle": "",
+      "keywords": "Tesla Roadster 2026, peluncuran Tesla Roadster, Roadster SpaceX, mobil listrik sport",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false,
+      "date": "2026-10-17",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "us-tesla-roadster-2026-launch",
+      "title": "Tesla's Next-Generation Roadster Unveiled With SpaceX Thrusters",
+      "slug": "us-tesla-roadster-2026-launch",
+      "excerpt": "Tesla's redesigned Roadster debuted at SpaceX's Texas test site: cold-gas thrusters, a claimed 0.81-second 0-60 mph, and production in 2028.",
+      "body": "Nine years after the first concept rolled out of a Tesla Semi trailer, the next-generation Roadster is finally here. Tesla unveiled the redesigned two-seat sports car on Wednesday night at SpaceX's rocket test facility in McGregor, Texas, near Waco, in a livestreamed event that had been postponed from October 1 because of weather.\n\n## A car that \"flies\"\n\nDuring the demonstration, the Roadster climbed a steep inverted ramp using its suction system, rotated in midair, and leaped over a lineup of Tesla vehicles — including a Semi, a Cybercab and a Cybertruck — using cold-gas thrusters developed with SpaceX. The demo car ran without a driver on board.\n\n\"Flying cars are real,\" Tesla VP of vehicle engineering Lars Moravy said after one of the stunts. Musk called the Roadster \"the best of the last of the human-driven cars\" and admitted it is \"not necessarily a safety-optimized car\" — the goal, he said, is to take the fun meter to 11 out of 10.\n\n## Three configurations\n\nTesla's site lists three versions:\n\n- **Performance** — road-ready, two seats, active aerodynamics and a multi-mode suction system for downforce.\n- **Thrust** — race-ready, adding rear-mounted cold-gas thrusters. During the demo, a 0-60 mph run was claimed at just 0.81 seconds.\n- **Rocket** — invite-only, single seat, ten perimeter thrusters for lift and rotation; not approved for public roads.\n\nOn the Thrust, the trunk holds a 200-liter nitrogen tank at roughly 10,000 psi. One fill is good for about five seconds of thrust, and refilling currently takes two to six hours.\n\n## The numbers\n\nTesla did not run a spec sheet on stage, but its engineering and design chiefs — Lars Moravy and Franz von Holzhausen — detailed the platform afterwards:\n\n- Over 1,073 hp in the base version and over 1,341 hp (1,000 kW) in the stronger ones. All are rear-wheel drive, with dual rear motors and torque vectoring.\n- An 800-1,000-volt battery with nickel-based cells, DC charging over 500 kW at V4 Superchargers, and 15-85 percent in about 10 minutes.\n- Around 310-320 miles of range — about half of the 620-mile figure promised in 2017.\n- An initial top speed of 214 mph, with a 330 mph target.\n- Under 3,700 lb, an aluminum-and-carbon-fiber chassis, steer-by-wire yoke, carbon-ceramic brakes, and butterfly doors with removable roof panels.\n\n## Pricing and production\n\nNo final price was announced at the event. Reservations reopened with a $50,000 deposit for the Performance and $250,000 for the Thrust; the Rocket is invitation-only. Musk said production begins in 2028 at Gigafactory Texas — \"Actually. For real,\" he added.\n\n## Official video\n\n[Watch the full Roadster reveal stream (Tesla's channel) on YouTube](https://www.youtube.com/watch?v=qt5p-_tE8d0)\n",
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "tags": [
+        "Tesla",
+        "Roadster",
+        "launch",
+        "EV",
+        "SpaceX"
+      ],
+      "sources": [
+        {
+          "label": "Tesla Roadster official site",
+          "url": "https://www.tesla.com/roadster"
+        },
+        {
+          "label": "Roadster Event — full official stream (YouTube)",
+          "url": "https://www.youtube.com/watch?v=qt5p-_tE8d0"
+        },
+        {
+          "label": "InsideEVs — full 2026 Roadster specs",
+          "url": "https://insideevs.com/news/812242/tesla-roadster-2026-specs/"
+        },
+        {
+          "label": "CBS News — Tesla Roadster debut",
+          "url": "https://www.cbsnews.com/news/tesla-roadster-debut-elon-musk-flying-cars-are-real/"
+        },
+        {
+          "label": "CNBC — Tesla Roadster reveal",
+          "url": "https://www.cnbc.com/2026/10/15/tesla-roadster-reveal-what-to-know-about-the-delayed-ev.html"
+        }
+      ],
+      "wilayah": "us",
+      "image": "https://cdn.motor1.com/images/mgl/lE4nn6/s3/2028-tesla-roadster-reveal.jpg",
+      "seoTitle": "",
+      "keywords": "Tesla Roadster 2026, Roadster unveiling, SpaceX thrusters, electric sports car",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false,
+      "date": "2026-10-17",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-tesla-roadster-2026-fabu",
+      "title": "特斯拉第二代Roadster正式发布：冷气推进器加持，0-60英里加速0.81秒",
+      "slug": "cn-tesla-roadster-2026-fabu",
+      "excerpt": "特斯拉在得州SpaceX试验场发布第二代Roadster。三个版本、冷气推进器与吸附系统，计划2028年在得州超级工厂量产。",
+      "body": "经过近九年的等待，特斯拉第二代Roadster终于正式发布。当地时间10月15日晚（北京时间10月16日上午），特斯拉在得克萨斯州韦科附近的SpaceX麦克格雷戈火箭试验场揭晓了这款全新双座电动跑车，活动全程直播，原定10月1日的发布因天气原因推迟。\n\n## 会\"飞\"的跑车\n\n演示环节中，Roadster借吸附系统爬上倒置的陡坡，在空中翻转，并使用与SpaceX联合开发的冷气推进器跃过一排特斯拉车辆——包括Semi、Cybercab和Cybertruck。演示车辆全程无人驾驶。\n\n特斯拉车辆工程副总裁拉斯·莫拉维在特技完成后说：\"飞行汽车是真的。\"马斯克称Roadster是\"最后一批由人驾驶的汽车中最好的一款\"，并承认它\"并非以安全为最优先\"，重点是把乐趣拉满。\n\n## 三种配置\n\n特斯拉官网列出三个版本：\n\n- **Performance**：可上路，双座，配备主动空气动力学与多模式吸附系统。\n- **Thrust**：赛道取向，在Performance基础上增加后置冷气推进器；演示中官方宣称0-60英里/时加速仅0.81秒。\n- **Rocket**：仅限受邀用户，单座，配备十个环绕车身的推进器，不具备公共道路行驶资格。\n\nThrust版本的后备箱装有约200升、压力约1万psi的氮气瓶，一次加注约可提供五秒推力，目前加注需要两到六小时。\n\n## 主要参数\n\n特斯拉未在台上公布完整参数表，但高管在会后说明了平台细节：\n\n- 基础版超过1,073马力，高性能版超过1,341马力（1,000千瓦），全部为后轮驱动，后轴双电机并支持扭矩矢量分配。\n- 800–1,000伏高压电池，采用专用镍基电芯，可在V4超级充电桩以超过500千瓦功率直流充电，15%–85%约需10分钟。\n- 续航约500–510公里，远低于2017年公布的1,000公里目标。\n- 初期最高时速约345公里/小时，长期目标约530公里/小时。\n- 整车重量低于1,700公斤，铝合金与碳纤维底盘，线控转向yoke方向盘，蝶翼门配可拆卸车顶面板。\n\n## 价格与量产\n\n特斯拉没有公布最终售价。预订已重新开放：Performance定金5万美元，Thrust为25万美元，Rocket仅限邀请。马斯克确认量产将于2028年在得州超级工厂启动——他补充说：\"这次是真的。\"\n\n## 官方视频\n\n[在YouTube观看特斯拉官方完整发布直播回放](https://www.youtube.com/watch?v=qt5p-_tE8d0)\n",
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "tags": [
+        "特斯拉",
+        "Roadster",
+        "发布",
+        "电动车",
+        "SpaceX"
+      ],
+      "sources": [
+        {
+          "label": "特斯拉Roadster官网",
+          "url": "https://www.tesla.cn/roadster"
+        },
+        {
+          "label": "发布活动完整直播回放（YouTube）",
+          "url": "https://www.youtube.com/watch?v=qt5p-_tE8d0"
+        },
+        {
+          "label": "InsideEVs：Roadster 2026完整参数",
+          "url": "https://insideevs.com/news/812242/tesla-roadster-2026-specs/"
+        },
+        {
+          "label": "CBS News：特斯拉Roadster亮相",
+          "url": "https://www.cbsnews.com/news/tesla-roadster-debut-elon-musk-flying-cars-are-real/"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "https://cdn.motor1.com/images/mgl/lE4nn6/s3/2028-tesla-roadster-reveal.jpg",
+      "seoTitle": "",
+      "keywords": "特斯拉Roadster 2026, Roadster发布, SpaceX推进器, 电动跑车",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false,
+      "date": "2026-10-17",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
     {
       "id": "tips-isi-daya-spklu-pemula",
       "title": "Pertama Kali Mengisi Daya di SPKLU? 5 Tips Ini Biar Tidak Canggung",
