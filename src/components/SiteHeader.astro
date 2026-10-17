@@ -75,6 +75,9 @@ const links = [
   site.showBengkel ? { id: "bengkel", label: t("pub.nav.bengkel"), href: hrefEdisi("#bengkel", "/bengkel"), mode: "", note: t("pub.nav.bengkel.note") } : null,
   site.showBerita ? { id: "berita", label: t("pub.nav.berita"), href: hrefEdisi("#berita", "/berita"), mode: "", note: t("pub.nav.berita.note") } : null,
   { id: "artikel", label: t("pub.nav.artikel"), href: artikel || (region === "id" ? denganBase(base, "artikel") : `/artikel?region=${region}`), mode: "", note: t("pub.nav.artikel.note") },
+  { id: "evfinder", label: t("pub.nav.evfinder"), href: region === "id" ? "/ev-finder" : `/ev-finder?region=${region}`, mode: "", note: t("pub.nav.evfinder.note") },
+  { id: "rute", label: t("pub.nav.rute"), href: region === "id" ? "/panduan-rute" : `/panduan-rute?region=${region}`, mode: "", note: t("pub.nav.rute.note") },
+  { id: "kalkulator", label: t("pub.nav.kalkulator"), href: region === "id" ? "/kalkulator" : `/kalkulator?region=${region}`, mode: "", note: t("pub.nav.kalkulator.note") },
   site.showAbout ? { id: "tentang", label: t("pub.nav.tentang"), href: hrefBeranda("#tentang", denganBase(base, "#tentang")), mode: "", note: t("pub.nav.tentang.note") } : null,
 ].filter(Boolean) as { id: string; label: string; href: string; mode: string; note: string }[];
 

@@ -1,0 +1,69 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
+import { terjemahContent } from "../../lib/terjemahan.js";
+
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(content.site, lang);
+---
+
+<Base>
+  <SiteHeader site={site} lang={lang} t={t} />
+  <main class="container karbon-main">
+    <header class="karbon-head">
+      <h1>{t("pub.kalk.karbonTitle")}</h1>
+      <p class="karbon-sub">{t("pub.kalk.karbonSub")}</p>
+    </header>
+    <form id="karbonForm" class="karbon-form">
+      <label>{t("pub.kalk.karbonKm")} <input type="number" id="kKm" value="15000" /></label>
+      <label>{t("pub.kalk.karbonIce")} <input type="number" id="kIce" value="8" step="0.1" /></label>
+      <label>{t("pub.kalk.karbonEv")} <input type="number" id="kEv" value="18" step="0.1" /></label>
+      <label>{t("pub.kalk.karbonFaktor")} <input type="number" id="kFaktor" value="0.85" step="0.01" /></label>
+      <button type="submit" class="btn btn-primary">{t("pub.kalk.hitung")}</button>
+    </form>
+    <div id="karbonResult" class="karbon-result" hidden></div>
+  </main>
+  <SiteFooter site={site} lang={lang} t={t} content={content} />
+  <script>
+    (function () {
+      const form = document.getElementById("karbonForm");
+      const res = document.getElementById("karbonResult");
+      if (!form || !res) return;
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const km = Number(document.getElementById("kKm").value) || 0;
+        const ice = Number(document.getElementById("kIce").value) || 0;
+        const ev = Number(document.getElementById("kEv").value) || 0;
+        const faktor = Number(document.getElementById("kFaktor").value) || 0;
+        const literIce = km * ice / 100;
+        const kwhEv = km * ev / 100;
+        const co2Ice = literIce * 2.31;
+        const co2Ev = kwhEv * faktor / 1000;
+        const hemat = co2Ice - co2Ev;
+        const pohon = hemat / 21;
+        res.hidden = false;
+        res.innerHTML = `
+          <h3>Hasil</h3>
+          <p>Emisi CO₂ mobil bensin: <strong>${Math.round(co2Ice).toLocaleString("id-ID")} kg/thn</strong></p>
+          <p>Emisi CO₂ mobil listrik: <strong>${Math.round(co2Ev).toLocaleString("id-ID")} kg/thn</strong></p>
+          <p>Hemat emisi: <strong>${Math.round(hemat).toLocaleString("id-ID")} kg/thn</strong></p>
+          <p>Setara menanam <strong>${Math.round(pohon)}</strong> pohon/tahun</p>
+        `;
+      });
+    })();
+  </script>
+  <style>
+    .karbon-main { padding: 2rem 1rem 4rem; max-width: 720px; margin: 0 auto; }
+    .karbon-head h1 { margin: 0 0 .25rem; }
+    .karbon-sub { color: var(--muted, #64748b); margin: 0 0 1.5rem; }
+    .karbon-form { display: grid; gap: .75rem; }
+    .karbon-form label { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+    .karbon-form input { padding: .4rem .6rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; }
+    .karbon-result { margin-top: 1.5rem; padding: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--card, #fff); }
+  </style>
+</Base>

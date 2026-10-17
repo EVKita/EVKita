@@ -15,7 +15,7 @@ import { tautanFooter } from "../lib/laman.js";
 import { artikelTayang } from "../lib/artikel.js";
 import { cms, pubIntl } from "../lib/i18n/pub.js";
 import { bacaVotes } from "../lib/vote-store.js";
-import { rankVotes, voteRowHtml } from "../lib/vote-html.js";
+import { rankVotes, voteRowHtml, starsHtml } from "../lib/vote-html.js";
 import { gambarBerita, kunciKanonik, petaGambarBerita } from "../lib/berita-gambar";
 
 /**
@@ -222,6 +222,41 @@ const voteMotor = site.showMotor ? rankVotes(defaultSort(motors), votes.motors, 
 /* Total suara sejenis untuk bilah persen ala Shining Awards di tiap baris. */
 const totalVoteMobil = voteMobil.reduce((n: number, r: any) => n + (Number(r.votes) || 0), 0);
 const totalVoteMotor = voteMotor.reduce((n: number, r: any) => n + (Number(r.votes) || 0), 0);
+
+/* EV Battle of the Month: dua kendaraan setara (bodyType sama) yang diadu
+   selama satu minggu. Pemilihan deterministik per minggu supaya semua pengunjung
+   melihat duel yang sama; suaranya tetap memakai agregat VoteKita yang sudah ada. */
+function nomorMinggu(): number {
+  const d = new Date();
+  const awal = new Date(d.getFullYear(), 0, 1);
+  const minggu = Math.ceil(((d.getTime() - awal.getTime()) / 86400000 + awal.getDay() + 1) / 7);
+  return d.getFullYear() * 100 + minggu;
+}
+const grupBodi: Record<string, any[]> = {};
+for (const c of defaultSort(cars)) {
+  const k = String((c && c.bodyType) || "").trim();
+  if (!k) continue;
+  (grupBodi[k] = grupBodi[k] || []).push(c);
+}
+const bodiLayak = Object.keys(grupBodi).filter((k) => grupBodi[k].length >= 2);
+let battleA: any = null;
+let battleB: any = null;
+if (bodiLayak.length) {
+  const seed = nomorMinggu();
+  const kunci = bodiLayak[seed % bodiLayak.length];
+  const arr = grupBodi[kunci].slice().sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
+  const i = seed % arr.length;
+  let j = (seed * 7 + 3) % arr.length;
+  if (j === i) j = (i + 1) % arr.length;
+  battleA = arr[i];
+  battleB = arr[j];
+}
+const battleStatA = battleA ? votes.cars[battleA.id] : null;
+const battleStatB = battleB ? votes.cars[battleB.id] : null;
+const avgBattleA = battleStatA ? Number(battleStatA.s) / Number(battleStatA.v) : 0;
+const avgBattleB = battleStatB ? Number(battleStatB.s) / Number(battleStatB.v) : 0;
+const voteBattleA = battleStatA ? Number(battleStatA.v) || 0 : 0;
+const voteBattleB = battleStatB ? Number(battleStatB.v) || 0 : 0;
 
 /** Sorotan SPKLU beranda: entri pertama tampil besar berfoto di kiri. */
 const spkluUnggulan = spkluList[0] || null;
@@ -1498,6 +1533,35 @@ const jsonLd = {
           ) : null}
         </aside>
       ) : null}
+      {battleA && battleB ? (
+        <aside class="home-battle" id="evBattle" aria-label={t("pub.battle.title")} data-err={t("pub.battle.err")} data-voted={t("pub.battle.voted")} data-suara={t("pub.vote.suara")} data-belum={t("pub.vote.belum")}>
+          <section class="kita-card battle-card">
+            <h2 class="kita-title">{t("pub.battle.title")}</h2>
+            <p class="kita-sub">{t("pub.battle.sub")}</p>
+            <div class="battle-row">
+              <div class="battle-side" data-battle-id={battleA.id}>
+                {battleA.image ? <img class="battle-img" src={safeUrl(battleA.image)} alt={`${battleA.brand} ${battleA.name}`} loading="lazy" decoding="async" /> : null}
+                <p class="battle-name">{battleA.brand} {battleA.name}</p>
+                <p class="battle-meta">{Number.isFinite(Number(battleA.price)) ? trimNum(Number(battleA.price)) + " " + (battleA.priceUnit || "") : (battleA.price || "")}</p>
+                <div class="battle-stars" set:html={starsHtml(avgBattleA, "battleA")} />
+                <p class="battle-count">{voteBattleA > 0 ? t("pub.vote.suara", { n: voteBattleA }) : t("pub.vote.belum")}</p>
+                <button type="button" class="btn btn-primary btn-sm battle-vote" data-battle-kind="mobil" data-battle-id={battleA.id}>{t("pub.battle.vote")}</button>
+              </div>
+              <div class="battle-vs" aria-hidden="true">{t("pub.battle.vs")}</div>
+              <div class="battle-side" data-battle-id={battleB.id}>
+                {battleB.image ? <img class="battle-img" src={safeUrl(battleB.image)} alt={`${battleB.brand} ${battleB.name}`} loading="lazy" decoding="async" /> : null}
+                <p class="battle-name">{battleB.brand} {battleB.name}</p>
+                <p class="battle-meta">{Number.isFinite(Number(battleB.price)) ? trimNum(Number(battleB.price)) + " " + (battleB.priceUnit || "") : (battleB.price || "")}</p>
+                <div class="battle-stars" set:html={starsHtml(avgBattleB, "battleB")} />
+                <p class="battle-count">{voteBattleB > 0 ? t("pub.vote.suara", { n: voteBattleB }) : t("pub.vote.belum")}</p>
+                <button type="button" class="btn btn-primary btn-sm battle-vote" data-battle-kind="mobil" data-battle-id={battleB.id}>{t("pub.battle.vote")}</button>
+              </div>
+            </div>
+            <p class="battle-note">{t("pub.battle.note")}</p>
+            <p class="vote-err" id="battleErr" hidden></p>
+          </section>
+        </aside>
+      ) : null}
       <aside class="home-vote" id="voteKita" aria-label={t("pub.vote.title")}>
         <section class="kita-card">
           <h2 class="kita-title">{t("pub.vote.title")}</h2>
@@ -2017,5 +2081,61 @@ const jsonLd = {
   <script define:vars={{ votes }}>
     window.__EV_VOTES__ = votes;
   </script>
+  <script>
+    (function () {
+      const wadah = document.getElementById("evBattle");
+      if (!wadah) return;
+      const errEl = document.getElementById("battleErr");
+      const errText = wadah.dataset.err || "Voting gagal. Coba lagi.";
+      const votedText = wadah.dataset.voted || "Suaramu tercatat. Terima kasih!";
+      const suaraTpl = wadah.dataset.suara || "{n} suara";
+      const belumText = wadah.dataset.belum || "Belum ada suara";
+      wadah.addEventListener("click", async (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest(".battle-vote") : null;
+        if (!btn) return;
+        const kind = btn.getAttribute("data-battle-kind") || "mobil";
+        const id = btn.getAttribute("data-battle-id") || "";
+        if (!id) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch("/api/vote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ kind, id, stars: 5, prev: 0 }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data || !data.ok) throw new Error("fail");
+          // update count text in the side
+          const side = btn.closest(".battle-side");
+          const countEl = side ? side.querySelector(".battle-count") : null;
+          if (countEl) countEl.textContent = data.votes > 0 ? suaraTpl.replace("{n}", data.votes) : belumText;
+          btn.textContent = "✓";
+          btn.classList.add("is-voted");
+          if (errEl) errEl.hidden = true;
+        } catch {
+          btn.disabled = false;
+          if (errEl) { errEl.textContent = errText; errEl.hidden = false; }
+        }
+      });
+    })();
+  </script>
+  <style>
+    .home-battle { margin: 0 0 1rem; }
+    .battle-card { }
+    .battle-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: .75rem; align-items: center; }
+    .battle-side { text-align: center; padding: .5rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; }
+    .battle-img { width: 100%; max-width: 160px; height: auto; border-radius: 8px; margin: 0 auto .5rem; display: block; }
+    .battle-name { font-weight: 700; margin: .25rem 0; font-size: .95rem; }
+    .battle-meta { font-size: .8rem; color: var(--muted, #64748b); margin: 0 0 .25rem; }
+    .battle-stars { margin: .25rem 0; }
+    .battle-count { font-size: .8rem; margin: .25rem 0; }
+    .battle-vs { font-weight: 800; font-size: 1.1rem; color: var(--muted, #64748b); padding: 0 .25rem; }
+    .battle-note { font-size: .75rem; color: var(--muted, #64748b); margin-top: .75rem; text-align: center; }
+    .battle-vote.is-voted { opacity: .7; }
+    @media (max-width: 640px) {
+      .battle-row { grid-template-columns: 1fr; }
+      .battle-vs { text-align: center; }
+    }
+  </style>
   <script src="../scripts/app.js"></script>
 </Base>

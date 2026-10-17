@@ -378,6 +378,16 @@ const pageTitle = car
             {priceText ? <span class="detail-price-note">{t("pub.detail.mulaiDari")}</span> : null}
           </div>
 
+          <details class="notify-price" open={false}>
+            <summary>{t("pub.notify.title")}</summary>
+            <form class="notify-form" data-car-id={car.id}>
+              <input type="email" name="email" placeholder={t("pub.notify.emailPh")} required />
+              <input type="number" name="target" placeholder={t("pub.notify.targetPh")} />
+              <button type="submit" class="btn btn-primary btn-sm">{t("pub.notify.submit")}</button>
+            </form>
+            <p class="notify-msg" hidden></p>
+          </details>
+
           <div class="detail-stats">
             {stats.map(([n, l]) => (
               <div class="dstat"><span class="num">{n}</span><span class="label">{l}</span></div>
@@ -656,6 +666,33 @@ const pageTitle = car
           copy();
         });
       }
+    })();
+  </script>
+  <script>
+    (function () {
+      document.querySelectorAll(".notify-form").forEach((form) => {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const msg = form.parentElement && form.parentElement.querySelector(".notify-msg");
+          const email = (form.querySelector('input[name="email"]') as HTMLInputElement)?.value || "";
+          const target = (form.querySelector('input[name="target"]') as HTMLInputElement)?.value || "";
+          const carId = form.getAttribute("data-car-id") || "";
+          try {
+            const res = await fetch("/api/notifikasi-harga", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, vehicleId: carId, targetPrice: target ? Number(target) : null }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (msg) {
+              msg.hidden = false;
+              msg.textContent = (res.ok && data && data.ok) ? "Terima kasih! Kami akan kabari saat harga turun." : "Gagal mendaftar. Coba lagi.";
+            }
+          } catch {
+            if (msg) { msg.hidden = false; msg.textContent = "Gagal mendaftar. Coba lagi."; }
+          }
+        });
+      });
     })();
   </script>
 </Base>

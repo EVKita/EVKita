@@ -1,0 +1,85 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
+import { terjemahContent } from "../../lib/terjemahan.js";
+
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(content.site, lang);
+---
+
+<Base>
+  <SiteHeader site={site} lang={lang} t={t} />
+  <main class="container tco-main">
+    <header class="tco-head">
+      <h1>{t("pub.kalk.tcoTitle")}</h1>
+      <p class="tco-sub">{t("pub.kalk.tcoSub")}</p>
+    </header>
+    <form id="tcoForm" class="tco-form">
+      <label>{t("pub.kalk.tcoPrice")} <input type="number" id="tcoPrice" value="400000000" /></label>
+      <label>{t("pub.kalk.tcoDown")} <input type="number" id="tcoDown" value="20" /> %</label>
+      <label>{t("pub.kalk.tcoTerm")} <input type="number" id="tcoTerm" value="5" /></label>
+      <label>{t("pub.kalk.tcoRate")} <input type="number" id="tcoRate" value="6" step="0.1" /> %</label>
+      <label>{t("pub.kalk.tcoKm")} <input type="number" id="tcoKm" value="15000" /></label>
+      <label>{t("pub.kalk.tcoTarif")} <input type="number" id="tcoTarif" value="1500" /></label>
+      <label>{t("pub.kalk.tcoDepresiasi")} <input type="number" id="tcoDep" value="15" /> %/thn</label>
+      <label>{t("pub.kalk.tcoMaintenance")} <input type="number" id="tcoMaint" value="2000000" /></label>
+      <button type="submit" class="btn btn-primary">{t("pub.kalk.hitung")}</button>
+    </form>
+    <div id="tcoResult" class="tco-result" hidden></div>
+  </main>
+  <SiteFooter site={site} lang={lang} t={t} content={content} />
+  <script>
+    (function () {
+      const form = document.getElementById("tcoForm");
+      const res = document.getElementById("tcoResult");
+      if (!form || !res) return;
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const price = Number(document.getElementById("tcoPrice").value) || 0;
+        const downPct = Number(document.getElementById("tcoDown").value) || 0;
+        const term = Number(document.getElementById("tcoTerm").value) || 1;
+        const rate = (Number(document.getElementById("tcoRate").value) || 0) / 100;
+        const km = Number(document.getElementById("tcoKm").value) || 0;
+        const tarif = Number(document.getElementById("tcoTarif").value) || 0;
+        const dep = (Number(document.getElementById("tcoDep").value) || 0) / 100;
+        const maint = Number(document.getElementById("tcoMaint").value) || 0;
+        const down = price * downPct / 100;
+        const pokok = price - down;
+        const bulan = term * 12;
+        const rBulan = rate / 12;
+        const cicilan = rBulan > 0 ? pokok * rBulan / (1 - Math.pow(1 + rBulan, -bulan)) : pokok / bulan;
+        const totalCicilan = cicilan * bulan;
+        const konsumsiKwhPerKm = 0.18;
+        const kwhPerTahun = km * konsumsiKwhPerKm;
+        const biayaListrik = kwhPerTahun * tarif * term;
+        const biayaMaint = maint * term;
+        const nilaiAkhir = price * Math.pow(1 - dep, term);
+        const total = down + totalCicilan + biayaListrik + biayaMaint - (price - nilaiAkhir);
+        const perKm = km * term > 0 ? total / (km * term) : 0;
+        res.hidden = false;
+        res.innerHTML = `
+          <h3>Hasil</h3>
+          <p>Total biaya kepemilikan ${term} tahun: <strong>Rp ${Math.round(total).toLocaleString("id-ID")}</strong></p>
+          <p>Biaya per km: <strong>Rp ${Math.round(perKm).toLocaleString("id-ID")}</strong></p>
+          <p>Cicilan/bulan: Rp ${Math.round(cicilan).toLocaleString("id-ID")}</p>
+          <p>Biaya listrik ${term} tahun: Rp ${Math.round(biayaListrik).toLocaleString("id-ID")}</p>
+          <p>Nilai jual akhir: Rp ${Math.round(nilaiAkhir).toLocaleString("id-ID")}</p>
+        `;
+      });
+    })();
+  </script>
+  <style>
+    .tco-main { padding: 2rem 1rem 4rem; max-width: 720px; margin: 0 auto; }
+    .tco-head h1 { margin: 0 0 .25rem; }
+    .tco-sub { color: var(--muted, #64748b); margin: 0 0 1.5rem; }
+    .tco-form { display: grid; gap: .75rem; }
+    .tco-form label { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+    .tco-form input { padding: .4rem .6rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; }
+    .tco-result { margin-top: 1.5rem; padding: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--card, #fff); }
+  </style>
+</Base>

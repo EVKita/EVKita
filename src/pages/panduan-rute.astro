@@ -1,0 +1,128 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { readContent } from "../lib/store";
+import { hanyaTayang } from "../lib/tayang.js";
+import { safeUrl } from "../lib/url.js";
+import { filterWilayah, regionDariParam } from "../lib/region.js";
+import { makePubT, normalizePubLocale, cmsSite } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
+
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(content.site, lang);
+const region = regionDariParam(Astro.url.searchParams.get("region"));
+const spkluList = filterWilayah(content.spklu, region).filter(hanyaTayang());
+
+const K = (v: any) => ({ id: v.id, name: v.name, lat: v.lat, lng: v.lng, area: v.area, address: v.address, power: v.power, connector: v.connector, price: v.price, mapUrl: v.mapUrl });
+const spkluLite = spkluList.map(K);
+---
+
+<Base>
+  <SiteHeader site={site} lang={lang} t={t} region={region} />
+  <main class="container rute-main">
+    <header class="rute-head">
+      <h1>{t("pub.rute.title")}</h1>
+      <p class="rute-sub">{t("pub.rute.sub")}</p>
+    </header>
+    <form id="ruteForm" class="rute-form">
+      <label>{t("pub.rute.asal")} <input type="text" id="ruteAsal" placeholder="-6.2,106.8" /></label>
+      <label>{t("pub.rute.tujuan")} <input type="text" id="ruteTujuan" placeholder="-6.9,107.6" /></label>
+      <button type="submit" class="btn btn-primary">{t("pub.rute.hitung")}</button>
+    </form>
+    <div id="ruteResult" class="rute-result" hidden></div>
+    <div class="rute-save" id="ruteSave" hidden>
+      <button type="button" class="btn btn-ghost btn-sm" id="ruteSaveBtn">Simpan rute ini</button>
+      <a class="btn btn-ghost btn-sm" href="/rute-tersimpan">Rute tersimpan</a>
+    </div>
+    <section class="rute-list">
+      <h2>{t("pub.rute.spkluTerdekat")}</h2>
+      <div id="ruteSpklu" class="rute-spklu"></div>
+    </section>
+  </main>
+  <SiteFooter site={site} lang={lang} t={t} content={content} />
+  <script define:vars={{ spkluLite }}>
+    window.__RUTE_SPKLU__ = spkluLite;
+  </script>
+  <script>
+    (function () {
+      const spklu = Array.isArray(window.__RUTE_SPKLU__) ? window.__RUTE_SPKLU__ : [];
+      const form = document.getElementById("ruteForm");
+      const res = document.getElementById("ruteResult");
+      const list = document.getElementById("ruteSpklu");
+      function haversine(a, b) {
+        const R = 6371;
+        const toRad = (x) => x * Math.PI / 180;
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+        const x = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)*Math.sin(dLng/2);
+        return 2 * R * Math.asin(Math.sqrt(x));
+      }
+      function parseCoord(s) {
+        const parts = String(s).split(",").map((x) => Number(x.trim()));
+        if (parts.length === 2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1])) return { lat: parts[0], lng: parts[1] };
+        return null;
+      }
+      function renderSpklu(ref) {
+        if (!list) return;
+        const sorted = spklu
+          .filter((s) => Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lng)))
+          .map((s) => ({ s, d: ref ? haversine(ref, { lat: Number(s.lat), lng: Number(s.lng) }) : Infinity }))
+          .sort((a, b) => a.d - b.d)
+          .slice(0, 8);
+        list.innerHTML = sorted.map((x) => {
+          const s = x.s;
+          const url = s.mapUrl ? s.mapUrl : "https://www.google.com/maps/search/" + encodeURIComponent(s.name + " SPKLU");
+          return `<div class="rute-spklu-card"><strong>${escapeHtml(s.name)}</strong><span>${escapeHtml(s.area || "")}</span><span>${escapeHtml(s.power ? s.power + " kW" : "")}</span><span>${x.d === Infinity ? "" : Math.round(x.d) + " km"}</span><a href="${escapeHtml(url)}" target="_blank" rel="noopener">Peta →</a></div>`;
+        }).join("") || "<p>Tidak ada data SPKLU.</p>";
+      }
+      function escapeHtml(s) {
+        return String(s === null || s === undefined ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+      }
+      const saveWrap = document.getElementById("ruteSave");
+      const saveBtn = document.getElementById("ruteSaveBtn");
+      let lastRoute = null;
+      if (form) form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const a = parseCoord(document.getElementById("ruteAsal").value);
+        const b = parseCoord(document.getElementById("ruteTujuan").value);
+        if (!a || !b) { if (res) { res.hidden = false; res.textContent = "Format koordinat: lat,lng (contoh -6.2,106.8)"; } if (saveWrap) saveWrap.hidden = true; return; }
+        const d = haversine(a, b);
+        if (res) {
+          res.hidden = false;
+          res.innerHTML = `<p>Jarak lurus: <strong>${Math.round(d).toLocaleString("id-ID")} km</strong></p><p>Perkiraan waktu (60 km/jam): <strong>${Math.round(d/60*60)} menit</strong></p>`;
+        }
+        if (saveWrap) saveWrap.hidden = false;
+        lastRoute = { asal: document.getElementById("ruteAsal").value, tujuan: document.getElementById("ruteTujuan").value, jarak: Math.round(d), tgl: new Date().toISOString() };
+        renderSpklu(b);
+      });
+      if (saveBtn) saveBtn.addEventListener("click", () => {
+        if (!lastRoute) return;
+        const key = "evkita_rute_tersimpan";
+        let arr = [];
+        try { arr = JSON.parse(localStorage.getItem(key) || "[]"); } catch { arr = []; }
+        if (!Array.isArray(arr)) arr = [];
+        arr.unshift(lastRoute);
+        arr = arr.slice(0, 20);
+        try { localStorage.setItem(key, JSON.stringify(arr)); } catch {}
+        saveBtn.textContent = "Tersimpan ✓";
+        setTimeout(() => { saveBtn.textContent = "Simpan rute ini"; }, 1500);
+      });
+      renderSpklu(null);
+    })();
+  </script>
+  <style>
+    .rute-main { padding: 2rem 1rem 4rem; max-width: 900px; margin: 0 auto; }
+    .rute-head h1 { margin: 0 0 .25rem; }
+    .rute-sub { color: var(--muted, #64748b); margin: 0 0 1.5rem; }
+    .rute-form { display: grid; gap: .75rem; max-width: 480px; }
+    .rute-form label { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+    .rute-form input { padding: .4rem .6rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; }
+    .rute-result { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--card, #fff); }
+    .rute-list { margin-top: 2rem; }
+    .rute-spklu { display: grid; gap: .75rem; margin-top: .75rem; }
+    .rute-spklu-card { display: grid; gap: .25rem; padding: .75rem; border: 1px solid var(--border, #e2e8f0); border-radius: 10px; }
+  </style>
+</Base>

@@ -1,0 +1,52 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { readContent } from "../../lib/store";
+import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
+import { terjemahContent } from "../../lib/terjemahan.js";
+
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(content.site, lang);
+---
+
+<Base>
+  <SiteHeader site={site} lang={lang} t={t} />
+  <main class="container kalkulator-hub">
+    <header class="kh-head">
+      <h1>{t("pub.kalk.hubTitle")}</h1>
+      <p class="kh-sub">{t("pub.kalk.hubSub")}</p>
+    </header>
+    <div class="kh-grid">
+      <a class="kh-card" href="/kalkulator/biaya-pengisian">
+        <h3>{t("pub.kalk.titleBiaya")}</h3>
+        <p>{t("pub.kalk.hubBiaya")}</p>
+      </a>
+      <a class="kh-card" href="/kalkulator/hemat-listrik-vs-bensin">
+        <h3>{t("pub.kalk.titleHemat")}</h3>
+        <p>{t("pub.kalk.hubHemat")}</p>
+      </a>
+      <a class="kh-card" href="/kalkulator/tco">
+        <h3>{t("pub.kalk.tcoTitle")}</h3>
+        <p>{t("pub.kalk.hubTco")}</p>
+      </a>
+      <a class="kh-card" href="/kalkulator/emisi-karbon">
+        <h3>{t("pub.kalk.karbonTitle")}</h3>
+        <p>{t("pub.kalk.hubKarbon")}</p>
+      </a>
+    </div>
+  </main>
+  <SiteFooter site={site} lang={lang} t={t} content={content} />
+  <style>
+    .kalkulator-hub { padding: 2rem 1rem 4rem; max-width: 900px; margin: 0 auto; }
+    .kh-head h1 { margin: 0 0 .25rem; }
+    .kh-sub { color: var(--muted, #64748b); margin: 0 0 1.5rem; }
+    .kh-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .kh-card { display: block; padding: 1.25rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; text-decoration: none; color: inherit; background: var(--card, #fff); }
+    .kh-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .kh-card h3 { margin: 0 0 .5rem; }
+    .kh-card p { margin: 0; font-size: .9rem; color: var(--muted, #64748b); }
+  </style>
+</Base>

@@ -1,0 +1,299 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { readContent } from "../lib/store";
+import { hanyaTayang } from "../lib/tayang.js";
+import { safeUrl } from "../lib/url.js";
+import { filterWilayah, regionDariParam } from "../lib/region.js";
+import { makePubT, normalizePubLocale, cmsSite } from "../lib/i18n/pub.js";
+import { terjemahContent } from "../lib/terjemahan.js";
+
+const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
+const lang = normalizePubLocale(Astro.locals?.pubLang);
+const t = makePubT(lang);
+const site = cmsSite(content.site, lang);
+const region = regionDariParam(Astro.url.searchParams.get("region"));
+const cars = filterWilayah(content.cars, region).filter(hanyaTayang());
+
+const KATALOG_FIELDS = [
+  "id", "kind", "brand", "name", "bodyType", "tagline", "tags",
+  "rangeKm", "rangeStandard", "batteryKwh", "powerHp", "torqueNm",
+  "topSpeedKph", "accelSec", "seats", "year", "driveType",
+  "chargeDcKw", "chargeAcKw", "chargeTime", "warranty",
+  "variants", "variantNames", "colors", "price", "priceText",
+  "featured", "stale", "image", "video", "updatedAt",
+];
+const ringkas = (v: any) =>
+  Object.fromEntries(KATALOG_FIELDS.filter((k) => v[k] !== undefined).map((k) => [k, v[k]]));
+const carsLite = cars.map(ringkas);
+
+const bodyTypes = [...new Set(cars.map((c: any) => c.bodyType).filter(Boolean))].sort();
+---
+
+<Base>
+  <SiteHeader site={site} lang={lang} t={t} region={region} />
+  <main class="container evfinder-main">
+    <header class="ef-head">
+      <h1>{t("pub.ef.title")}</h1>
+      <p class="ef-sub">{t("pub.ef.sub")}</p>
+    </header>
+
+    <section class="ef-filters">
+      <div class="ef-filter-group">
+        <span class="ef-label">{t("pub.ef.bodyType")}</span>
+        <div class="ef-chips" id="efBodyChips">
+          <button type="button" class="ef-chip is-on" data-body="">{t("pub.ef.all")}</button>
+          {bodyTypes.map((b: string) => (
+            <button type="button" class="ef-chip" data-body={b}>{b}</button>
+          ))}
+        </div>
+      </div>
+      <div class="ef-filter-group">
+        <span class="ef-label">{t("pub.ef.budget")}</span>
+        <select id="efBudget" class="ef-select">
+          <option value="0">{t("pub.ef.budgetAll")}</option>
+          <option value="300000000">{t("pub.ef.budget1")}</option>
+          <option value="500000000">{t("pub.ef.budget2")}</option>
+          <option value="800000000">{t("pub.ef.budget3")}</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="ef-deck-wrap">
+      <div id="efDeck" class="ef-deck" aria-live="polite"></div>
+      <p id="efEmpty" class="ef-empty" hidden>{t("pub.ef.empty")}</p>
+      <div class="ef-actions">
+        <button type="button" class="ef-btn ef-no" id="efNo" aria-label={t("pub.ef.no")}>✕</button>
+        <button type="button" class="ef-btn ef-yes" id="efYes" aria-label={t("pub.ef.yes")}>♥</button>
+      </div>
+      <div class="ef-progress" id="efProgress"></div>
+    </section>
+
+    <section class="ef-likes">
+      <h2>{t("pub.ef.likesTitle")} <span id="efLikeCount">(0)</span></h2>
+      <div id="efLikesList" class="ef-likes-list"></div>
+      <div class="ef-likes-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="efReset">{t("pub.ef.reset")}</button>
+        <button type="button" class="btn btn-primary btn-sm" id="efCompare" hidden>{t("pub.ef.compare")}</button>
+      </div>
+    </section>
+  </main>
+  <SiteFooter site={site} lang={lang} t={t} content={content} />
+  <script define:vars={{ carsLite }}>
+    window.__EF_CARS__ = carsLite;
+  </script>
+  <script>
+    (function () {
+      const cars = Array.isArray(window.__EF_CARS__) ? window.__EF_CARS__ : [];
+      const LS_KEY = "evkita_ef_likes";
+      let liked = [];
+      try { liked = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { liked = []; }
+      if (!Array.isArray(liked)) liked = [];
+
+      const deck = document.getElementById("efDeck");
+      const empty = document.getElementById("efEmpty");
+      const progress = document.getElementById("efProgress");
+      const likesList = document.getElementById("efLikesList");
+      const likeCount = document.getElementById("efLikeCount");
+      const compareBtn = document.getElementById("efCompare");
+
+      let bodyFilter = "";
+      let budgetMax = 0;
+      let queue = [];
+      let idx = 0;
+
+      function filterCars() {
+        return cars.filter((c) => {
+          if (bodyFilter && c.bodyType !== bodyFilter) return false;
+          if (budgetMax > 0 && !(typeof c.price === "number" && c.price <= budgetMax)) return false;
+          return true;
+        });
+      }
+
+      function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      function escapeHtml(s) {
+        return String(s === null || s === undefined ? "" : s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+
+      function renderCard() {
+        if (!deck) return;
+        deck.innerHTML = "";
+        if (idx >= queue.length) {
+          if (empty) empty.hidden = false;
+          if (progress) progress.textContent = "";
+          return;
+        }
+        if (empty) empty.hidden = true;
+        const c = queue[idx];
+        const img = c.image ? `<img class="ef-card-img" src="${escapeHtml(c.image)}" alt="${escapeHtml(c.brand + " " + c.name)}" loading="lazy" />` : "";
+        const price = typeof c.price === "number" ? (c.price.toLocaleString("id-ID") + " " + (c.priceUnit || "")) : (c.priceText || "");
+        const specs = [
+          c.rangeKm ? c.rangeKm + " km" : "",
+          c.batteryKwh ? c.batteryKwh + " kWh" : "",
+          c.powerHp ? c.powerHp + " hp" : "",
+        ].filter(Boolean).join(" · ");
+        deck.innerHTML = `
+          <article class="ef-card" data-id="${escapeHtml(c.id)}">
+            ${img}
+            <div class="ef-card-body">
+              <h3 class="ef-card-title">${escapeHtml(c.brand)} ${escapeHtml(c.name)}</h3>
+              <p class="ef-card-price">${escapeHtml(price)}</p>
+              <p class="ef-card-specs">${escapeHtml(specs)}</p>
+              <p class="ef-card-type">${escapeHtml(c.bodyType || "")}</p>
+            </div>
+          </article>`;
+        if (progress) progress.textContent = (idx + 1) + " / " + queue.length;
+      }
+
+      function renderLikes() {
+        if (!likesList) return;
+        if (!liked.length) {
+          likesList.innerHTML = "";
+        } else {
+          likesList.innerHTML = liked.map((id) => {
+            const c = cars.find((x) => x.id === id);
+            if (!c) return "";
+            return `<a class="ef-like-chip" href="/mobil/${encodeURIComponent(c.id)}">${escapeHtml(c.brand)} ${escapeHtml(c.name)}</a>`;
+          }).join("");
+        }
+        if (likeCount) likeCount.textContent = "(" + liked.length + ")";
+        if (compareBtn) compareBtn.hidden = liked.length < 2;
+      }
+
+      function decide(choice) {
+        if (idx >= queue.length) return;
+        const c = queue[idx];
+        if (choice === "yes" && !liked.includes(c.id)) {
+          liked.push(c.id);
+          try { localStorage.setItem(LS_KEY, JSON.stringify(liked)); } catch {}
+        }
+        idx++;
+        renderCard();
+        renderLikes();
+      }
+
+      let startX = 0, dragging = false, moved = false;
+      function onDown(e) {
+        const card = deck && deck.querySelector(".ef-card");
+        if (!card) return;
+        dragging = true; moved = false;
+        startX = (e.touches ? e.touches[0].clientX : e.clientX);
+        card.style.transition = "none";
+      }
+      function onMove(e) {
+        if (!dragging) return;
+        const card = deck && deck.querySelector(".ef-card");
+        if (!card) return;
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - startX;
+        if (Math.abs(x) > 8) moved = true;
+        card.style.transform = "translate(" + x + "px, 0) rotate(" + (x * 0.05) + "deg)";
+        card.style.opacity = String(Math.max(0.5, 1 - Math.abs(x) / 400));
+      }
+      function onUp(e) {
+        if (!dragging) return;
+        dragging = false;
+        const card = deck && deck.querySelector(".ef-card");
+        if (!card) return;
+        const x = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - startX;
+        card.style.transition = "";
+        card.style.transform = "";
+        card.style.opacity = "";
+        if (moved && Math.abs(x) > 80) {
+          decide(x > 0 ? "yes" : "no");
+        }
+      }
+      if (deck) {
+        deck.addEventListener("mousedown", onDown);
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+        deck.addEventListener("touchstart", onDown, { passive: true });
+        deck.addEventListener("touchmove", onMove, { passive: true });
+        deck.addEventListener("touchend", onUp);
+      }
+
+      const yesBtn = document.getElementById("efYes");
+      const noBtn = document.getElementById("efNo");
+      if (yesBtn) yesBtn.addEventListener("click", () => decide("yes"));
+      if (noBtn) noBtn.addEventListener("click", () => decide("no"));
+
+      const resetBtn = document.getElementById("efReset");
+      if (resetBtn) resetBtn.addEventListener("click", () => {
+        liked = [];
+        try { localStorage.removeItem(LS_KEY); } catch {}
+        idx = 0;
+        queue = shuffle(filterCars());
+        renderCard();
+        renderLikes();
+      });
+
+      const compareBtnEl = document.getElementById("efCompare");
+      if (compareBtnEl) compareBtnEl.addEventListener("click", () => {
+        if (liked.length >= 2) window.location.href = "/bandingkan/" + liked.slice(0, 4).join(",");
+      });
+
+      const chips = document.getElementById("efBodyChips");
+      if (chips) chips.addEventListener("click", (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest(".ef-chip") : null;
+        if (!btn) return;
+        bodyFilter = btn.getAttribute("data-body") || "";
+        chips.querySelectorAll(".ef-chip").forEach((b) => b.classList.toggle("is-on", b === btn));
+        idx = 0;
+        queue = shuffle(filterCars());
+        renderCard();
+      });
+      const budgetSel = document.getElementById("efBudget");
+      if (budgetSel) budgetSel.addEventListener("change", () => {
+        budgetMax = Number(budgetSel.value) || 0;
+        idx = 0;
+        queue = shuffle(filterCars());
+        renderCard();
+      });
+
+      queue = shuffle(filterCars());
+      renderCard();
+      renderLikes();
+    })();
+  </script>
+  <style>
+    .evfinder-main { padding: 2rem 1rem 4rem; max-width: 900px; margin: 0 auto; }
+    .ef-head h1 { margin: 0 0 .25rem; }
+    .ef-sub { color: var(--muted, #64748b); margin: 0 0 1.5rem; }
+    .ef-filters { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; align-items: center; }
+    .ef-filter-group { display: flex; flex-direction: column; gap: .25rem; }
+    .ef-label { font-size: .8rem; font-weight: 600; }
+    .ef-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .ef-chip { padding: .3rem .7rem; border: 1px solid var(--border, #e2e8f0); border-radius: 999px; background: transparent; cursor: pointer; font-size: .85rem; }
+    .ef-chip.is-on { background: var(--accent, #2563eb); color: #fff; border-color: var(--accent, #2563eb); }
+    .ef-select { padding: .35rem .6rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; }
+    .ef-deck-wrap { position: relative; margin-bottom: 2rem; text-align: center; }
+    .ef-deck { min-height: 360px; display: flex; justify-content: center; align-items: center; }
+    .ef-card { width: 100%; max-width: 340px; border: 1px solid var(--border, #e2e8f0); border-radius: 16px; overflow: hidden; background: var(--card, #fff); box-shadow: 0 8px 24px rgba(0,0,0,.08); cursor: grab; user-select: none; }
+    .ef-card-img { width: 100%; height: 200px; object-fit: cover; display: block; }
+    .ef-card-body { padding: 1rem; }
+    .ef-card-title { margin: 0 0 .25rem; font-size: 1.1rem; }
+    .ef-card-price { font-weight: 700; margin: 0 0 .25rem; }
+    .ef-card-specs { font-size: .85rem; color: var(--muted, #64748b); margin: 0 0 .25rem; }
+    .ef-card-type { font-size: .75rem; color: var(--muted, #64748b); margin: 0; }
+    .ef-empty { color: var(--muted, #64748b); }
+    .ef-actions { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; }
+    .ef-btn { width: 64px; height: 64px; border-radius: 50%; border: none; font-size: 1.6rem; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .ef-no { background: #fee2e2; color: #dc2626; }
+    .ef-yes { background: #dcfce7; color: #16a34a; }
+    .ef-progress { margin-top: .5rem; font-size: .85rem; color: var(--muted, #64748b); }
+    .ef-likes { margin-top: 2rem; }
+    .ef-likes-list { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+    .ef-like-chip { padding: .35rem .7rem; border: 1px solid var(--border, #e2e8f0); border-radius: 999px; text-decoration: none; font-size: .85rem; }
+    .ef-likes-actions { display: flex; gap: .5rem; margin-top: .5rem; }
+  </style>
+</Base>
