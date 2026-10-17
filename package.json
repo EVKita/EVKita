@@ -1,7 +1,7 @@
 {
   "name": "evkita",
   "type": "module",
-  "version": "1.0.119",
+  "version": "1.0.120",
   "private": true,
   "scripts": {
     "dev": "astro dev",
