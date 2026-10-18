@@ -110,6 +110,18 @@ const spkluLite = spkluList.map(K);
           { enableHighAccuracy: true, timeout: 10000 }
         );
       });
+      if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: "geolocation" }).then((p) => {
+          if (p.state !== "granted") return;
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const el = document.getElementById("ruteAsal");
+              if (el && !el.value) el.value = pos.coords.latitude.toFixed(6) + "," + pos.coords.longitude.toFixed(6);
+            },
+            () => {}
+          );
+        }).catch(() => {});
+      }
       if (form) form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const asalVal = document.getElementById("ruteAsal").value;
@@ -136,6 +148,10 @@ const spkluLite = spkluList.map(K);
         }
         if (res) {
           res.innerHTML += `<p>Jarak lurus: <strong>${Math.round(d).toLocaleString("id-ID")} km</strong></p><p>Perkiraan waktu (60 km/jam): <strong>${Math.round(d/60*60)} menit</strong></p><p><a class="btn btn-outline btn-sm" href="${mapUrl}" target="_blank" rel="noopener">Buka rute di ${reg === "cn" ? "Baidu Maps" : "Google Maps"} →</a></p>`;
+          if (reg !== "cn") {
+            const embed = "https://maps.google.com/maps?saddr=" + A.lat + "," + A.lng + "&daddr=" + B.lat + "," + B.lng + "&z=8&output=embed";
+            res.innerHTML += `<iframe class="rute-map" src="${embed}" title="Peta rute" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`;
+          }
         }
         if (saveWrap) saveWrap.hidden = false;
         lastRoute = { asal: asalVal, tujuan: tujuanVal, jarak: Math.round(d), tgl: new Date().toISOString() };
@@ -164,6 +180,7 @@ const spkluLite = spkluList.map(K);
     .rute-form label { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
     .rute-form input { padding: .4rem .6rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; }
     .rute-result { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--card, #fff); }
+    .rute-map { width: 100%; height: 360px; margin-top: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; }
     .rute-list { margin-top: 2rem; }
     .rute-spklu { display: grid; gap: .75rem; margin-top: .75rem; }
     .rute-spklu-card { display: grid; gap: .25rem; padding: .75rem; border: 1px solid var(--border, #e2e8f0); border-radius: 10px; }

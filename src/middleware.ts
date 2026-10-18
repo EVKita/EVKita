@@ -107,6 +107,15 @@ function cspUntuk(pathname: string): string {
   ) {
     extra.frame.push("https://www.youtube-nocookie.com");
   }
+  /*
+   * Peta Panduan Rute disematkan sebagai iframe Google Maps (edisi Indonesia
+   * dan Amerika). Tanpa domainnya di sini, `default-src 'self'` berlaku dan
+   * petanya tampil sebagai kotak kosong. Edisi China memakai tautan Baidu Maps,
+   * bukan iframe, jadi tidak perlu domain tambahan.
+   */
+  if (!extra.frame.includes("https://www.google.com")) {
+    extra.frame.push("https://www.google.com", "https://maps.google.com");
+  }
 
   const tambah = (baris: string, host: string[]) =>
     host.length ? `${baris} ${host.join(" ")}` : baris;
@@ -307,7 +316,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   h.set("X-Content-Type-Options", "nosniff");
   h.set("Referrer-Policy", "strict-origin-when-cross-origin");
   h.set("X-Frame-Options", "DENY");
-  h.set("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()");
+  h.set("Permissions-Policy", "geolocation=(self), microphone=(), camera=(), payment=()");
 
   // HSTS hanya saat benar-benar lewat HTTPS. Memasangnya di atas HTTP tidak
   // ada gunanya, dan di pengembangan lokal justru mengunci localhost ke HTTPS
