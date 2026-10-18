@@ -28,9 +28,13 @@ const spkluLite = spkluList.map(K);
       <p class="rute-sub">{t("pub.rute.sub")}</p>
     </header>
     <form id="ruteForm" class="rute-form" data-region={region}>
-      <label>{t("pub.rute.asal")} <input type="text" id="ruteAsal" placeholder="Nama tempat atau -6.2,106.8" /></label>
+      <label>{t("pub.rute.asal")} <input type="text" id="ruteAsal" placeholder="Nama tempat, -6.2,106.8, atau tautan Google Maps" /></label>
       <button type="button" class="btn btn-ghost btn-sm" id="ruteGps">📍 Gunakan lokasi saya</button>
-      <label>{t("pub.rute.tujuan")} <input type="text" id="ruteTujuan" placeholder="Nama tempat atau -6.9,107.6" /></label>
+      <label>{t("pub.rute.tujuan")} <input type="text" id="ruteTujuan" placeholder="Nama tempat, -6.9,107.6, atau tautan Google Maps" /></label>
+      <div class="rute-google-row">
+        <a class="rute-google" id="ruteCariAsal" data-target="ruteAsal" href="https://www.google.com/maps" target="_blank" rel="noopener" title={t("pub.rute.cariGoogle")}><span class="rute-g">G</span> {t("pub.rute.cariGoogle")}</a>
+        <a class="rute-google" id="ruteCariTujuan" data-target="ruteTujuan" href="https://www.google.com/maps" target="_blank" rel="noopener" title={t("pub.rute.cariGoogle")}><span class="rute-g">G</span> {t("pub.rute.cariGoogle")}</a>
+      </div>
       <button type="submit" class="btn btn-primary">{t("pub.rute.hitung")}</button>
     </form>
     <div id="ruteResult" class="rute-result" hidden></div>
@@ -62,8 +66,21 @@ const spkluLite = spkluList.map(K);
         return 2 * R * Math.asin(Math.sqrt(x));
       }
       function parseCoord(s) {
-        const parts = String(s).split(",").map((x) => Number(x.trim()));
-        if (parts.length === 2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1])) return { lat: parts[0], lng: parts[1] };
+        const str = String(s == null ? "" : s).trim();
+        const parts = str.split(",").map((x) => Number(x.trim()));
+        if (parts.length === 2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1]) && Math.abs(parts[0]) <= 90 && Math.abs(parts[1]) <= 180) return { lat: parts[0], lng: parts[1] };
+        const pola = [
+          /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
+          /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+          /[?&](?:q|ll|center|query|daddr|destination)=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/
+        ];
+        for (const rx of pola) {
+          const m = str.match(rx);
+          if (m) {
+            const lat = Number(m[1]), lng = Number(m[2]);
+            if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
+          }
+        }
         return null;
       }
       async function geocode(q) {
@@ -109,6 +126,14 @@ const spkluLite = spkluList.map(K);
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
+      });
+      document.querySelectorAll(".rute-google").forEach((a) => {
+        a.addEventListener("click", () => {
+          const el = document.getElementById(a.getAttribute("data-target") || "");
+          const v = el && el.value ? el.value.trim() : "";
+          if (!v) { a.href = "https://www.google.com/maps"; return; }
+          a.href = /^https?:\/\//i.test(v) ? v : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(v);
+        });
       });
       if (navigator.permissions && navigator.permissions.query) {
         navigator.permissions.query({ name: "geolocation" }).then((p) => {
@@ -181,6 +206,10 @@ const spkluLite = spkluList.map(K);
     .rute-form input { padding: .4rem .6rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; }
     .rute-result { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--card, #fff); }
     .rute-map { width: 100%; height: 360px; margin-top: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; }
+    .rute-google-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .rute-google { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .7rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; font-size: .85rem; color: var(--fg, #0f172a); text-decoration: none; background: var(--card, #fff); }
+    .rute-google:hover { border-color: #4285f4; }
+    .rute-g { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #4285f4; color: #fff; font-weight: 700; font-size: .75rem; }
     .rute-list { margin-top: 2rem; }
     .rute-spklu { display: grid; gap: .75rem; margin-top: .75rem; }
     .rute-spklu-card { display: grid; gap: .25rem; padding: .75rem; border: 1px solid var(--border, #e2e8f0); border-radius: 10px; }
