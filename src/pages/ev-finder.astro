@@ -31,7 +31,7 @@ const carsLite = cars.map(ringkas);
 const bodyTypes = [...new Set(cars.map((c: any) => c.bodyType).filter(Boolean))].sort();
 ---
 
-<Base>
+<Base title={t("pub.ef.title")} site={site}>
   <SiteHeader site={site} lang={lang} t={t} region={region} />
   <main class="container evfinder-main">
     <header class="ef-head">

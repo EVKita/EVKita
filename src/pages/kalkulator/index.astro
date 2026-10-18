@@ -12,7 +12,7 @@ const t = makePubT(lang);
 const site = cmsSite(content.site, lang);
 ---
 
-<Base>
+<Base title={t("pub.kalk.hubTitle")} site={site}>
   <SiteHeader site={site} lang={lang} t={t} />
   <main class="container kalkulator-hub">
     <header class="kh-head">

@@ -189,12 +189,13 @@ export function menuBawaan(site, lamanMenu = [], base = "") {
     { label: "Katalog", i18n: "pub.katalog", href: "/katalog" },
     { label: "Merek", i18n: "pub.menu.merek", href: "/merek" },
     { label: "Tipe bodi", i18n: "pub.menu.tipe", href: "/tipe" },
-    { label: "Kalkulator hemat", i18n: "pub.menu.kalkHemat", href: "/kalkulator/hemat-listrik-vs-bensin" },
+    { label: "Kalkulator Pintar", i18n: "pub.menu.kalkPintar", href: "/kalkulator" },
     { label: "Biaya pengisian", i18n: "pub.menu.kalkIsi", href: "/kalkulator/biaya-pengisian" },
+    { label: "EV Finder", i18n: "pub.nav.evfinder", href: "/ev-finder" },
     site.showSpklu ? { label: "SPKLU", i18n: "pub.nav.spklu", href: "/spklu" } : null,
     site.showBengkel ? { label: "Bengkel", i18n: "pub.nav.bengkel", href: "/bengkel" } : null,
     site.showBerita ? { label: "Berita & Komunitas", i18n: "pub.nav.berita", href: "/berita" } : null,
     site.showAbout ? { label: "Tentang", i18n: "pub.nav.tentang", href: denganBase(base, "#tentang") } : null,
-    ...(Array.isArray(lamanMenu) ? lamanMenu : []),
+    ...(Array.isArray(lamanMenu) ? lamanMenu.filter((l) => l && l.label !== "Motor Listrik" && l.href !== "/motor-listrik") : []),
   ].filter(Boolean);
 }

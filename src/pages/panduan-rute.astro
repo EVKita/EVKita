@@ -20,7 +20,7 @@ const K = (v: any) => ({ id: v.id, name: v.name, lat: v.lat, lng: v.lng, area: v
 const spkluLite = spkluList.map(K);
 ---
 
-<Base>
+<Base title={t("pub.rute.title")} site={site}>
   <SiteHeader site={site} lang={lang} t={t} region={region} />
   <main class="container rute-main">
     <header class="rute-head">
