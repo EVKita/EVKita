@@ -29,6 +29,22 @@ const ringkas = (v: any) =>
 const carsLite = cars.map(ringkas);
 
 const bodyTypes = [...new Set(cars.map((c: any) => c.bodyType).filter(Boolean))].sort();
+
+/* Batas harga mengikuti mata uang edisi — Rupiah di Indonesia, dolar di
+   Amerika, yuan di China. Nilai USD/CNY adalah tetapan (bukan terjemahan):
+   edisi Amerika selalu dolar, edisi China selalu yuan, di bahasa apa pun. */
+const EF_BUDGET = {
+  id: [300000000, 500000000, 800000000],
+  us: [40000, 60000, 80000],
+  cn: [200000, 300000, 500000],
+};
+const EF_BUDGET_LABEL = {
+  id: [t("pub.ef.budget1"), t("pub.ef.budget2"), t("pub.ef.budget3")],
+  us: ["Under US$40k", "Under US$60k", "Under US$80k"],
+  cn: ["20万元以下", "30万元以下", "50万元以下"],
+};
+const budgetOpts = EF_BUDGET[region].map((v: number, i: number) => ({ v, label: EF_BUDGET_LABEL[region][i] }));
+const efLocale = lang === "en" ? "en-US" : lang === "zh" ? "zh-CN" : "id-ID";
 ---
 
 <Base title={t("pub.ef.title")} site={site}>
@@ -53,9 +69,9 @@ const bodyTypes = [...new Set(cars.map((c: any) => c.bodyType).filter(Boolean))]
         <span class="ef-label">{t("pub.ef.budget")}</span>
         <select id="efBudget" class="ef-select">
           <option value="0">{t("pub.ef.budgetAll")}</option>
-          <option value="300000000">{t("pub.ef.budget1")}</option>
-          <option value="500000000">{t("pub.ef.budget2")}</option>
-          <option value="800000000">{t("pub.ef.budget3")}</option>
+          {budgetOpts.map((o: any) => (
+            <option value={o.v}>{o.label}</option>
+          ))}
         </select>
       </div>
     </section>
@@ -80,12 +96,14 @@ const bodyTypes = [...new Set(cars.map((c: any) => c.bodyType).filter(Boolean))]
     </section>
   </main>
   <SiteFooter site={site} lang={lang} t={t} content={content} />
-  <script define:vars={{ carsLite }}>
+  <script define:vars={{ carsLite, efLocale }}>
     window.__EF_CARS__ = carsLite;
+    window.__EF_LOCALE__ = efLocale;
   </script>
   <script>
     (function () {
       const cars = Array.isArray(window.__EF_CARS__) ? window.__EF_CARS__ : [];
+      const LOCALE = window.__EF_LOCALE__ || "id-ID";
       const LS_KEY = "evkita_ef_likes";
       let liked = [];
       try { liked = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { liked = []; }
@@ -103,10 +121,27 @@ const bodyTypes = [...new Set(cars.map((c: any) => c.bodyType).filter(Boolean))]
       let queue = [];
       let idx = 0;
 
+      /* Harga SEBENARNYA: `price` numerik untuk edisi Indonesia, `priceText`
+         ("US$39.990", "¥219,900") untuk edisi regional yang tidak punya angka.
+         Tanpa ini saringan anggaran akan membuang seluruh mobil regional. */
+      function hargaNum(c) {
+        if (typeof c.price === "number" && c.price > 0) return c.price;
+        const n = Number(String(c.priceText || "").replace(/[^\d]/g, ""));
+        return Number.isFinite(n) && n > 0 ? n : 0;
+      }
+      function hargaTeks(c) {
+        if (c.priceText) return c.priceText;
+        if (typeof c.price === "number") return c.price.toLocaleString(LOCALE);
+        return "";
+      }
+
       function filterCars() {
         return cars.filter((c) => {
           if (bodyFilter && c.bodyType !== bodyFilter) return false;
-          if (budgetMax > 0 && !(typeof c.price === "number" && c.price <= budgetMax)) return false;
+          if (budgetMax > 0) {
+            const h = hargaNum(c);
+            if (!(h > 0 && h <= budgetMax)) return false;
+          }
           return true;
         });
       }
@@ -137,7 +172,7 @@ const bodyTypes = [...new Set(cars.map((c: any) => c.bodyType).filter(Boolean))]
         if (empty) empty.hidden = true;
         const c = queue[idx];
         const img = c.image ? `<img class="ef-card-img" src="${escapeHtml(c.image)}" alt="${escapeHtml(c.brand + " " + c.name)}" loading="lazy" />` : "";
-        const price = typeof c.price === "number" ? (c.price.toLocaleString("id-ID") + " " + (c.priceUnit || "")) : (c.priceText || "");
+        const price = hargaTeks(c);
         const specs = [
           c.rangeKm ? c.rangeKm + " km" : "",
           c.batteryKwh ? c.batteryKwh + " kWh" : "",

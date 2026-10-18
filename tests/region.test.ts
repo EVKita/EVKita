@@ -4,6 +4,7 @@ import {
   filterWilayah,
   isWilayah,
   normalizeWilayah,
+  regionDariParam,
   wilayahDariPath,
 } from "../src/lib/region.js";
 
@@ -48,6 +49,26 @@ describe("isWilayah", () => {
     assert.equal(isWilayah({}, "id"), true);
     assert.equal(isWilayah({}, "us"), false);
     assert.equal(isWilayah({ wilayah: "us" }, "us"), true);
+  });
+});
+
+describe("regionDariParam", () => {
+  it("menerima kode us/cn", () => {
+    assert.equal(regionDariParam("us"), "us");
+    assert.equal(regionDariParam("cn"), "cn");
+  });
+
+  it("menerima slug alamat amerika/china juga", () => {
+    assert.equal(regionDariParam("amerika"), "us");
+    assert.equal(regionDariParam("china"), "cn");
+    assert.equal(regionDariParam(" Amerika "), "us");
+  });
+
+  it("selainnya Indonesia", () => {
+    assert.equal(regionDariParam(""), "id");
+    assert.equal(regionDariParam(null), "id");
+    assert.equal(regionDariParam(undefined), "id");
+    assert.equal(regionDariParam("eropa"), "id");
   });
 });
 

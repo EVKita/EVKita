@@ -5,7 +5,7 @@ import SiteFooter from "../components/SiteFooter.astro";
 import { readContent } from "../lib/store";
 import { hanyaTayang } from "../lib/tayang.js";
 import { safeUrl } from "../lib/url.js";
-import { filterWilayah, regionDariParam } from "../lib/region.js";
+import { filterWilayah, regionDariParam, istilahCas } from "../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
 
@@ -15,6 +15,20 @@ const t = makePubT(lang);
 const site = cmsSite(content.site, lang);
 const region = regionDariParam(Astro.url.searchParams.get("region"));
 const spkluList = filterWilayah(content.spklu, region).filter(hanyaTayang());
+
+/* Nama peta: edisi China memakai Amap (高德地图) — layanan peta China yang
+   paling mirip Google Maps; Google sendiri tidak bisa dipakai di sana. */
+const petaNama = region === "cn" ? "高德地图" : "Google Maps";
+const petaCari = region === "cn" ? t("pub.rute.cariAmap") : t("pub.rute.cariGoogle");
+const tipTempel = region === "cn" ? t("pub.rute.tambahPetaCn") : t("pub.rute.tempelTip");
+
+/* Judul seksi & tombol lihat-semua memakai istilah TETAP edisi (Charging/
+   充电站) — tidak pernah "SPKLU" di edisi Amerika dan China. */
+const spkluJudul =
+  region === "id" ? t("pub.rute.spkluTerdekat") : t(region === "us" ? "pub.region.spkluTitle" : "pub.region.cnSpkluTitle");
+const spkluSemuaLabel = region === "id" ? t("pub.rute.lihatSemuaSpklu") : t(istilahCas(region, "semua"));
+const spkluSemuaHref = region === "id" ? "/spklu" : region === "us" ? "/amerika#spklu" : "/china#spklu";
+const petaLabel = t(istilahCas(region, "peta"));
 
 const K = (v: any) => ({
   id: v.id,
@@ -42,16 +56,16 @@ const spkluLite = spkluList.map(K);
     </header>
 
     <form id="ruteForm" class="rute-form" data-region={region}>
-      <label>{t("pub.rute.asal")} <input type="text" id="ruteAsal" placeholder="Nama tempat, -6.2,106.8, atau tautan Google Maps" /></label>
+      <label>{t("pub.rute.asal")} <input type="text" id="ruteAsal" placeholder="Nama tempat, -6.2,106.8, atau tautan peta" /></label>
       <div class="rute-btn-row">
-        <button type="button" class="btn btn-ghost btn-sm" id="ruteGps">📍 Gunakan lokasi saya</button>
-        <button type="button" class="rute-gbtn" id="ruteAsalGoogle" title={t("pub.rute.lokasiPerkiraan")} aria-label={t("pub.rute.lokasiPerkiraan")}><span class="rute-g">G</span></button>
+        <button type="button" class="btn btn-ghost btn-sm" id="ruteGps">📍 {t("pub.rute.gps")}</button>
+        <button type="button" class="rute-gbtn" id="ruteAsalGoogle" title={t("pub.rute.lokasiPerkiraan")} aria-label={t("pub.rute.lokasiPerkiraan")}><span class="rute-g">{region === "cn" ? "◎" : "G"}</span></button>
       </div>
 
-      <label>{t("pub.rute.tujuan")} <input type="text" id="ruteTujuan" placeholder="Nama tempat, -6.9,107.6, atau tautan Google Maps" /></label>
+      <label>{t("pub.rute.tujuan")} <input type="text" id="ruteTujuan" placeholder="Nama tempat, -6.9,107.6, atau tautan peta" /></label>
       <div class="rute-btn-row">
-        <button type="button" class="rute-gbtn" id="ruteTujuanGoogle" title={t("pub.rute.cariGoogle")} aria-label={t("pub.rute.cariGoogle")}><span class="rute-g">G</span></button>
-        <span class="rute-tip">{t("pub.rute.tempelTip")}</span>
+        <button type="button" class="rute-gbtn" id="ruteTujuanGoogle" title={petaCari} aria-label={petaCari}><span class={`rute-g${region === "cn" ? " wide" : ""}`}>{region === "cn" ? "高德" : "G"}</span></button>
+        <span class="rute-tip">{tipTempel}</span>
       </div>
 
       <button type="submit" class="btn btn-primary">{t("pub.rute.hitung")}</button>
@@ -60,37 +74,93 @@ const spkluLite = spkluList.map(K);
     <div id="ruteResult" class="rute-result" hidden></div>
 
     <div class="rute-save" id="ruteSave" hidden>
-      <button type="button" class="btn btn-ghost btn-sm" id="ruteSaveBtn">Simpan rute ini</button>
-      <a class="btn btn-ghost btn-sm" href="/rute-tersimpan">Rute tersimpan</a>
+      <button type="button" class="btn btn-ghost btn-sm" id="ruteSaveBtn">{t("pub.rute.simpan")}</button>
+      <a class="btn btn-ghost btn-sm" href={region === "id" ? "/rute-tersimpan" : `/rute-tersimpan?region=${region}`}>{t("pub.rute.ruteTersimpan")}</a>
     </div>
 
     <section class="rute-list">
-      <h2>{t("pub.rute.spkluTerdekat")}</h2>
+      <h2>{spkluJudul}</h2>
       <div id="ruteSpklu" class="rute-spklu"></div>
-      <p><a class="btn btn-outline btn-sm" href="/spklu">{t("pub.rute.lihatSemuaSpklu")} →</a></p>
+      <p><a class="btn btn-outline btn-sm" href={spkluSemuaHref}>{spkluSemuaLabel} →</a></p>
     </section>
   </main>
   <SiteFooter site={site} lang={lang} t={t} content={content} />
 
-  <script define:vars={{ spkluLite, spkluKosong: t("pub.rute.spkluKosong") }}>
-    window.__RUTE_SPKLU__ = spkluLite;
-    window.__RUTE_SPKLU_EMPTY__ = spkluKosong;
+  <script
+    define:vars={{
+      spkluLite,
+      region,
+      petaNama,
+      spkluKosong: t("pub.rute.spkluKosong"),
+      petaLabel,
+      labelAsal: t("pub.rute.hasilAsal"),
+      labelTujuan: t("pub.rute.hasilTujuan"),
+      jarakLurus: t("pub.rute.jarakLurus"),
+      waktuTempuh: t("pub.rute.waktuTempuh"),
+      menit: t("pub.peng.menit"),
+      bukaDi: t("pub.rute.bukaDi"),
+      mencari: t("pub.rute.mencari"),
+      tidakDitemukan: t("pub.rute.tidakDitemukan"),
+      gpsGagal: t("pub.rute.gpsGagal"),
+      gpsTakDidukung: t("pub.rute.gpsTakDidukung"),
+      gpsPerkiraan: t("pub.rute.gpsPerkiraan"),
+      asalPerkiraan: t("pub.rute.asalDiisiPerkiraan"),
+      simpan: t("pub.rute.simpan"),
+      tersimpanOk: t("pub.rute.tersimpanOk"),
+    }}
+  >
+    window.__RUTE__ = {
+      spklu: spkluLite, region, petaNama, spkluKosong, petaLabel,
+      labelAsal, labelTujuan, jarakLurus, waktuTempuh, menit, bukaDi,
+      mencari, tidakDitemukan, gpsGagal, gpsTakDidukung, gpsPerkiraan, asalPerkiraan,
+      simpan, tersimpanOk,
+    };
   </script>
   <script>
     (function () {
-      const spklu = Array.isArray(window.__RUTE_SPKLU__) ? window.__RUTE_SPKLU__ : [];
-      const spkluKosong = window.__RUTE_SPKLU_EMPTY__ || "Belum ada data SPKLU.";
+      const R = window.__RUTE__ || {};
+      const spklu = Array.isArray(R.spklu) ? R.spklu : [];
+      const IS_CN = R.region === "cn";
       const form = document.getElementById("ruteForm");
       const res = document.getElementById("ruteResult");
       const list = document.getElementById("ruteSpklu");
 
       function haversine(a, b) {
-        const R = 6371;
+        const Rk = 6371;
         const toRad = (x) => x * Math.PI / 180;
         const dLat = toRad(b.lat - a.lat);
         const dLng = toRad(b.lng - a.lng);
         const x = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)*Math.sin(dLng/2);
-        return 2 * R * Math.asin(Math.sqrt(x));
+        return 2 * Rk * Math.asin(Math.sqrt(x));
+      }
+      /* WGS84 → GCJ-02. Amap/Baidu memakai GCJ-02, bukan WGS84 (yang dipakai
+         GPS & geokode), jadi tautan peta China digeser dulu supaya titiknya
+         tepat — tanpa ini lokasinya meleset beberapa ratus meter. */
+      function gcj(lat, lng) {
+        if (!IS_CN) return { lat, lng };
+        if (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271) return { lat, lng };
+        const a = 6378245, ee = 0.00669342162296594323;
+        const tLat = (x, y) => {
+          let r = -100 + 2*x + 3*y + 0.2*y*y + 0.1*x*y + 0.2*Math.sqrt(Math.abs(x));
+          r += (20*Math.sin(6*x*Math.PI) + 20*Math.sin(2*x*Math.PI)) * 2/3;
+          r += (20*Math.sin(y*Math.PI) + 40*Math.sin(y/3*Math.PI)) * 2/3;
+          r += (160*Math.sin(y/12*Math.PI) + 320*Math.sin(y*Math.PI/30)) * 2/3;
+          return r;
+        };
+        const tLng = (x, y) => {
+          let r = 300 + x + 2*y + 0.1*x*x + 0.1*x*y + 0.1*Math.sqrt(Math.abs(x));
+          r += (20*Math.sin(6*x*Math.PI) + 20*Math.sin(2*x*Math.PI)) * 2/3;
+          r += (20*Math.sin(x*Math.PI) + 40*Math.sin(x/3*Math.PI)) * 2/3;
+          r += (150*Math.sin(x/12*Math.PI) + 300*Math.sin(x/30*Math.PI)) * 2/3;
+          return r;
+        };
+        const dLat0 = tLat(lng - 105, lat - 35), dLng0 = tLng(lng - 105, lat - 35);
+        const radLat = lat/180*Math.PI;
+        let magic = Math.sin(radLat); magic = 1 - ee*magic*magic;
+        const sq = Math.sqrt(magic);
+        const dLat = (dLat0*180)/((a*(1-ee))/(magic*sq)*Math.PI);
+        const dLng = (dLng0*180)/(a/sq*Math.cos(radLat)*Math.PI);
+        return { lat: lat + dLat, lng: lng + dLng };
       }
       function parseCoord(s) {
         const str = String(s == null ? "" : s).trim();
@@ -99,7 +169,7 @@ const spkluLite = spkluList.map(K);
         const pola = [
           /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
           /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
-          /[?&](?:q|ll|center|query|daddr|destination)=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/
+          /[?&](?:q|ll|center|query|daddr|destination|position)=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/
         ];
         for (const rx of pola) {
           const m = str.match(rx);
@@ -126,26 +196,35 @@ const spkluLite = spkluList.map(K);
         if (/^https?:\/\//i.test(v) || v.startsWith("/")) return v;
         return fallback || "";
       }
-      function petaUrl(s, reg) {
-        const kata = reg === "cn" ? "充电站" : reg === "us" ? "charging station" : "SPKLU";
-        return safeHref(s.mapUrl, "") || "https://www.google.com/maps/search/" + encodeURIComponent((s.name || "") + " " + kata);
+      function petaHome() { return IS_CN ? "https://www.amap.com/" : "https://www.google.com/maps"; }
+      function petaCariUrl(v) {
+        return IS_CN
+          ? "https://www.amap.com/search?query=" + encodeURIComponent(v)
+          : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(v);
       }
-      function renderSpklu(ref) {
+      function petaKartu(s) {
+        const nama = String(s.name || "") + (IS_CN ? " 充电站" : " charging");
+        return safeHref(s.mapUrl, "") || (IS_CN
+          ? "https://www.amap.com/search?query=" + encodeURIComponent(nama)
+          : "https://www.google.com/maps/search/" + encodeURIComponent(nama));
+      }
+      function ruteUrl(a, b) {
+        if (IS_CN) {
+          const p = gcj(a.lat, a.lng), q = gcj(b.lat, b.lng);
+          return "https://uri.amap.com/navigation?from=" + p.lng + "," + p.lat + "&to=" + q.lng + "," + q.lat + "&mode=car&coordinate=gaode&callnative=1";
+        }
+        return "https://www.google.com/maps/dir/?api=1&origin=" + a.lat + "," + a.lng + "&destination=" + b.lat + "," + b.lng;
+      }
+      function renderSpklu() {
         if (!list) return;
-        const reg = (form && form.getAttribute("data-region")) || "id";
-        if (!spklu.length) { list.innerHTML = "<p>" + escapeHtml(spkluKosong) + "</p>"; return; }
-        const baris = spklu.map((s) => {
-          const gambar = s.image ? `<a class="rute-spklu-img" href="${escapeHtml(petaUrl(s, reg))}" target="_blank" rel="noopener"><img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.name)}" loading="lazy" decoding="async" /></a>` : "";
-          const meta = [
-            s.operator ? escapeHtml(s.operator) : "",
-            s.area ? escapeHtml(s.area) : "",
-            s.power ? escapeHtml(String(s.power) + " kW") : "",
-            s.connector ? escapeHtml(s.connector) : "",
-          ].filter(Boolean).map((x) => `<span>${x}</span>`).join("");
+        if (!spklu.length) { list.innerHTML = "<p>" + escapeHtml(R.spkluKosong) + "</p>"; return; }
+        list.innerHTML = spklu.map((s) => {
+          const gambar = s.image ? `<a class="rute-spklu-img" href="${escapeHtml(petaKartu(s))}" target="_blank" rel="noopener"><img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.name)}" loading="lazy" decoding="async" /></a>` : "";
+          const meta = [s.operator, s.area, s.power ? String(s.power) + " kW" : "", s.connector]
+            .filter(Boolean).map((x) => `<span>${escapeHtml(x)}</span>`).join("");
           const situs = s.website ? `<a href="${escapeHtml(s.website)}" target="_blank" rel="noopener">Situs →</a>` : "";
-          return `<article class="rute-spklu-card">${gambar}<div class="rute-spklu-body"><strong>${escapeHtml(s.name)}</strong>${meta}<div class="rute-spklu-links"><a href="${escapeHtml(petaUrl(s, reg))}" target="_blank" rel="noopener">Peta →</a>${situs}</div></div></article>`;
+          return `<article class="rute-spklu-card">${gambar}<div class="rute-spklu-body"><strong>${escapeHtml(s.name)}</strong>${meta}<div class="rute-spklu-links"><a href="${escapeHtml(petaKartu(s))}" target="_blank" rel="noopener">${escapeHtml(R.petaLabel)} →</a>${situs}</div></div></article>`;
         }).join("");
-        list.innerHTML = baris;
       }
 
       const saveWrap = document.getElementById("ruteSave");
@@ -167,23 +246,19 @@ const spkluLite = spkluList.map(K);
 
       const gpsBtn = document.getElementById("ruteGps");
       if (gpsBtn) gpsBtn.addEventListener("click", () => {
-        const gagal = (pesan) => {
-          if (res) { res.hidden = false; res.textContent = pesan; }
-          gpsBtn.textContent = "📍 Gunakan lokasi saya";
-        };
+        const gagal = (pesan) => { if (res) { res.hidden = false; res.textContent = pesan; } };
         if (!navigator.geolocation) {
           perkiraanLokasi()
-            .then((d) => { isiAsal(d, d.label); gagal("GPS tidak didukung. Dipakai perkiraan lokasi " + (d.label || "") + "."); })
-            .catch(() => gagal("Geolokasi tidak didukung peramban ini."));
+            .then((d) => { isiAsal(d, d.label); gagal(R.gpsPerkiraan.replace("{label}", d.label || "")); })
+            .catch(() => gagal(R.gpsTakDidukung));
           return;
         }
-        gpsBtn.textContent = "Mencari lokasi...";
         navigator.geolocation.getCurrentPosition(
-          (pos) => { isiAsal({ lat: pos.coords.latitude, lng: pos.coords.longitude }, ""); gpsBtn.textContent = "📍 Gunakan lokasi saya"; if (res) res.hidden = true; },
+          (pos) => { isiAsal({ lat: pos.coords.latitude, lng: pos.coords.longitude }, ""); if (res) res.hidden = true; },
           () => {
             perkiraanLokasi()
-              .then((d) => { isiAsal(d, d.label); gagal("GPS tidak tersedia. Dipakai perkiraan lokasi " + (d.label || "") + "."); })
-              .catch(() => gagal("Gagal mendapatkan lokasi. Izinkan akses lokasi lalu coba lagi."));
+              .then((d) => { isiAsal(d, d.label); gagal(R.gpsPerkiraan.replace("{label}", d.label || "")); })
+              .catch(() => gagal(R.gpsGagal));
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
@@ -193,8 +268,8 @@ const spkluLite = spkluList.map(K);
       if (ogBtn) ogBtn.addEventListener("click", () => {
         ogBtn.disabled = true;
         perkiraanLokasi()
-          .then((d) => { isiAsal(d, d.label); if (res) { res.hidden = false; res.textContent = "Lokasi asal diisi dari perkiraan: " + (d.label || ""); } })
-          .catch(() => { window.open("https://www.google.com/maps", "_blank", "noopener"); })
+          .then((d) => { isiAsal(d, d.label); if (res) { res.hidden = false; res.textContent = R.asalPerkiraan.replace("{label}", d.label || ""); } })
+          .catch(() => { window.open(petaHome(), "_blank", "noopener"); })
           .finally(() => { ogBtn.disabled = false; });
       });
 
@@ -202,7 +277,7 @@ const spkluLite = spkluList.map(K);
       if (tgBtn) tgBtn.addEventListener("click", () => {
         const el = document.getElementById("ruteTujuan");
         const v = el && el.value ? el.value.trim() : "";
-        const url = !v ? "https://www.google.com/maps" : (/^https?:\/\//i.test(v) ? v : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(v));
+        const url = !v ? petaHome() : (/^https?:\/\//i.test(v) ? v : petaCariUrl(v));
         window.open(url, "_blank", "noopener");
       });
 
@@ -223,7 +298,7 @@ const spkluLite = spkluList.map(K);
         e.preventDefault();
         const asalVal = document.getElementById("ruteAsal").value;
         const tujuanVal = document.getElementById("ruteTujuan").value;
-        if (res) { res.hidden = false; res.textContent = "Mencari lokasi..."; }
+        if (res) { res.hidden = false; res.textContent = R.mencari; }
         if (saveWrap) saveWrap.hidden = true;
         let A, B, ga, gb;
         try {
@@ -231,24 +306,20 @@ const spkluLite = spkluList.map(K);
           gb = await geocode(tujuanVal);
           A = ga.coord; B = gb.coord;
         } catch (err) {
-          if (res) res.textContent = "Lokasi tidak ditemukan. Coba nama tempat lain, koordinat lat,lng, atau tautan Google Maps.";
+          if (res) res.textContent = R.tidakDitemukan;
           return;
         }
         const d = haversine(A, B);
-        const reg = (form && form.getAttribute("data-region")) || "id";
-        let mapUrl = reg === "cn"
-          ? "https://api.map.baidu.com/directions?origin=" + A.lat + "," + A.lng + "&destination=" + B.lat + "," + B.lng + "&mode=driving&region=cn"
-          : "https://www.google.com/maps/dir/?api=1&origin=" + A.lat + "," + A.lng + "&destination=" + B.lat + "," + B.lng;
         if (res) {
-          res.innerHTML = `<p>Asal: ${escapeHtml(ga.label)} (${A.lat.toFixed(5)},${A.lng.toFixed(5)})</p><p>Tujuan: ${escapeHtml(gb.label)} (${B.lat.toFixed(5)},${B.lng.toFixed(5)})</p><p>Jarak lurus: <strong>${Math.round(d).toLocaleString("id-ID")} km</strong></p><p>Perkiraan waktu (60 km/jam): <strong>${Math.round(d/60*60)} menit</strong></p><p><a class="btn btn-outline btn-sm" href="${mapUrl}" target="_blank" rel="noopener">Buka rute di ${reg === "cn" ? "Baidu Maps" : "Google Maps"} →</a></p>`;
-          if (reg !== "cn") {
+          res.innerHTML = `<p>${escapeHtml(R.labelAsal)}: ${escapeHtml(ga.label)} (${A.lat.toFixed(5)},${A.lng.toFixed(5)})</p><p>${escapeHtml(R.labelTujuan)}: ${escapeHtml(gb.label)} (${B.lat.toFixed(5)},${B.lng.toFixed(5)})</p><p>${escapeHtml(R.jarakLurus)}: <strong>${Math.round(d).toLocaleString("id-ID")} km</strong></p><p>${escapeHtml(R.waktuTempuh)}: <strong>${R.menit.replace("{n}", String(Math.round(d)))}</strong></p><p><a class="btn btn-outline btn-sm" href="${ruteUrl(A, B)}" target="_blank" rel="noopener">${escapeHtml(R.bukaDi.replace("{peta}", R.petaNama))} →</a></p>`;
+          if (!IS_CN) {
             const embed = "https://maps.google.com/maps?saddr=" + A.lat + "," + A.lng + "&daddr=" + B.lat + "," + B.lng + "&z=8&output=embed";
-            res.innerHTML += `<iframe class="rute-map" src="${embed}" title="Peta rute" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`;
+            res.innerHTML += `<iframe class="rute-map" src="${embed}" title="${escapeHtml(R.petaNama)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`;
           }
         }
         if (saveWrap) saveWrap.hidden = false;
         lastRoute = { asal: asalVal, tujuan: tujuanVal, jarak: Math.round(d), tgl: new Date().toISOString() };
-        renderSpklu(B);
+        renderSpklu();
       });
 
       if (saveBtn) saveBtn.addEventListener("click", () => {
@@ -260,11 +331,11 @@ const spkluLite = spkluList.map(K);
         arr.unshift(lastRoute);
         arr = arr.slice(0, 20);
         try { localStorage.setItem(key, JSON.stringify(arr)); } catch {}
-        saveBtn.textContent = "Tersimpan ✓";
-        setTimeout(() => { saveBtn.textContent = "Simpan rute ini"; }, 1500);
+        saveBtn.textContent = R.tersimpanOk;
+        setTimeout(() => { saveBtn.textContent = R.simpan; }, 1500);
       });
 
-      renderSpklu(null);
+      renderSpklu();
     })();
   </script>
   <style>
@@ -276,10 +347,11 @@ const spkluLite = spkluList.map(K);
     .rute-form input { padding: .5rem .6rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; font-size: 1rem; }
     .rute-btn-row { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-top: -.35rem; }
     .rute-tip { font-size: .78rem; color: var(--muted, #64748b); flex: 1 1 220px; }
-    .rute-gbtn { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 34px; padding: 0; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; background: var(--card, #fff); cursor: pointer; }
+    .rute-gbtn { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 34px; padding: 0 .4rem; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; background: var(--card, #fff); cursor: pointer; }
     .rute-gbtn:hover { border-color: #4285f4; box-shadow: 0 0 0 2px rgba(66,133,244,.15); }
     .rute-gbtn:disabled { opacity: .6; cursor: progress; }
     .rute-g { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #4285f4; color: #fff; font-weight: 700; font-size: .8rem; font-family: Arial, sans-serif; }
+    .rute-g.wide { width: auto; padding: 0 .45rem; border-radius: 10px; font-size: .72rem; }
     .rute-result { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--card, #fff); }
     .rute-map { width: 100%; height: 360px; margin-top: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; }
     .rute-list { margin-top: 2rem; }

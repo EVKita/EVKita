@@ -352,6 +352,27 @@ const panduanSlug =
 const panduanLabel =
   region === "cn" ? t("pub.region.cnPanduan") : region === "us" ? t("pub.region.usPanduan") : "";
 
+/**
+ * Susunan "Jelajahi" edisi regional — cerminan menu edisi Indonesia, tetapi
+ * setiap tujuan tinggal DI DALAM edisinya sendiri, dan istilahnya memakai
+ * istilah negara itu (Charging/充电站) bukan "SPKLU". Tetap di kode, bukan di
+ * data, supaya tidak bisa dibalikkan auto-update konten. Merek & Tipe bodi
+ * tidak dibawa: kedua halaman itu masih menyajikan katalog Indonesia.
+ */
+const jelajahiEdisi = [
+  { label: t("pub.nav.beranda"), href: edisiBase },
+  { label: t("pub.katalog"), href: `${edisiBase}#daftar` },
+  { label: t("pub.menu.kalkPintar"), href: `/kalkulator${edisiParam}` },
+  { label: t("pub.menu.kalkIsi"), href: `/kalkulator/biaya-pengisian${edisiParam}` },
+  { label: t("pub.nav.evfinder"), href: `/ev-finder${edisiParam}` },
+  site.showSpklu ? { label: t(istilahCas(region, "nav")), href: `${edisiBase}#spklu` } : null,
+  site.showBengkel ? { label: region === "cn" ? t("pub.region.cnWorkshop") : t("pub.nav.bengkel"), href: `${edisiBase}#bengkel` } : null,
+  site.showBerita ? { label: t("pub.nav.berita"), href: `${edisiBase}#berita` } : null,
+  { label: t("pub.nav.artikel"), href: `/artikel${edisiParam}` },
+  { label: panduanLabel, href: panduanSlug },
+  site.showAbout ? { label: t("pub.nav.tentang"), href: `${edisiBase}#tentang` } : null,
+].filter(Boolean);
+
 /* Beranda etalase empat kartu — mengisi penuh baris grid, tidak menyisakan
    slot kosong. Angka 4 ini disamakan dengan HOME_TEASER di src/scripts/app.js. */
 const HOME_CARDS = 4;
@@ -634,22 +655,10 @@ const jsonLd = {
                     {jelajahi.map((l: any) => <a class="tag-pill" href={l.href}>{l.label}</a>)}
                   </nav>
                 ) : (
-                  /* Menu Indonesia tidak dibawa ke edisi regional — yang ada
-                     hanya tujuan di dalam edisinya sendiri. */
+                  /* Susunan regional = cerminan menu Indonesia (jelajahiEdisi),
+                     tiap tautan tinggal di dalam edisinya. */
                   <nav class="tag-row" aria-label={site.footerMenuTitle || t("pub.jelajahi")}>
-                    <a class="tag-pill" href={region === "cn" ? "/china" : "/amerika"}>{t("pub.nav.beranda")}</a>
-                    <a class="tag-pill" href={region === "cn" ? "/china#daftar" : "/amerika#daftar"}>{t("pub.katalog")}</a>
-                    {/* Di China tidak ada istilah SPKLU — menu memakai bahasa setempat. */}
-                    <a class="tag-pill" href={region === "cn" ? "/china#spklu" : "/amerika#spklu"}>{t(istilahCas(region, "nav"))}</a>
-                    <a class="tag-pill" href={region === "cn" ? "/china#bengkel" : "/amerika#bengkel"}>{region === "cn" ? t("pub.region.cnWorkshop") : t("pub.nav.bengkel")}</a>
-                    <a class="tag-pill" href={region === "cn" ? "/china#berita" : "/amerika#berita"}>{t("pub.nav.berita")}</a>
-                    <a class="tag-pill" href={region === "cn" ? "/china#artikel" : "/amerika#artikel"}>{t("pub.nav.artikel")}</a>
-                    {region === "us" ? (
-                      <a class="tag-pill" href="/artikel/panduan-membeli-mobil-listrik-di-amerika">{t("pub.region.usPanduan")}</a>
-                    ) : (
-                      <a class="tag-pill" href="/artikel/panduan-membeli-mobil-listrik-di-china">{t("pub.region.cnPanduan")}</a>
-                    )}
-                    <a class="tag-pill" href={region === "cn" ? "/china#tentang" : "/amerika#tentang"}>{t("pub.nav.tentang")}</a>
+                    {jelajahiEdisi.map((l: any) => <a class="tag-pill" href={l.href}>{l.label}</a>)}
                   </nav>
                 )}
               </div>

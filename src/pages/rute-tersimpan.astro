@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import { readContent } from "../lib/store";
+import { regionDariParam } from "../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
 
@@ -10,27 +11,30 @@ const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 const lang = normalizePubLocale(Astro.locals?.pubLang);
 const t = makePubT(lang);
 const site = cmsSite(content.site, lang);
+const region = regionDariParam(Astro.url.searchParams.get("region"));
+const edisiParam = region === "id" ? "" : `?region=${region}`;
+const locale = lang === "en" ? "en-US" : lang === "zh" ? "zh-CN" : "id-ID";
 ---
 
-<Base>
-  <SiteHeader site={site} lang={lang} t={t} />
+<Base title={t("pub.rute.ruteTersimpan")} site={site}>
+  <SiteHeader site={site} lang={lang} t={t} region={region} />
   <main class="container rute-main">
     <header class="rute-head">
-      <h1>Rute Tersimpan</h1>
-      <p class="rute-sub">Rute yang kamu simpan di peramban ini.</p>
+      <h1>{t("pub.rute.ruteTersimpan")}</h1>
+      <p class="rute-sub">{t("pub.rute.tersimpanSub")}</p>
     </header>
     <div id="ruteList" class="rute-saved-list"></div>
-    <p><a class="btn btn-ghost btn-sm" href="/panduan-rute">← Kembali ke Panduan Rute</a></p>
+    <p><a class="btn btn-ghost btn-sm" href={`/panduan-rute${edisiParam}`}>← {t("pub.rute.kembali")}</a></p>
   </main>
   <SiteFooter site={site} lang={lang} t={t} content={content} />
-  <script>
+  <script define:vars={{ kosong: t("pub.rute.tersimpanKosong"), locale }}>
     (function () {
       const list = document.getElementById("ruteList");
       if (!list) return;
       let arr = [];
       try { arr = JSON.parse(localStorage.getItem("evkita_rute_tersimpan") || "[]"); } catch { arr = []; }
-      if (!Array.isArray(arr) || !arr.length) { list.innerHTML = "<p>Belum ada rute tersimpan.</p>"; return; }
-      list.innerHTML = arr.map((r) => `<div class="rute-saved-card"><strong>${escapeHtml(r.asal)} → ${escapeHtml(r.tujuan)}</strong><span>${r.jarak} km</span><span>${new Date(r.tgl).toLocaleDateString("id-ID")}</span></div>`).join("");
+      if (!Array.isArray(arr) || !arr.length) { list.innerHTML = "<p>" + escapeHtml(kosong) + "</p>"; return; }
+      list.innerHTML = arr.map((r) => `<div class="rute-saved-card"><strong>${escapeHtml(r.asal)} → ${escapeHtml(r.tujuan)}</strong><span>${Number(r.jarak).toLocaleString(locale)} km</span><span>${new Date(r.tgl).toLocaleDateString(locale)}</span></div>`).join("");
       function escapeHtml(s) { return String(s === null || s === undefined ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
     })();
   </script>

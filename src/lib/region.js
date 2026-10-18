@@ -51,10 +51,17 @@ export function wilayahDariPath(pathname) {
   return "id";
 }
 
-/** Edisi dari parameter `?region=` (`us`, `cn`, selainnya `id`). */
+/**
+ * Edisi dari parameter `?region=`. Menerima kode (`us`, `cn`) MAUPUN slug
+ * alamat (`amerika`, `china`) — orang menulis yang satu atau yang lain, dan
+ * `?region=amerika` yang jatuh ke Indonesia adalah kejutan yang diam. Selain
+ * itu (termasuk `id`) berarti Indonesia.
+ */
 export function regionDariParam(value) {
-  const s = String(value === null || value === undefined ? "" : value);
-  return s === "us" || s === "cn" ? s : "id";
+  const s = String(value === null || value === undefined ? "" : value).trim().toLowerCase();
+  if (s === "us" || s === "amerika") return "us";
+  if (s === "cn" || s === "china" || s === "cina") return "cn";
+  return "id";
 }
 
 /**
