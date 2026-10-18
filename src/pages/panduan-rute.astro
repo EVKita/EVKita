@@ -27,7 +27,7 @@ const spkluLite = spkluList.map(K);
       <h1>{t("pub.rute.title")}</h1>
       <p class="rute-sub">{t("pub.rute.sub")}</p>
     </header>
-    <form id="ruteForm" class="rute-form">
+    <form id="ruteForm" class="rute-form" data-region={region}>
       <label>{t("pub.rute.asal")} <input type="text" id="ruteAsal" placeholder="Nama tempat atau -6.2,106.8" /></label>
       <button type="button" class="btn btn-ghost btn-sm" id="ruteGps">📍 Gunakan lokasi saya</button>
       <label>{t("pub.rute.tujuan")} <input type="text" id="ruteTujuan" placeholder="Nama tempat atau -6.9,107.6" /></label>
@@ -69,16 +69,10 @@ const spkluLite = spkluList.map(K);
       async function geocode(q) {
         const c = parseCoord(q);
         if (c) return { coord: c, label: q.trim() };
-        const url = "https://photon.komoot.io/api?q=" + encodeURIComponent(q) + "&limit=1";
-        const r = await fetch(url, { headers: { Accept: "application/json" } });
-        if (!r.ok) throw new Error("geocode");
+        const r = await fetch("/api/geocode?q=" + encodeURIComponent(q), { headers: { Accept: "application/json" } });
         const data = await r.json();
-        const f = data && data.features && data.features[0];
-        if (!f || !f.geometry || !f.geometry.coordinates) throw new Error("notfound");
-        const [lng, lat] = f.geometry.coordinates;
-        const props = f.properties || {};
-        const label = [props.name, props.city || props.town || props.village, props.country].filter(Boolean).join(", ") || q;
-        return { coord: { lat: Number(lat), lng: Number(lng) }, label };
+        if (!r.ok || !data || !data.ok) throw new Error("notfound");
+        return { coord: { lat: Number(data.lat), lng: Number(data.lng) }, label: data.label || q };
       }
       function renderSpklu(ref) {
         if (!list) return;
@@ -133,8 +127,15 @@ const spkluLite = spkluList.map(K);
           return;
         }
         const d = haversine(A, B);
+        const reg = (form && form.getAttribute("data-region")) || "id";
+        let mapUrl = "";
+        if (reg === "cn") {
+          mapUrl = "https://api.map.baidu.com/directions?origin=" + A.lat + "," + A.lng + "&destination=" + B.lat + "," + B.lng + "&mode=driving&region=cn";
+        } else {
+          mapUrl = "https://www.google.com/maps/dir/?api=1&origin=" + A.lat + "," + A.lng + "&destination=" + B.lat + "," + B.lng;
+        }
         if (res) {
-          res.innerHTML += `<p>Jarak lurus: <strong>${Math.round(d).toLocaleString("id-ID")} km</strong></p><p>Perkiraan waktu (60 km/jam): <strong>${Math.round(d/60*60)} menit</strong></p>`;
+          res.innerHTML += `<p>Jarak lurus: <strong>${Math.round(d).toLocaleString("id-ID")} km</strong></p><p>Perkiraan waktu (60 km/jam): <strong>${Math.round(d/60*60)} menit</strong></p><p><a class="btn btn-outline btn-sm" href="${mapUrl}" target="_blank" rel="noopener">Buka rute di ${reg === "cn" ? "Baidu Maps" : "Google Maps"} →</a></p>`;
         }
         if (saveWrap) saveWrap.hidden = false;
         lastRoute = { asal: asalVal, tujuan: tujuanVal, jarak: Math.round(d), tgl: new Date().toISOString() };
