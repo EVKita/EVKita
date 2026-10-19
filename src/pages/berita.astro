@@ -170,7 +170,7 @@ const jsonLd = site.showBerita
         {beritaList.map((n: any) => (
           <a class={`news-card${n.featured ? " is-featured" : ""}`} href={safeUrl(n.url) || "#"} target={safeUrl(n.url) ? "_blank" : undefined} rel={safeUrl(n.url) ? "noopener" : undefined}>
             {fotoBerita(n) ? (
-              <div class="news-thumb"><img src={fotoBerita(n)} alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb-berita /></div>
+              <div class="news-thumb"><img src={fotoBerita(n)} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb-berita /></div>
             ) : null}
             <div class="news-body">
               <div class="news-top">
