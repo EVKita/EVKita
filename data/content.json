@@ -107,6 +107,299 @@
   },
   "cars": [
     {
+      "id": "us-lucid-air-sapphire",
+      "kind": "mobil",
+      "brand": "Lucid",
+      "name": "Air Sapphire",
+      "bodyType": "Sedan",
+      "tagline": "The world first luxury electric super-sports sedan with 1,234 hp.",
+      "description": "The Lucid Air Sapphire is the pinnacle of American electric hyper-performance, boasting a 1,234 hp three-motor powertrain delivering 0-60 mph in 1.89 seconds and a top speed of 205 mph. With an EPA-rated 427 miles of range and 900V+ ultra-fast charging architecture, it effortlessly blends track supremacy with grand touring luxury.",
+      "highlights": [
+        "1,234 hp Three-Motor Powertrain",
+        "0-60 mph in 1.89 seconds (205 mph top speed)",
+        "427 miles EPA range with 900V+ charging"
+      ],
+      "rangeKm": 687,
+      "rangeStandard": "EPA",
+      "batteryKwh": 118,
+      "powerHp": 1234,
+      "torqueNm": 1940,
+      "topSpeedKph": 330,
+      "accelSec": 1.89,
+      "seats": 5,
+      "year": 2026,
+      "driveType": "AWD",
+      "chargeDcKw": 300,
+      "chargeAcKw": 19.2,
+      "chargeTime": "Up to 200 miles in 12 minutes (300 kW DC)",
+      "warranty": "8 years / 100,000 miles powertrain & battery",
+      "variants": 1,
+      "variantNames": [
+        "Sapphire"
+      ],
+      "price": 249000,
+      "priceText": ",000",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": true,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "tags": [
+        "Lucid",
+        "Sapphire",
+        "Hyper-Sedan",
+        "Supercar"
+      ],
+      "specs": [
+        {
+          "label": "Brakes",
+          "value": "Carbon-ceramic rotors (420mm front, 390mm rear) with 10-piston front calipers"
+        },
+        {
+          "label": "Chassis",
+          "value": "Track-tuned adaptive dampers with bespoke anti-roll bars"
+        },
+        {
+          "label": "Interior",
+          "value": "Sapphire Blue stitching, 18-way power sport seats, Alcantara trim"
+        }
+      ],
+      "colors": [
+        "Sapphire Blue"
+      ],
+      "image": "/gambar/mobil/us-lucid-air-sapphire.webp",
+      "gallery": [],
+      "video": "https://www.youtube.com/watch?v=FqG_rVfL6lM",
+      "sumberUrl": "https://www.lucidmotors.com/air-sapphire",
+      "updatedAt": "2026-10-24T08:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "us-tesla-model-s-plaid",
+      "kind": "mobil",
+      "brand": "Tesla",
+      "name": "Model S Plaid",
+      "bodyType": "Sedan",
+      "tagline": "1,020 hp tri-motor electric supercar with 1.99s 0-60 mph.",
+      "description": "The Tesla Model S Plaid is America bench-mark high-performance electric sedan, featuring a tri-motor all-wheel-drive powertrain with carbon-sleeved rotors producing 1,020 hp. Capable of 0-60 mph in 1.99 seconds with a 200 mph top speed while providing a comfortable 5-passenger luxury cabin.",
+      "highlights": [
+        "1,020 hp Tri-Motor AWD",
+        "0-60 mph in 1.99 seconds",
+        "359 miles EPA range"
+      ],
+      "rangeKm": 578,
+      "rangeStandard": "EPA",
+      "batteryKwh": 100,
+      "powerHp": 1020,
+      "torqueNm": 1420,
+      "topSpeedKph": 322,
+      "accelSec": 1.99,
+      "seats": 5,
+      "year": 2026,
+      "driveType": "AWD",
+      "chargeDcKw": 250,
+      "chargeAcKw": 11.5,
+      "chargeTime": "Up to 200 miles in 15 minutes at Supercharger V3/V4",
+      "warranty": "8 years / 150,000 miles battery & drive unit",
+      "variants": 1,
+      "variantNames": [
+        "Plaid Tri-Motor"
+      ],
+      "price": 89990,
+      "priceText": ",990",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": true,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "tags": [
+        "Tesla",
+        "Plaid",
+        "Supercar",
+        "Tri-Motor"
+      ],
+      "specs": [
+        {
+          "label": "Quarter Mile",
+          "value": "9.23 seconds @ 155 mph"
+        },
+        {
+          "label": "Drag Coefficient",
+          "value": "0.208 Cd"
+        },
+        {
+          "label": "Audio",
+          "value": "22-speaker, 960-watt premium audio system"
+        }
+      ],
+      "colors": [
+        "Ultra Red",
+        "Stealth Grey",
+        "Pearl White Multi-Coat",
+        "Deep Blue Metallic",
+        "Solid Black"
+      ],
+      "image": "/gambar/mobil/us-tesla-model-s-plaid.webp",
+      "gallery": [],
+      "video": "https://www.youtube.com/watch?v=qt5p-_tE8d0",
+      "sumberUrl": "https://www.tesla.com/models",
+      "updatedAt": "2026-10-24T08:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "cn-xiaomi-su7-ultra",
+      "kind": "mobil",
+      "brand": "Xiaomi",
+      "name": "SU7 Ultra",
+      "bodyType": "Sedan",
+      "tagline": "巅峰性能科技轿跑，1548匹马力三电机纽北战神。",
+      "description": "小米SU7 Ultra是小米汽车推出的巅峰性能量产车，搭载两台V8s超级电机与一台V6s电机，总功率达1,548马力。0-100 km/h加速1.98秒，最高时速超350 km/h。搭载宁德时代第二代麒麟高功率电池（5.2C高充放电倍率），全车标配赛道级碳纤维空气动力学套件与碳陶制动盘。",
+      "highlights": [
+        "1,548 hp 超级三电机全轮驱动",
+        "0-100 km/h 仅需 1.98 秒",
+        "宁德时代麒麟II赛道高倍率电池"
+      ],
+      "rangeKm": 630,
+      "rangeStandard": "CLTC",
+      "batteryKwh": 93.7,
+      "powerHp": 1548,
+      "torqueNm": 1770,
+      "topSpeedKph": 350,
+      "accelSec": 1.98,
+      "seats": 5,
+      "year": 2026,
+      "driveType": "AWD",
+      "chargeDcKw": 490,
+      "chargeAcKw": 11,
+      "chargeTime": "11分钟 10-80% (5.2C 超快充)",
+      "warranty": "整车质保5年/10万公里，三电质保8年/16万公里",
+      "variants": 1,
+      "variantNames": [
+        "Ultra 赛道量产版"
+      ],
+      "price": null,
+      "priceText": "¥814,900",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": true,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "tags": [
+        "小米",
+        "SU7 Ultra",
+        "纽北",
+        "三电机",
+        "超跑轿跑"
+      ],
+      "specs": [
+        {
+          "label": "制动系统",
+          "value": "Akebono 前六后四活塞碳陶瓷刹车盘 (100-0 km/h 制动 30.8米)"
+        },
+        {
+          "label": "下压力",
+          "value": "碳纤维固定大尾翼产生 285 kg 赛道下压力"
+        },
+        {
+          "label": "车机系统",
+          "value": "Xiaomi HyperOS 智能赛道座舱"
+        }
+      ],
+      "colors": [
+        "闪电黄",
+        "太空银",
+        "曜石黑"
+      ],
+      "image": "/gambar/mobil/cn-xiaomi-su7-ultra.webp",
+      "gallery": [],
+      "video": "https://www.youtube.com/watch?v=7uV8-yZ6Vlw",
+      "sumberUrl": "https://www.xiaomiev.com",
+      "updatedAt": "2026-10-24T08:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "cn-byd-yangwang-u9",
+      "kind": "mobil",
+      "brand": "Yangwang",
+      "name": "U9",
+      "bodyType": "Coupe",
+      "tagline": "比亚迪纯电超跑，1305匹马力与云辇-X全主动车身控制系统。",
+      "description": "仰望U9是比亚迪旗下百万级纯电性能超跑，基于易四方四电机平台打造，综合最大功率960 kW (1,305 hp)，峰值扭矩1,680 Nm。0-100 km/h加速仅2.36秒，极速达309 km/h。配备云辇-X智能全主动车身控制系统，支持原地跳跃与三轮平稳行驶。",
+      "highlights": [
+        "1,305 hp 四电机独立驱动",
+        "0-100 km/h 加速 2.36 秒",
+        "云辇-X 智能全主动车身系统"
+      ],
+      "rangeKm": 450,
+      "rangeStandard": "CLTC",
+      "batteryKwh": 80,
+      "powerHp": 1305,
+      "torqueNm": 1680,
+      "topSpeedKph": 309,
+      "accelSec": 2.36,
+      "seats": 2,
+      "year": 2026,
+      "driveType": "AWD",
+      "chargeDcKw": 500,
+      "chargeAcKw": 11,
+      "chargeTime": "双枪超充 10-80% 仅需10分钟",
+      "warranty": "整车质保6年/15万公里，首任车主三电终身质保",
+      "variants": 1,
+      "variantNames": [
+        "旗舰版"
+      ],
+      "price": null,
+      "priceText": "¥1,680,000",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": true,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "tags": [
+        "仰望",
+        "超跑",
+        "易四方",
+        "云辇-X"
+      ],
+      "specs": [
+        {
+          "label": "驱动平台",
+          "value": "易四方 e4 四电机独立驱动"
+        },
+        {
+          "label": "车身材质",
+          "value": "超级碳纤维单体壳座舱"
+        },
+        {
+          "label": "下压力",
+          "value": "全车综合最大下压力 280 kg"
+        }
+      ],
+      "colors": [
+        "赤霞丹朱",
+        "月曜银",
+        "阿盖尔紫"
+      ],
+      "image": "/gambar/mobil/cn-byd-yangwang-u9.webp",
+      "gallery": [],
+      "video": "https://www.youtube.com/watch?v=Fh3qW9u-y1Q",
+      "sumberUrl": "https://www.yangwangauto.com",
+      "updatedAt": "2026-10-24T08:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
       "id": "byd-atto-1",
       "kind": "mobil",
       "brand": "BYD",
@@ -3215,6 +3508,154 @@
     }
   ],
   "motors": [
+    {
+      "id": "yadea-gt80",
+      "kind": "motor",
+      "brand": "Yadea",
+      "name": "GT80",
+      "bodyType": "Skuter",
+      "tagline": "Maxi scooter listrik premium untuk touring dan komuter jarak jauh.",
+      "description": "Yadea GT80 adalah skutik maxi listrik bodi bongsor yang resmi diluncurkan Indomobil di Indonesia. Mengusung motor 3.000 Watt dengan opsi Dual Battery lithium EVE hingga 190 km, serta fitur TCS, Hill Hold Control, dan Digital Map Mirroring.",
+      "highlights": [
+        "Jarak tempuh hingga 190 km (Dual Battery)",
+        "Maxi scooter bodi gambot untuk touring",
+        "Fitur keselamatan TCS, Hill Hold & Cruise Control"
+      ],
+      "rangeKm": 190,
+      "rangeStandard": "WMTC",
+      "batteryKwh": 3.6,
+      "powerHp": 6.7,
+      "torqueNm": 120,
+      "topSpeedKph": 85,
+      "accelSec": null,
+      "seats": 2,
+      "year": 2026,
+      "driveType": "Hub motor",
+      "chargeDcKw": null,
+      "chargeAcKw": 0.8,
+      "chargeTime": "4-5 jam per baterai",
+      "warranty": "Garansi baterai & motor 3 tahun Indomobil",
+      "variants": 2,
+      "variantNames": [
+        "Single Battery 72V50Ah",
+        "Dual Battery 72V50Ah+30Ah"
+      ],
+      "price": 29800000,
+      "priceText": "Rp 29,8 jt",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": true,
+      "status": "published",
+      "wilayah": "id",
+      "tags": [
+        "Yadea",
+        "Indomobil",
+        "Maxi Scooter",
+        "Touring"
+      ],
+      "specs": [
+        {
+          "label": "Baterai",
+          "value": "EVE Lithium 72V (Opsional Dual Pack)"
+        },
+        {
+          "label": "Sistem Pengereman",
+          "value": "Front & Rear Disc with CBS"
+        },
+        {
+          "label": "Fitur Pintar",
+          "value": "TCS, HHC, HDC, Cruise Control, Reverse Mode"
+        }
+      ],
+      "colors": [
+        "Glossy Black",
+        "Royal Blue",
+        "Solo Gray",
+        "Electric Red"
+      ],
+      "image": "/gambar/motor/yadea-gt80.webp",
+      "gallery": [],
+      "video": "https://www.youtube.com/watch?v=Fj-v50tGvH8",
+      "sumberUrl": "https://yadea.id",
+      "updatedAt": "2026-10-24T08:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "omoway-omo-x",
+      "kind": "motor",
+      "brand": "Omoway",
+      "name": "OMO-X",
+      "bodyType": "Skuter",
+      "tagline": "Smart luxury electric motorcycle dengan fitur self-balancing.",
+      "description": "Omoway OMO-X adalah motor listrik pintar berteknologi tinggi di Indonesia, dilengkapi giroskop mandiri yang memungkinkannya berdiri seimbang tanpa standar. Ditenagai motor 13 kW (320 Nm) dengan baterai LiFePO4 hingga 7,6 kWh untuk jarak tempuh 200–260 km.",
+      "highlights": [
+        "Jarak tempuh hingga 200–260 km",
+        "Fitur Self-Balancing & Self-Parking",
+        "Suspensi Double Wishbone & Layar 10,25 inci"
+      ],
+      "rangeKm": 200,
+      "rangeStandard": "Klaim pabrikan",
+      "batteryKwh": 5.4,
+      "powerHp": 17.6,
+      "torqueNm": 320,
+      "topSpeedKph": 113,
+      "accelSec": 3.3,
+      "seats": 2,
+      "year": 2026,
+      "driveType": "Mid-drive",
+      "chargeDcKw": null,
+      "chargeAcKw": 1.5,
+      "chargeTime": "1-2 jam (Fast) / 6 jam (Standar)",
+      "warranty": "Garansi baterai 5 tahun",
+      "variants": 2,
+      "variantNames": [
+        "Smart 5.4 kWh",
+        "Balance Self-Righting 7.6 kWh"
+      ],
+      "price": 46900000,
+      "priceText": "Rp 46,9 jt",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": true,
+      "status": "published",
+      "wilayah": "id",
+      "publishAt": "",
+      "tags": [
+        "Omoway",
+        "Smart Motorcycle",
+        "Self Balancing",
+        "Skuter Mewah"
+      ],
+      "specs": [
+        {
+          "label": "Suspensi Depan",
+          "value": "Double wishbone independent"
+        },
+        {
+          "label": "Sistem Pengereman",
+          "value": "Dual Disc Brake + Full ABS + TCS"
+        },
+        {
+          "label": "Instrumen",
+          "value": "10.25 inci Full-Color Smart Screen"
+        }
+      ],
+      "colors": [
+        "Starlight Silver",
+        "Obsidian Black",
+        "Cyber White"
+      ],
+      "image": "/gambar/motor/omoway-omo-x.webp",
+      "gallery": [],
+      "video": "https://www.youtube.com/watch?v=Jm3f_zM2Nl8",
+      "sumberUrl": "https://apmotor.co.id",
+      "updatedAt": "2026-10-24T08:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
     {
       "id": "alva-cervo",
       "kind": "motor",
