@@ -3505,6 +3505,167 @@
       "sumberUrl": "",
       "updatedAt": "2026-10-14T16:20:28.394Z",
       "updatedBy": ""
+    },
+    {
+      "id": "us-porsche-taycan-turbo-gt",
+      "kind": "mobil",
+      "brand": "Porsche",
+      "name": "Taycan Turbo GT",
+      "bodyType": "Sedan",
+      "tagline": "Most powerful production Porsche EV.",
+      "description": "Porsche Taycan Turbo GT up to 1092 hp.",
+      "highlights": [
+        "1092 hp",
+        "0-60 mph 2.1s"
+      ],
+      "rangeKm": 475,
+      "rangeStandard": "EPA",
+      "batteryKwh": 105,
+      "powerHp": 1092,
+      "torqueNm": 1340,
+      "topSpeedKph": 305,
+      "accelSec": 2.1,
+      "seats": 2,
+      "year": 2025,
+      "driveType": "AWD",
+      "chargeDcKw": 320,
+      "chargeAcKw": 11,
+      "chargeTime": "10-80% ~18 min",
+      "warranty": "4 years/50k miles",
+      "variants": 1,
+      "variantNames": [
+        "Turbo GT Weissach"
+      ],
+      "price": 231995,
+      "priceText": "US,995",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": true,
+      "status": "published",
+      "wilayah": "us",
+      "tags": [
+        "Porsche",
+        "Taycan",
+        "Supercar"
+      ],
+      "specs": [],
+      "colors": [
+        "Ice Grey Metallic"
+      ],
+      "image": "/gambar/mobil/us-porsche-taycan-turbo-gt.webp",
+      "gallery": [],
+      "video": "",
+      "sumberUrl": "https://www.porsche.com/usa/",
+      "updatedAt": "2026-10-24T05:38:34.215Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "us-rimac-nevera",
+      "kind": "mobil",
+      "brand": "Rimac",
+      "name": "Nevera",
+      "bodyType": "Coupe",
+      "tagline": "Worlds fastest accelerating production car.",
+      "description": "Rimac Nevera 1914 hp hypercar sold in US.",
+      "highlights": [
+        "1914 hp",
+        "0-60 mph 1.74s"
+      ],
+      "rangeKm": 490,
+      "rangeStandard": "WLTP",
+      "batteryKwh": 120,
+      "powerHp": 1914,
+      "torqueNm": 2360,
+      "topSpeedKph": 415,
+      "accelSec": 1.74,
+      "seats": 2,
+      "year": 2025,
+      "driveType": "AWD",
+      "chargeDcKw": 500,
+      "chargeAcKw": 11,
+      "chargeTime": "19 min 10-80%",
+      "warranty": "3 years/unlimited",
+      "variants": 1,
+      "variantNames": [
+        "Nevera"
+      ],
+      "price": 2400000,
+      "priceText": "US,400,000",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": true,
+      "status": "published",
+      "wilayah": "us",
+      "tags": [
+        "Rimac",
+        "Nevera",
+        "Hypercar"
+      ],
+      "specs": [],
+      "colors": [
+        "Custom"
+      ],
+      "image": "/gambar/mobil/us-rimac-nevera.webp",
+      "gallery": [],
+      "video": "",
+      "sumberUrl": "https://www.rimac-automobili.com/nevera/",
+      "updatedAt": "2026-10-24T05:38:34.215Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "cn-nio-et9",
+      "kind": "mobil",
+      "brand": "NIO",
+      "name": "ET9",
+      "bodyType": "Sedan",
+      "tagline": "蔚来旗舰行政轿车",
+      "description": "蔚来ET9旗舰纯电轿车。",
+      "highlights": [
+        "900V平台"
+      ],
+      "rangeKm": 650,
+      "rangeStandard": "CLTC",
+      "batteryKwh": 100,
+      "powerHp": 707,
+      "torqueNm": null,
+      "topSpeedKph": 220,
+      "accelSec": 4.3,
+      "seats": 4,
+      "year": 2026,
+      "driveType": "AWD",
+      "chargeDcKw": 600,
+      "chargeAcKw": 11,
+      "chargeTime": "快充",
+      "warranty": "",
+      "variants": 1,
+      "variantNames": [
+        "首发版"
+      ],
+      "price": null,
+      "priceText": "¥788,000",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": true,
+      "featured": true,
+      "status": "published",
+      "wilayah": "cn",
+      "tags": [
+        "NIO",
+        "ET9"
+      ],
+      "specs": [],
+      "colors": [],
+      "image": "/gambar/mobil/cn-nio-et9.webp",
+      "gallery": [],
+      "video": "",
+      "sumberUrl": "https://www.nio.com",
+      "updatedAt": "2026-10-24T05:38:34.215Z",
+      "updatedBy": "Redaksi"
     }
   ],
   "motors": [
@@ -5168,6 +5329,132 @@
       "sumberUrl": "",
       "updatedAt": "2026-10-14T16:25:21.336Z",
       "updatedBy": ""
+    },
+    {
+      "id": "omoway-m1",
+      "kind": "motor",
+      "brand": "Omoway",
+      "name": "M1",
+      "bodyType": "Skuter",
+      "tagline": "Skuter listrik ringkas untuk komuter perkotaan.",
+      "description": "Omoway M1 skuter listrik kompak untuk mobilitas perkotaan.",
+      "highlights": [
+        "Ringkas dan lincah",
+        "Pengisian praktis"
+      ],
+      "rangeKm": 80,
+      "rangeStandard": "Klaim pabrikan",
+      "batteryKwh": 2.7,
+      "powerHp": 4.8,
+      "torqueNm": 85,
+      "topSpeedKph": 70,
+      "accelSec": null,
+      "seats": 2,
+      "year": 2026,
+      "driveType": "Hub motor",
+      "chargeDcKw": null,
+      "chargeAcKw": 0.6,
+      "chargeTime": "4-5 jam",
+      "warranty": "Garansi baterai & motor",
+      "variants": 1,
+      "variantNames": [
+        "Standard"
+      ],
+      "price": 19900000,
+      "priceText": "Rp 19,9 jt",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": false,
+      "status": "published",
+      "wilayah": "id",
+      "tags": [
+        "Omoway",
+        "Skuter",
+        "Kota"
+      ],
+      "specs": [
+        {
+          "label": "Baterai",
+          "value": "Lithium-ion"
+        },
+        {
+          "label": "Pengereman",
+          "value": "Disc Brake"
+        }
+      ],
+      "colors": [
+        "Matte Black",
+        "Pearl White"
+      ],
+      "image": "/gambar/motor/omoway-m1.webp",
+      "gallery": [],
+      "video": "",
+      "sumberUrl": "https://apmotor.co.id",
+      "updatedAt": "2026-10-24T05:38:34.214Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "yadea-oris",
+      "kind": "motor",
+      "brand": "Yadea",
+      "name": "Oris",
+      "bodyType": "Skuter",
+      "tagline": "Skuter listrik stylish untuk komuter.",
+      "description": "Yadea Oris hadir di Indonesia via Indomobil.",
+      "highlights": [
+        "Desain elegan",
+        "Komuter ideal"
+      ],
+      "rangeKm": 110,
+      "rangeStandard": "WMTC",
+      "batteryKwh": 2.88,
+      "powerHp": 4.5,
+      "torqueNm": 95,
+      "topSpeedKph": 65,
+      "accelSec": null,
+      "seats": 2,
+      "year": 2026,
+      "driveType": "Hub motor",
+      "chargeDcKw": null,
+      "chargeAcKw": 0.6,
+      "chargeTime": "4-5 jam",
+      "warranty": "Garansi 3 tahun Indomobil",
+      "variants": 1,
+      "variantNames": [
+        "Standard"
+      ],
+      "price": 22900000,
+      "priceText": "Rp 22,9 jt",
+      "penjualan2026": null,
+      "penjualanBulan": "",
+      "stale": false,
+      "perluCek": false,
+      "featured": false,
+      "status": "published",
+      "wilayah": "id",
+      "tags": [
+        "Yadea",
+        "Indomobil",
+        "Skuter"
+      ],
+      "specs": [
+        {
+          "label": "Baterai",
+          "value": "Lithium-ion"
+        }
+      ],
+      "colors": [
+        "Ivory White",
+        "Midnight Black"
+      ],
+      "image": "/gambar/motor/yadea-oris.webp",
+      "gallery": [],
+      "video": "",
+      "sumberUrl": "https://yadea.id",
+      "updatedAt": "2026-10-24T05:38:34.215Z",
+      "updatedBy": "Redaksi"
     }
   ],
   "spklu": [
