@@ -64,6 +64,15 @@ export const TOPIK_PANDUAN = [
   "memilih motor listrik untuk harian",
   "memilih mobil listrik untuk keluarga",
   "kesalahan umum pemilik EV baru",
+  /* Topik baru 2026 — lebih spesifik, sesuai pertanyaan terkini pengguna EV */
+  "panduan servis dan bengkel resmi kendaraan listrik di Indonesia",
+  "perbandingan SPKLU umum vs wallbox rumah: mana lebih hemat?",
+  "tips berkendara EV di musim hujan dan jalanan banjir",
+  "subsidi dan insentif pembelian kendaraan listrik di Indonesia 2026",
+  "mengenal tipe konektor pengisian: CCS2, AC Type 2, CHAdeMO, dan GB/T",
+  "cara membaca brosur spesifikasi EV: jangan tertipu angka klaim pabrik",
+  "panduan pindah dari motor bensin ke motor listrik",
+  "daftar SPKLU di rest area tol dan cara menemukannya lewat aplikasi",
 ];
 
 /**
@@ -78,6 +87,15 @@ export const TOPIK_PANDUAN_US = [
   "choosing an electric motorcycle for commuting",
   "choosing an electric car for families",
   "common mistakes new EV owners make",
+  /* New 2026 topics covering current US EV owner concerns */
+  "finding EV service centers and certified repair shops in the US",
+  "home charging vs public charging: total cost comparison",
+  "driving an EV in extreme weather: heat, cold, and storms",
+  "federal and state EV incentives in 2026: what you can still claim",
+  "understanding charging connectors: NACS, CCS, CHAdeMO — what fits your car",
+  "how to read an EV window sticker: MPGe, range, and what it really means",
+  "switching from gas to electric: a complete first-year guide",
+  "finding fast chargers on US highway road trips",
 ];
 
 /**
@@ -92,6 +110,15 @@ export const TOPIK_PANDUAN_CN = [
   "如何选择日常通勤电动车",
   "如何为家庭选择电动汽车",
   "新手车主常见误区",
+  /* 2026年新话题 — 更贴近中国新能源车主的日常需求 */
+  "中国新能源汽车售后服务与维修保养指南",
+  "超充桩vs家用充电桩：哪种更省钱？",
+  "雨季和洪涝路段开电动车的注意事项",
+  "2026年新能源汽车购车补贴与免购置税政策解读",
+  "认识充电接口标准：GB/T、CCS2、超充接口有什么区别",
+  "如何看懂新能源汽车的参数表：CLTC续航别被虚标误导",
+  "从燃油车换到新能源车：第一年需要了解的一切",
+  "高速公路服务区快充桩怎么找、怎么用",
 ];
 
 export interface TopikArtikel {

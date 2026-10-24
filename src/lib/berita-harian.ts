@@ -24,11 +24,14 @@ import { gabungBerita, parseFeed, urlKunci } from "./berita-rss.js";
  */
 
 const JADWAL = path.resolve(process.cwd(), "data/berita-jadwal.json");
-/** Batas kewajaran jumlah kartu di Berita Terkini. */
-const MAKS_BERITA = 30;
-/** Edisi Amerika baru seumur jagung — 10 kartu cukup, Indonesia tetap 30. */
-const MAKS_BERITA_US = 10;
+/** Batas kewajaran jumlah kartu di Berita Terkini Indonesia.
+ *  Dinaikkan ke 50 karena sumber bertambah dari 4 menjadi 7 (Oktober 2026). */
+const MAKS_BERITA = 50;
+/** Edisi Amerika dan China kini punya masing-masing 4 dan 3 sumber —
+ *  dinaikkan ke 20 agar tiap sumber punya jatah yang adil. */
+const MAKS_BERITA_US = 20;
 const UA = "Mozilla/5.0 (compatible; EVKitaBot/1.0; +https://evkita.com)";
+
 
 /** Tanggal menurut WIB, bukan zona waktu server (produksi berjalan di UTC). */
 export function tanggalWib(d: Date = new Date()): string {

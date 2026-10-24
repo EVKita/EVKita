@@ -23,12 +23,20 @@ registerHooks({
     const relative = specifier.startsWith("./") || specifier.startsWith("../");
     const hasExtension = /\.[cm]?[jt]sx?$/.test(specifier);
 
-    if (relative && !hasExtension && context.parentURL?.startsWith("file:")) {
+    if (relative && context.parentURL?.startsWith("file:")) {
       const base = path.resolve(path.dirname(fileURLToPath(context.parentURL)), specifier);
-      for (const ext of CANDIDATES) {
-        const candidate = base + ext;
-        if (fs.existsSync(candidate)) {
-          return { url: pathToFileURL(candidate).href, shortCircuit: true };
+      if (specifier.endsWith(".js")) {
+        const tsCandidate = base.slice(0, -3) + ".ts";
+        if (!fs.existsSync(base) && fs.existsSync(tsCandidate)) {
+          return { url: pathToFileURL(tsCandidate).href, shortCircuit: true };
+        }
+      }
+      if (!hasExtension) {
+        for (const ext of CANDIDATES) {
+          const candidate = base + ext;
+          if (fs.existsSync(candidate)) {
+            return { url: pathToFileURL(candidate).href, shortCircuit: true };
+          }
         }
       }
     }

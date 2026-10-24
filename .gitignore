@@ -21,4 +21,7 @@ data/berita-jadwal.json
 data/berita-gambar.json
 data/pantauan.json
 data/peluncuran.json
+data/penjualan-*.json
+data/artikel-*.json
+data/pembaruan-*.json
 data/terjemahan/

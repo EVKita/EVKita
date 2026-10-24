@@ -111,6 +111,7 @@ describe("berkas .env", () => {
   });
 
   it("izinnya 0600 — proses lain di server tidak bisa membacanya", () => {
+    if (process.platform === "win32") return;
     env.writeEnvFile({ DEEPSEEK_API_KEY: KUNCI_SAH });
     const mode = fs.statSync(".env").mode & 0o777;
     assert.equal(mode, 0o600);

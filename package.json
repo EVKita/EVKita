@@ -10,7 +10,11 @@
     "start": "node ./dist/server/entry.mjs",
     "i18n:check": "node tools/i18n-check.mjs",
     "test": "node --import ./tools/ts-resolver.mjs --test \"tests/**/*.test.ts\"",
-    "check": "npm run i18n:check && npm test"
+    "check": "npm run i18n:check && npm test",
+    "update:paksa": "node --import ./tools/ts-resolver.mjs tools/force-update.mjs",
+    "update:berita": "node --import ./tools/ts-resolver.mjs tools/force-update.mjs berita",
+    "update:artikel": "node --import ./tools/ts-resolver.mjs tools/force-update.mjs artikel",
+    "update:katalog": "node --import ./tools/ts-resolver.mjs tools/force-update.mjs katalog"
   },
   "dependencies": {
     "@astrojs/node": "^9.1.0",
