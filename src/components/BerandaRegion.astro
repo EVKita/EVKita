@@ -39,8 +39,8 @@ const { content, site, lang, t, region, base = "" }: Props = Astro.props;
  * boleh menampilkannya, termasuk di baris unggulan maupun data katalog yang
  * disuntik ke klien.
  */
-const cars = filterWilayah(content.cars, region).filter(hanyaTayang());
-const motors = site.showMotor ? filterWilayah(content.motors, region).filter(hanyaTayang()) : [];
+const cars = filterWilayah(content.cars, region).filter(hanyaTayang()).filter((v: any) => String(v?.kind || "mobil") !== "motor");
+const motors = site.showMotor ? filterWilayah(content.motors, region).filter(hanyaTayang()).filter((v: any) => String(v?.kind || "motor") === "motor") : [];
 /* Direktori ikut disaring sejak versi ini. Sebelumnya SPKLU, bengkel, dan
    berita langsung tayang begitu tombol Simpan ditekan — tidak ada cara
    menyiapkan sepuluh entri lalu menayangkannya sekaligus, dan tidak ada cara
@@ -234,6 +234,7 @@ function nomorMinggu(): number {
 }
 const grupBodi: Record<string, any[]> = {};
 for (const c of defaultSort(cars)) {
+  if (c && c.id === "cn-nio-et9") continue;
   const k = String((c && c.bodyType) || "").trim();
   if (!k) continue;
   (grupBodi[k] = grupBodi[k] || []).push(c);
