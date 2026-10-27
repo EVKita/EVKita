@@ -19,12 +19,37 @@ export const GET: APIRoute = ({ url }) => {
    */
   const perayap = [
     "*",
+    // Mesin pencari tradisional
+    "Googlebot",
+    "Bingbot",
     "Baiduspider",
     "Baiduspider-render",
     "360Spider",
     "Sogou",
-    "Bytespider",
     "Yisouspider",
+    // AI / Generative Engine crawlers (GEO): 10+ mesin AI favorit per regional
+    "GPTBot",
+    "ChatGPT-User",
+    "OAI-SearchBot",
+    "ClaudeBot",
+    "Claude-Web",
+    "anthropic-ai",
+    "PerplexityBot",
+    "Perplexity-User",
+    "Google-Extended",
+    "Gemini",
+    "Copilot",
+    "BingPreview",
+    "YouBot",
+    "Meta-ExternalAgent",
+    "FacebookBot",
+    "Applebot-Extended",
+    "Amazonbot",
+    "cohere-ai",
+    "Diffbot",
+    "DuckAssistBot",
+    "MistralAI-User",
+    "Bytespider",
   ];
 
   const blok = perayap
@@ -43,7 +68,7 @@ export const GET: APIRoute = ({ url }) => {
     )
     .join("\n");
 
-  const body = `${blok}Sitemap: ${origin}/sitemap.xml\n`;
+  const body = `${blok}# GEO: ringkasan untuk mesin AI generatif\n# LLMs-Txt: ${origin}/llms.txt\nSitemap: ${origin}/sitemap.xml\n`;
 
   return new Response(body, {
     status: 200,
