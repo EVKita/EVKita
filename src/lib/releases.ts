@@ -9,7 +9,7 @@ export interface Release {
   assets: { name: string; browser_download_url: string }[];
 }
 
-const TTL = 5 * 60 * 1000;
+const TTL = 60 * 1000;
 
 /**
  * Cache di level modul, bukan di dalam frontmatter halaman: kode frontmatter
