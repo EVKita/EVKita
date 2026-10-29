@@ -244,6 +244,17 @@ const jsonLd =
             ))}
           </div>
         ) : null}
+
+        <section class="artikel-bagikan" aria-label={t("pub.detail.share")}>
+          <span class="artikel-bagikan-label">{t("pub.detail.share")}</span>
+          <div class="artikel-bagikan-tombol">
+            <a class="btn-share" href={`https://wa.me/?text=${encodeURIComponent(pageTitle + " " + canonicalUrl(Astro.url))}`} target="_blank" rel="noopener" aria-label="WhatsApp">WhatsApp</a>
+            <a class="btn-share" href={`https://t.me/share/url?url=${encodeURIComponent(canonicalUrl(Astro.url))}&text=${encodeURIComponent(pageTitle)}`} target="_blank" rel="noopener" aria-label="Telegram">Telegram</a>
+            <a class="btn-share" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(canonicalUrl(Astro.url))}&text=${encodeURIComponent(pageTitle)}`} target="_blank" rel="noopener" aria-label="X">X</a>
+            <a class="btn-share" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrl(Astro.url))}`} target="_blank" rel="noopener" aria-label="Facebook">Facebook</a>
+            <button type="button" class="btn-share" data-copy={canonicalUrl(Astro.url)}>{t("pub.detail.share")}</button>
+          </div>
+        </section>
       </article>
 
       {lainnya.length ? (
@@ -264,7 +275,38 @@ const jsonLd =
     </main>
   )}
 
+  <style>
+    .artikel-bagikan { margin: 1.5rem 0; padding: 1rem 0; border-top: 1px solid var(--border, #e5e7eb); border-bottom: 1px solid var(--border, #e5e7eb); }
+    .artikel-bagikan-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--muted-foreground, #6b7280); }
+    .artikel-bagikan-tombol { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .btn-share { display: inline-flex; align-items: center; padding: 0.4rem 0.85rem; border: 1px solid var(--border, #e5e7eb); border-radius: 999px; font-size: 0.85rem; text-decoration: none; color: var(--foreground, #111); background: var(--card, #fff); cursor: pointer; }
+    .btn-share:hover { background: var(--secondary, #f3f4f6); }
+  </style>
+
   <SiteFooter site={site} base="/" />
+
+  <script is:inline>
+    (function () {
+      var btns = document.querySelectorAll("[data-copy]");
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].addEventListener("click", function () {
+          var url = this.getAttribute("data-copy");
+          if (!url) return;
+          var done = function () { this.textContent = "✓"; var b = this; setTimeout(function () { b.textContent = b.getAttribute("data-label") || "Salin"; }, 1500); }.bind(this);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(done).catch(function () {});
+          } else {
+            var ta = document.createElement("textarea");
+            ta.value = url;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); done(); } catch (e) {}
+            document.body.removeChild(ta);
+          }
+        });
+      }
+    })();
+  </script>
 
   {/* Bilah pratinjau menempel di tepi BAWAH dan karena itu harus jadi elemen
       terakhir — alasan lengkapnya ada di VehicleDetail.astro. */}
