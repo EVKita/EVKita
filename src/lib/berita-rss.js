@@ -176,6 +176,50 @@ export function beritaDijaga(b) {
 }
 
 /**
+ * Umur maksimal berita hasil tarikan yang dipertahankan: dua bulan.
+ *
+ * Batas ini menjaga Berita Terkini tetap "terkini" — tanpa tanggal, daftar
+ * yang penuh karena batas jumlah bisa menyimpan kabar berbulan-bulan lalu dan
+ * mencampurnya dengan kabar hari ini. Berita yang ditambahkan/disunting
+ * redaksi (`beritaDijaga`) tidak ikut dipangkas: itu tulisan manusia, bukan
+ * hasil tarikan yang bisa diambil ulang besok.
+ */
+export const UMUR_BERITA_HARI = 60;
+
+/** Satu hari dalam milidetik, dipakai perhitungan umur berita. */
+const HARI_MS = 24 * 3600 * 1000;
+
+/**
+ * Membuang berita tarikan yang lebih tua dari `maksHari`.
+ *
+ * Tanggal yang tidak terbaca TIDAK dibuang: lebih aman menampilkan baris tanpa
+ * tanggal daripada menghapus berita yang mungkin baru. Baris redaksi, draf,
+ * jadwal tayang, dan unggulan selalu dipertahankan dengan alasan yang sama
+ * seperti `gabungBerita()`.
+ *
+ * Murni (tanpa Node) supaya aturannya bisa diuji langsung.
+ */
+export function pangkasBeritaLama(daftar, sekarang = Date.now(), maksHari = UMUR_BERITA_HARI) {
+  const batas = sekarang - Math.max(1, Number(maksHari) || UMUR_BERITA_HARI) * HARI_MS;
+  const simpan = [];
+  let dipangkas = 0;
+  for (const b of Array.isArray(daftar) ? daftar : []) {
+    if (!b) continue;
+    if (beritaDijaga(b)) {
+      simpan.push(b);
+      continue;
+    }
+    const t = Date.parse(String(b.date || b.updatedAt || ""));
+    if (Number.isFinite(t) && t < batas) {
+      dipangkas++;
+      continue;
+    }
+    simpan.push(b);
+  }
+  return { daftar: simpan, dipangkas };
+}
+
+/**
  * Menggabungkan berita baru ke daftar lama.
  *
  * Berita dianggap sama kalau alamatnya sama, bukan kalau judulnya sama: satu

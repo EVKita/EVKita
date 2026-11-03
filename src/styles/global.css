@@ -6028,6 +6028,8 @@ a.pager-arrow:hover {
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
 }
 
 /* Kotak sumber. Sengaja tampil sebagai bagian penutup yang tenang, bukan

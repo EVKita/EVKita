@@ -137,7 +137,7 @@ const jsonLd = {
 >
   {!tutup ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base={(region === "id" ? "/" : region === "us" ? "/amerika" : "/china")} active="" region={region} artikel="/artikel" />
+  <SiteHeader site={site} base={(region === "id" ? "/" : region === "us" ? "/amerika" : "/china")} active="" region={region} artikel={region === "id" ? "/artikel" : `/artikel?region=${region}`} />
 
   {tutup ? (
     <main class="container notfound" id="konten">

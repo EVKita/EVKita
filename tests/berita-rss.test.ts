@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseFeed, gabungBerita, urlKunci, tanggalIso } from "../src/lib/berita-rss.js";
+import { parseFeed, gabungBerita, pangkasBeritaLama, UMUR_BERITA_HARI, urlKunci, tanggalIso } from "../src/lib/berita-rss.js";
 import { relevanBerita, judulBersih, SUMBER_BERITA } from "../src/lib/berita-sumber.js";
 
 const RSS = `<?xml version="1.0"?>
@@ -174,5 +174,54 @@ describe("gabungBerita", () => {
     const { daftar } = gabungBerita(manual, rss, 6);
     assert.equal(daftar.filter((b) => b.url.startsWith("https://rss.test/")).length, 3);
     assert.equal(daftar.filter((b) => b.url.startsWith("https://redaksi.test/")).length, 8);
+  });
+});
+
+describe("pangkasBeritaLama", () => {
+  /* 4 November 2026, 06.00 WIB — tanggal yang sama dengan sesi ini. */
+  const SEKARANG = Date.parse("2026-11-04T06:00:00+07:00");
+
+  it("membuang berita tarikan yang lebih tua dari dua bulan", () => {
+    const { daftar, dipangkas } = pangkasBeritaLama(
+      [
+        { url: "https://a.test/baru", date: "2026-11-03" },
+        { url: "https://a.test/lama", date: "2026-09-01" },
+      ],
+      SEKARANG
+    );
+    assert.equal(dipangkas, 1);
+    assert.deepEqual(daftar.map((b) => b.url), ["https://a.test/baru"]);
+  });
+
+  it("mempertahankan berita yang masih di dalam batas dua bulan", () => {
+    const { daftar, dipangkas } = pangkasBeritaLama(
+      [{ url: "https://a.test/batas", date: "2026-09-05" }],
+      SEKARANG
+    );
+    assert.equal(dipangkas, 0);
+    assert.equal(daftar.length, 1);
+  });
+
+  it("tidak membuang berita redaksi, unggulan, draf, atau yang dijadwalkan", () => {
+    const lama = "2026-01-01";
+    const daftar = [
+      { url: "https://redaksi.test/1", date: lama, updatedBy: "Ed" },
+      { url: "https://redaksi.test/2", date: lama, featured: true },
+      { url: "https://redaksi.test/3", date: lama, status: "draft" },
+      { url: "https://redaksi.test/4", date: lama, publishAt: "2026-12-01T00:00:00Z" },
+    ];
+    const hasil = pangkasBeritaLama(daftar, SEKARANG);
+    assert.equal(hasil.dipangkas, 0);
+    assert.equal(hasil.daftar.length, 4);
+  });
+
+  it("tidak membuang baris tanpa tanggal yang terbaca", () => {
+    const hasil = pangkasBeritaLama([{ url: "https://a.test/tanpa-tanggal" }], SEKARANG);
+    assert.equal(hasil.dipangkas, 0);
+    assert.equal(hasil.daftar.length, 1);
+  });
+
+  it("memakai 60 hari sebagai bawaan", () => {
+    assert.equal(UMUR_BERITA_HARI, 60);
   });
 });

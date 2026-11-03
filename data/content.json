@@ -1,5 +1,5 @@
 {
-  "revision": "mw1bip3i-6d04e022",
+  "revision": "mw1bkqum-3a8154de",
   "site": {
     "brandText": "EVKita",
     "brandSuffix": ".com",
@@ -8448,6 +8448,71 @@
       "publishAt": "",
       "updatedAt": "2026-11-01T05:55:13.511Z",
       "updatedBy": ""
+    },
+    {
+      "id": "us-reddit-evcharging",
+      "name": "r/EVcharging (Reddit)",
+      "source": "Reddit",
+      "url": "https://www.reddit.com/r/EVcharging/",
+      "note": "Komunitas global pengguna EV dengan banyak diskusi soal charging, road trip, dan tips praktis.",
+      "featured": false,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:36.907Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "us-f150-lightning-forum",
+      "name": "F-150 Lightning Forum",
+      "source": "F150LightningForum.com",
+      "url": "https://www.f150lightningforum.com/",
+      "note": "Forum khusus pemilik Ford F-150 Lightning: pengalaman, charging, dan modifikasi.",
+      "featured": false,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:36.907Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-dongchedi-ev",
+      "name": "懂车帝 新能源",
+      "source": "Dongchedi",
+      "url": "https://www.dongchedi.com/",
+      "note": "Platform otomotif Tiongkok dengan komunitas NEV aktif dan ulasan mendalam.",
+      "featured": false,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:36.907Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-xpeng-bbs",
+      "name": "小鹏汽车社区",
+      "source": "XPeng",
+      "url": "https://bbs.xiaopeng.com/",
+      "note": "Komunitas resmi pemilik XPeng: tips, OTA, dan pengalaman penggunaan.",
+      "featured": false,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:36.907Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-lixiang-club",
+      "name": "理想汽车社区",
+      "source": "Li Auto",
+      "url": "https://www.lixiang.com/",
+      "note": "Komunitas pemilik Li Auto (L-series) dengan diskusi EREV dan charging.",
+      "featured": false,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:36.907Z",
+      "updatedBy": ""
     }
   ],
   "halaman": [
@@ -9082,7 +9147,7 @@
         }
       ],
       "wilayah": "id",
-      "image": "/gambar/mobil/byd-atto-1.webp",
+      "image": "/gambar/spklu/pertamina.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9184,7 +9249,7 @@
         }
       ],
       "wilayah": "id",
-      "image": "/gambar/mobil/byd-atto-1.webp",
+      "image": "/gambar/spklu/starvo.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9218,7 +9283,7 @@
         }
       ],
       "wilayah": "id",
-      "image": "/gambar/mobil/byd-atto-3.webp",
+      "image": "/gambar/mobil/byd-sealion-7.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9286,7 +9351,7 @@
         }
       ],
       "wilayah": "us",
-      "image": "/gambar/mobil/us-tesla-model-s-plaid.webp",
+      "image": "/gambar/spklu/us-chargepoint.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9320,7 +9385,7 @@
         }
       ],
       "wilayah": "id",
-      "image": "/gambar/mobil/byd-atto-1.webp",
+      "image": "/gambar/spklu/pln-charge-in.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9354,7 +9419,7 @@
         }
       ],
       "wilayah": "id",
-      "image": "/gambar/mobil/byd-atto-3.webp",
+      "image": "/gambar/bengkel/alva-experience-center.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9422,7 +9487,7 @@
         }
       ],
       "wilayah": "cn",
-      "image": "/gambar/mobil/cn-xiaomi-su7-ultra.webp",
+      "image": "/gambar/spklu/cn-nio-power.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9456,7 +9521,7 @@
         }
       ],
       "wilayah": "us",
-      "image": "/gambar/mobil/us-lucid-air-sapphire.webp",
+      "image": "/gambar/mobil/us-lucid-air.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9490,7 +9555,7 @@
         }
       ],
       "wilayah": "us",
-      "image": "/gambar/mobil/us-tesla-model-s-plaid.webp",
+      "image": "/gambar/spklu/us-electrify-america.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -9524,7 +9589,7 @@
         }
       ],
       "wilayah": "id",
-      "image": "/gambar/mobil/byd-atto-1.webp",
+      "image": "/gambar/spklu/pln-charge-in.webp",
       "seoTitle": "",
       "keywords": "",
       "noindex": false,
@@ -10145,7 +10210,7 @@
         }
       ],
       "wilayah": "us",
-      "image": "https://www.kia.com/content/dam/kia/us/en/vehicles/ev9/2026/in-page-gallery/my26-ev9-mep-gallery-01.jpg",
+      "image": "/gambar/mobil/us-hyundai-ioniq-5.webp",
       "seoTitle": "",
       "keywords": "membeli mobil listrik Amerika, harga EV Amerika, kredit pajak EV",
       "noindex": false,
@@ -10190,7 +10255,7 @@
         }
       ],
       "wilayah": "cn",
-      "image": "https://gascloud.gasgoo.com/production/2026/08/f5dd8d88-3b34-41e6-8bff-4a408a2fb2d3-1786619643.png",
+      "image": "/gambar/mobil/cn-byd-seal.webp",
       "seoTitle": "",
       "keywords": "membeli mobil listrik China, harga EV China, charging China",
       "noindex": false,
@@ -10201,6 +10266,240 @@
       "status": "published",
       "publishAt": "",
       "updatedAt": "2026-10-12T00:00:00.000Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "biaya-pengisian-ev-indonesia-rumah-spklu-2026-11-04",
+      "title": "Biaya Pengisian EV di Indonesia 2026: Rumah vs SPKLU vs DC Fast Charging",
+      "slug": "biaya-pengisian-ev-indonesia-rumah-spklu-2026-11-04",
+      "excerpt": "Perbandingan biaya pengisian mobil listrik di Indonesia 2026 antara rumah, SPKLU PLN, dan DC fast charging, lengkap dengan contoh hitungan dan tips hemat.",
+      "body": "## Ringkasan\n\nBiaya pengisian adalah salah satu pertimbangan terbesar saat membeli EV. Di Indonesia, pilihan pengisian terbagi tiga: di rumah, di SPKLU PLN, dan di DC fast charging. Artikel ini merangkum biaya masing-masing dan kapan sebaiknya dipakai.\n\n## 1. Pengisian di Rumah\n\nPengisian di rumah biasanya paling murah per kWh karena memakai tarif listrik PLN rumah. Untuk pelanggan R1 (daya 1300–2200 VA), tarif berkisar belasan ribu rupiah per kWh; untuk R2/R3 lebih tinggi tetapi tetap kompetitif.\n\nContoh: mobil dengan baterai 50 kWh yang diisi dari 20% ke 100% (40 kWh) di rumah dengan tarif Rp1.600/kWh membutuhkan sekitar Rp64.000. Itu setara jarak tempuh 250–300 km.\n\n## 2. SPKLU PLN (AC)\n\nSPKLU publik PLN Charge.in umumnya memakai tarif per kWh yang sedikit lebih tinggi dari listrik rumah. Cocok untuk pengisian saat bepergian jarak jauh atau saat tidak sempat mengisi di rumah.\n\n## 3. DC Fast Charging\n\nDC fast charging (50–150 kW) memangkas waktu pengisian drastis (20–80% dalam 20–40 menit) tetapi tarifnya paling tinggi per kWh. Gunakan hanya saat dibutuhkan: perjalanan jauh, jadwal padat, atau darurat.\n\n## 4. Perbandingan Ringkas\n\n| Metode | Waktu 20→80% | Biaya relatif | Cocok untuk |\n|---|---|---|---|\n| Rumah (AC 7 kW) | 6–8 jam | Paling murah | Harian |\n| SPKLU (AC) | 3–5 jam | Sedang | Saat bepergian |\n| DC fast | 20–40 menit | Paling mahal | Perjalanan jauh |\n\n## 5. Tips Hemat\n\n- Isi di rumah malam hari saat tarif lebih rendah (jika tarif TOU berlaku).\n- Batasi pengisian harian ke 80% untuk menjaga kesehatan baterai dan menghemat biaya.\n- Pakai aplikasi PLN Mobile / Charge.in untuk melihat tarif dan ketersediaan SPKLU.\n- Hindari DC fast charging harian; simpan untuk perjalanan.\n\n## Kesimpulan\n\nUntuk pemakaian harian, pengisian di rumah adalah pilihan paling ekonomis. SPKLU publik dan DC fast charging melengkapi kebutuhan perjalanan. Kombinasikan ketiganya sesuai pola berkendara Anda.",
+      "author": "EVKita",
+      "category": "Panduan",
+      "tags": [
+        "biaya",
+        "pengisian",
+        "SPKLU",
+        "Indonesia",
+        "hemat"
+      ],
+      "sources": [
+        {
+          "label": "PLN — Layanan SPKLU",
+          "url": "https://layanan.pln.co.id/partnership-spklu"
+        },
+        {
+          "label": "PLN",
+          "url": "https://www.pln.co.id/"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/spklu/pln-charge-in.webp",
+      "seoTitle": "Biaya Pengisian EV Indonesia 2026",
+      "keywords": "biaya pengisian ev indonesia, tarif spklu, charge di rumah, dc fast charging",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:17.249Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "tips-merawat-baterai-ev-musim-hujan-2026-11-04",
+      "title": "Tips Merawat Baterai EV di Musim Hujan Indonesia 2026",
+      "slug": "tips-merawat-baterai-ev-musim-hujan-2026-11-04",
+      "excerpt": "Panduan perawatan baterai mobil listrik saat musim hujan: pengisian, penyimpanan, dan kebiasaan berkendara yang menjaga kesehatan baterai.",
+      "body": "## Ringkasan\n\nMusim hujan di Indonesia membawa kelembapan tinggi, genangan, dan suhu yang berubah-ubah. Semua itu memengaruhi baterai EV. Artikel ini merangkum kebiasaan sederhana yang menjaga kesehatan baterai.\n\n## 1. Jangan Biarkan Baterai Terlalu Rendah\n\nBaterai lithium-ion paling nyaman di kisaran 20–80%. Di musim hujan, perjalanan bisa lebih jauh karena macet dan AC bekerja keras. Rencanakan pengisian sebelum baterai di bawah 20%.\n\n## 2. Hindari Pengisian Saat Kendaraan Basah Kuyup\n\nSetelah melewati genangan, biarkan kendaraan mengering sebelum disambungkan ke charger. Konektor dan port pengisian dirancang tahan air, tetapi kebiasaan ini mengurangi risiko.\n\n## 3. Gunakan Fitur Preconditioning\n\nBanyak EV modern punya fitur preconditioning baterai sebelum pengisian cepat. Aktifkan saat cuaca dingin atau saat akan DC fast charging agar pengisian lebih efisien dan aman.\n\n## 4. Periksa Segel dan Drainase\n\nPastikan karet pintu, bagasi, dan penutup port pengisian dalam kondisi baik. Bersihkan daun dan kotoran yang menyumbat drainase agar air tidak menggenang.\n\n## 5. Penyimpanan Jangka Panjang\n\nJika kendaraan tidak dipakai beberapa hari saat banjir, simpan dengan SOC sekitar 50% di tempat kering dan berventilasi. Hindari menyimpan dalam keadaan penuh atau kosong.\n\n## Kesimpulan\n\nPerawatan baterai di musim hujan bukan hal rumit: jaga SOC di kisaran sehat, hindari pengisian saat basah kuyup, dan periksa segel. Dengan kebiasaan ini, baterai EV tetap awet meski cuaca tidak bersahabat.",
+      "author": "EVKita",
+      "category": "Tips",
+      "tags": [
+        "baterai",
+        "musim hujan",
+        "perawatan",
+        "Indonesia"
+      ],
+      "sources": [
+        {
+          "label": "PLN",
+          "url": "https://www.pln.co.id/"
+        },
+        {
+          "label": "ESDM",
+          "url": "https://www.esdm.go.id/"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/byd-atto-3.webp",
+      "seoTitle": "Merawat Baterai EV Musim Hujan 2026",
+      "keywords": "merawat baterai ev musim hujan, tips ev indonesia, kesehatan baterai listrik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:17.249Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "dc-fast-charging-usa-nacs-ccs-2026-11-04",
+      "title": "DC Fast Charging in the U.S. 2026: NACS, CCS, and What Drivers Should Know",
+      "slug": "dc-fast-charging-usa-nacs-ccs-2026-11-04",
+      "excerpt": "A practical guide to DC fast charging in America in 2026: connector standards (NACS vs CCS), major networks, pricing, and tips for road trips.",
+      "body": "## Summary\n\nDC fast charging is the backbone of long-distance EV travel in the U.S. In 2026, the landscape is shifting fast as NACS (Tesla's connector) becomes the North American standard. This guide explains what changed and how to plan.\n\n## 1. Connector Standards\n\n- **NACS (SAE J3400)**: Now the North American standard. Most new EVs ship with NACS ports or adapters.\n- **CCS1**: Still common on older EVs and many non-Tesla stations. Adapters let CCS cars use NACS stations and vice versa.\n\n## 2. Major Networks\n\n- **Tesla Supercharger**: Largest and most reliable; increasingly open to non-Tesla via NACS.\n- **Electrify America**: CCS-focused, expanding NACS.\n- **ChargePoint, EVgo, EV Connect**: Mixed connector support; check app before visiting.\n\n## 3. Pricing\n\nDC fast charging typically costs more per kWh than home charging. Prices vary by state, network, and time of day. Some networks charge per minute; others per kWh. Use PlugShare or A Better Routeplanner to compare.\n\n## 4. Road-Trip Tips\n\n- Plan stops at 10–80% SOC; charging slows above 80%.\n- Precondition the battery before arriving at a fast charger.\n- Carry a NACS↔CCS adapter if your car and station differ.\n- Check station status in-app to avoid broken units.\n\n## 5. Home vs Public\n\nHome Level 2 charging covers daily needs cheaply. Reserve DC fast charging for trips and emergencies to save money and reduce battery wear.\n\n## Conclusion\n\nNACS unification is making U.S. charging simpler. With a little planning, DC fast charging is reliable and predictable for cross-country travel.",
+      "author": "EVKita",
+      "category": "Panduan",
+      "tags": [
+        "charging",
+        "NACS",
+        "CCS",
+        "USA",
+        "road trip"
+      ],
+      "sources": [
+        {
+          "label": "U.S. DOE AFDC — Electric Vehicle Charging",
+          "url": "https://afdc.energy.gov/"
+        },
+        {
+          "label": "EPA Green Vehicles",
+          "url": "https://www.epa.gov/greenvehicles"
+        },
+        {
+          "label": "FuelEconomy.gov",
+          "url": "https://www.fueleconomy.gov/"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/spklu/us-electrify-america.webp",
+      "seoTitle": "DC Fast Charging USA 2026 NACS CCS",
+      "keywords": "dc fast charging usa 2026, nacs vs ccs, tesla supercharger, electrify america",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:17.249Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "buying-used-ev-america-2026-11-04",
+      "title": "Buying a Used EV in America 2026: Battery Health, Incentives, and Pitfalls",
+      "slug": "buying-used-ev-america-2026-11-04",
+      "excerpt": "How to buy a used electric vehicle in the U.S. in 2026: checking battery health, federal/state incentives, warranty, and common pitfalls.",
+      "body": "## Summary\n\nThe used EV market in the U.S. is maturing in 2026, with more inventory and better pricing. A used EV can be a great value—if you check the right things.\n\n## 1. Battery Health Comes First\n\nBattery degradation is the single biggest risk. Ask for a battery health report (SOH). Many brands expose SOH via OBD or the infotainment. A healthy pack typically retains 85–95% capacity after 4–5 years.\n\n## 2. Federal and State Incentives\n\nUsed EVs may qualify for federal tax credits (up to $4,000) if income and price caps are met. Some states add rebates. Check current rules before purchase.\n\n## 3. Warranty and Recalls\n\nVerify remaining battery and drivetrain warranty. Check NHTSA for open recalls. Software updates should be current.\n\n## 4. Charging Compatibility\n\nConfirm connector type (NACS/CCS) and whether adapters are included. Home charging setup costs (Level 2 installer) should be budgeted.\n\n## 5. Common Pitfalls\n\n- Buying without a battery report.\n- Ignoring tire wear (EVs are heavier).\n- Assuming all used EVs qualify for credits.\n- Skipping a pre-purchase inspection by an EV-knowledgeable mechanic.\n\n## Conclusion\n\nA used EV can deliver excellent value. Prioritize battery health, confirm incentives, and budget for home charging. Do the homework and you'll likely save thousands over a new car.",
+      "author": "EVKita",
+      "category": "Tips",
+      "tags": [
+        "used EV",
+        "battery",
+        "incentives",
+        "USA"
+      ],
+      "sources": [
+        {
+          "label": "FuelEconomy.gov",
+          "url": "https://www.fueleconomy.gov/"
+        },
+        {
+          "label": "EPA Green Vehicles",
+          "url": "https://www.epa.gov/greenvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/mobil/us-tesla-model-3.webp",
+      "seoTitle": "Buying Used EV USA 2026",
+      "keywords": "buying used ev america 2026, battery health, ev tax credit used",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:17.249Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "zhongguo-jiazhuang-chongdianzhuang-2026-11-04",
+      "title": "2026年中国新能源汽车家用充电桩安装全指南",
+      "slug": "zhongguo-jiazhuang-chongdianzhuang-2026-11-04",
+      "excerpt": "从选型、报装、安装到费用与注意事项，全面讲解2026年中国新能源汽车家用充电桩安装流程。",
+      "body": "## 概述\n\n家充是大多数中国新能源车主的主力补能方式。2026年，家充安装流程更加标准化，但不同小区、不同电网公司的要求仍有差异。本文梳理从选型到通电的全流程。\n\n## 1. 选型\n\n- **交流慢充（7 kW）**：适合夜间充电，经济实用，是家充主流。\n- **直流快充（更高功率）**：成本高、对电网要求高，一般不推荐家用。\n- 确认车辆支持的交流充电功率，避免\"大马拉小车\"。\n\n## 2. 报装与物业沟通\n\n- 提前联系物业，确认车位产权与安装条件。\n- 向当地电网公司申请用电增容或专用计量。\n- 准备材料：购车发票、车位证明、物业同意书等。\n\n## 3. 安装施工\n\n- 选择具备资质的安装服务商。\n- 线缆应采用符合标准的铜缆，做好防水与接地。\n- 安装完成后进行通电测试与安全检查。\n\n## 4. 费用与补贴\n\n- 安装费用因距离、楼层、线缆长度而异。\n- 部分地区或车企提供家充安装补贴或赠送安装服务。\n- 关注峰谷电价，夜间充电更省钱。\n\n## 5. 注意事项\n\n- 不要私拉电线，存在安全隐患。\n- 定期检查充电桩与线缆老化情况。\n- 充电时保持通风，避免在封闭空间长时间大功率充电。\n\n## 结论\n\n家充安装并不复杂，关键在于提前沟通物业与电网、选择正规服务商、做好安全检查。安装完成后，夜间低价充电将大幅降低用车成本。",
+      "author": "EVKita",
+      "category": "Panduan",
+      "tags": [
+        "充电桩",
+        "家充",
+        "中国",
+        "安装"
+      ],
+      "sources": [
+        {
+          "label": "中华人民共和国工业和信息化部",
+          "url": "https://www.miit.gov.cn/"
+        },
+        {
+          "label": "国家能源局",
+          "url": "https://www.nea.gov.cn/"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/spklu/cn-nio-power.webp",
+      "seoTitle": "中国家用充电桩安装指南 2026",
+      "keywords": "中国 家用充电桩 安装 2026, 新能源汽车 充电",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:17.249Z",
+      "updatedBy": ""
+    },
+    {
+      "id": "dongji-dian-dong-qiche-xuhang-chongdian-jiqiao-2026-11-04",
+      "title": "冬季低温下电动汽车续航与充电实用技巧",
+      "slug": "dongji-dian-dong-qiche-xuhang-chongdian-jiqiao-2026-11-04",
+      "excerpt": "冬季低温对电动汽车续航与充电的影响及应对方法：预热、充电策略、驾驶习惯与停车建议。",
+      "body": "## 概述\n\n冬季低温会降低电池活性、增加能耗（暖风、除霜），导致续航缩水与充电变慢。掌握几条实用技巧，可显著改善冬季用车体验。\n\n## 1. 预热与 preconditioning\n\n- 出发前通过 App 远程预热座舱与电池。\n- 到达快充站前让车辆自动预热电池，提升充电速度。\n\n## 2. 充电策略\n\n- 低温下直流快充功率可能受限，耐心等待或选择室内/地下充电站。\n- 夜间家充时间更长，提前规划。\n- 电量保持在 20–80%，避免满充或深度放电。\n\n## 3. 驾驶习惯\n\n- 平缓加速，利用动能回收。\n- 合理使用座椅加热替代全车暖风，更省电。\n- 提前规划路线，减少绕行。\n\n## 4. 停车建议\n\n- 尽量停在室内或避风处，减少冷 soak。\n- 长时间停放保持 SOC 约 50%。\n- 雪天注意充电口防冰，必要时使用充电口加热。\n\n## 结论\n\n冬季 EV 用车需要更多规划，但通过预热、合理充电与节能驾驶，续航与充电体验完全可以接受。提前准备是关键。",
+      "author": "EVKita",
+      "category": "Tips",
+      "tags": [
+        "冬季",
+        "续航",
+        "充电",
+        "中国"
+      ],
+      "sources": [
+        {
+          "label": "中国汽车技术研究中心",
+          "url": "https://www.catarc.org.cn/"
+        },
+        {
+          "label": "国家能源局",
+          "url": "https://www.nea.gov.cn/"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/mobil/cn-byd-seal.webp",
+      "seoTitle": "冬季 EV 续航充电技巧 2026",
+      "keywords": "冬季 电动汽车 续航 充电 技巧",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-04",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-03T23:28:17.249Z",
       "updatedBy": ""
     }
   ],

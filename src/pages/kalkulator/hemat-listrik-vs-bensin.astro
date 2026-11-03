@@ -228,7 +228,7 @@ const contohProfil = (us ? [1000, 1500, 2000] : cn ? [1000, 1500, 2000] : [1000,
 <Base title={pageTitle} description={metaDesc} keywords={t("pub.kalk.keywordHemat")} ogImage={site.seoOgImage} site={site}>
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
-  <SiteHeader site={site} base={edisiBase || "/"} active="" region={region} artikel="/artikel" />
+  <SiteHeader site={site} base={edisiBase || "/"} active="" region={region} artikel={region === "id" ? "/artikel" : `/artikel?region=${region}`} />
 
   <main class="container kalk" id="konten">
     <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>

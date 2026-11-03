@@ -146,12 +146,31 @@ export async function gambarBerita(artikelUrl: string): Promise<string> {
   }
 }
 
-/** Thumbnail untuk sekelompok alamat sekaligus — pararel, tetap tidak melempar. */
-export async function petaGambarBerita(artikelUrls: string[]): Promise<Record<string, string>> {
+/**
+ * Thumbnail untuk sekelompok alamat sekaligus — pararel, tetap tidak melempar.
+ *
+ * `batasAmbil` membatasi berapa alamat BARU yang boleh menyentuh jaringan.
+ * Halaman daftar yang panjang (mis. /berita berisi 90 kartu) tidak perlu
+ * menunggu 90 penerbit: foto di bawah lipatan dimuat malas oleh peramban
+ * dan sudah dipanaskan `berita-harian.ts` sesudah tarikan harian. Entri yang
+ * sudah ada di cache tetap dipakai tanpa batas.
+ */
+export async function petaGambarBerita(artikelUrls: string[], batasAmbil = Number.POSITIVE_INFINITY): Promise<Record<string, string>> {
   const unik = [...new Set((artikelUrls || []).map(kunciKanonik).filter(Boolean))];
   const keluar: Record<string, string> = {};
+  const cache = bacaCache();
+  const sekarang = Date.now();
   await Promise.all(
-    unik.map(async (u) => {
+    unik.map(async (u, i) => {
+      const ada = cache[u];
+      if (ada && typeof ada.image === "string" && masihSegar(ada.at, sekarang)) {
+        keluar[u] = ada.image;
+        return;
+      }
+      if (i >= batasAmbil) {
+        keluar[u] = "";
+        return;
+      }
       keluar[u] = await gambarBerita(u);
     })
   );

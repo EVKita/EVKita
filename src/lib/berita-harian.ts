@@ -3,7 +3,7 @@ import path from "node:path";
 import { readContent, writeContent } from "./store";
 import { SUMBER_BERITA, relevanBerita, judulBersih } from "./berita-sumber.js";
 import { normalizeWilayah } from "./region.js";
-import { gabungBerita, parseFeed, urlKunci } from "./berita-rss.js";
+import { gabungBerita, parseFeed, pangkasBeritaLama, urlKunci } from "./berita-rss.js";
 
 /**
  * Penarik berita harian.
@@ -163,11 +163,18 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
     const gId = gabungBerita(lamaId, baruId, MAKS_BERITA);
     const gUs = gabungBerita(lamaUs, baruUs, MAKS_BERITA_US);
     const gCn = gabungBerita(lamaCn, baruCn, MAKS_BERITA_US);
-    const daftar = [...gId.daftar, ...gUs.daftar, ...gCn.daftar].sort((a: any, b: any) =>
+    /* Batas dua bulan diterapkan SESUDAH penggabungan: berita lama yang masih
+       tersimpan dari tarikan sebelumnya ikut dibersihkan pada putaran hari
+       ini, bukan menunggu batas jumlah mendorongnya keluar. */
+    const pId = pangkasBeritaLama(gId.daftar);
+    const pUs = pangkasBeritaLama(gUs.daftar);
+    const pCn = pangkasBeritaLama(gCn.daftar);
+    const daftar = [...pId.daftar, ...pUs.daftar, ...pCn.daftar].sort((a: any, b: any) =>
       String((b && b.date) || "").localeCompare(String((a && a.date) || ""))
     );
     const ditambah = gId.ditambah + gUs.ditambah + gCn.ditambah;
-    if (ditambah > 0) {
+    const dipangkas = pId.dipangkas + pUs.dipangkas + pCn.dipangkas;
+    if (ditambah > 0 || dipangkas > 0) {
       const segar = { ...content, berita: daftar };
       writeContent(segar);
       /* Sama seperti auto-update kendaraan: siapkan terjemahan EN/ZH sekarang
@@ -179,6 +186,16 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
       } catch {
         /* abaikan */
       }
+      /* Panaskan cache thumbnail untuk beberapa berita teratas. Beranda dan
+         /berita membaca og:image penerbit saat render; tanpa pemanasan ini
+         permintaan pertama sesudah tarikan harian menunggu situs penerbit
+         satu per satu. Sengaja TIDAK ditunggu: berita sudah tersimpan, dan
+         kegagalan jaringan tidak boleh menggagalkan putaran. */
+      void import("./berita-gambar")
+        .then(({ petaGambarBerita }) =>
+          petaGambarBerita(daftar.slice(0, 12).map((b: any) => String(b?.url || "")))
+        )
+        .catch(() => {});
     }
 
     /* Berhasil bila ada yang ditambah, atau semua sumber terbaca (hanya
@@ -189,6 +206,7 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
       dilewati: false,
       tanggal: hariIni,
       ditambah,
+      dipangkas,
       total: daftar.length,
       sumber: SUMBER_BERITA.map((s) => s.nama),
       gagal,

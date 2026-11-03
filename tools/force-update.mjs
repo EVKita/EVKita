@@ -50,7 +50,7 @@ if (jalanBerita) {
     } else if (hasil.error) {
       console.error("   ❌ Gagal:", hasil.error);
     } else {
-      console.log(`   ✅ Ditambah: ${hasil.ditambah} berita | Total: ${hasil.total} | Sumber gagal: ${(hasil.gagal || []).join(", ") || "tidak ada"}`);
+      console.log(`   ✅ Ditambah: ${hasil.ditambah} berita | Dipangkas (>60 hari): ${hasil.dipangkas || 0} | Total: ${hasil.total} | Sumber gagal: ${(hasil.gagal || []).join(", ") || "tidak ada"}`);
     }
   } catch (e) {
     console.error("   ❌ Error memuat modul berita:", e.message);

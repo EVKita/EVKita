@@ -199,7 +199,7 @@ const jsonLd = items.length >= 2
 >
   {jsonLd ? <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} /> : null}
 
-  <SiteHeader site={site} base={edisiBase} active="mobil" region={edisiRegion} artikel="/artikel" />
+  <SiteHeader site={site} base={edisiBase} active="mobil" region={edisiRegion} artikel={edisiRegion === "id" ? "/artikel" : `/artikel?region=${edisiRegion}`} />
 
   {items.length < 2 ? (
     <main class="container notfound" id="konten">
