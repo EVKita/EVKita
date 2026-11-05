@@ -234,10 +234,7 @@ export const POLA_EV = [
   /* Merek dan model khas China — feed CnEVPost/Gasgoo/Yicai memakai kata ini */
   /\b(xiaomi|su7|yu7|nio|et5|et7|es6|ec6|onvo|xpeng|p7|g6|g9|mona|zeekr|007|009|li auto|lixiang|l9|l8|l7|mega|avatr|deepal|fangchengbao|yangwang|denza|hongqi|leapmotor|catl|byd yuan|seal 06|song plus|qin plus|aito|m9|m7|huawei|hiphix|luxeed|stelato|wanjie)\b/i,
   /* Istilah EV umum China */
-  /\u7535\u52a8|\u7535\u52a8\u8f66|\u65b0\u80fd\u6e90|\u7535\u6c60|\u5145\u7535|\u7535\u8f66|\u63d2\u7535/i,
-  /电动|电动车|新能源|电池|充电|电车|插电/i,
-  /电动|电动车|新能源|电池|充电|电车|插电/i,
-  /电动|电动车|新能源|电池|充电|电车|插电/i,
+  /\u7535\u52a8|\u7535\u52a8\u8f66|\u65b0\u80fd\u6e90|\u7535\u6c60|\u5145\u7535|\u7535\u8f66|\u63d2\u7535|\u7279\u65af\u62c9/i,
   /* Istilah industri baterai dan infrastruktur pengisian */
   /\b(solid.?state battery|lfp|nmc|blade battery|cell.?to.?pack|800v|ultra.?fast charging|v3 supercharger|hpc|hgrs|gbt|ccs|chademo|ocpp)\b/i,
 ];
