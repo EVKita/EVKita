@@ -70,7 +70,7 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string; str
     if (!r.ok) return { items: [], error: `http${r.status}` };
     const xml = await r.text();
     const items = parseFeed(xml)
-      .filter((it) => relevanBerita(`${it.title} ${it.excerpt}`))
+      .filter((it) => relevanBerita(`${it.title} ${it.link}`))
       .map((it) => ({
         id: "",
         title: judulBersih(sumber, it.title),
