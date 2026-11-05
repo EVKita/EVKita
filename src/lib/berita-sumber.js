@@ -226,7 +226,7 @@ export const POLA_EV = [
   /hybrid/i,
   /mobil listrik|motor listrik|skuter listrik|sepeda listrik|bus listrik/i,
   /* Merek EV Indonesia dan Asia yang aktif di pasar lokal */
-  /\b(byd|wuling|hyundai|ioniq|vinfast|chery|omoda|jaecoo|geely|aion|polytron|alva|gesits|smoot|tesla|nio|xpeng|leapmotor|changan|gac|denza|jaecoo|volta|united e-motor|viar|rakata|neta|ora|maxwell|beijing|dfac)\b/i,
+  /\b(byd|wuling|hyundai|ioniq|vinfast|chery|omoda|jaecoo|geely|aion|polytron|alva|gesits|smoot|teslas?|nio|xpeng|leapmotor|changan|gac|denza|jaecoo|volta|united e-motor|viar|rakata|neta|ora|maxwell|beijing|dfac)\b/i,
   /* Honda dan Yamaha EV — keduanya juga jual bensin, jadi perlu pola model spesifik */
   /\b(honda em1|honda e:n|honda ev|yamaha e-01|yamaha e-vino|yamaha nmax electric|yamaha fazzio electric)\b/i,
   /* Merek dan model khas Amerika — feed AS memakai kata ini, bukan "listrik" */
