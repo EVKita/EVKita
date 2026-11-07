@@ -238,6 +238,7 @@ function normalizeCar(c: any, kind: "mobil" | "motor"): any {
        antrean auto-update. */
     perluCek: !!c?.perluCek,
     featured: !!c?.featured,
+    autoFeatured: !!c?.autoFeatured,
     status,
     /* Edisi regional (Indonesia/Amerika). Kosong berarti Indonesia — seluruh
        isi lama otomatis menjadi edisi Indonesia tanpa migrasi. Aturannya di
@@ -361,6 +362,7 @@ function normalizeBerita(v: any): any {
     video: str(v?.video),
     excerpt: str(v?.excerpt),
     featured: !!v?.featured,
+    autoFeatured: !!v?.autoFeatured,
     status: str(v?.status) === "draft" ? "draft" : "published",
     /* Edisi regional — lihat catatan yang sama di `normalizeCar()`. */
     wilayah: normalizeWilayah((v as any)?.wilayah),

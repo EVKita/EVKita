@@ -38,6 +38,16 @@ export function tanggalWib(d: Date = new Date()): string {
   return new Date(d.getTime() + 7 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
+/** Senin (WIB) dari minggu berjalan — dipakai sebagai kunci rotasi sorotan
+ *  mingguan per edisi. */
+function seninMingguIni(tanggal: string): string {
+  const d = new Date(tanggal + "T00:00:00+07:00");
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
 function bacaJadwal(): any {
   try {
     return JSON.parse(fs.readFileSync(JADWAL, "utf8"));
@@ -174,7 +184,37 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
     );
     const ditambah = gId.ditambah + gUs.ditambah + gCn.ditambah;
     const dipangkas = pId.dipangkas + pUs.dipangkas + pCn.dipangkas;
-    if (ditambah > 0 || dipangkas > 0) {
+    /* Sorotan mingguan: pilih satu berita (heuristik: ringkasan terpanjang
+       di 7 hari terakhir) per edisi, diputar sekali per minggu. Hanya
+       berita tarikan (updatedBy kosong) yang dikelola otomatis — sorotan
+       redaksi (updatedBy terisi) tidak pernah disentuh. */
+    const weekKey = seninMingguIni(hariIni);
+    const jadwalLama = bacaJadwal();
+    let featuredBerubah = false;
+    if (jadwalLama.featuredWeek !== weekKey) {
+      for (const b of daftar) {
+        if (b && b.autoFeatured) {
+          b.featured = false;
+          b.autoFeatured = false;
+          featuredBerubah = true;
+        }
+      }
+      for (const w of ["id", "us", "cn"]) {
+        const tujuhHari = Date.now() - 7 * 86400 * 1000;
+        let kandidat = daftar.filter((b: any) => normalizeWilayah(b && b.wilayah) === w && !String(b && b.updatedBy || "").trim() && b && b.date && Date.parse(String(b.date)) >= tujuhHari);
+        if (!kandidat.length) {
+          kandidat = daftar.filter((b: any) => normalizeWilayah(b && b.wilayah) === w && !String(b && b.updatedBy || "").trim());
+        }
+        kandidat.sort((a: any, b: any) => String((b && b.excerpt) || "").length - String((a && a.excerpt) || "").length);
+        if (kandidat.length) {
+          const pilih = kandidat[0];
+          pilih.featured = true;
+          pilih.autoFeatured = true;
+          featuredBerubah = true;
+        }
+      }
+    }
+    if (ditambah > 0 || dipangkas > 0 || featuredBerubah) {
       const segar = { ...content, berita: daftar };
       writeContent(segar);
       /* Sama seperti auto-update kendaraan: siapkan terjemahan EN/ZH sekarang
@@ -214,7 +254,7 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
       ...(gagal.length && ditambah === 0 ? { error: `sumber mati: ${gagal.join(", ")}` } : {}),
     };
     const terbaru = daftar.find((b: any) => b && b.url);
-    tulisJadwal({ tanggal: hariIni, hasil: ringkas, penanda: terbaru ? urlKunci(terbaru.url) : "*" });
+    tulisJadwal({ tanggal: hariIni, hasil: ringkas, penanda: terbaru ? urlKunci(terbaru.url) : "*", featuredWeek: weekKey });
     return ringkas;
   } catch (e: any) {
     const ringkas = { dilewati: false, tanggal: hariIni, ditambah: 0, ok: false, error: String((e && e.message) || e) };
