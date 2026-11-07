@@ -192,20 +192,20 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
     const jadwalLama = bacaJadwal();
     let featuredBerubah = false;
     if (jadwalLama.featuredWeek !== weekKey) {
+      // Satu sorotan per edisi: sorotan lama (termasuk pilihan redaksi
+      // sebelumnya) menjadi berita biasa, lalu yang paling baru di edisi itu
+      // diangkat sebagai sorotan tunggal.
       for (const b of daftar) {
-        if (b && b.autoFeatured) {
+        if (b && b.featured) {
           b.featured = false;
           b.autoFeatured = false;
           featuredBerubah = true;
         }
       }
       for (const w of ["id", "us", "cn"]) {
-        const tujuhHari = Date.now() - 7 * 86400 * 1000;
-        let kandidat = daftar.filter((b: any) => normalizeWilayah(b && b.wilayah) === w && !String(b && b.updatedBy || "").trim() && b && b.date && Date.parse(String(b.date)) >= tujuhHari);
-        if (!kandidat.length) {
-          kandidat = daftar.filter((b: any) => normalizeWilayah(b && b.wilayah) === w && !String(b && b.updatedBy || "").trim());
-        }
-        kandidat.sort((a: any, b: any) => String((b && b.excerpt) || "").length - String((a && a.excerpt) || "").length);
+        const kandidat = daftar
+          .filter((b: any) => normalizeWilayah(b && b.wilayah) === w)
+          .sort((a: any, b: any) => String((b && b.date) || "").localeCompare(String((a && a.date) || "")));
         if (kandidat.length) {
           const pilih = kandidat[0];
           pilih.featured = true;
