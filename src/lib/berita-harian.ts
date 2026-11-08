@@ -214,6 +214,41 @@ export async function perbaruiBerita({ paksa = false }: { paksa?: boolean } = {}
         }
       }
     }
+    /* Simpan foto penerbit ke konten agar tampilan konsisten di semua
+       lingkungan (localhost dan produksi) tanpa bergantung cache lokal. */
+    const kurangGambar = daftar
+      .filter((b: any) => !b.image && b.url)
+      .map((b: any) => String(b.url));
+    if (kurangGambar.length) {
+      try {
+        const nodeFs = await import("node:fs");
+        const nodePath = await import("node:path");
+        const cacheFile = nodePath.join(nodePath.resolve(process.cwd(), "data"), "berita-gambar.json");
+        const cache = JSON.parse(nodeFs.readFileSync(cacheFile, "utf8") || "{}");
+        const { kunciKanonik } = await import("./berita-gambar.js");
+        let del = 0;
+        for (const u of kurangGambar) {
+          const k = kunciKanonik(u);
+          if (k && cache[k] && !cache[k].image) { delete cache[k]; del++; }
+        }
+        nodeFs.writeFileSync(cacheFile, JSON.stringify(cache));
+      } catch (e) {
+        /* abaikan */
+      }
+      try {
+        const { petaGambarBerita, kunciKanonik } = await import("./berita-gambar.js");
+        const peta = await petaGambarBerita(kurangGambar, 24);
+        for (const b of daftar) {
+          if (!b.image && b.url) {
+            const img = peta[kunciKanonik(String(b.url))];
+            if (img) b.image = img;
+          }
+        }
+      } catch {
+        /* pengayaan foto best-effort */
+      }
+    }
+
     if (ditambah > 0 || dipangkas > 0 || featuredBerubah) {
       const segar = { ...content, berita: daftar };
       writeContent(segar);
