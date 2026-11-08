@@ -174,7 +174,8 @@ const tagPublik = !!site && !accentOnly;
         });
       })();
     </script>
-    {noindex ? <meta name="robots" content="noindex, nofollow" /> : null}
+    {noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+    <meta name="author" content="EVKita" />
     <link rel="canonical" href={canonical} />
     <link rel="alternate" hreflang="id" href={alternates.id} />
     <link rel="alternate" hreflang="en" href={alternates.en} />
@@ -188,10 +189,14 @@ const tagPublik = !!site && !accentOnly;
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={pubOgLocale(lang)} />
     {ogAlternate.map((loc) => <meta property="og:locale:alternate" content={loc} />)}
+    <meta property="og:site_name" content="EVKita" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={metaDesc} />
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={metaDesc} />
+    {ogImage ? <meta name="twitter:image" content={ogImage} /> : null}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
