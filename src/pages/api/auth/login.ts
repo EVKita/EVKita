@@ -91,7 +91,7 @@ export const POST: APIRoute = async ({ request, cookies, url, clientAddress }) =
     // Di belakang reverse proxy, url.protocol sudah mencerminkan skema asli
     // selama proxy meneruskan X-Forwarded-Proto.
     secure,
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 30,
   });
 
   // Bahasa pilihan pengguna dicerminkan ke cookie biasa supaya halaman yang

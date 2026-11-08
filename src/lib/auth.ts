@@ -44,7 +44,7 @@ export function signWithSecret(value: string): string | null {
  * peramban bukan pihak yang bisa dipercaya menegakkannya. Token yang tersalin
  * keluar — dari log, dari perangkat yang hilang — dulu sah selamanya.
  */
-export const MAX_SESSION_MS = 7 * 24 * 60 * 60 * 1000;
+export const MAX_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
 /**
  * Token sesi: `<userId>.<waktuTerbit>.<acak>.<tanda tangan>`.
@@ -178,6 +178,6 @@ export function issueFreshCookie(cookies: any, userId: string, url: URL): void {
     sameSite: "lax",
     path: "/",
     secure: url.protocol === "https:",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * 30,
   });
 }
