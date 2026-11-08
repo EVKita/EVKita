@@ -176,6 +176,14 @@ const tagPublik = !!site && !accentOnly;
     </script>
     {noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
     <meta name="author" content="EVKita" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "EVKita",
+      url: canonical.split("?")[0],
+      logo: new URL("/apple-touch-icon.png", Astro.url).href,
+      sameAs: []
+    })} />
     <link rel="canonical" href={canonical} />
     <link rel="alternate" hreflang="id" href={alternates.id} />
     <link rel="alternate" hreflang="en" href={alternates.en} />
