@@ -331,8 +331,24 @@ normalisasi, slug, daftar sumber, waktu baca, dan tanggal terbit.
   `BATAS_SEHARI` (10) per hari. Judul, slug, kategori, tag, gambar, tanggal
   terbit, dan draf tidak pernah disentuh; sumber lama tidak pernah dibuang;
   `updatedAt`/`updatedBy` hanya dicap kalau isi benar-benar berubah. Saklarnya
-  di Admin → Artikel (`segar.*`, endpoint `/api/artikel-segar`), bawaannya
-  menyala tapi tanpa kunci AI ia diam sendiri.
+di Admin → Artikel (`segar.*`, endpoint `/api/artikel-segar`), bawaannya
+menyala tapi tanpa kunci AI ia diam sendiri.
+
+### Standar Gambar Artikel (foto/gambar/video)
+
+Setiap artikel wajib menggunakan gambar yang **unik** dengan aturan berikut:
+
+1. **Tidak boleh sama dalam satu regional** — tiap artikel di wilayah yang sama
+   (id, us, cn) harus menggunakan file gambar yang berbeda. Tidak boleh dua
+   artikel Indonesia menggunakan gambar yang sama, dan seterusnya.
+2. **Tidak boleh sama lintas regional** — gambar yang dipakai artikel Indonesia
+   tidak boleh dipakai artikel Amerika atau China, dan sebaliknya. Setiap
+   regional memiliki pool gambarnya sendiri.
+3. **Gambar harus diambil dari folder resmi** (`public/gambar/`) dan tidak
+   melanggar hak paten atau undang-undang regional masing-masing. Hindari
+   hotlink ke domain eksternal tanpa izin.
+4. Sebelum menambah artikel baru, periksa daftar gambar yang sudah dipakai
+   artikel existing di setiap regional untuk mencegah duplikasi.
 
 ### Fitur AI (DeepSeek)
 
