@@ -12,9 +12,14 @@ const t = makePubT(lang);
 const site = cmsSite(content.site, lang);
 ---
 
-<Base>
+<Base title={t("pub.kalk.tcoTitle")} description={t("pub.kalk.tcoSub")} ogImage={site.seoOgImage} site={site}>
   <SiteHeader site={site} lang={lang} t={t} />
   <main class="container kalk" id="konten">
+    <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+      <a href="/">{t("pub.nav.beranda")}</a>
+      <span aria-hidden="true">/</span>
+      <span class="breadcrumb-current">{t("pub.kalk.tcoTitle")}</span>
+    </nav>
     <header class="kalk-head">
       <h1>{t("pub.kalk.tcoTitle")}</h1>
       <p class="kalk-lead">{t("pub.kalk.tcoSub")}</p>
@@ -22,28 +27,36 @@ const site = cmsSite(content.site, lang);
     <form id="tcoForm" class="kalk-form">
       <div class="kalk-grid">
         <div class="kalk-field">
-          <label>{t("pub.kalk.tcoPrice")} <input type="number" id="tcoPrice" value="400000000" /></label>
+          <label for="tcoPrice">{t("pub.kalk.tcoPrice")}</label>
+          <input id="tcoPrice" type="number" value="400000000" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.tcoDown")} <input type="number" id="tcoDown" value="20" /> %</label>
+          <label for="tcoDown">{t("pub.kalk.tcoDown")} <span class="kalk-unit">%</span></label>
+          <input id="tcoDown" type="number" value="20" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.tcoTerm")} <input type="number" id="tcoTerm" value="5" /></label>
+          <label for="tcoTerm">{t("pub.kalk.tcoTerm")}</label>
+          <input id="tcoTerm" type="number" value="5" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.tcoRate")} <input type="number" id="tcoRate" value="6" step="0.1" /> %</label>
+          <label for="tcoRate">{t("pub.kalk.tcoRate")} <span class="kalk-unit">%</span></label>
+          <input id="tcoRate" type="number" value="6" step="0.1" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.tcoKm")} <input type="number" id="tcoKm" value="15000" /></label>
+          <label for="tcoKm">{t("pub.kalk.tcoKm")}</label>
+          <input id="tcoKm" type="number" value="15000" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.tcoTarif")} <input type="number" id="tcoTarif" value="1500" /></label>
+          <label for="tcoTarif">{t("pub.kalk.tcoTarif")}</label>
+          <input id="tcoTarif" type="number" value="1500" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.tcoDepresiasi")} <input type="number" id="tcoDep" value="15" /> % / tahun</label>
+          <label for="tcoDep">{t("pub.kalk.tcoDepresiasi")} <span class="kalk-unit">% / tahun</span></label>
+          <input id="tcoDep" type="number" value="15" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.tcoMaintenance")} <input type="number" id="tcoMaint" value="2000000" /></label>
+          <label for="tcoMaint">{t("pub.kalk.tcoMaintenance")}</label>
+          <input id="tcoMaint" type="number" value="2000000" />
         </div>
       </div>
       <button type="submit" class="btn btn-primary">{t("pub.kalk.hitung")}</button>

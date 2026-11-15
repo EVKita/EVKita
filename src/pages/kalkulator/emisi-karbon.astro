@@ -12,9 +12,14 @@ const t = makePubT(lang);
 const site = cmsSite(content.site, lang);
 ---
 
-<Base>
+<Base title={t("pub.kalk.karbonTitle")} description={t("pub.kalk.karbonSub")} ogImage={site.seoOgImage} site={site}>
   <SiteHeader site={site} lang={lang} t={t} />
   <main class="container kalk" id="konten">
+    <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
+      <a href="/">{t("pub.nav.beranda")}</a>
+      <span aria-hidden="true">/</span>
+      <span class="breadcrumb-current">{t("pub.kalk.karbonTitle")}</span>
+    </nav>
     <header class="kalk-head">
       <h1>{t("pub.kalk.karbonTitle")}</h1>
       <p class="kalk-lead">{t("pub.kalk.karbonSub")}</p>
@@ -22,16 +27,20 @@ const site = cmsSite(content.site, lang);
     <form id="karbonForm" class="kalk-form">
       <div class="kalk-grid">
         <div class="kalk-field">
-          <label>{t("pub.kalk.karbonKm")} <input type="number" id="kKm" value="15000" /></label>
+          <label for="kKm">{t("pub.kalk.karbonKm")}</label>
+          <input id="kKm" type="number" value="15000" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.karbonIce")} <input type="number" id="kIce" value="8" step="0.1" /></label>
+          <label for="kIce">{t("pub.kalk.karbonIce")}</label>
+          <input id="kIce" type="number" value="8" step="0.1" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.karbonEv")} <input type="number" id="kEv" value="18" step="0.1" /></label>
+          <label for="kEv">{t("pub.kalk.karbonEv")}</label>
+          <input id="kEv" type="number" value="18" step="0.1" />
         </div>
         <div class="kalk-field">
-          <label>{t("pub.kalk.karbonFaktor")} <input type="number" id="kFaktor" value="0.85" step="0.01" /></label>
+          <label for="kFaktor">{t("pub.kalk.karbonFaktor")}</label>
+          <input id="kFaktor" type="number" value="0.85" step="0.01" />
         </div>
       </div>
       <button type="submit" class="btn btn-primary">{t("pub.kalk.hitung")}</button>
