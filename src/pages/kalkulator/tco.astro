@@ -35,7 +35,6 @@ const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 const lang = normalizePubLocale(Astro.locals?.pubLang);
 const t = makePubT(lang);
 const site = cmsSite(content.site, lang);
-const intl = pubIntl(lang);
 
 const q = Astro.url.searchParams;
 const region = regionDariParam(q.get("region"));
