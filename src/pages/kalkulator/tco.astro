@@ -5,119 +5,195 @@ import SiteFooter from "../../components/SiteFooter.astro";
 import { readContent } from "../../lib/store";
 import { makePubT, normalizePubLocale, cmsSite } from "../../lib/i18n/pub.js";
 import { terjemahContent } from "../../lib/terjemahan.js";
+import { regionDariParam } from "../../lib/region.js";
+import { canonicalUrl, siteOrigin } from "../../lib/site-url";
+import {
+  bawaanTco,
+  bawaanRute,
+  hitungTco,
+  uangTeks,
+  uangHalusTeks,
+  simbolMataUang,
+  satuanJarak,
+  jarakKeKm,
+  MIL_KM,
+} from "../../lib/kalk-region.js";
+
+/**
+ * Kalkulator TCO — total biaya kepemilikan.
+ *
+ * Hasilnya dirender SERVER dari parameter URL, seperti kalkulator biaya
+ * pengisian: halaman tetap utuh tanpa JavaScript, dan angka yang tampil tidak
+ * bisa berselisih dengan angka yang dihitung skrip. Formulirnya `method="get"`.
+ *
+ * Edisi mengikuti `?region=` (us/cn); tanpa parameter berarti Indonesia. Mata
+ * uang TIDAK dikonversi dari rupiah — harga katalog tiap edisi sudah dalam mata
+ * uang negaranya, dan kurs yang ditambahkan di sini hanya menambah galat.
+ */
 
 const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 const lang = normalizePubLocale(Astro.locals?.pubLang);
 const t = makePubT(lang);
 const site = cmsSite(content.site, lang);
+const intl = pubIntl(lang);
+
+const q = Astro.url.searchParams;
+const region = regionDariParam(q.get("region"));
+const us = region === "us";
+const edisiBase = region === "id" ? "" : region === "us" ? "/amerika" : "/china";
+const edisiParam = region === "id" ? "" : `?region=${region}`;
+
+const b = bawaanTco(region);
+const satuan = satuanJarak(region);
+const lambang = simbolMataUang(region);
+
+/**
+ * Membaca satu parameter URL. Kosong berarti sengaja dinolkan (pembaca
+ * menghapus isian), tidak ada berarti bawaan edisi — sama seperti kalkulator
+ * biaya pengisian.
+ */
+const num = (key: string, fallback: number) => {
+  const raw = q.get(key);
+  if (raw === null) return fallback;
+  if (raw.trim() === "") return 0;
+  const n = Number(raw.replace(",", "."));
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+};
+
+const form = {
+  harga: num("harga", b.harga),
+  dp: num("dp", b.uangMuka),
+  jangka: num("jangka", b.jangka),
+  bunga: num("bunga", b.bunga),
+  jarak: num("jarak", b.jarak),
+  tarif: num("tarif", b.tarif),
+  dep: num("dep", b.depresiasi),
+  perawatan: num("perawatan", b.perawatan),
+};
+
+const jarakKm = jarakKeKm(form.jarak, region);
+const hasil = hitungTco({
+  harga: form.harga,
+  uangMukaPct: form.dp,
+  jangka: form.jangka,
+  bungaPct: form.bunga,
+  jarakKm,
+  tarif: form.tarif,
+  depresiasiPct: form.dep,
+  perawatan: form.perawatan,
+  konsumsiKwhPerKm: b.konsumsiKwhPerKm,
+});
+
+/**
+ * Pembanding BBM: biaya bensin untuk jarak yang SAMA selama jangka yang sama.
+ * Sengaja hanya satu kartu dan tidak ikut dijumlahkan ke total — total tetap
+ * biaya kepemilikan mobil listrik. Gunanya memperlihatkan selisihnya.
+ */
+const rute = bawaanRute(region);
+const biayaBbmSetara =
+  (jarakKm * form.jangka * rute.konsumsiBbm100) / 100 * rute.hargaBbmPerLiter;
+
+const tampil = q.get("hitung") === "1" && form.harga > 0;
+const perSatuan = us ? hasil.perKm * MIL_KM : hasil.perKm;
+
+const origin = siteOrigin(Astro.url);
+const canonical =
+  region === "id" ? canonicalUrl(Astro.url) : `${origin}/kalkulator/tco${edisiParam}`;
+const uang = (n: number) => uangTeks(region, n);
 ---
 
-<Base title={t("pub.kalk.tcoTitle")} description={t("pub.kalk.tcoSub")} ogImage={site.seoOgImage} site={site}>
-  <SiteHeader site={site} lang={lang} t={t} />
+<Base
+  title={t("pub.kalk.tcoTitle")}
+  description={t("pub.kalk.tcoSub")}
+  ogImage={site.seoOgImage}
+  site={site}
+>
+  <SiteHeader site={site} lang={lang} t={t} region={region} />
+  <link slot="head" rel="canonical" href={canonical} />
+
   <main class="container kalk" id="konten">
     <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-      <a href="/">{t("pub.nav.beranda")}</a>
+      <a href={edisiBase || "/"}>{t("pub.nav.beranda")}</a>
       <span aria-hidden="true">/</span>
       <span class="breadcrumb-current">{t("pub.kalk.tcoTitle")}</span>
     </nav>
+
     <header class="kalk-head">
       <h1>{t("pub.kalk.tcoTitle")}</h1>
       <p class="kalk-lead">{t("pub.kalk.tcoSub")}</p>
     </header>
-    <form id="tcoForm" class="kalk-form">
+
+    <form id="tcoForm" class="kalk-form" method="get" autocomplete="off">
+      {region === "id" ? null : <input type="hidden" name="region" value={region} />}
       <div class="kalk-grid">
         <div class="kalk-field">
-          <label for="tcoPrice">{t("pub.kalk.tcoPrice")}</label>
-          <input id="tcoPrice" type="number" value="400000000" />
+          <label for="tcoHarga">{t("pub.kalk.tcoPrice", { mata: lambang })}</label>
+          <input id="tcoHarga" name="harga" type="number" min="0" step="any" value={form.harga} />
         </div>
         <div class="kalk-field">
-          <label for="tcoDown">{t("pub.kalk.tcoDown")} <span class="kalk-unit">%</span></label>
-          <input id="tcoDown" type="number" value="20" />
+          <label for="tcoDp">{t("pub.kalk.tcoDown")} <span class="kalk-unit">%</span></label>
+          <input id="tcoDp" name="dp" type="number" min="0" max="100" step="any" value={form.dp} />
         </div>
         <div class="kalk-field">
-          <label for="tcoTerm">{t("pub.kalk.tcoTerm")}</label>
-          <input id="tcoTerm" type="number" value="5" />
+          <label for="tcoJangka">{t("pub.kalk.tcoTerm")}</label>
+          <input id="tcoJangka" name="jangka" type="number" min="1" step="1" value={form.jangka} />
         </div>
         <div class="kalk-field">
-          <label for="tcoRate">{t("pub.kalk.tcoRate")} <span class="kalk-unit">%</span></label>
-          <input id="tcoRate" type="number" value="6" step="0.1" />
+          <label for="tcoBunga">{t("pub.kalk.tcoRate")} <span class="kalk-unit">%</span></label>
+          <input id="tcoBunga" name="bunga" type="number" min="0" step="0.1" value={form.bunga} />
         </div>
         <div class="kalk-field">
-          <label for="tcoKm">{t("pub.kalk.tcoKm")}</label>
-          <input id="tcoKm" type="number" value="15000" />
+          <label for="tcoJarak">{t("pub.kalk.tcoKm", { unit: satuan })}</label>
+          <input id="tcoJarak" name="jarak" type="number" min="0" step="any" value={form.jarak} />
         </div>
         <div class="kalk-field">
-          <label for="tcoTarif">{t("pub.kalk.tcoTarif")}</label>
-          <input id="tcoTarif" type="number" value="1500" />
+          <label for="tcoTarif">{t("pub.kalk.tcoTarif", { mata: lambang })}</label>
+          <input id="tcoTarif" name="tarif" type="number" min="0" step="any" value={form.tarif} />
         </div>
         <div class="kalk-field">
-          <label for="tcoDep">{t("pub.kalk.tcoDepresiasi")} <span class="kalk-unit">% / tahun</span></label>
-          <input id="tcoDep" type="number" value="15" />
+          <label for="tcoDep">{t("pub.kalk.tcoDepresiasi")} <span class="kalk-unit">% / {t("pub.kalk.tahun")}</span></label>
+          <input id="tcoDep" name="dep" type="number" min="0" max="100" step="any" value={form.dep} />
         </div>
         <div class="kalk-field">
-          <label for="tcoMaint">{t("pub.kalk.tcoMaintenance")}</label>
-          <input id="tcoMaint" type="number" value="2000000" />
+          <label for="tcoPerawatan">{t("pub.kalk.tcoMaintenance", { mata: lambang })}</label>
+          <input id="tcoPerawatan" name="perawatan" type="number" min="0" step="any" value={form.perawatan} />
         </div>
       </div>
-      <button type="submit" class="btn btn-primary">{t("pub.kalk.hitung")}</button>
+      <button type="submit" name="hitung" value="1" class="btn btn-primary">{t("pub.kalk.hitung")}</button>
     </form>
-    <div id="tcoResult" class="kalk-result" hidden></div>
-  </main>
-  <SiteFooter site={site} lang={lang} t={t} content={content} />
-  <script>
-    (function () {
-      const form = document.getElementById("tcoForm");
-      const res = document.getElementById("tcoResult");
-      if (!form || !res) return;
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const price = Number(document.getElementById("tcoPrice").value) || 0;
-        const downPct = Number(document.getElementById("tcoDown").value) || 0;
-        const term = Number(document.getElementById("tcoTerm").value) || 1;
-        const rate = (Number(document.getElementById("tcoRate").value) || 0) / 100;
-        const km = Number(document.getElementById("tcoKm").value) || 0;
-        const tarif = Number(document.getElementById("tcoTarif").value) || 0;
-        const dep = (Number(document.getElementById("tcoDep").value) || 0) / 100;
-        const maint = Number(document.getElementById("tcoMaint").value) || 0;
-        const down = price * downPct / 100;
-        const pokok = price - down;
-        const bulan = term * 12;
-        const rBulan = rate / 12;
-        const cicilan = rBulan > 0 ? pokok * rBulan / (1 - Math.pow(1 + rBulan, -bulan)) : pokok / bulan;
-        const totalCicilan = cicilan * bulan;
-        const konsumsiKwhPerKm = 0.18;
-        const kwhPerTahun = km * konsumsiKwhPerKm;
-        const biayaListrik = kwhPerTahun * tarif * term;
-        const biayaMaint = maint * term;
-        const nilaiAkhir = price * Math.pow(1 - dep, term);
-        const total = down + totalCicilan + biayaListrik + biayaMaint - (price - nilaiAkhir);
-        const perKm = km * term > 0 ? total / (km * term) : 0;
-        res.hidden = false;
-        res.innerHTML = `
-          <div class="kalk-cards">
-            <div class="kalk-card">
-              <span class="kalk-card-label">Total biaya ${term} tahun</span>
-              <strong class="kalk-card-value">Rp ${Math.round(total).toLocaleString("id-ID")}</strong>
-            </div>
-            <div class="kalk-card">
-              <span class="kalk-card-label">Biaya per km</span>
-              <strong class="kalk-card-value">Rp ${Math.round(perKm).toLocaleString("id-ID")}</strong>
-            </div>
-            <div class="kalk-card kalk-card-accent">
-              <span class="kalk-card-label">Cicilan per bulan</span>
-              <strong class="kalk-card-value">Rp ${Math.round(cicilan).toLocaleString("id-ID")}</strong>
-            </div>
-            <div class="kalk-card">
-              <span class="kalk-card-label">Biaya listrik ${term} tahun</span>
-              <strong class="kalk-card-value">Rp ${Math.round(biayaListrik).toLocaleString("id-ID")}</strong>
-            </div>
-            <div class="kalk-card">
-              <span class="kalk-card-label">Nilai jual akhir</span>
-              <strong class="kalk-card-value">Rp ${Math.round(nilaiAkhir).toLocaleString("id-ID")}</strong>
-            </div>
+
+    {tampil ? (
+      <div id="tcoResult" class="kalk-result">
+        <div class="kalk-cards">
+          <div class="kalk-card">
+            <span class="kalk-card-label">{t("pub.kalk.tcoTotal", { n: form.jangka })}</span>
+            <strong class="kalk-card-value">{uang(hasil.total)}</strong>
           </div>
-        `;
-      });
-    })();
-  </script>
+          <div class="kalk-card">
+            <span class="kalk-card-label">{t("pub.kalk.tcoPer", { unit: satuan })}</span>
+            <strong class="kalk-card-value">{uangHalusTeks(region, perSatuan)}</strong>
+          </div>
+          <div class="kalk-card kalk-card-accent">
+            <span class="kalk-card-label">{t("pub.kalk.tcoCicilan")}</span>
+            <strong class="kalk-card-value">{uang(hasil.cicilan)}</strong>
+          </div>
+          <div class="kalk-card">
+            <span class="kalk-card-label">{t("pub.kalk.tcoListrik", { n: form.jangka })}</span>
+            <strong class="kalk-card-value">{uang(hasil.biayaListrik)}</strong>
+          </div>
+          <div class="kalk-card">
+            <span class="kalk-card-label">{t("pub.kalk.tcoBbm", { n: form.jangka })}</span>
+            <strong class="kalk-card-value">{uang(biayaBbmSetara)}</strong>
+          </div>
+          <div class="kalk-card">
+            <span class="kalk-card-label">{t("pub.kalk.tcoNilai")}</span>
+            <strong class="kalk-card-value">{uang(hasil.nilaiAkhir)}</strong>
+          </div>
+        </div>
+        <p class="kalk-hint">{t("pub.kalk.catatanPerkiraan")}</p>
+      </div>
+    ) : null}
+  </main>
+
+  <SiteFooter site={site} lang={lang} t={t} content={content} />
 </Base>

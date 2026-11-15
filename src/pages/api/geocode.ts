@@ -10,9 +10,10 @@ function json(payload: unknown, status: number): Response {
 
 export const GET: APIRoute = async ({ url }) => {
   const q = (url.searchParams.get("q") || "").trim();
+  const region = (url.searchParams.get("region") || "id").trim();
   if (!q) return json({ ok: false, error: "kosong" }, 400);
   try {
-    const hit = await cariLokasi(q);
+    const hit = await cariLokasi(q, region);
     if (!hit) return json({ ok: false, error: "tidakDitemukan" }, 404);
     return json({ ok: true, lat: hit.lat, lng: hit.lng, label: hit.label }, 200);
   } catch {

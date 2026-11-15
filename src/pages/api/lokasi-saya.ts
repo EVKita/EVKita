@@ -18,7 +18,8 @@ function json(payload: unknown, status: number): Response {
  * hanyalah NAMA KOTA untuk dicari koordinatnya — tanpa IP, tanpa identitas.
  * Presisinya tingkat kota, dan itu memang disebut di label.
  */
-export const GET: APIRoute = async ({ request, clientAddress }) => {
+export const GET: APIRoute = async ({ request, clientAddress, url }) => {
+  const region = (url.searchParams.get("region") || "id").trim();
   let ip = (request.headers.get("x-forwarded-for") || "").split(",")[0].trim();
   if (!ip) {
     try {
@@ -31,7 +32,7 @@ export const GET: APIRoute = async ({ request, clientAddress }) => {
     const geo = await cari(ip);
     const kota = [geo.kota, geo.provinsi, geo.negara].filter(Boolean).join(", ");
     if (!kota) return json({ ok: false, error: "tidakAdaPerkiraan" }, 200);
-    const hit = await cariLokasi(kota);
+    const hit = await cariLokasi(kota, region);
     if (!hit) return json({ ok: false, error: "tidakDitemukan" }, 200);
     return json({ ok: true, lat: hit.lat, lng: hit.lng, label: kota }, 200);
   } catch {

@@ -34,7 +34,10 @@ const locale = lang === "en" ? "en-US" : lang === "zh" ? "zh-CN" : "id-ID";
       let arr = [];
       try { arr = JSON.parse(localStorage.getItem("evkita_rute_tersimpan") || "[]"); } catch { arr = []; }
       if (!Array.isArray(arr) || !arr.length) { list.innerHTML = "<p>" + escapeHtml(kosong) + "</p>"; return; }
-      list.innerHTML = arr.map((r) => `<div class="rute-saved-card"><strong>${escapeHtml(r.asal)} → ${escapeHtml(r.tujuan)}</strong><span>${Number(r.jarak).toLocaleString(locale)} km</span><span>${new Date(r.tgl).toLocaleDateString(locale)}</span></div>`).join("");
+      list.innerHTML = arr.map((r) => {
+        const unit = r.satuan || (r.region === "us" ? "mi" : "km");
+        return `<div class="rute-saved-card"><strong>${escapeHtml(r.asal)} â†’ ${escapeHtml(r.tujuan)}</strong><span>${Number(r.jarak).toLocaleString(locale)} ${escapeHtml(unit)}</span><span>${new Date(r.tgl).toLocaleDateString(locale)}</span></div>`;
+      }).join("");
       function escapeHtml(s) { return String(s === null || s === undefined ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
     })();
   </script>

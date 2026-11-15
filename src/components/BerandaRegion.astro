@@ -787,8 +787,9 @@ const jsonLd = {
               ) : (
                 <>
                   <a class="tag-pill" href={`${edisiBase}#daftar`}>{t("pub.koleksi.katalogLengkap")}</a>
+                  <a class="tag-pill" href={`/kalkulator${edisiParam}`}>{t("pub.nav.kalkulator")}</a>
+                  <a class="tag-pill" href={`/panduan-rute${edisiParam}`}>{t("pub.nav.rute")}</a>
                   <a class="tag-pill" href={panduanSlug}>{panduanLabel}</a>
-                  <a class="tag-pill" href={`${edisiBase}#berita`}>{t("pub.nav.berita")}</a>
                 </>
               )}
             </nav>
@@ -807,7 +808,8 @@ const jsonLd = {
                 <>
                   <a class="tag-pill" href={`${edisiBase}#daftar`}>{t("pub.koleksi.katalogLengkap")}</a>
                   <a class="tag-pill" href={`/kalkulator/hemat-listrik-vs-bensin${edisiParam}`}>{t("pub.kalk.titleHemat")}</a>
-                  <a class="tag-pill" href={panduanSlug}>{panduanLabel}</a>
+                  <a class="tag-pill" href={`/kalkulator/biaya-pengisian${edisiParam}`}>{t("pub.kalk.titleBiaya")}</a>
+                  <a class="tag-pill" href={`/panduan-rute${edisiParam}`}>{t("pub.nav.rute")}</a>
                 </>
               )}
             </nav>
@@ -825,7 +827,8 @@ const jsonLd = {
               ) : (
                 <>
                   <a class="tag-pill" href={`${edisiBase}#spklu`}>{t(istilahCas(region, "nav"))}</a>
-                  <a class="tag-pill" href={panduanSlug}>{panduanLabel}</a>
+                  <a class="tag-pill" href={`/kalkulator/biaya-pengisian${edisiParam}`}>{t("pub.kalk.titleBiaya")}</a>
+                  <a class="tag-pill" href={`/panduan-rute${edisiParam}`}>{t("pub.nav.rute")}</a>
                   <a class="tag-pill" href={`${edisiBase}#bengkel`}>{region === "cn" ? t("pub.region.cnWorkshop") : t("pub.nav.bengkel")}</a>
                 </>
               )}

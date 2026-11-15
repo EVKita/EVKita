@@ -8,6 +8,11 @@ import { safeUrl } from "../lib/url.js";
 import { filterWilayah, regionDariParam, istilahCas } from "../lib/region.js";
 import { makePubT, normalizePubLocale, cmsSite } from "../lib/i18n/pub.js";
 import { terjemahContent } from "../lib/terjemahan.js";
+import {
+  bawaanRuteTampil,
+  satuanJarak,
+  simbolMataUang,
+} from "../lib/kalk-region.js";
 
 const content = await terjemahContent(readContent(), Astro.locals?.pubLang);
 const lang = normalizePubLocale(Astro.locals?.pubLang);
@@ -29,6 +34,18 @@ const spkluJudul =
 const spkluSemuaLabel = region === "id" ? t("pub.rute.lihatSemuaSpklu") : t(istilahCas(region, "semua"));
 const spkluSemuaHref = region === "id" ? "/spklu" : region === "us" ? "/amerika#spklu" : "/china#spklu";
 const petaLabel = t(istilahCas(region, "peta"));
+
+/* Biaya perjalanan memakai satuan edisinya: mil & MPG & $/galon untuk
+   Amerika, km & L/100 km untuk Indonesia dan China. */
+const biaya = bawaanRuteTampil(region);
+const us = region === "us";
+const satuan = satuanJarak(region);
+const lambang = simbolMataUang(region);
+const labelKonsumsiListrik = us ? t("pub.rute.konsumsiListrikUs") : t("pub.rute.konsumsiListrik");
+const labelKonsumsiBbm = us ? t("pub.rute.konsumsiBbmUs") : t("pub.rute.konsumsiBbm");
+const labelHargaBbm = us
+  ? t("pub.rute.hargaBbmUs", { mata: lambang })
+  : t("pub.rute.hargaBbm", { mata: lambang });
 
 const K = (v: any) => ({
   id: v.id,
@@ -56,17 +73,40 @@ const spkluLite = spkluList.map(K);
     </header>
 
     <form id="ruteForm" class="rute-form" data-region={region}>
-      <label>{t("pub.rute.asal")} <input type="text" id="ruteAsal" placeholder="Nama tempat, -6.2,106.8, atau tautan peta" /></label>
+      <label>{t("pub.rute.asal")} <input type="text" id="ruteAsal" placeholder={region === "us" ? "Place name, 34.0522,-118.2437, or map link" : region === "cn" ? "地点名称、39.9042,116.4074 或地图链接" : "Nama tempat, -6.2,106.8, atau tautan peta"} /></label>
       <div class="rute-btn-row">
-        <button type="button" class="btn btn-ghost btn-sm" id="ruteGps">📍 {t("pub.rute.gps")}</button>
-        <button type="button" class="rute-gbtn" id="ruteAsalGoogle" title={t("pub.rute.lokasiPerkiraan")} aria-label={t("pub.rute.lokasiPerkiraan")}><span class="rute-g">{region === "cn" ? "◎" : "G"}</span></button>
+        <button type="button" class="btn btn-ghost btn-sm" id="ruteGps">ðŸ“ {t("pub.rute.gps")}</button>
+        <button type="button" class="rute-gbtn" id="ruteAsalGoogle" title={t("pub.rute.lokasiPerkiraan")} aria-label={t("pub.rute.lokasiPerkiraan")}><span class="rute-g">{region === "cn" ? "â—Ž" : "G"}</span></button>
       </div>
 
-      <label>{t("pub.rute.tujuan")} <input type="text" id="ruteTujuan" placeholder="Nama tempat, -6.9,107.6, atau tautan peta" /></label>
+      <label>{t("pub.rute.tujuan")} <input type="text" id="ruteTujuan" placeholder={region === "us" ? "Place name, 36.1699,-115.1398, or map link" : region === "cn" ? "地点名称、31.2304,121.4737 或地图链接" : "Nama tempat, -6.9,107.6, atau tautan peta"} /></label>
       <div class="rute-btn-row">
         <button type="button" class="rute-gbtn" id="ruteTujuanGoogle" title={petaCari} aria-label={petaCari}><span class={`rute-g${region === "cn" ? " wide" : ""}`}>{region === "cn" ? "高德" : "G"}</span></button>
         <span class="rute-tip">{tipTempel}</span>
       </div>
+
+      <details class="rute-biaya">
+        <summary>{t("pub.rute.biayaJudul")}</summary>
+        <div class="rute-biaya-grid">
+          <div class="kalk-field">
+            <label for="ruteEv">{labelKonsumsiListrik}</label>
+            <input id="ruteEv" type="number" min="0" step="any" value={biaya.konsumsiKwh100} />
+          </div>
+          <div class="kalk-field">
+            <label for="ruteTarif">{t("pub.rute.tarifListrik", { mata: lambang })}</label>
+            <input id="ruteTarif" type="number" min="0" step="any" value={biaya.tarif} />
+          </div>
+          <div class="kalk-field">
+            <label for="ruteBbm">{labelKonsumsiBbm}</label>
+            <input id="ruteBbm" type="number" min="0" step="any" value={biaya.konsumsiBbm100} />
+          </div>
+          <div class="kalk-field">
+            <label for="ruteHb">{labelHargaBbm}</label>
+            <input id="ruteHb" type="number" min="0" step="any" value={biaya.hargaBbm} />
+          </div>
+        </div>
+        <p class="rute-tip">{t("pub.rute.biayaCatatan")}</p>
+      </details>
 
       <button type="submit" class="btn btn-primary">{t("pub.rute.hitung")}</button>
     </form>
@@ -95,9 +135,16 @@ const spkluLite = spkluList.map(K);
       petaLabel,
       labelAsal: t("pub.rute.hasilAsal"),
       labelTujuan: t("pub.rute.hasilTujuan"),
-      jarakLurus: t("pub.rute.jarakLurus"),
-      waktuTempuh: t("pub.rute.waktuTempuh"),
-      menit: t("pub.peng.menit"),
+      labelJarak: t("pub.rute.jarakRute"),
+      labelJarakLurus: t("pub.rute.jarakLurus"),
+      labelWaktu: t("pub.rute.waktuTempuh"),
+      perkiraanRute: t("pub.rute.perkiraanRute"),
+      labelBiaya: t("pub.rute.biayaJudul"),
+      labelListrik: t("pub.rute.biayaListrik"),
+      labelBensin: t("pub.rute.biayaBensin"),
+      labelHemat: t("pub.rute.biayaHemat"),
+      atribusi: t("pub.rute.atribusi"),
+      gagalRute: t("pub.rute.gagal"),
       bukaDi: t("pub.rute.bukaDi"),
       mencari: t("pub.rute.mencari"),
       tidakDitemukan: t("pub.rute.tidakDitemukan"),
@@ -107,13 +154,19 @@ const spkluLite = spkluList.map(K);
       asalPerkiraan: t("pub.rute.asalDiisiPerkiraan"),
       simpan: t("pub.rute.simpan"),
       tersimpanOk: t("pub.rute.tersimpanOk"),
+      menitTpl: t("pub.peng.menit"),
+      jamTpl: t("pub.peng.jam"),
+      jamMenitTpl: t("pub.peng.jamMenit"),
+      satuanJarak: satuanJarak(region),
+      lang,
     }}
   >
     window.__RUTE__ = {
       spklu: spkluLite, region, petaNama, spkluKosong, petaLabel,
-      labelAsal, labelTujuan, jarakLurus, waktuTempuh, menit, bukaDi,
-      mencari, tidakDitemukan, gpsGagal, gpsTakDidukung, gpsPerkiraan, asalPerkiraan,
-      simpan, tersimpanOk,
+      labelAsal, labelTujuan, labelJarak, labelJarakLurus, labelWaktu, perkiraanRute,
+      labelBiaya, labelListrik, labelBensin, labelHemat, atribusi, gagalRute,
+      bukaDi, mencari, tidakDitemukan, gpsGagal, gpsTakDidukung, gpsPerkiraan, asalPerkiraan,
+      simpan, tersimpanOk, menitTpl, jamTpl, jamMenitTpl, satuanJarak, lang,
     };
   </script>
   <script>
@@ -183,7 +236,7 @@ const spkluLite = spkluList.map(K);
       async function geocode(q) {
         const c = parseCoord(q);
         if (c) return { coord: c, label: q.trim() };
-        const r = await fetch("/api/geocode?q=" + encodeURIComponent(q), { headers: { Accept: "application/json" } });
+        const r = await fetch("/api/geocode?region=" + encodeURIComponent(R.region || "id") + "&q=" + encodeURIComponent(q), { headers: { Accept: "application/json" } });
         const data = await r.json();
         if (!r.ok || !data || !data.ok) throw new Error("notfound");
         return { coord: { lat: Number(data.lat), lng: Number(data.lng) }, label: data.label || q };
@@ -204,9 +257,9 @@ const spkluLite = spkluList.map(K);
       }
       function petaKartu(s) {
         const nama = String(s.name || "") + (IS_CN ? " 充电站" : " charging");
-        return safeHref(s.mapUrl, "") || (IS_CN
-          ? "https://www.amap.com/search?query=" + encodeURIComponent(nama)
-          : "https://www.google.com/maps/search/" + encodeURIComponent(nama));
+        if (s.mapUrl) return safeHref(s.mapUrl, "");
+        if (IS_CN) return "https://uri.amap.com/search?keyword=" + encodeURIComponent(nama) + "&view=map&src=evkita";
+        return "https://www.google.com/maps/search/" + encodeURIComponent(nama);
       }
       function ruteUrl(a, b) {
         if (IS_CN) {
@@ -214,6 +267,20 @@ const spkluLite = spkluList.map(K);
           return "https://uri.amap.com/navigation?from=" + p.lng + "," + p.lat + "&to=" + q.lng + "," + q.lat + "&mode=car&coordinate=gaode&callnative=1";
         }
         return "https://www.google.com/maps/dir/?api=1&origin=" + a.lat + "," + a.lng + "&destination=" + b.lat + "," + b.lng;
+      }
+      function ruteBaiduUrl(a, b) {
+        if (!IS_CN) return "";
+        const p = gcj(a.lat, a.lng), q = gcj(b.lat, b.lng);
+        return "https://map.baidu.com/direction?origin=latlng:" + p.lat + "," + p.lng + "|name:Start&destination=latlng:" + q.lat + "," + q.lng + "|name:End&mode=driving&coord_type=gcj02&output=html&src=evkita";
+      }
+      function menitKeTeks(menit) {
+        const m = Math.round(Number(menit) || 0);
+        if (m < 60) return String(R.menitTpl).replace("{n}", m);
+        const jam = Math.floor(m / 60);
+        const sisa = m % 60;
+        return sisa
+          ? String(R.jamMenitTpl).replace("{j}", jam).replace("{m}", sisa)
+          : String(R.jamTpl).replace("{n}", jam);
       }
       function renderSpklu() {
         if (!list) return;
@@ -238,10 +305,38 @@ const spkluLite = spkluList.map(K);
         el.dataset.label = label || "";
       }
       async function perkiraanLokasi() {
-        const r = await fetch("/api/lokasi-saya", { headers: { Accept: "application/json" } });
+        const r = await fetch("/api/lokasi-saya?region=" + encodeURIComponent(R.region || "id"), { headers: { Accept: "application/json" } });
         const d = await r.json();
         if (r.ok && d && d.ok) return d;
         throw new Error((d && d.error) || "gagal");
+      }
+
+      /* Isian biaya dibaca apa adanya; server yang mengubahnya ke metrik dan
+         memformat uangnya. Kosong berarti bawaan edisi di server. */
+      function angkaIsian(id) {
+        const el = document.getElementById(id);
+        const v = el && el.value !== "" ? Number(el.value) : NaN;
+        return Number.isFinite(v) && v >= 0 ? String(v) : "";
+      }
+      async function mintaRute(A, B) {
+        const p = new URLSearchParams({
+          from: A.lat + "," + A.lng,
+          to: B.lat + "," + B.lng,
+          region: R.region,
+          lang: R.lang,
+        });
+        const ev = angkaIsian("ruteEv");
+        const tarif = angkaIsian("ruteTarif");
+        const bbm = angkaIsian("ruteBbm");
+        const hb = angkaIsian("ruteHb");
+        if (ev) p.set("ev", ev);
+        if (tarif) p.set("tarif", tarif);
+        if (bbm) p.set("bbm", bbm);
+        if (hb) p.set("hb", hb);
+        const r = await fetch("/api/rute?" + p.toString(), { headers: { Accept: "application/json" } });
+        const d = await r.json();
+        if (!r.ok || !d || !d.ok) throw new Error("gagal");
+        return d;
       }
 
       const gpsBtn = document.getElementById("ruteGps");
@@ -309,17 +404,59 @@ const spkluLite = spkluList.map(K);
           if (res) res.textContent = R.tidakDitemukan;
           return;
         }
-        const d = haversine(A, B);
+
+        /* Rute dihitung server. Kalau endpoint-nya gagal, halaman TIDAK
+           kosong: jarak lurus tetap dijawab di sini dengan label perkiraan. */
+        let rute;
+        try {
+          rute = await mintaRute(A, B);
+        } catch (err) {
+          const d = haversine(A, B) * 1.3;
+          rute = {
+            jarakKm: d,
+            jarakTeks: Math.round(d).toLocaleString() + " " + R.satuanJarak,
+            menit: d,
+            menitTeks: menitKeTeks(d),
+            sumber: "perkiraan",
+            biaya: null,
+            atribusi: false,
+            gagal: true,
+          };
+        }
+
         if (res) {
-          res.innerHTML = `<p>${escapeHtml(R.labelAsal)}: ${escapeHtml(ga.label)} (${A.lat.toFixed(5)},${A.lng.toFixed(5)})</p><p>${escapeHtml(R.labelTujuan)}: ${escapeHtml(gb.label)} (${B.lat.toFixed(5)},${B.lng.toFixed(5)})</p><p>${escapeHtml(R.jarakLurus)}: <strong>${Math.round(d).toLocaleString("id-ID")} km</strong></p><p>${escapeHtml(R.waktuTempuh)}: <strong>${R.menit.replace("{n}", String(Math.round(d)))}</strong></p><p><a class="btn btn-outline btn-sm" href="${ruteUrl(A, B)}" target="_blank" rel="noopener">${escapeHtml(R.bukaDi.replace("{peta}", R.petaNama))} →</a></p>`;
+          const kartuBiaya = rute.biaya
+            ? `<div class="rute-biaya-kartu">
+                 <div class="kalk-card"><span class="kalk-card-label">${escapeHtml(R.labelListrik)}</span><strong class="kalk-card-value">${escapeHtml(rute.biaya.listrik)}</strong></div>
+                 <div class="kalk-card"><span class="kalk-card-label">${escapeHtml(R.labelBensin)}</span><strong class="kalk-card-value">${escapeHtml(rute.biaya.bensin)}</strong></div>
+                 <div class="kalk-card kalk-card-accent"><span class="kalk-card-label">${escapeHtml(R.labelHemat)}</span><strong class="kalk-card-value">${escapeHtml(rute.biaya.hemat)}</strong></div>
+               </div>`
+            : "";
+          const catatan = rute.sumber === "perkiraan"
+            ? `<p class="rute-catatan">${escapeHtml(R.perkiraanRute)}</p>`
+            : "";
+          const atribusi = rute.atribusi
+            ? `<p class="rute-atribusi">${escapeHtml(R.atribusi)}</p>`
+            : "";
+          res.innerHTML = `
+            <p>${escapeHtml(R.labelAsal)}: ${escapeHtml(ga.label)} (${A.lat.toFixed(5)},${A.lng.toFixed(5)})</p>
+            <p>${escapeHtml(R.labelTujuan)}: ${escapeHtml(gb.label)} (${B.lat.toFixed(5)},${B.lng.toFixed(5)})</p>
+            <p>${escapeHtml(rute.sumber === "perkiraan" ? R.labelJarakLurus : R.labelJarak)}: <strong>${escapeHtml(rute.jarakTeks)}</strong></p>
+            <p>${escapeHtml(R.labelWaktu)}: <strong>${escapeHtml(rute.menitTeks)}</strong></p>
+            ${catatan}
+            ${kartuBiaya}
+            ${atribusi}
+            <p class="rute-open-links">
+              <a class="btn btn-outline btn-sm" href="${ruteUrl(A, B)}" target="_blank" rel="noopener">${escapeHtml(R.bukaDi.replace("{peta}", R.petaNama))} →</a>
+              ${IS_CN ? `<a class="btn btn-outline btn-sm" href="${ruteBaiduUrl(A, B)}" target="_blank" rel="noopener">${escapeHtml(R.bukaDi.replace("{peta}", "百度地图"))} →</a>` : ""}
+            </p>`;
           if (!IS_CN) {
             const embed = "https://maps.google.com/maps?saddr=" + A.lat + "," + A.lng + "&daddr=" + B.lat + "," + B.lng + "&z=8&output=embed";
             res.innerHTML += `<iframe class="rute-map" src="${embed}" title="${escapeHtml(R.petaNama)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`;
           }
         }
         if (saveWrap) saveWrap.hidden = false;
-        lastRoute = { asal: asalVal, tujuan: tujuanVal, jarak: Math.round(d), tgl: new Date().toISOString() };
-        renderSpklu();
+        lastRoute = { asal: asalVal, tujuan: tujuanVal, jarak: Math.round(rute.jarakKm), satuan: R.satuanJarak, region: R.region, tgl: new Date().toISOString() };
       });
 
       if (saveBtn) saveBtn.addEventListener("click", () => {
@@ -352,7 +489,13 @@ const spkluLite = spkluList.map(K);
     .rute-gbtn:disabled { opacity: .6; cursor: progress; }
     .rute-g { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: #4285f4; color: #fff; font-weight: 700; font-size: .8rem; font-family: Arial, sans-serif; }
     .rute-g.wide { width: auto; padding: 0 .45rem; border-radius: 10px; font-size: .72rem; }
+    .rute-biaya { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: .6rem .75rem; }
+    .rute-biaya summary { cursor: pointer; font-size: .85rem; font-weight: 700; }
+    .rute-biaya-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .6rem; margin-top: .6rem; }
+    .rute-biaya-grid .kalk-field label { font-size: .78rem; }
     .rute-result { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--card, #fff); }
+    .rute-biaya-kartu { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .6rem; margin: .75rem 0; }
+    .rute-catatan, .rute-atribusi { font-size: .78rem; color: var(--muted, #64748b); }
     .rute-map { width: 100%; height: 360px; margin-top: 1rem; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; }
     .rute-list { margin-top: 2rem; }
     .rute-spklu { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); margin-top: .75rem; }
@@ -363,5 +506,6 @@ const spkluLite = spkluList.map(K);
     .rute-spklu-body span { color: var(--muted, #64748b); }
     .rute-spklu-links { display: flex; gap: .75rem; margin-top: .3rem; }
     .rute-spklu-links a { font-weight: 600; }
+    .rute-open-links { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
   </style>
 </Base>
