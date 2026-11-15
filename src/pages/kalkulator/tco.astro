@@ -15,11 +15,6 @@ const site = cmsSite(content.site, lang);
 <Base>
   <SiteHeader site={site} lang={lang} t={t} />
   <main class="container kalk" id="konten">
-    <nav class="breadcrumb" aria-label={t("pub.breadcrumb")}>
-      <a href="/">{t("pub.nav.beranda")}</a>
-      <span aria-hidden="true">/</span>
-      <span class="breadcrumb-current">{t("pub.kalk.tcoTitle")}</span>
-    </nav>
     <header class="kalk-head">
       <h1>{t("pub.kalk.tcoTitle")}</h1>
       <p class="kalk-lead">{t("pub.kalk.tcoSub")}</p>
@@ -27,36 +22,28 @@ const site = cmsSite(content.site, lang);
     <form id="tcoForm" class="kalk-form">
       <div class="kalk-grid">
         <div class="kalk-field">
-          <label for="tcoPrice">{t("pub.kalk.tcoPrice")}</label>
-          <input id="tcoPrice" type="number" value="400000000" />
+          <label>{t("pub.kalk.tcoPrice")} <input type="number" id="tcoPrice" value="400000000" /></label>
         </div>
         <div class="kalk-field">
-          <label for="tcoDown">{t("pub.kalk.tcoDown")} <span class="kalk-unit">%</span></label>
-          <input id="tcoDown" type="number" value="20" />
+          <label>{t("pub.kalk.tcoDown")} <input type="number" id="tcoDown" value="20" /> %</label>
         </div>
         <div class="kalk-field">
-          <label for="tcoTerm">{t("pub.kalk.tcoTerm")}</label>
-          <input id="tcoTerm" type="number" value="5" />
+          <label>{t("pub.kalk.tcoTerm")} <input type="number" id="tcoTerm" value="5" /></label>
         </div>
         <div class="kalk-field">
-          <label for="tcoRate">{t("pub.kalk.tcoRate")} <span class="kalk-unit">%</span></label>
-          <input id="tcoRate" type="number" step="0.1" value="6" />
+          <label>{t("pub.kalk.tcoRate")} <input type="number" id="tcoRate" value="6" step="0.1" /> %</label>
         </div>
         <div class="kalk-field">
-          <label for="tcoKm">{t("pub.kalk.tcoKm")}</label>
-          <input id="tcoKm" type="number" value="15000" />
+          <label>{t("pub.kalk.tcoKm")} <input type="number" id="tcoKm" value="15000" /></label>
         </div>
         <div class="kalk-field">
-          <label for="tcoTarif">{t("pub.kalk.tcoTarif")}</label>
-          <input id="tcoTarif" type="number" value="1500" />
+          <label>{t("pub.kalk.tcoTarif")} <input type="number" id="tcoTarif" value="1500" /></label>
         </div>
         <div class="kalk-field">
-          <label for="tcoDep">{t("pub.kalk.tcoDepresiasi")} <span class="kalk-unit">%/thn</span></label>
-          <input id="tcoDep" type="number" value="15" />
+          <label>{t("pub.kalk.tcoDepresiasi")} <input type="number" id="tcoDep" value="15" /> % / tahun</label>
         </div>
         <div class="kalk-field">
-          <label for="tcoMaint">{t("pub.kalk.tcoMaintenance")}</label>
-          <input id="tcoMaint" type="number" value="2000000" />
+          <label>{t("pub.kalk.tcoMaintenance")} <input type="number" id="tcoMaint" value="2000000" /></label>
         </div>
       </div>
       <button type="submit" class="btn btn-primary">{t("pub.kalk.hitung")}</button>
@@ -104,7 +91,7 @@ const site = cmsSite(content.site, lang);
               <strong class="kalk-card-value">Rp ${Math.round(perKm).toLocaleString("id-ID")}</strong>
             </div>
             <div class="kalk-card kalk-card-accent">
-              <span class="kalk-card-label">Cicilan/bulan</span>
+              <span class="kalk-card-label">Cicilan per bulan</span>
               <strong class="kalk-card-value">Rp ${Math.round(cicilan).toLocaleString("id-ID")}</strong>
             </div>
             <div class="kalk-card">
