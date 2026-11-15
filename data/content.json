@@ -1,5 +1,5 @@
 {
-  "revision": "mwha9gaf-6e19488f",
+  "revision": "mwhi11cc-9078fb99",
   "site": {
     "brandText": "EVKita",
     "brandSuffix": ".com",
@@ -442,7 +442,7 @@
       "penjualan2026": 19909,
       "penjualanBulan": "",
       "stale": false,
-      "perluCek": false,
+      "perluCek": true,
       "featured": false,
       "autoFeatured": false,
       "status": "published",
@@ -11169,6 +11169,238 @@
       "aiAssisted": false,
       "auto": false,
       "date": "2026-11-14",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "garansi-baterai-ev-indonesia-2026",
+      "title": "Garansi Baterai EV di Indonesia: Apa yang Perlu Diketahui",
+      "slug": "garansi-baterai-ev-indonesia-2026",
+      "excerpt": "Cakupan garansi baterai, klaim, dan cara menjaga agar garansi tetap berlaku bagi pemilik mobil dan motor listrik di Indonesia.",
+      "body": "## Ringkasan\n\nBaterai adalah komponen termahal dalam kendaraan listrik. Garansi baterai memberikan perlindungan finanzi untuk pemilik EV di Indonesia. Artikel ini menjakupi cakupan garansi, proses klaim, dan tips menjaga agar garansi tetap berlaku.\n\n## 1. Cakupan Garansi Baterai Umum\n\nSebagian besar pabrikan di Indonesia memberikan garansi baterai 8 tahun atau 160.000 km, mana yang lebih dulu. Garansi biasanya mencakup:\n- Penurunan kapasitas di bawah ambang batas (mis. 70% dari kapasitas asli).\n- Kerusakan sel baterai akibat faktor pabrikan.\n- Masalah sistem manajemen baterai (BMS).\n\n## 2. Apa yang Tidak Tercakup Garansi\n\n- Kerusakan akibat kecelakaan atau kecelakaan lalu lintas.\n- Pemeriksaan dan perawatan rutin.\n- Penggunaan charger non-resmi atau modifikasi baterai.\n- Penurunan kapasitas akibat usia normal di bawah ambang batas pabrikan.\n\n## 3. Proses Klaim Garansi\n\nHubungi dealer resmi tempat pembelian, bawa buku servis, dan ajukan klaim melalui bengkel resmi. Pabrikan akan memeriksa kondisi baterai melalui diagnosa komputer sebelum menyetujui penggantian atau perbaikan.\n\n## 4. Tips Menjaga Garansi Tetap Berlaku\n\n- Lakukan servis berkala ke bengkel resmi sesuai jadwal pabrikan.\n- Gunakan charger resmi atau yang direkomendasikan pabrikan.\n- Hindari modifikasi sistem baterai atau listrik kendaraan.\n- Simpan semua bukti servis dan transaksi.\n- Jaga isi daya baterai di rentang 20–80% untuk pemakaian harian.\n\n---\n*Sumber: pabrikan kendaraan listrik terpasang di Indonesia dan Kemenperin. Konfirmasi detail garansi ke dealer resmi sebelum pembelian.*",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "garansi baterai",
+        "baterai ev",
+        "mobil listrik",
+        "motor listrik",
+        "Indonesia"
+      ],
+      "sources": [
+        {
+          "label": "Kemenperin — Roadmap Kendaraan Bermotor Listrik Berbasis Baterai",
+          "url": "https://kemenperin.go.id"
+        },
+        {
+          "label": "PLN — Layanan dan Program SPKLU",
+          "url": "https://layanan.pln.co.id/partnership-spklu"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/byd-seal.webp",
+      "seoTitle": "",
+      "keywords": "garansi baterai EV Indonesia, klaim baterai listrik, perawatan baterai EV",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-15",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "tukar-baterai-motor-listrik-indonesia-2026",
+      "title": "Sistem Tukar Baterai Motor Listrik di Indonesia: Cara Kerja dan Manfaatnya",
+      "slug": "tukar-baterai-motor-listrik-indonesia-2026",
+      "excerpt": "Panduan sistem swap baterai motor listrik di Indonesia: cara kerja, biaya, lokasi stasiun tukar, dan manfaat bagi pengemudi harian.",
+      "body": "## Ringkasan\n\nSistem tukar baterai (battery swap) semakin populer di Indonesia bagi pengguna motor listrik. Artikel ini menjakupi cara kerja sistem swap, biaya, lokasi stasiun, dan manfaatnya bagi pengemudi harian.\n\n## 1. Cara Kerja Sistem Tukar Baterai\n\nPengemudi menuju stasiun tukar, menukarkan baterai yang sudah kosong dengan baterai penuh, dan melanjutkan perjalanan. Prosesnya hanya membutuhkan waktu 2–5 menit, jauh lebih cepat daripada mengisi daya konvensional.\n\n## 2. Biaya Sistem Tukar\n\nBiaya biasanya berbentuk langganan bulanan atau bayar per pakai. Beberapa operator menawarkan paket harian, mingguan, atau bulanan dengan harga yang bervariasi tergantung kapasitas baterai dan lokasi.\n\n## 3. Lokasi Stasiun Tukar di Indonesia\n\nStasiun tukar baterai ada di berbagai kota besar seperti Jakarta, Surabaya, Bandung, dan Medan. Banyak terletak di stasiun pengisian umum, minim market, atau titik strategis di dekat jalan tol.\n\n## 4. Manfaat Bagi Pengemudi Harian\n\n- Tidak perlu menunggu lama saat mengisi daya.\n- Tidak perlu khawatir degradasi baterai jangka panjang.\n- Biaya awal kendaraan lebih terjangkau karena baterai tidak termasuk dalam harga beli.\n- Cocok untuk ojek online, kurir, dan pengemudi jarak jauh harian.\n\n## 5. Tips Memilih Sistem Tukar\n\n- Cek jangkauan stasiun tukar di rute harian Anda.\n- Bandingkan biaya langganan dengan biaya listrik rumah.\n- Pastikan kompatibilitas baterai dengan model motor Anda.\n- Pilih operator dengan jaringan stasiun yang luas.\n\n---\n*Sumber: operator sistem tukar baterai di Indonesia dan pabrikan motor listrik. Verifikasi ke operator terdekat sebelum berlangganan.*",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "tukar baterai",
+        "battery swap",
+        "motor listrik",
+        "Indonesia"
+      ],
+      "sources": [
+        {
+          "label": "Kemenperin — Roadmap Kendaraan Bermotor Listrik Berbasis Baterai",
+          "url": "https://kemenperin.go.id"
+        },
+        {
+          "label": "Gaikindo — Laporan Penjualan Otomotif Indonesia",
+          "url": "https://www.gaikindo.or.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/motor/alva-one.webp",
+      "seoTitle": "",
+      "keywords": "tukar baterai motor listrik Indonesia, battery swap, sistem tukar baterai",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-15",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "solar-charging-ev-usa-2026",
+      "title": "Solar Panel Charging for EVs in America 2026",
+      "slug": "solar-charging-ev-usa-2026",
+      "excerpt": "How to charge your EV using solar panels at home in the US: costs, equipment, incentives, and savings.",
+      "body": "## Overview\n\nCharging an EV with solar power at home is becoming increasingly popular in America. This guide covers equipment, costs, incentives, and savings for homeowners.\n\n## 1. Equipment Needed\n\n- Solar panels (rooftop or ground-mounted).\n- Inverter to convert DC to AC power.\n- Level 2 EV charger compatible with your vehicle.\n- Optional: home battery storage (e.g., Tesla Powerwall).\n\n## 2. Costs\n\nSolar panel system: US,000–US,000 before incentives. Level 2 charger: US–US,500. Installation: US,000–US,000. Federal tax credit can cover up to 30% of solar costs.\n\n## 3. Incentives\n\n- Federal Investment Tax Credit (ITC): up to 30% of solar system cost.\n- State and utility rebates vary by location.\n- Some utilities offer time-of-use rates for EV charging.\n\n## 4. Savings\n\nCharging with solar can reduce EV fuel costs to near zero. Payback period typically 7–10 years depending on local electricity rates and sunlight.\n\n## 5. Tips\n\n- Size your solar system to cover both home and EV usage.\n- Charge during peak solar production (midday).\n- Use a smart charger to optimize charging times.\n- Check local permitting requirements before installation.\n\n---\n*Information summarized from U.S. DOE, EPA, and solar industry sources. Verify local incentives and requirements before installation.*",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "solar charging",
+        "home charging",
+        "solar panels",
+        "USA",
+        "incentives"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Alternative Fuels Data Center",
+          "url": "https://afdc.energy.gov/fuels/electricity.html"
+        },
+        {
+          "label": "DSIRE — Database of State Incentives for Renewables & Efficiency",
+          "url": "https://www.dsireusa.org/"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/mobil/us-ford-mustang-mach-e.webp",
+      "seoTitle": "",
+      "keywords": "solar EV charging USA, home solar charger, EV solar panel cost",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-15",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "ev-winter-driving-usa-2026",
+      "title": "Winter Driving Tips for EV Owners in America 2026",
+      "slug": "ev-winter-driving-usa-2026",
+      "excerpt": "How to maximize EV range and performance during winter in the US: preconditioning, tire care, and charging strategies.",
+      "body": "## Overview\n\nWinter weather reduces EV range and charging speed. This guide helps American EV owners stay safe and efficient during cold months.\n\n## 1. Range Impact\n\nCold weather can reduce EV range by 20–40% due to battery chemistry and cabin heating. Plan trips accordingly and allow extra charging time.\n\n## 2. Preconditioning\n\nUse your car's app to precondition the battery and cabin while still plugged in. This warms the battery using grid power, preserving range for driving.\n\n## 3. Tire Care\n\nWinter tires improve traction but may slightly reduce efficiency. Check tire pressure weekly—cold temperatures lower pressure and increase rolling resistance.\n\n## 4. Charging Strategies\n\n- Charge more frequently in winter.\n- Precondition before arriving at fast chargers.\n- Keep the car plugged in when parked outdoors.\n- Use heated seats instead of cabin heat to save energy.\n\n## 5. Safety Tips\n\n- Clear snow and ice from charging port before plugging in.\n- Carry a winter emergency kit in the car.\n- Plan charging stops along your route.\n- Allow extra time for charging in extreme cold.\n\n---\n*Information summarized from U.S. DOE, EPA, and EV owner communities. Always check local weather and road conditions before traveling.*",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "winter driving",
+        "EV range",
+        "cold weather",
+        "USA",
+        "tips"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Alternative Fuels Data Center",
+          "url": "https://afdc.energy.gov/fuels/electricity.html"
+        },
+        {
+          "label": "EPA Green Vehicles",
+          "url": "https://www.epa.gov/greenvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/spklu/shell-recharge.jpeg",
+      "seoTitle": "",
+      "keywords": "EV winter driving USA, cold weather EV tips, EV range winter",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-15",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-battery-swap-network-2026",
+      "title": "2026年中国换电站网络建设与使用指南",
+      "slug": "cn-battery-swap-network-2026",
+      "excerpt": "2026年中国换电站网络分布、使用方法、费用及注意事项，新能源车主换电出行全攻略。",
+      "body": "## 摘要\n\n换电站已成为中国新能源车主的重要补能选择，尤其适合无法安装家用充电桩的用户。本文介绍2026年换电站网络分布、使用流程、费用及注意事项。\n\n## 1. 换电站网络分布\n\n换电站主要集中在一线及新一线城市，沿高速公路服务区和城市主干道也有部署。蔚来、吉利等运营商的换电站网络已覆盖多个省份。\n\n## 2. 使用流程\n\n1. 通过运营商APP找到附近换电站。\n2. 驶入站内，系统自动识别车辆。\n3. 自动移除旧电池并安装满电电池，全程3–5分钟。\n4. 按APP提示支付费用并离开。\n\n## 3. 费用说明\n\n换电费用通常按次收费或包月订阅。单次换电约30–60元，月套餐约200–500元，具体视车型和运营商而定。\n\n## 4. 注意事项\n\n- 确认车型与换电站兼容。\n- 检查电池健康状态后再换电。\n- 换电完成后及时挪车，释放泊位。\n- 恶劣天气下注意站内安全。\n\n## 5. 适用人群\n\n适合网约车司机、出租车驾驶员、无家用充电条件的用户以及长途出行频繁的车主。\n\n---\n*信息摘自换电运营商及相关部门公开资料。实际使用请以现场设备提示为准。*",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "换电站",
+        "换电",
+        "补能",
+        "新能源汽车",
+        "中国"
+      ],
+      "sources": [
+        {
+          "label": "中华人民共和国工业和信息化部",
+          "url": "https://www.miit.gov.cn/"
+        },
+        {
+          "label": "国家能源局",
+          "url": "https://www.nea.gov.cn/"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/mobil/cn-zeekr-007.webp",
+      "seoTitle": "",
+      "keywords": "中国换电站，换电网络，新能源汽车补能，2026",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-15",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-ev-insurance-2026",
+      "title": "2026年中国电动汽车保险购买指南",
+      "slug": "cn-ev-insurance-2026",
+      "excerpt": "2026年中国电动汽车保险种类、购买渠道、保费及理赔指南，帮助新能源车主选对保险。",
+      "body": "## 摘要\n\n电动汽车保险与传统燃油车有所不同，尤其在电池保障方面。本文介绍2026年中国电动汽车保险种类、购买方式及理赔注意事项。\n\n## 1. 保险种类\n\n- 交强险：法定强制保险。\n- 商业第三者责任险：建议购买高保额。\n- 车损险：包含电池损坏保障，需确认条款。\n- 电池单独险：部分保司提供电池专项保障。\n\n## 2. 保费影响因素\n\n车型、车辆价值、驾驶记录、使用性质（私人或商业）均影响保费。电动汽车保费通常略高于同级燃油车。\n\n## 3. 购买渠道\n\n- 4S店购车时直接投保。\n- 保险公司官网或APP。\n- 第三方保险中介平台。\n\n## 4. 理赔注意事项\n\n- 电池事故需及时报案并保留现场证据。\n- 维修需到指定新能源车维修网点。\n- 保留充电记录和车辆行驶数据。\n\n## 5. 购买建议\n\n建议优先选择包含电池保障的商业险，并关注免赔额和理赔时效。\n\n---\n*信息摘自中国保险行业协会及各保险公司公开资料。购买前请以保司最新条款为准。*",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "保险",
+        "电动汽车保险",
+        "购车指南",
+        "中国"
+      ],
+      "sources": [
+        {
+          "label": "中国保险行业协会",
+          "url": "https://www.cias.org.cn/"
+        },
+        {
+          "label": "中华人民共和国工业和信息化部",
+          "url": "https://www.miit.gov.cn/"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/mobil/cn-nio-es6.webp",
+      "seoTitle": "",
+      "keywords": "中国电动汽车保险，新能源车保险，电池保险，2026",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-15",
       "status": "published",
       "publishAt": "",
       "updatedAt": "",
