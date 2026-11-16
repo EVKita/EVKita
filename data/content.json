@@ -11642,6 +11642,239 @@
       "publishAt": "",
       "updatedAt": "",
       "updatedBy": ""
+    },
+    {
+      "id": "emergency-baterai-ev-habis-indonesia-2026",
+      "title": "Baterai EV Habis di Jalan Raya Indonesia: Langkah Darurat",
+      "slug": "baterai-ev-habis-jalan-raya-indonesia-2026",
+      "excerpt": "Apa yang harus dilakukan saat baterai EV habis di tengah jalan: layanan tow, stasiun terdekat, dan pencegahan.",
+      "body": "## Ringkasan\n\nBaterai EV habis di tengah jalan bisa menjadi pengalaman stres, terutama di jalan raya Indonesia. Artikel ini menjakupi langkah darurat, kontak layanan, dan cara mencegahnya.\n\n## 1. Langkah Pertama Saat Baterai Habis\n\n- Nyalakan lampu darurat (hazard light) dan gerakkan ke tepi jalan yang aman.\n- Nyalakan mode penghemat energi jika tersedia.\n- Kontak layanan darurat pabrikan atau asuransi.\n\n## 2. Layanan Towing dan Darurat\n\nBeberapa pabrikan EV di Indonesia menyediakan layanan towing gratis dalam jangkauan garansi. Simpan nomor darurat di ponsel. PLN dan beberapa operator SPKLU juga memiliki layanan evakuasi baterai di tol besar.\n\n## 3. Cari SPKLU Terdekat\n\nGunakan aplikasi SPKLU (PLN Charge.in, Bluecharge, Casion, dll.) untuk mencari stasiun pengisian terdekat. Beberapa menawarkan layanan pengiriman baterai portable untuk darurat.\n\n## 4. Pencegahan\n\n- Jaga isi daya minimal 20% sebelum berangkat perjalanan jauh.\n- Periksa rute dan ketersediaan SPKLU sebelum lebaran atau libur panjang.\n- Bawa kabel pengisian darurat jika kendaraan mendukungnya.\n\n---\n*Sumber: pabrikan kendaraan listrik dan operator SPKLU di Indonesia. Konfirmasi ke pabrikan Anda tentang layanan darurat.*",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "baterai habis",
+        "darurat",
+        "towing",
+        "SPKLU",
+        "Indonesia"
+      ],
+      "sources": [
+        {
+          "label": "PLN — Layanan dan Program SPKLU",
+          "url": "https://layanan.pln.co.id/partnership-spklu"
+        },
+        {
+          "label": "Kemenperin — Roadmap Kendaraan Bermotor Listrik Berbasis Baterai",
+          "url": "https://kemenperin.go.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/chery-j6.webp",
+      "seoTitle": "",
+      "keywords": "baterai EV habis, towing EV, darurat EV, SPKLU Indonesia",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-16",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "biaya-operasi-ev-vs-bensin-indonesia-2026",
+      "title": "Bandingkan Biaya Operasi EV vs Bensin di Indonesia 2026",
+      "slug": "biaya-operasi-ev-vs-bensin-indonesia-2026",
+      "excerpt": "Perbandingan biaya operasional kendaraan listrik versus bensin di Indonesia: listrik, perawatan, dan total biaya per tahun.",
+      "body": "## Ringkasan\n\nApakah kendaraan listrik lebih hemat dibanding bensin di Indonesia? Artikel ini membandingkan biaya operasional tahunan antara mobil listrik dan mobil bensin kelas sama.\n\n## 1. Biaya Energi per Kilometer\n\nListrik rumah (tarif R-1) berkisar Rp1.400–Rp1.600 per kWh. Mobil listrik berkonsumsi 15–20 kWh per 100 km, jadi biaya sekitar Rp200–Rp320 per km. Bensin Pertamax berkisar Rp14.000–Rp16.000 per liter, mobil kelas sama berkonsumsi 10–12 km per liter, jadi sekitar Rp1.200–Rp1.600 per km.\n\n## 2. Biaya Perawatan\n\nEV tidak perlu ganti oli, busi, atau filter udara. Perawatan berkala hanya memeriksa pendingin baterai, rem, dan ban. Biaya perawatan EV per tahun sekitar 30–50% lebih rendah dari bensin.\n\n## 3. Biaya Asuransi dan Pajak\n\nAsuransi EV sedikit lebih tinggi karena baterai bernilai mahal. Pajak kendaraan bermotor (PKB) untuk EV di beberapa daerah Indonesia mendapat diskon atau insentif.\n\n## 4. Total Biaya per Tahun\n\nUntuk perjalanan 20.000 km per tahun:\n- EV: energi Rp4–6 juta + perawatan Rp1–2 juta = Rp5–8 juta per tahun.\n- Bensin: energi Rp24–32 juta + perawatan Rp3–5 juta = Rp27–37 juta per tahun.\n\n## 5. Break-Even\n\nHarga beli EV lebih tinggi, tetapi biaya operasional lebih rendah. Break-even biasanya tercapai dalam 3–5 tahun tergantung intensitas pemakaian.\n\n---\n*Sumber: PLN, pabrikan kendaraan, dan data pasar Indonesia. Biaya bisa bervariasi tergantung wilayah dan pola pemakaian.*",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "biaya operasi",
+        "ev vs bensin",
+        "hemat",
+        "perbandingan",
+        "Indonesia"
+      ],
+      "sources": [
+        {
+          "label": "PLN — Tarif Listrik Rumah Tangga",
+          "url": "https://www.pln.co.id/"
+        },
+        {
+          "label": "Gaikindo — Laporan Penjualan Otomotif Indonesia",
+          "url": "https://www.gaikindo.or.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/motor/alessa-dimentro-e1-pro.webp",
+      "seoTitle": "",
+      "keywords": "biaya operasi EV Indonesia, ev vs bensin, hemat energi, perbandingan biaya",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-16",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "ev-tax-credit-usa-2026",
+      "title": "EV Tax Credits and Incentives in America 2026",
+      "slug": "ev-tax-credits-usa-2026",
+      "excerpt": "Federal and state tax credits for buying an EV in the US: eligibility, amounts, and how to claim.",
+      "body": "## Overview\n\nBuying an EV in America can be cheaper thanks to federal and state incentives. This guide explains available tax credits, eligibility requirements, and how to claim them.\n\n## 1. Federal Clean Vehicle Credit\n\nUp to US$7,500 tax credit for new qualifying EVs. Requirements:\n- Vehicle must be assembled in North America.\n- Battery minerals and components must meet sourcing rules.\n- Buyer income must be under US$150,000 (single) or US$300,000 (joint).\n\n## 2. Used EV Credit\n\nUp to US$4,000 for used EVs priced under US$25,000. Buyer income limits apply.\n\n## 3. State and Local Incentives\n\n- California: Clean Vehicle Rebate Project (CVRP) rebates.\n- New York: Drive Clean Rebate.\n- Colorado: State tax credit.\n- Many utilities offer charger rebates and time-of-use rates.\n\n## 4. How to Claim\n\n- Federal credit: claim on your tax return (Form 8936).\n- Some dealers offer point-of-sale credit transfer starting 2024.\n- State rebates: apply through state agency websites.\n\n## 5. Tips\n\n- Check eligibility before buying.\n- Combine federal credit with state rebates.\n- Consider leased EVs (leasing company claims credit, passes savings to you).\n\n---\n*Information from U.S. DOE, IRS, and state energy offices. Tax laws change; consult a tax professional.*",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "tax credit",
+        "incentives",
+        "federal credit",
+        "USA",
+        "buying guide"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Alternative Fuels Data Center",
+          "url": "https://afdc.energy.gov/fuels/electricity.html"
+        },
+        {
+          "label": "IRS — Clean Vehicle Credit",
+          "url": "https://www.irs.gov/credits-deductions/clean-vehicle-credit"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/mobil/us-chevrolet-equinox-ev.webp",
+      "seoTitle": "",
+      "keywords": "EV tax credit USA 2026, federal EV incentive, state EV rebate, clean vehicle credit",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-16",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "best-ev-road-trip-routes-usa-2026",
+      "title": "Best EV Road Trip Routes in America 2026",
+      "slug": "best-ev-road-trip-routes-usa-2026",
+      "excerpt": "Top scenic EV road trip routes in the US with charging stops: Pacific Coast, Route 66, and national parks.",
+      "body": "## Overview\n\nPlanning an EV road trip across America? These scenic routes offer reliable charging infrastructure and beautiful sights.\n\n## 1. Pacific Coast Highway (California)\n\nSan Francisco to San Diego along Highway 1. Plenty of Level 2 and DC fast chargers in coastal towns. Stop at Big Sur, Monterey, and Santa Barbara.\n\n## 2. Route 66 (Chicago to Los Angeles)\n\nHistoric route now well-served by EV chargers. Stop in Tulsa, Oklahoma City, Amarillo, and Flagstaff. Tesla Superchargers and Electrify America stations along the way.\n\n## 3. National Parks Loop (Utah and Arizona)\n\nZion, Bryce Canyon, Grand Canyon, and Capitol Reef. Charging available in gateway towns like Springdale and Moab. Plan carefully due to remote stretches.\n\n## 4. I-95 East Coast Corridor\n\nBoston to Miami. Heaviest concentration of DC fast chargers in the US. Tesla Superchargers and Electrify America every 50–100 miles.\n\n## 5. Road Trip Tips\n\n- Use A Better Route Planner (ABRP) for charging stops.\n- Aim to arrive at chargers with 10–30% charge.\n- Stop at 80% to save time.\n- Have backup charger locations in mind.\n\n---\n*Information from charging network operators and travel guides. Check charger status in real time before departing.*",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "road trip",
+        "travel",
+        "charging route",
+        "USA",
+        "tips"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Alternative Fuels Data Center",
+          "url": "https://afdc.energy.gov/fuels/electricity.html"
+        },
+        {
+          "label": "PlugShare — EV Charging Station Map",
+          "url": "https://www.plugshare.com/"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/motor/us-livewire-s2.webp",
+      "seoTitle": "",
+      "keywords": "EV road trip USA 2026, scenic EV routes, EV charging route America",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-16",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-ev-insurance-guide-2026",
+      "title": "2026年中国新能源汽车保险选购指南",
+      "slug": "cn-ev-insurance-guide-2026",
+      "excerpt": "2026年中国电动汽车保险种类、购买渠道、保费及理赔指南，帮助新能源车主选对保险。",
+      "body": "## 摘要\n\n电动汽车保险与传统燃油车有所不同，尤其在电池保障方面。本文介绍2026年中国电动汽车保险种类、购买方式及理赔注意事项。\n\n## 1. 保险种类\n\n- 交强险：法定强制保险。\n- 商业第三者责任险：建议购买高保额。\n- 车损险：包含电池损坏保障，需确认条款。\n- 电池单独险：部分保险公司提供电池专项保障。\n\n## 2. 保费影响因素\n\n车型、车辆价值、驾驶记录、使用性质（私人或商业）均影响保费。电动汽车保费通常略高于同级燃油车。\n\n## 3. 购买渠道\n\n- 4S店购车时直接投保。\n- 保险公司官网或APP。\n- 第三方保险中介平台。\n\n## 4. 理赔注意事项\n\n- 电池事故需及时报案并保留现场证据。\n- 维修需到指定新能源车维修网点。\n- 保留充电记录和车辆行驶数据。\n\n## 5. 购买建议\n\n建议优先选择包含电池保障的商业险，并关注免赔额和理赔时效。\n\n---\n*信息摘自中国保险行业协会及各保险公司公开资料。购买前请以保司最新条款为准。*",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "保险",
+        "电动汽车保险",
+        "购车指南",
+        "中国"
+      ],
+      "sources": [
+        {
+          "label": "中国保险行业协会",
+          "url": "https://www.cias.org.cn/"
+        },
+        {
+          "label": "中华人民共和国工业和信息化部",
+          "url": "https://www.miit.gov.cn/"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/mobil/cn-li-l9.webp",
+      "seoTitle": "",
+      "keywords": "中国电动汽车保险，新能源车保险，电池保险，2026",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-16",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
+    },
+    {
+      "id": "cn-ev-charging-etiquette-2026",
+      "title": "2026年中国电动汽车充电礼仪指南",
+      "slug": "cn-ev-charging-etiquette-2026",
+      "excerpt": "2026年中国公共充电桩使用礼仪、排队规则及充电桩共享建议，新能源车主必读。",
+      "body": "## 摘要\n\n随着电动汽车普及，公共充电桩排队现象增多。本文介绍2026年中国充电桩使用礼仪、排队规则及共享建议，帮助车主文明充电。\n\n## 1. 充电桩使用礼仪\n\n- 充电完成及时挪车，不要长期占用桩位。\n- 不要拔掉他人车辆的充电枪。\n- 保持充电桩周围整洁，丢弃垃圾到垃圾桶。\n\n## 2. 排队规则\n\n- 按到达顺序排队，不得插队。\n- 如果暂时离开车辆，请在车内留言或通过APP告知预计返回时间。\n- 快充桩建议充至80%即挪车，给其他车辆机会。\n\n## 3. 共享建议\n\n- 优先使用慢充桩进行长时间停车充电。\n- 快充桩留给急需补能的车辆。\n- APP中可标注“是否可共享”，方便其他车主沟通。\n\n## 4. 注意事项\n\n- 确认充电桩功率与车辆兼容。\n- 检查充电枪和车辆充电口是否干净。\n- 恶劣天气下注意充电安全。\n\n## 5. 文明充电口号\n\n“文明充电，从我做起”——共同维护良好的充电环境。\n\n---\n*信息摘自主流充电运营商及行业协会公开资料。实际使用请以APP及现场规则为准。*",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "充电礼仪",
+        "充电桩",
+        "公共充电",
+        "新能源汽车",
+        "中国"
+      ],
+      "sources": [
+        {
+          "label": "中华人民共和国工业和信息化部",
+          "url": "https://www.miit.gov.cn/"
+        },
+        {
+          "label": "国家能源局",
+          "url": "https://www.nea.gov.cn/"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/motor/cn-niu-mqi-gt.webp",
+      "seoTitle": "",
+      "keywords": "中国充电礼仪，电动车充电桩，文明充电，新能源汽车，2026",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-16",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "",
+      "updatedBy": ""
     }
   ],
   "media": {}
