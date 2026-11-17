@@ -340,6 +340,15 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
 }
 
 /**
+ * Jendela "foto tidak boleh kembar" antar artikel satu edisi.
+ *
+ * Dua bulan, sama dengan batas umur berita. Aturan redaksi situs ini: tidak
+ * ada dua artikel di edisi yang sama yang memakai foto yang sama dalam dua
+ * bulan terakhir — dan tidak ada foto yang dipakai dua edisi sekaligus.
+ */
+export const JENDELA_GAMBAR_HARI = 60;
+
+/**
  * Sampul otomatis untuk draf harian.
  *
  * Kartu artikel tanpa gambar tampil sebagai kotak teks polos — di /artikel
@@ -349,7 +358,16 @@ export function pilihTopik(content: any, riwayat: { kunci: string }[], hari: str
  * menebak: perbandingan memakai foto salah satu kendaraannya, rangkuman
  * berita memakai foto berita asalnya (atau foto katalog kalau berita itu
  * tidak bergambar, mis. Kompas.com), panduan memakai foto katalog yang
- * diputar per hari. Kosong kalau katalog memang belum punya satu pun foto.
+ * diputar per hari.
+ *
+ * Untuk jalur putaran katalog, gambar yang sudah dipakai artikel edisi itu
+ * dalam `JENDELA_GAMBAR_HARI` terakhir dilewati lebih dulu. Tanpa ini, satu
+ * foto katalog yang sama muncul di beberapa artikel dalam sebulan — persis
+ * yang dilarang panduan gambar artikel. Kalau seluruh katalog edisi itu sudah
+ * terpakai, ia kembali ke daftar penuh: sampul kembar lebih baik daripada
+ * sampul kosong.
+ *
+ * Kosong kalau katalog memang belum punya satu pun foto.
  * Murni: tidak membaca berkas, tidak memanggil model.
  */
 export function sampulArtikel(content: any, topik: TopikArtikel, hari: string): string {
@@ -390,8 +408,29 @@ export function sampulArtikel(content: any, topik: TopikArtikel, hari: string): 
     .map((v: any) => String((v && v.image) || "").trim())
     .filter((g) => g && (/^https?:\/\//i.test(g) || g.startsWith("/")));
   if (!semuaGambar.length) return "";
+
+  /* Foto yang sudah dipakai artikel edisi ini dalam dua bulan terakhir tidak
+     dipilih lagi. Dihitung dari tanggal artikel, bukan `updatedAt`: menyunting
+     lama sebuah artikel tidak boleh membuat fotonya "baru" lagi. */
+  const batas = new Date(`${String(hari || "").slice(0, 10)}T00:00:00+07:00`).getTime();
+  const batasAwal = Number.isFinite(batas)
+    ? new Date(batas - JENDELA_GAMBAR_HARI * 86400000).toISOString().slice(0, 10)
+    : "";
+  const dipakai = new Set(
+    ((content && content.artikel) || [])
+      .filter((a: any) => String(a?.wilayah || "id").toLowerCase() === edisi)
+      .filter((a: any) => {
+        const tgl = String((a && a.date) || "").slice(0, 10);
+        return /^\d{4}-\d{2}-\d{2}$/.test(tgl) && (!batasAwal || tgl >= batasAwal);
+      })
+      .map((a: any) => String((a && a.image) || "").trim())
+      .filter(Boolean)
+  );
+  const bebas = semuaGambar.filter((g) => !dipakai.has(g));
+  const pilihan = bebas.length ? bebas : semuaGambar;
+
   const indeks = [...String(hari || "")].reduce((n, c) => n + c.charCodeAt(0), 0);
-  return semuaGambar[indeks % semuaGambar.length];
+  return pilihan[indeks % pilihan.length];
 }
 
 const SKEMA_DRAF = {

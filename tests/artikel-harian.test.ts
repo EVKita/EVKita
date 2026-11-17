@@ -199,6 +199,55 @@ describe("sampulArtikel", () => {
     const topik = { strategi: "panduan", kunci: "panduan:x", judulKerja: "X", bahan: "", sumberBoleh: [] } as any;
     assert.equal(sampulArtikel(kosong, topik, "2026-10-07"), "");
   });
+
+  /* Aturan redaksi: tidak ada dua artikel satu edisi yang memakai foto sama
+     dalam dua bulan terakhir. */
+  it("melewati foto yang sudah dipakai artikel edisi itu dalam dua bulan", () => {
+    const isi = {
+      berita: [],
+      cars: [
+        { id: "a", brand: "A", name: "Satu", image: "/api/uploads/a.webp", wilayah: "id" },
+        { id: "b", brand: "B", name: "Dua", image: "/api/uploads/b.webp", wilayah: "id" },
+      ],
+      motors: [],
+      artikel: [{ wilayah: "id", date: "2026-09-20", image: "/api/uploads/a.webp" }],
+    };
+    const topik = { strategi: "panduan", kunci: "panduan:x", judulKerja: "X", bahan: "", sumberBoleh: [], wilayah: "id" } as any;
+    assert.equal(sampulArtikel(isi, topik, "2026-10-07"), "/api/uploads/b.webp");
+  });
+
+  it("foto yang dipakai artikel lama di luar dua bulan boleh dipakai lagi", () => {
+    const isi = {
+      berita: [],
+      cars: [{ id: "a", brand: "A", name: "Satu", image: "/api/uploads/a.webp", wilayah: "id" }],
+      motors: [],
+      artikel: [{ wilayah: "id", date: "2026-05-01", image: "/api/uploads/a.webp" }],
+    };
+    const topik = { strategi: "panduan", kunci: "panduan:x", judulKerja: "X", bahan: "", sumberBoleh: [], wilayah: "id" } as any;
+    assert.equal(sampulArtikel(isi, topik, "2026-10-07"), "/api/uploads/a.webp");
+  });
+
+  it("foto artikel edisi lain tidak menghalangi edisi ini", () => {
+    const isi = {
+      berita: [],
+      cars: [{ id: "a", brand: "A", name: "Satu", image: "/api/uploads/a.webp", wilayah: "us" }],
+      motors: [],
+      artikel: [{ wilayah: "id", date: "2026-10-06", image: "/api/uploads/a.webp" }],
+    };
+    const topik = { strategi: "panduan", kunci: "panduan:x", judulKerja: "X", bahan: "", sumberBoleh: [], wilayah: "us" } as any;
+    assert.equal(sampulArtikel(isi, topik, "2026-10-07"), "/api/uploads/a.webp");
+  });
+
+  it("tetap memilih sesuatu kalau seluruh katalog edisi sudah terpakai", () => {
+    const isi = {
+      berita: [],
+      cars: [{ id: "a", brand: "A", name: "Satu", image: "/api/uploads/a.webp", wilayah: "id" }],
+      motors: [],
+      artikel: [{ wilayah: "id", date: "2026-10-06", image: "/api/uploads/a.webp" }],
+    };
+    const topik = { strategi: "panduan", kunci: "panduan:x", judulKerja: "X", bahan: "", sumberBoleh: [], wilayah: "id" } as any;
+    assert.equal(sampulArtikel(isi, topik, "2026-10-07"), "/api/uploads/a.webp");
+  });
 });
 
 describe("pembantu", () => {  it("drafTunggu hanya menghitung draf otomatis berstatus draf", () => {
