@@ -227,6 +227,12 @@ export function pangkasBeritaLama(daftar, sekarang = Date.now(), maksHari = UMUR
  * menulis judul yang nyaris sama untuk peristiwa yang berbeda. Yang tersisa
  * diurutkan dari yang terbaru dan dipotong pada `maks`.
  *
+ * Satu kekecualian: judul yang sama PERSIS dari PENERBIT yang sama. Itu bukan
+ * dua peristiwa, melainkan satu kisah yang masuk dua kali lewat dua alamat —
+ * lazim terjadi pada feed pencarian Google News, yang kadang mengembalikan
+ * artikel yang sama dengan URL berbeda. Membiarkannya berarti kartu kembar di
+ * Berita Terkini dan satu jatah edisi terbuang.
+ *
  * Pemotongan hanya mengenai berita hasil tarikan RSS. Berita yang dijaga
  * redaksi (`beritaDijaga`) selalu ikut — sebelumnya satu tarikan berisi 55
  * berita baru ikut membuang tulisan yang ditambahkan tangan. Berita RSS tetap
@@ -236,12 +242,27 @@ export function pangkasBeritaLama(daftar, sekarang = Date.now(), maksHari = UMUR
 export function gabungBerita(lama, baru, maks = 30) {
   const daftar = Array.isArray(lama) ? [...lama] : [];
   const ada = new Set(daftar.map((b) => urlKunci(b && b.url)).filter(Boolean));
+  /* Kunci kedua: penerbit + judul yang dinormalkan. Hanya dipakai untuk
+     menolak judul yang sama persis dari penerbit yang sama (lihat catatan
+     di atas fungsi). */
+  const teksKunci = (b) => {
+    const judul = String((b && b.title) || "")
+      .toLowerCase()
+      .replace(/[^\p{Letter}\p{Number}]+/gu, " ")
+      .trim();
+    const penerbit = String((b && b.source) || "").toLowerCase().trim();
+    return judul && penerbit ? `${penerbit}|${judul}` : "";
+  };
+  const judulAda = new Set(daftar.map(teksKunci).filter(Boolean));
 
   let ditambah = 0;
   for (const b of Array.isArray(baru) ? baru : []) {
     const k = urlKunci(b && b.url);
     if (!k || ada.has(k)) continue;
+    const j = teksKunci(b);
+    if (j && judulAda.has(j)) continue;
     ada.add(k);
+    if (j) judulAda.add(j);
     daftar.push(b);
     ditambah++;
   }

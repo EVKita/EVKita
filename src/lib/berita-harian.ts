@@ -4,6 +4,7 @@ import { readContent, writeContent } from "./store";
 import { SUMBER_BERITA, relevanBerita, judulBersih } from "./berita-sumber.js";
 import { normalizeWilayah } from "./region.js";
 import { gabungBerita, parseFeed, pangkasBeritaLama, urlKunci } from "./berita-rss.js";
+import { perluDiselesaikan, selesaikanTautanGoogle } from "./berita-tautan";
 
 /**
  * Penarik berita harian.
@@ -102,6 +103,24 @@ async function ambilSumber(sumber: { id: string; nama: string; feed: string; str
         updatedAt: new Date().toISOString(),
         updatedBy: "",
       }));
+
+    /*
+     * Alamat perantara Google News ditukar dengan alamat penerbit aslinya.
+     * Dibatasi dua belas per sumber per putaran: satu feed pencarian bisa
+     * berisi puluhan tautan, dan tiap penukaran berarti dua permintaan HTTP.
+     * Yang gagal tetap memakai alamat Google News — beritanya tidak hilang,
+     * hanya kartunya tetap tanpa foto.
+     */
+    const perlu = items.filter((b) => perluDiselesaikan(b.url)).slice(0, 12);
+    if (perlu.length) {
+      await Promise.all(
+        perlu.map(async (b) => {
+          const asli = await selesaikanTautanGoogle(b.url);
+          if (asli) b.url = asli;
+        })
+      );
+    }
+
     return { items, error: "" };
   } catch {
     return { items: [], error: "jaringan" };

@@ -32,6 +32,15 @@ export const SUMBER_BERITA = [
   { id: "antaranews", nama: "Antara News", feed: "https://www.antaranews.com/rss/otomotif.xml", wilayah: "id" },
 
   /*
+   * Sindonews Otomotif: RSS resmi (`/rss`), diverifikasi aktif November 2026.
+   * Ditambahkan karena beberapa kanal otomotif besar Indonesia hanya bisa
+   * dibaca lewat feed pencarian Google News, dan halaman perantara itu tidak
+   * punya `og:image` — kartunya selalu tampil tanpa foto. Feed langsung ini
+   * memberi tautan penerbit dan foto utama yang bisa diambil.
+   */
+  { id: "sindonews", nama: "Sindonews", feed: "https://otomotif.sindonews.com/rss", wilayah: "id" },
+
+  /*
    * Kompas.com tidak lagi menyediakan RSS publik (`/getrss/*` sudah 404,
    * tidak ada tautan RSS di kanal otomotifnya) — jadi feed resminya tidak
    * bisa dipakai langsung. Sebagai gantinya dipakai feed pencarian Google
@@ -157,18 +166,22 @@ export const SUMBER_BERITA = [
   /* ─── EDISI CHINA ─── */
 
   /*
-   * CnEVPost dan Gasgoo: liputan EV China berbahasa Inggris lewat feed
-   * pencarian Google News yang dibatasi ke situsnya — pola yang sama dengan
-   * Kompas.com di atas. CnEVPost dan Gasgoo tidak menyediakan RSS publik
-   * yang stabil, jadi kanal resmi Google News yang dipakai; yang disimpan
-   * tetap sama — hanya judul, ringkasan, tanggal, dan TAUTAN ke artikel
-   * aslinya.
+   * CnEVPost: RSS resmi penerbitnya sendiri (`/feed/`), diverifikasi aktif
+   * November 2026. Sebelumnya dipakai feed pencarian Google News karena
+   * feed langsungnya dianggap tidak stabil — akibatnya tautan yang tersimpan
+   * adalah alamat `news.google.com`, bukan alamat artikel aslinya, dan
+   * halaman perantara itu tidak punya `og:image`. Karena itu seluruh kartu
+   * edisi China tampil tanpa foto. Feed resmi mengembalikan keduanya
+   * sekaligus: tautan penerbit dan gambar utama di dalam `<description>`.
+   *
+   * Gasgoo dan Yicai Global tetap memakai feed pencarian Google News: feed
+   * resmi keduanya sudah dicek (404/410). Yang disimpan tetap sama — judul,
+   * ringkasan, tanggal, dan tautan ke artikel aslinya.
    */
   {
     id: "cnevpost",
     nama: "CnEVPost",
-    feed: "https://news.google.com/rss/search?q=site%3Acnevpost.com%20%28EV%20OR%20electric%20OR%20battery%20OR%20NIO%20OR%20XPeng%20OR%20BYD%20OR%20Xiaomi%29&hl=en&gl=SG&ceid=SG%3Aen",
-    stripJudul: " - CnEVPost",
+    feed: "https://cnevpost.com/feed/",
     wilayah: "cn",
   },
   {
@@ -176,6 +189,20 @@ export const SUMBER_BERITA = [
     nama: "Gasgoo",
     feed: "https://news.google.com/rss/search?q=site%3Agasgoo.com%20%28EV%20OR%20electric%20OR%20battery%20OR%20NEV%29&hl=en&gl=SG&ceid=SG%3Aen",
     stripJudul: " - Gasgoo",
+    wilayah: "cn",
+  },
+
+  /*
+   * CarNewsChina: RSS resmi penerbitnya (`/feed/`), diverifikasi aktif
+   * November 2026. Ditambahkan justru karena alasan yang sama dengan
+   * CnEVPost di atas: feed Google News tidak membawa alamat artikel asli,
+   * sehingga gambarnya tidak bisa diambil. Feed ini mengembalikan tautan
+   * penerbit; gambarnya menyusul dari `og:image` halaman artikelnya.
+   */
+  {
+    id: "carnewschina",
+    nama: "CarNewsChina",
+    feed: "https://carnewschina.com/feed/",
     wilayah: "cn",
   },
 

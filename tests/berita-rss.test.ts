@@ -149,6 +149,24 @@ describe("gabungBerita", () => {
     assert.equal(daftar[0].url, "https://b.test/2");
   });
 
+  it("menolak judul kembar dari penerbit yang sama, tetapi bukan dari penerbit lain", () => {
+    const lama = [
+      { url: "https://a.test/1", date: "2026-09-10", source: "Gasgoo", title: "Following Xiaomi, Two More Automakers Obtain Licenses" },
+    ];
+    const baru = [
+      /* Kisah yang sama, alamat berbeda, penerbit sama — kembar. */
+      { url: "https://news.google.com/rss/articles/xyz", date: "2026-09-11", source: "Gasgoo", title: "Following Xiaomi, Two More Automakers Obtain Licenses" },
+      /* Judul sama dari penerbit lain boleh: itu dua ruang redaksi. */
+      { url: "https://b.test/2", date: "2026-09-12", source: "CnEVPost", title: "Following Xiaomi, Two More Automakers Obtain Licenses" },
+      /* Penerbit sama, kisah lain — tentu boleh. */
+      { url: "https://a.test/3", date: "2026-09-13", source: "Gasgoo", title: "CATL Opens New Battery Plant in Hungary" },
+    ];
+    const { daftar, ditambah } = gabungBerita(lama, baru, 30);
+    assert.equal(ditambah, 2);
+    assert.equal(daftar.length, 3);
+    assert.ok(!daftar.some((b) => b.url.includes("news.google.com")));
+  });
+
   it("memotong pada batas maksimum", () => {
     const lama = Array.from({ length: 5 }, (_, i) => ({ url: `https://a.test/${i}`, date: `2026-09-0${i + 1}` }));
     const { daftar } = gabungBerita(lama, [], 3);
