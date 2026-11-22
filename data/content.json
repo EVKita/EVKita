@@ -9295,6 +9295,212 @@
   ],
   "artikel": [
     {
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "冬季",
+        "保养",
+        "电池",
+        "充电",
+        "续航"
+      ],
+      "sources": [
+        {
+          "label": "国家电网 — 充电服务",
+          "url": "https://www.sgcc.com.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/motor/cn-segway-e300se.webp",
+      "seoTitle": "电动车冬季保养全方位指南",
+      "keywords": "电动车冬季保养, 电池, 充电, 续航",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T01:19:19.884Z",
+      "updatedBy": "",
+      "date": "2026-11-22",
+      "id": "dianche-dongji-baoyang-quan-mian-zhinan",
+      "title": "电动车冬季保养全方位指南：续航、电池与充电实用技巧",
+      "slug": "dianche-dongji-baoyang-quan-mian-zhinan",
+      "excerpt": "冬季低温会让电动车续航下降、充电变慢。掌握这套冬季保养技巧，让爱车在寒冷天气里依然高效可靠。",
+      "body": "## 摘要\n\n冬季是电动车用车的考验期。本文提供续航、电池与充电方面的实用保养建议。\n\n## 每周检查胎压\n\n低温导致胎压下降，胎压不足增加能耗。每周检查并按标准充气。\n\n## 出发前预热座舱与电池\n\n利用插电状态预热，使用电网电力而非电池电量，节省续航。\n\n## 电量保持 20%-80%\n\n避免电量过低或长期满充，冬季日常建议保持 20%-80% 区间。\n\n## 优先使用座椅加热\n\n座椅和方向盘加热功率远低于空调暖风，更节能，取暖效果更直接。\n\n## 合理规划充电站\n\n冬季充电速度变慢，长途出行提前规划充电站，预留充足充电时间。\n\n## 尽量室内停车\n\n车库停车可保持电池温度较高，提升续航和充电速度，优于露天停放。\n\n## 结论\n\n做好这几点冬季保养，电动车在寒冷天气里依然高效可靠。"
+    },
+    {
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "家用充电桩",
+        "安全",
+        "安装",
+        "电动车"
+      ],
+      "sources": [
+        {
+          "label": "国家电网 — 充电服务",
+          "url": "https://www.sgcc.com.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/motor/cn-segway-e125s.webp",
+      "seoTitle": "电动车家用充电桩安全指南",
+      "keywords": "家用充电桩, 安全安装, 电动车用电防护",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T01:19:19.884Z",
+      "updatedBy": "",
+      "date": "2026-11-22",
+      "id": "dianche-chongdian-anquan-quan-mian-zhinan",
+      "title": "电动车家用充电桩安全使用全指南：安装、检查与日常防护",
+      "slug": "dianche-chongdian-anquan-quan-mian-zhinan",
+      "excerpt": "安装家用充电桩前后，安全至关重要。本指南涵盖安装检查、用电防护与日常使用注意事项。",
+      "body": "## 摘要\n\n家用充电桩让电动车用车更方便，但涉及高压用电，安全安装与使用不能忽视。\n\n## 找持证电工安装\n\n家用充电桩涉及高压电路，必须由持证电工安装，切勿自行改装电线。\n\n## 检查家庭电表容量\n\n安装前确认家庭电表和电路容量足够支撑充电桩功率，必要时升级电表。\n\n## 使用独立电路\n\n充电桩应使用独立电路和空气开关，避免与其他大功率电器共用。\n\n## 安装漏电保护\n\n室外和车库安装的充电桩必须加装漏电保护器（GFCI/RCD），防止触电事故。\n\n## 选择合格产品\n\n购买通过国家认证（CCC等）的正规充电桩，避免使用三无产品。\n\n## 规范摆放与线缆管理\n\n充电桩应固定在稳固墙面，线缆避免拖地，室外安装需做防雨防晒措施。\n\n## 结论\n\n安全安装、规范使用，家用充电桩才能长期放心使用。"
+    },
+    {
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "summer",
+        "battery",
+        "heat",
+        "range",
+        "EV"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Electric Vehicles",
+          "url": "https://www.energy.gov/eere/electricvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/mobil/toyota-bz4x.webp",
+      "seoTitle": "EV Battery Life Summer Heat Tips",
+      "keywords": "EV battery summer heat, protect EV battery, EV range summer",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T01:19:19.884Z",
+      "updatedBy": "",
+      "date": "2026-11-22",
+      "id": "extending-ev-battery-life-in-summer-heat",
+      "title": "Extending EV Battery Life in Summer Heat: Practical Tips",
+      "slug": "extending-ev-battery-life-in-summer-heat",
+      "excerpt": "Summer heat can stress EV batteries. Use these practical tips to protect battery health and maintain range during hot weather.",
+      "body": "## Summary\n\nHot weather puts extra stress on EV batteries. These tips help you protect battery health and maintain range during summer.\n\n## Park in the shade or garage\n\nDirect sunlight heats up the battery pack. Parking in shade or a garage keeps the battery cooler when not in use.\n\n## Precondition while plugged in\n\nCool the cabin while still connected to the charger before a trip. This uses grid power instead of draining the battery.\n\n## Avoid charging to 100 percent daily\n\nIn hot weather, keeping the battery between 20 and 80 percent reduces heat stress and extends battery life.\n\n## Avoid fast charging during heat waves\n\nDC fast charging generates heat. On very hot days, use Level 2 charging when possible and avoid midday fast charging.\n\n## Keep tires properly inflated\n\nHot pavement and underinflated tires increase rolling resistance and energy use. Check tire pressure monthly.\n\n## Conclusion\n\nSimple summer habits keep your EV battery healthy and your range dependable all season long."
+    },
+    {
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "home charger",
+        "safety",
+        "installation",
+        "EV"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Home Charging",
+          "url": "https://www.energy.gov/eere/electricvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/bengkel/hyundai-kona-electric.jpg",
+      "seoTitle": "EV Home Charger Safety Checklist",
+      "keywords": "home EV charger safety, EV charger installation, EV electrical safety",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T01:19:19.884Z",
+      "updatedBy": "",
+      "date": "2026-11-22",
+      "id": "ev-home-charger-safety-checklist-before-installation",
+      "title": "EV Home Charger Safety Checklist Before Installation",
+      "slug": "ev-home-charger-safety-checklist-before-installation",
+      "excerpt": "Before installing a home EV charger, go through this safety checklist to protect your home, your car, and your family.",
+      "body": "## Summary\n\nInstalling a home EV charger involves electrical work. Follow this safety checklist before and during installation.\n\n## Hire a licensed electrician\n\nNever attempt DIY installation of a Level 2 charger. A licensed electrician knows local codes and permit requirements.\n\n## Check your electrical panel capacity\n\nConfirm your home's electrical panel has enough spare capacity for a 30-50 amp charger circuit. An upgrade may be needed.\n\n## Use a dedicated circuit\n\nThe charger should have its own dedicated circuit and breaker, not shared with other large appliances.\n\n## Install GFCI protection\n\nGround Fault Circuit Interrupter protection is required for outdoor and garage charger installations in most areas.\n\n## Choose a UL-listed charger\n\nBuy a charger certified by UL or another recognized testing laboratory. Avoid uncertified cheap chargers.\n\n## Mount the charger properly\n\nSecure the charger to a sturdy wall, keep the cable off the floor, and protect it from weather if installed outdoors.\n\n## Conclusion\n\nA safe installation protects your investment and gives you years of worry-free home charging."
+    },
+    {
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "motor listrik",
+        "overheating",
+        "perawatan",
+        "cuaca panas"
+      ],
+      "sources": [
+        {
+          "label": "Kementerian Perhubungan — Kendaraan Listrik",
+          "url": "https://www.dephub.go.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/motor/alessa-ex3000.webp",
+      "seoTitle": "Mengatasi Overheating Motor Listrik Hari Panas",
+      "keywords": "overheating motor listrik, mendinginkan baterai, perawatan motor listrik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T01:19:19.884Z",
+      "updatedBy": "",
+      "date": "2026-11-22",
+      "id": "mengatasi-overheating-motor-listrik-pada-hari-panas",
+      "title": "Mengatasi Overheating Motor Listrik pada Hari Panas: 5 Langkah Praktis",
+      "slug": "mengatasi-overheating-motor-listrik-pada-hari-panas",
+      "excerpt": "Motor listrik bisa overheat saat dipakai di siang hari panas. Ikuti 5 langkah ini untuk mendinginkan dan menjaga performa motor Anda.",
+      "body": "## Ringkasan\n\nPanas ekstrem dapat memengaruhi baterai dan motor listrik. Berikut cara sederhana mencegah dan mengatasi overheating.\n\n## 1. Parkir di tempat teduh\n\nHindari parkir di bawah sinar matahari langsung selama berjam-jam. Gunakan garage, carport, atau tempat berbayang.\n\n## 2. Jangan cas segera setelah berkendara jauh\n\nTunggu motor mendingin selama 15-30 menit sebelum mencolokkan charger. Cas segera saat panas bisa menambah stres baterai.\n\n## 3. Bersihkan saluran pendingin\n\nPastikan saluran angin dan sirip pendingin motor tidak tersumbat debu atau kotoran. Bersihkan dengan lembut secara berkala.\n\n## 4. Hindari beban berlebih\n\nJangan membebani motor melebihi kapasitasnya, terutama di atas tanjaman panjang saat cuaca panas.\n\n## 5. Cek cairan pendingin (jika ada)\n\nBeberapa motor listrik dilengkapi sistem pendingin cair. Periksa tingkat cairan sesuai jadwal pemeliharaan pabrik."
+    },
+    {
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "baterai",
+        "mobil listrik bekas",
+        "kesehatan baterai",
+        "tips beli"
+      ],
+      "sources": [
+        {
+          "label": "Kementerian Perindustrian — Kendaraan Listrik",
+          "url": "https://www.kemenperin.go.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/mini-cooper-se.webp",
+      "seoTitle": "Cek Kesehatan Baterai Mobil Listrik Bekas Sebelum Beli",
+      "keywords": "kesehatan baterai mobil listrik, mobil listrik bekas, tips beli EV bekas",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T01:19:19.884Z",
+      "updatedBy": "",
+      "date": "2026-11-22",
+      "id": "cara-mengecek-kesehatan-baterai-mobil-listrik-bekas",
+      "title": "Cara Mengecek Kesehatan Baterai Mobil Listrik Bekas Sebelum Beli",
+      "slug": "cara-mengecek-kesehatan-baterai-mobil-listrik-bekas",
+      "excerpt": "Beli mobil listrik bekas jangan hanya lihat bodinya. Cek kesehatan baterai dulu dengan 6 langkah sederhana ini agar tidak menyesal.",
+      "body": "## Ringkasan\n\nBaterai adalah bagian paling mahal mobil listrik. Saat beli bekas, cek kesehatan baterai sebelum menandatangani perjanjian.\n\n## 1. Cek sisa kapasitas baterai\n\nMinta laporan diagnose baterai dari dealer atau bengkel resmi. Kapasitas seharusnya masih di atas 80-90 persen dari kapasitas asal.\n\n## 2. Periksa jaminan baterai yang tersisa\n\nBanyak pabrikan menawarkan garansi baterai 8 tahun atau 160.000 km. Cek apakah garansi masih berlaku dan dapat dialihkan ke pemilik baru.\n\n## 3. Lihat riwayat pengisian\n\nBaterai yang selalu diisi cepat (DC fast charging) setiap hari cenderung menurun lebih cepat. Minta riwayat charging jika tersedia.\n\n## 4. Test drive dan perhatikan range\n\nJalani test drive dengan baterai penuh. Bandingkan jarak tempuh nyata dengan spesifikasi pabrik. Selisih besar bisa menandakan degradasi.\n\n## 5. Periksa fisik paket baterai\n\nLihat paket baterai di bawah mobil. Hindari yang ada tanda kebocoran, korosi, atau kerusakan pada casing.\n\n## 6. Bandingkan harga dengan biaya penggantian\n\nJika baterai hampir usang, hitung biaya penggantian baterai sebelum menawar harga mobil bekas."
+    },
+    {
       "id": "diandong-motuo-che-bu-qidong-zijian-xiufu",
       "title": "电动摩托车不启动？自己检修与快速修复指南",
       "slug": "diandong-motuo-che-bu-qidong-zijian-xiufu",
