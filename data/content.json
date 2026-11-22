@@ -9295,6 +9295,211 @@
   ],
   "artikel": [
     {
+      "id": "dianche-zijian-xiufu-zhinan",
+      "title": "电动车常见故障自检与简单修复指南",
+      "slug": "dianche-zijian-xiufu-zhinan",
+      "excerpt": "电动车突然故障不要慌。本文教你几个常见故障的自检步骤与简单修复方法，大部分可在家中解决。",
+      "body": "## 摘要\n\n电动车突然故障不要慌。本文教你几个常见故障的自检步骤与简单修复方法，大部分可在家中解决。\n\n## 检查电源连接\n\n确认电池连接线牢固，无松动或腐蚀。\n\n## 检查钥匙和遥控\n\n确认钥匙电量充足且在感应范围内。\n\n## 检查保险丝\n\n打开保险丝盒，检查主保险丝是否烧断，烧断需更换同规格保险丝。\n\n## 检查电量\n\n电池电量过低会导致无法启动，充电后再试。\n\n## 系统复位\n\n关闭电源，等待 5 分钟，再重新启动系统。\n\n## 联系售后\n\n如上述步骤无效，联系品牌售后进行专业检修。",
+      "tags": [
+        "电动车",
+        "故障",
+        "自检",
+        "修复"
+      ],
+      "sources": [
+        {
+          "label": "中国电动自行车协会",
+          "url": "https://www.cebike.com"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/motor/cn-yadea-e8s.webp",
+      "seoTitle": "电动车常见故障自检指南",
+      "keywords": "电动车故障, 自检, 修复, 电动车维修",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T06:48:29.853Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "dianche-paoche-qiusun-yanjiu",
+      "title": "电动车换电池前必看：寿命、价格与回收全指南",
+      "slug": "dianche-paoche-qiusun-yanjiu",
+      "excerpt": "打算更换电动车电池？本文讲解电池寿命、更换价格与旧电池回收，帮你做出明智决定。",
+      "body": "## 摘要\n\n打算更换电动车电池？本文讲解电池寿命、更换价格与旧电池回收，帮你做出明智决定。\n\n## 了解电池寿命\n\n大多数电动车电池可使用 8-10 年或更久，具体取决于使用和维护习惯。\n\n## 检查电池健康状态\n\n前往服务中心检测电池健康度（SOH）。若 SOH 仍在 70% 以上，通常无需更换。\n\n## 更换价格参考\n\n电池包更换价格因车型而异，通常在数千至数万元人民币。\n\n## 旧电池回收\n\n拆下的废旧电池应交给正规回收渠道，避免随意丢弃污染环境。\n\n## 结论\n\n换电池前先做好健康检测与价格评估，避免不必要的更换支出。",
+      "tags": [
+        "电池",
+        "更换",
+        "回收",
+        "电动车"
+      ],
+      "sources": [
+        {
+          "label": "国家电网 — 充电服务",
+          "url": "https://www.sgcc.com.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/motor/cn-supersoco-tcmax.webp",
+      "seoTitle": "电动车换电池前必看",
+      "keywords": "电动车电池, 更换电池, 电池回收",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T06:48:29.853Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "fix-ev-charging-port-not-working",
+      "title": "How to Fix an EV Charging Port That Is Not Working",
+      "slug": "fix-ev-charging-port-not-working",
+      "excerpt": "EV charging port not working? Troubleshoot common issues — from debris in the port to software glitches — before calling a technician.",
+      "body": "## Summary\n\nAn EV charging port that will not work can often be fixed with simple troubleshooting.\n\n## Inspect the charging port\n\nLook for debris, dirt, or damage inside the port. Clean gently with a dry cloth.\n\n## Try a different cable and charger\n\nSwap the cable and charger to rule out a faulty accessory.\n\n## Restart the vehicle\n\nTurn off the EV, wait a few minutes, then restart. This clears temporary software glitches.\n\n## Check for software updates\n\nSome EVs need a software update to fix charging port communication issues.\n\n## Visit a technician if problems persist\n\nIf the port is damaged or keeps failing, contact a certified EV technician.",
+      "tags": [
+        "charging port",
+        "troubleshooting",
+        "EV repair",
+        "maintenance"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Home Charging",
+          "url": "https://www.energy.gov/eere/electricvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/motor/honda-cuv-e.webp",
+      "seoTitle": "Fix EV Charging Port Not Working",
+      "keywords": "EV charging port fix, charging port troubleshooting, EV repair",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T06:48:29.853Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "ev-range-anxiety-summer-travel-guide",
+      "title": "EV Range Anxiety Summer Travel Guide: Plan Your Road Trip with Confidence",
+      "slug": "ev-range-anxiety-summer-travel-guide",
+      "excerpt": "Planning a summer road trip in your EV? Learn how to manage range anxiety, find chargers, and keep your battery healthy in hot weather.",
+      "body": "## Summary\n\nSummer road trips in an EV require planning. This guide helps you manage range anxiety and enjoy the journey.\n\n## Map chargers along your route\n\nUse apps like PlugShare or A Better Routeplanner to find chargers every 150-200 miles.\n\n## Precondition while plugged in\n\nCool the cabin while still connected to the charger before departing. This saves battery range.\n\n## Keep battery between 20-80 percent\n\nHot weather stresses the battery. Staying in the 20-80% range reduces heat stress.\n\n## Avoid midday fast charging\n\nDC fast charging generates heat. Charge in the morning or evening when it is cooler.\n\n## Check tire pressure\n\nHot pavement increases tire pressure. Check monthly and inflate to the recommended level.",
+      "tags": [
+        "range anxiety",
+        "road trip",
+        "summer",
+        "charging",
+        "EV"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Electric Vehicles",
+          "url": "https://www.energy.gov/eere/electricvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/mobil/vinfast-vf-e34.webp",
+      "seoTitle": "EV Range Anxiety Summer Travel Guide",
+      "keywords": "EV range anxiety, summer road trip, EV charging planner",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T06:48:29.853Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "jaga-motor-listrik-di-musim-kemarau",
+      "title": "Jaga Motor Listrik di Musim Kemarau: 5 Tips Agar Tidak Overheat",
+      "slug": "jaga-motor-listrik-di-musim-kemarau",
+      "excerpt": "Panas panas bisa bikin motor listrik overheat. Ikuti 5 tips sederhana untuk menjaga baterai dan motor tetap awet di musim kemarau.",
+      "body": "## Ringkasan\n\nPanas ekstrim di musim kemarau dapat menurunkan performa baterai dan menyebabkan overheat motor listrik.\n\n## Parkir di tempat teduh\n\nHindari parkir di bawah sinar matahari langsung selama berjam-jam. Gunakan garage atau tempat berbayang.\n\n## Jangan cas segera setelah berkendara jauh\n\nTunggu motor mendingin 15-30 menit sebelum mencolokkan charger.\n\n## Bersihkan saluran pendingin\n\nPastikan sirip pendingin dan saluran angin tidak tersumbat debu.\n\n## Hindari beban berlebih\n\nJangan membebani motor melebihi kapasitas, terutama di atas tanjaman saat cuaca panas.\n\n## Cek cairan pendingin\n\nBeberapa motor listrik dilengkapi pendingin cair. Periksa tingkat cairan sesuai jadwal pabrik.",
+      "tags": [
+        "motor listrik",
+        "kemarau",
+        "overheat",
+        "perawatan"
+      ],
+      "sources": [
+        {
+          "label": "Kementerian Perhubungan — Kendaraan Listrik",
+          "url": "https://www.dephub.go.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/motor/alessa-forte.webp",
+      "seoTitle": "Jaga Motor Listrik Musim Kemarau",
+      "keywords": "motor listrik musim kemarau, mencegah overheat, perawatan motor",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T06:48:29.853Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "pilih-spklu-tepat-untuk-roadtrip-ev",
+      "title": "Cara Pilih SPKLU Tepat untuk Roadtrip Mobil Listrik Luar Kota",
+      "slug": "pilih-spklu-tepat-untuk-roadtrip-ev",
+      "excerpt": "Perencana perjalanan jauh dengan mobil listrik? Ikuti panduan memilih SPKLU di jalan, estimasi waktu pengisian, dan tips agar roadtrip tetap nyaman.",
+      "body": "## Ringkasan\n\nBerjalan jauh dengan mobil listrik membutuhkan perencanaan pengisian yang matang. Berikut panduan memilih SPKLU di jalan.\n\n## Cek rute dan jarak SPKLU\n\nSebelum berangkat, peta kan SPKLU di rute Anda. Pilih SPKLU yang jaraknya 150-200 km antar satu sama lain agar selalu ada cadangan.\n\n## Pilih daya pengisian yang sesuai\n\nDC fast charging 50-150 kW cocok untuk istirahat singkat 30-60 menit. AC charging lebih lambat tapi cocok untuk istirahat malam.\n\n## Periksa ketersediaan realtime\n\nGunakan aplikasi PLN Mobile atau Charge.IN untuk cek apakah SPKLU sedang antri atau rusak.\n\n## Bawa kabel dan adapter cadangan\n\nBeberapa SPKLU hanya menyediakan kabel CCS2. Bawa adapter CHAdeMO atau Type 2 jika mobil Anda membutuhkannya.\n\n## Isi baterai ke 80 persen\n\nDi atas 80% pengisian melambat. Berhenti di 80% untuk menghemat waktu dan biaya.\n\n## Kesimpulan\n\nDengan perencanaan SPKLU yang matang, roadtrip mobil listrik dapat dilakukan nyaman dan tanpa kecemasan range anxiety.",
+      "tags": [
+        "SPKLU",
+        "roadtrip",
+        "pengisian",
+        "perjalanan jauh"
+      ],
+      "sources": [
+        {
+          "label": "PLN — Layanan SPKLU",
+          "url": "https://web.pln.co.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/jaecoo-j5-ev.webp",
+      "seoTitle": "Cara Pilih SPKLU untuk Roadtrip Mobil Listrik",
+      "keywords": "SPKLU, roadtrip mobil listrik, pengisian di jalan",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T06:48:29.853Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
       "author": "Redaksi EVKita",
       "category": "Panduan",
       "tags": [
