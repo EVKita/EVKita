@@ -150,6 +150,288 @@ export function parseFeed(xml) {
   return out;
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Kembar lintas penerbit
+ *
+ * Satu peluncuran diliput lima penerbit dalam satu hari, dan kelimanya masuk
+ * Berita Terkini sebagai lima kartu yang menceritakan hal yang sama. Judulnya
+ * tidak pernah sama persis — karena itu pemeriksaan "judul sama" saja tidak
+ * cukup, dan pemeriksaan "judul mirip" saja berbahaya: "Hyundai Neira Meluncur"
+ * dan "BYD Ti7 Meluncur" sangat mirip kata demi kata padahal dua mobil
+ * berbeda.
+ *
+ * Karena itu satu pasang baru dianggap kembar kalau SEMUANYA terpenuhi:
+ *
+ *   1. tanggalnya sama — peristiwa yang sama diberitakan pada hari yang sama;
+ *   2. jenis peristiwanya sama (peluncuran/harga, penjualan, uji) — "harga
+ *      turun" dan "penjualan naik" adalah dua kabar, bukan satu;
+ *   3. mereknya sama — inilah yang memisahkan Neira dari Ti7;
+ *   4. modelnya tidak bertentangan — "Ioniq 5" dan "Ioniq 6" dari merek yang
+ *      sama tetap dua kabar;
+ *   5. kata-katanya benar-benar bertumpang tindih, diukur dengan bobot IDF:
+ *      kata yang muncul di banyak judul ("harga", "GAW", "2026") hampir tidak
+ *      berbobot, kata yang khas ("neira", "j7", "parkir") berbobot besar.
+ *
+ * Berita yang dijaga redaksi tidak pernah dibuang oleh aturan ini.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/** Kata yang muncul di hampir semua judul berita — tidak membedakan apa pun. */
+const KATA_UMUM = new Set(
+  (
+    "dan di ke dari ini itu untuk dengan pada akan bisa lebih mulai rp juta jutaan yang atau juga tak tidak " +
+    "cuma hanya sudah bakal segera kini hari resmi jadi oleh dalam soal para bagi usai setelah sebelum karena " +
+    "agar supaya saat ketika ada adalah akan bakal jadi kini masih belum sudah para sang si nya pun lah kah " +
+    "the of to in on for and with from by a an as at is are was were be been its it this that these those " +
+    "new now how why what when where who will can could would should may might"
+  ).split(/\s+/)
+);
+
+/**
+ * Merek yang dikenal. Daftar ini sengaja tidak harus lengkap: merek yang tidak
+ * tercatat hanya berarti pasangannya tidak pernah dianggap kembar — arah
+ * kesalahannya aman.
+ */
+const MEREK = [
+  "mercedes-benz", "mitsubishi", "chevrolet", "fangchengbao", "volkswagen", "yamaha", "suzuki",
+  "hyundai", "leapmotor", "polestar", "stellantis", "porsche", "ferrari", "baojun", "denza",
+  "hongqi", "deepal", "avatr", "zeekr", "tesla", "toyota", "honda", "nissan", "renault", "peugeot",
+  "citroen", "chery", "omoda", "jaecoo", "geely", "wuling", "vinfast", "xpeng", "changan", "aion",
+  "polytron", "gesits", "smoot", "volta", "viar", "rakata", "united", "maxwell", "beijing", "baic",
+  "dfac", "neta", "ora", "baw", "byd", "nio", "gac", "mg", "bmw", "audi", "mini", "lexus", "jeep",
+  "ford", "rivian", "lucid", "xiaomi", "lixiang", "aito", "luxeed", "hiphi", "stelato", "isuzu",
+  "daihatsu", "hyunda", "zero", "alva", "kawasaki", "vespa", "piaggio", "benelli", "qj",
+].sort((a, b) => b.length - a.length);
+
+/** Jenis peristiwa. Yang tidak masuk salah satunya tidak pernah digabung. */
+const KELAS_PERISTIWA = [
+  [
+    "peluncuran",
+    /(harga|juta|dijual|dipasarkan|meluncur|diluncurkan|hadir|diperkenalkan|debut|mengaspal|melantai|mejeng|tampil|booking|pemesanan|preorder|inden|spesifikasi|bocoran|varian|diumumkan|rilis|launch|\bjual\b|menanti|unveil|price|pricing)/,
+  ],
+  ["penjualan", /(penjualan|sales|laris|terjual|pangsa|produksi|pabrik|ekspor|impor|deliveries|delivery|produced|produces|production|millionth|rolls off|roll off|milestone)/],
+  ["uji", /(testdrive|uji|tanjakan|konsumsi|review|ulasan|jarak|tempuh|range|efficiency)/],
+];
+
+/** Huruf kecil tanpa aksen — perbandingan tidak boleh rewel soal kapital. */
+function bakuJudul(judul) {
+  return String(judul || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+/**
+ * Membuang akhiran nama penerbit yang masih menempel di judul (" - Oto",
+ * " - gridoto.com"). Syaratnya ketat: paling banyak dua kata, tanpa angka,
+ * dan hanya kalau masih ada judul yang tersisa. Judul asli yang memakai tanda
+ * pisah secara wajar ("MG S6 EV - Harga dan Spesifikasi") tidak ikut terpotong
+ * karena bagian kanannya lebih dari dua kata.
+ */
+function tanpaAkhiranPenerbit(teks) {
+  const bagian = String(teks).split(/\s+[-\u2013\u2014|]\s+/);
+  if (bagian.length < 2) return teks;
+  const ekor = bagian[bagian.length - 1].trim();
+  if (/^[a-z.\s]{2,24}$/i.test(ekor) && ekor.split(/\s+/).length <= 2 && !/\d/.test(ekor)) {
+    return bagian.slice(0, -1).join(" ");
+  }
+  return teks;
+}
+
+/** Angka yang ditulis dengan kata disamakan dengan angkanya. */
+const ANGKA_KATA = new Map([
+  ["one", "1"], ["two", "2"], ["three", "3"], ["four", "4"], ["five", "5"],
+  ["six", "6"], ["seven", "7"], ["eight", "8"], ["nine", "9"], ["ten", "10"],
+  ["satu", "1"], ["dua", "2"], ["tiga", "3"], ["empat", "4"], ["lima", "5"],
+  ["enam", "6"], ["tujuh", "7"], ["delapan", "8"], ["sembilan", "9"], ["sepuluh", "10"],
+]);
+
+/** Kata pembanding sebuah judul. */
+function kataJudul(judul) {
+  return new Set(
+    tanpaAkhiranPenerbit(bakuJudul(judul))
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(" ")
+      .filter((k) => k && !KATA_UMUM.has(k))
+      .filter((k) => !/^(19|20)\d\d$/.test(k))
+      .map((k) => ANGKA_KATA.get(k) || k)
+  );
+}
+
+/**
+ * Penanda model: kata yang memuat angka (`s6`, `j7`, `i60`, `ehs4`) dan
+ * gabungan kata+angka yang ditulis terpisah ("Titan 7", "MG S6").
+ *
+ * Inilah yang membuat "MG S6" dan "MGS6" bertemu, dan yang membuat "Ioniq 5"
+ * tidak pernah disamakan dengan "Ioniq 6". Harga ("Rp 532 juta") dan tahun
+ * bukan model — keduanya dibuang lebih dulu.
+ */
+const MATA_UANG = new Set([
+  "rp", "idr", "rmb", "usd", "eur", "jpy", "dollar", "dollars", "yuan", "juta", "ribu",
+  "million", "billion", "ribuan", "jutaan",
+]);
+
+/**
+ * Kata yang angka di sebelahnya BUKAN penanda model: jumlah varian, jumlah
+ * orang, satuan, dan kata kerja umum. Tanpa ini "Ada 3 Varian" menghasilkan
+ * model "ada3" yang tidak berarti apa-apa.
+ */
+const BUKAN_MODEL = new Set([
+  ...MATA_UANG,
+  "varian", "orang", "unit", "bulan", "tahun", "hari", "jam", "menit", "detik", "persen",
+  "km", "kwh", "kw", "liter", "kursi", "seat", "seater", "roda", "pintu", "airbag", "generasi",
+  "ada", "dapat", "beri", "capai", "jadi", "punya", "hingga", "sampai", "lebih", "kurang",
+  "hanya", "sekitar", "mulai", "tembus", "usung", "bawa", "pakai", "masuk", "keluar", "ke", "sudah",
+  "reaches", "reached", "hits", "hit", "tops", "topped", "sells", "sold", "clocks", "clocked",
+  "priced", "costs", "cost", "worth", "senilai", "seharga", "dibanderol", "berusia", "umur",
+]);
+
+function modelJudul(judul) {
+  const kata = tanpaAkhiranPenerbit(bakuJudul(judul)).replace(/[^a-z0-9]+/g, " ").split(" ").filter(Boolean);
+  const keluar = new Set();
+  for (let i = 0; i < kata.length; i++) {
+    const k = kata[i];
+    if (/^(19|20)\d\d$/.test(k)) continue; // tahun
+    if (/^(rp|idr|rmb|usd|eur|jpy)\d+$/.test(k)) continue; // "rp532"
+
+    if (/[a-z]/.test(k) && /\d/.test(k)) {
+      keluar.add(k);
+      // "mgs6" juga menyimpan "s6" supaya bertemu dengan "MG S6".
+      const ekor = k.match(/([a-z]\d{1,4})$/);
+      if (ekor && ekor[1] !== k) keluar.add(ekor[1]);
+      continue;
+    }
+
+    if (/^\d{1,3}$/.test(k)) {
+      const sebelum = i > 0 ? kata[i - 1] : "";
+      const sesudah = i + 1 < kata.length ? kata[i + 1] : "";
+      // "Titan 7" / "7 DM" — angka melekat pada kata di sebelahnya.
+      if (/^[a-z]{2,}$/.test(sebelum) && !BUKAN_MODEL.has(sebelum)) keluar.add(sebelum + k);
+      if (/^[a-z]{2,}$/.test(sesudah) && !BUKAN_MODEL.has(sesudah)) keluar.add(k + sesudah);
+    }
+  }
+  return keluar;
+}
+
+/** Apakah ada penanda model yang benar-benar khas (huruf+angka)? */
+function modelKhas(model) {
+  return [...model].some((m) => /[a-z]/.test(m) && /\d/.test(m) && m.length <= 12);
+}
+
+/** Merek yang disebut judul, dikenali juga saat menempel pada model ("mgs6"). */
+function merekJudul(judul) {
+  const kata = kataJudul(judul);
+  const keluar = new Set();
+  for (const k of kata) {
+    for (const m of MEREK) {
+      const rapat = m.replace(/-/g, "");
+      // "mgs6" = merek "mg" + model "s6"; "bydtitan7" bukan merek "byd" + model.
+      if (k === rapat || (k.startsWith(rapat) && /^[a-z]{0,3}\d/.test(k.slice(rapat.length)))) {
+        keluar.add(m);
+        break;
+      }
+    }
+  }
+  return keluar;
+}
+
+/** Jenis peristiwa sebuah judul, atau "" kalau tidak dikenali. */
+function kelasJudul(judul) {
+  const s = bakuJudul(judul);
+  for (const [nama, pola] of KELAS_PERISTIWA) if (pola.test(s)) return nama;
+  return "";
+}
+
+/**
+ * Bobot tiap kata: makin khas sebuah kata, makin besar bobotnya. Dihitung
+ * ulang pada tiap kumpulan berita, jadi tidak ada daftar kata yang perlu
+ * dirawat seiring berita baru.
+ */
+function bobotIdf(daftar) {
+  const df = new Map();
+  for (const b of daftar) {
+    for (const k of kataJudul(b && b.title)) df.set(k, (df.get(k) || 0) + 1);
+  }
+  const n = Math.max(1, daftar.length);
+  return (kata) => Math.log(1 + n / (df.get(kata) || 1));
+}
+
+/** Apakah dua berita menceritakan peristiwa yang sama? */
+export function peristiwaSama(a, b, bobot) {
+  if (!a || !b) return false;
+  if (String(a.date || "") !== String(b.date || "")) return false;
+  if (String(a.wilayah || "") !== String(b.wilayah || "")) return false;
+
+  const kelas = kelasJudul(a.title);
+  if (!kelas || kelas !== kelasJudul(b.title)) return false;
+
+  const merekA = merekJudul(a.title);
+  const merekB = merekJudul(b.title);
+  if (!merekA.size || !merekB.size || ![...merekA].some((m) => merekB.has(m))) return false;
+
+  // Model yang jelas berbeda berarti peristiwa yang berbeda.
+  const modelA = modelJudul(a.title);
+  const modelB = modelJudul(b.title);
+  const modelSama = modelA.size > 0 && modelB.size > 0 && [...modelA].some((m) => modelB.has(m));
+  if (modelA.size && modelB.size && !modelSama) return false;
+
+  /*
+   * Satu model + satu hari + satu jenis kabar = satu peristiwa, sekalipun
+   * kelima penerbit memilih kata yang berbeda-beda untuknya. Inilah yang
+   * merapikan "Jaecoo J7" yang muncul lima kali.
+   *
+   * Kedua judul WAJIB menyebut model itu. Kabar "BYD punya rencana besar"
+   * tidak boleh ikut dibuang hanya karena ada kabar "BYD TiTAN 7" di hari yang
+   * sama — merek yang sama bukan peristiwa yang sama.
+   */
+  if (modelSama && (modelKhas(modelA) || modelKhas(modelB))) return true;
+
+  /*
+   * Tanpa penanda model (mis. "Hyundai Neira"), kata-katanya harus benar-benar
+   * bertumpang tindih. Ambangnya lebih rendah daripada kemiripan biasa karena
+   * merek dan jenis peristiwanya sudah dipastikan sama.
+   */
+  const kataA = kataJudul(a.title);
+  const kataB = kataJudul(b.title);
+  let bersama = 0;
+  let bobotA = 0;
+  for (const k of kataA) {
+    bobotA += bobot(k);
+    if (kataB.has(k)) bersama += bobot(k);
+  }
+  let bobotB = 0;
+  for (const k of kataB) bobotB += bobot(k);
+  if (bersama <= 0) return false;
+
+  const tumpang = bersama / Math.min(bobotA, bobotB);
+  const jumlah = [...kataA].filter((k) => kataB.has(k)).length;
+  return jumlah >= 2 && tumpang >= 0.38;
+}
+
+/**
+ * Membuang kartu kembar lintas penerbit. Yang dipertahankan adalah yang lebih
+ * dulu hadir (berita redaksi selalu menang), supaya id dan fotonya tidak
+ * berubah setiap kali tarikan berikutnya menemukan versi penerbit lain.
+ */
+export function buangKembarPeristiwa(daftar) {
+  const isi = Array.isArray(daftar) ? daftar.filter(Boolean) : [];
+  const bobot = bobotIdf(isi);
+  const dijaga = isi.filter(beritaDijaga);
+  const lain = isi.filter((b) => !beritaDijaga(b));
+
+  const simpan = [...dijaga];
+  let dibuang = 0;
+  for (const b of lain) {
+    if (simpan.some((x) => peristiwaSama(x, b, bobot))) {
+      dibuang++;
+      continue;
+    }
+    simpan.push(b);
+  }
+  if (!dibuang) return { daftar: isi, dibuang: 0 };
+  // Urutan asli dipertahankan: pemanggil sudah mengurutkannya.
+  return { daftar: isi.filter((b) => simpan.includes(b)), dibuang };
+}
+
 /** Kunci pembanding tautan: tanpa skema `www`, tanpa query, tanpa garis miring akhir. */
 export function urlKunci(u) {
   return String(u || "")
@@ -268,8 +550,12 @@ export function gabungBerita(lama, baru, maks = 30) {
   }
 
   daftar.sort((a, b) => String((b && b.date) || "").localeCompare(String((a && a.date) || "")));
-  const dijaga = daftar.filter(beritaDijaga).length;
+  /* Kembar lintas penerbit dibuang sebelum jatah dihitung: kalau tidak, lima
+     kartu untuk satu peluncuran menghabiskan lima jatah dan menutupi berita
+     lain. */
+  const { daftar: bersih } = buangKembarPeristiwa(daftar);
+  const dijaga = bersih.filter(beritaDijaga).length;
   let jatah = Math.max(maks - dijaga, Math.ceil(maks / 2));
-  const hasil = daftar.filter((b) => beritaDijaga(b) || jatah-- > 0);
+  const hasil = bersih.filter((b) => beritaDijaga(b) || jatah-- > 0);
   return { daftar: hasil, ditambah };
 }

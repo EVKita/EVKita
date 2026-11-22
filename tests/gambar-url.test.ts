@@ -140,8 +140,12 @@ describe("ipTerlarang — hasil penerjemahan nama", () => {
       "fd12:3456::1",
       "fe80::1",
       "::ffff:127.0.0.1",
+      "::ffff:7f00:1",
       "2002:7f00:1::",
       "64:ff9b::7f00:1",
+      "64:ff9b::192.168.1.1",
+      "64:ff9b::a00:1",
+      "64:ff9b:1::1",
       "",
       "bukan-ip",
     ]) {
@@ -159,6 +163,29 @@ describe("ipTerlarang — hasil penerjemahan nama", () => {
       "2606:4700::1111",
     ]) {
       assert.equal(ipTerlarang(ip), false, `seharusnya lolos: ${ip}`);
+    }
+  });
+
+  it("membaca NAT64 well-known sebagai IPv4 yang dibungkusnya", () => {
+    /*
+     * Di jaringan IPv6-saja, Windows melaporkan hasil DNS sebagai
+     * `64:ff9b::<ipv4>`. Menolak seluruh awalan berarti menolak SETIAP situs
+     * — itu bug yang pernah membuat semua gambar berita gagal diambil.
+     * Yang diperiksa adalah 32 bit terakhirnya.
+     */
+    for (const ip of ["64:ff9b::808:808", "64:ff9b::9e45:759d", "64:ff9b::101:101"]) {
+      assert.equal(ipTerlarang(ip), false, `seharusnya lolos: ${ip}`);
+    }
+
+    // Alamat privat yang dibungkus tetap ditolak, dalam bentuk apa pun.
+    for (const ip of [
+      "64:ff9b::7f00:1",
+      "64:ff9b::a00:1",
+      "64:ff9b::c0a8:101",
+      "64:ff9b::a9fe:a9fe", // 169.254.169.254 — metadata awan
+      "64:ff9b::127.0.0.1",
+    ]) {
+      assert.equal(ipTerlarang(ip), true, `seharusnya ditolak: ${ip}`);
     }
   });
 });

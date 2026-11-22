@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseFeed, gabungBerita, pangkasBeritaLama, UMUR_BERITA_HARI, urlKunci, tanggalIso } from "../src/lib/berita-rss.js";
+import { parseFeed, gabungBerita, pangkasBeritaLama, UMUR_BERITA_HARI, urlKunci, tanggalIso, buangKembarPeristiwa } from "../src/lib/berita-rss.js";
 import { relevanBerita, judulBersih, SUMBER_BERITA } from "../src/lib/berita-sumber.js";
 
 const RSS = `<?xml version="1.0"?>
@@ -192,6 +192,82 @@ describe("gabungBerita", () => {
     const { daftar } = gabungBerita(manual, rss, 6);
     assert.equal(daftar.filter((b) => b.url.startsWith("https://rss.test/")).length, 3);
     assert.equal(daftar.filter((b) => b.url.startsWith("https://redaksi.test/")).length, 8);
+  });
+});
+
+describe("kembar lintas penerbit", () => {
+  /*
+   * Satu peluncuran diliput banyak penerbit. Yang diuji di sini: kartu kembar
+   * hilang, tetapi kabar yang memang berbeda tetap tinggal.
+   */
+  const tanggal = "2026-11-20";
+
+  it("menggabungkan kabar yang sama tentang satu model dari penerbit berbeda", () => {
+    const daftar = [
+      { id: "a", wilayah: "id", date: tanggal, source: "detikOto", url: "https://a.test/1", title: "Jaecoo Rilis Harga J7 yang Bisa Parkir Sendiri, Mulai Rp 500 Jutaan" },
+      { id: "b", wilayah: "id", date: tanggal, source: "CNN Indonesia", url: "https://b.test/2", title: "Jaecoo J7 Bisa Parkir Sendiri Meluncur, Segini Harganya" },
+      { id: "c", wilayah: "id", date: tanggal, source: "Liputan6", url: "https://c.test/3", title: "Jaecoo J7 SIVP Mengaspal di GAW 2026, Harganya Tembus Rp 500 Juta" },
+    ];
+    const { daftar: hasil, dibuang } = buangKembarPeristiwa(daftar);
+    assert.equal(dibuang, 2);
+    assert.deepEqual(hasil.map((b) => b.id), ["a"]);
+  });
+
+  it("mengenali 'MGS6' dan 'MG S6' sebagai model yang sama", () => {
+    const daftar = [
+      { id: "a", wilayah: "id", date: tanggal, source: "detikOto", url: "https://a.test/1", title: "MGS6 EV Resmi Dipasarkan: Ada 3 Varian, Harga Mulai Rp 400 Jutaan" },
+      { id: "b", wilayah: "id", date: tanggal, source: "Kompas.com", url: "https://b.test/2", title: "Bocoran Spesifikasi MG S6 EV, Harga Diumumkan Hari Ini" },
+    ];
+    assert.equal(buangKembarPeristiwa(daftar).dibuang, 1);
+  });
+
+  it("tidak menyamakan dua model berbeda dari merek yang sama", () => {
+    /*
+     * "Neira Meluncur" dan "Ti7 Meluncur" nyaris sama kata demi kata. Yang
+     * memisahkan keduanya hanya modelnya.
+     */
+    const daftar = [
+      { id: "a", wilayah: "id", date: tanggal, source: "Kompas.com", url: "https://a.test/1", title: "Hyundai Neira Meluncur Hari Ini di GAW 2026: Spesifikasi dan Harga" },
+      { id: "b", wilayah: "id", date: tanggal, source: "Kompas.com", url: "https://b.test/2", title: "BYD Ti7 Meluncur Hari Ini di GAW 2026: Bocoran Spesifikasi dan Harga" },
+      { id: "c", wilayah: "id", date: tanggal, source: "detikOto", url: "https://c.test/3", title: "BYD TiTAN 7 DM Tantang Fortuner Cs, Harga Mulai Rp 600 Jutaan" },
+    ];
+    assert.equal(buangKembarPeristiwa(daftar).dibuang, 0);
+  });
+
+  it("tidak menyamakan kabar harga dengan kabar penjualan atau uji kendara", () => {
+    const daftar = [
+      { id: "a", wilayah: "id", date: tanggal, source: "detikOto", url: "https://a.test/1", title: "BYD TiTAN 7 DM Harga Mulai Rp 600 Jutaan di GAW 2026" },
+      { id: "b", wilayah: "id", date: tanggal, source: "Kompas.com", url: "https://b.test/2", title: "Penjualan BYD TiTAN 7 DM Melonjak Sepanjang 2026" },
+      { id: "c", wilayah: "id", date: tanggal, source: "Liputan6", url: "https://c.test/3", title: "Tanjakan Sikarim Bukan Masalah buat BYD TiTAN 7 DM" },
+    ];
+    assert.equal(buangKembarPeristiwa(daftar).dibuang, 0);
+  });
+
+  it("hanya menggabungkan berita bertanggal sama dan sewilayah", () => {
+    const daftar = [
+      { id: "a", wilayah: "id", date: "2026-11-20", source: "detikOto", url: "https://a.test/1", title: "Jaecoo J7 Resmi Dijual, Harga Rp 599,9 Juta" },
+      { id: "b", wilayah: "id", date: "2026-11-19", source: "Kompas.com", url: "https://b.test/2", title: "Jaecoo J7 Resmi Dijual, Harga Rp 599,9 Juta" },
+      { id: "c", wilayah: "us", date: "2026-11-20", source: "InsideEVs", url: "https://c.test/3", title: "Jaecoo J7 Resmi Dijual, Harga Rp 599,9 Juta" },
+    ];
+    assert.equal(buangKembarPeristiwa(daftar).dibuang, 0);
+  });
+
+  it("tidak pernah membuang berita yang dijaga redaksi", () => {
+    const daftar = [
+      { id: "manual", wilayah: "id", date: tanggal, source: "redaksi", url: "https://redaksi.test/1", title: "Jaecoo J7 Resmi Dijual, Harga Rp 599,9 Juta", updatedBy: "Kevin" },
+      { id: "rss", wilayah: "id", date: tanggal, source: "detikOto", url: "https://a.test/2", title: "Jaecoo J7 Resmi Dijual, Harga Rp 599,9 Juta" },
+    ];
+    const { daftar: hasil, dibuang } = buangKembarPeristiwa(daftar);
+    assert.equal(dibuang, 1);
+    assert.deepEqual(hasil.map((b) => b.id), ["manual"]);
+  });
+
+  it("judul yang tidak menyebut merek tidak pernah digabung", () => {
+    const daftar = [
+      { id: "a", wilayah: "id", date: tanggal, source: "detikOto", url: "https://a.test/1", title: "Mobil Listrik China Banyak Dicari di Pasar Mobil Bekas" },
+      { id: "b", wilayah: "id", date: tanggal, source: "Kompas.com", url: "https://b.test/2", title: "Mobil Listrik China Kian Banyak di Pasar Mobil Bekas" },
+    ];
+    assert.equal(buangKembarPeristiwa(daftar).dibuang, 0);
   });
 });
 

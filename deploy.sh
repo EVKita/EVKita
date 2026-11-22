@@ -93,13 +93,12 @@ fi
 # perlu dicadangkan lalu dikembalikan — dua kali salin seluruh unggahan
 # (bisa ratusan MB) hilang dari setiap pembaruan.
 #
-# Pengecualian: `EVKITA_SYNC_CONTENT=1` di .env membuat content.json dari paket
-# rilis ikut MENIMPA content.json server. Ini untuk pemilik yang mengelola isi
-# situs lewat repo/Git, bukan lewat panel admin. Berkas data lain (users.json,
-# integrasi.json, uploads) tidak ikut tersalin karena memang tidak ada di paket.
-SYNC_CONTENT=0
-if [ -f "$APP_DIR/.env" ] && grep -qE '^EVKITA_SYNC_CONTENT=(1|true)' "$APP_DIR/.env" 2>/dev/null; then
-  SYNC_CONTENT=1
+# Secara default content.json dari paket rilis selalu menimpa content.json di
+# server, sehingga artikel/berita terbaru dari rilis ikut tersedia saat deploy.
+# Untuk menonaktifkan, atur EVKITA_SYNC_CONTENT=0 di .env server.
+SYNC_CONTENT=1
+if [ -f "$APP_DIR/.env" ] && grep -qE '^EVKITA_SYNC_CONTENT=0' "$APP_DIR/.env" 2>/dev/null; then
+  SYNC_CONTENT=0
 fi
 
 FRESH_INSTALL=0
