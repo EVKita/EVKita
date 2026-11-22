@@ -9295,6 +9295,244 @@
   ],
   "artikel": [
     {
+      "id": "dianche-xiaofei-zhuanhuan-zhinan",
+      "title": "电动车消费转换指南：从燃油车转电动车的完整清单",
+      "slug": "dianche-xiaofei-zhuanhuan-zhinan",
+      "excerpt": "准备从燃油车换电动车？本文提供从选车、充电设施、用车成本到心理适应的完整转换清单，助您平稳过渡。",
+      "body": "## 摘要\n\n从燃油车换电动车是生活方式的转变。本文提供从选车到心理适应的完整转换清单。\n\n## 选车清单\n\n- 确定需求：日均里程、充电条件、家庭用车/独用\n- 关键指标：CLTC 续航 ≥ 日均里程 × 2.5，支持快充\n- 试驾重点：动力响应、NVH、座椅舒适度、辅助驾驶\n\n## 充电设施准备\n\n- 有固定车位：申请安装家用充电桩（国标/国标+特斯拉）\n- 无固定车位：调研周边 3km 内公共充电桩密度\n- 公司充电：确认单位是否提供/允许安装充电设施\n\n## 用车成本对比\n\n| 项目 | 燃油车 (年) | 电动车 (年) |\n|------|------------|------------|\n| 能源费 | ~1.2-1.8 万 | ~2-4 千 |\n| 保养费 | ~3-6 千 | ~1-2 千 |\n| 保险费 | 相近 | 略高 |\n| **合计** | **~1.6-2.5 万** | **~3-6 千** |\n\n## 心理适应期\n\n- 第 1 周：建立充电习惯，克服里程焦虑\n- 第 1 个月：熟悉充电网络，优化出行规划\n- 第 3 个月：享受低成本、安静、平顺的用车体验\n\n## 避坑提示\n\n- 别只看 CLTC 续航，参考实测续航（通常 70-80% CLTC）\n- 确认小区/单位支持安装充电桩再下单\n- 了解品牌售后网络覆盖，避免偏远地区维修难\n\n## 结论\n\n换电动车是「降本增效」的选择。做好准备，转换期通常 1-3 个月，之后您会享受更低成本、更安静、更智能的出行体验。",
+      "tags": [
+        "燃油车转电动车",
+        "选车指南",
+        "用车成本",
+        "避坑"
+      ],
+      "sources": [
+        {
+          "label": "中国汽车工业协会 — 新能源汽车消费指引",
+          "url": "https://www.caam.org.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/motor/omoway-m1.webp",
+      "seoTitle": "电动车消费转换指南",
+      "keywords": "燃油车转电动车, 选车清单, 用车成本对比, 避坑指南",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T07:57:34.166Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "dianche-baoxiu-baoyang-changjian-wenti",
+      "title": "电动车保修与保养常见问题：官方政策、非官方维修与避坑指南",
+      "slug": "dianche-baoxiu-baoyang-changjian-wenti",
+      "excerpt": "电动车保修政策复杂？本文梳理官方保修条款、非官方维修风险、保养周期与常见避坑指南，帮您守住权益。",
+      "body": "## 摘要\n\n电动车保修政策直接关系用车成本。本文梳理官方条款、非官方维修风险与避坑指南。\n\n## 核心部件保修政策\n\n- 电池包：通常 8 年/16 万公里，容量衰减至 70% 以下可索赔\n- 电机/电控：通常 8 年/15 万公里\n- 整车：通常 3-4 年/10-12 万公里\n- *具体以各品牌官方条款为准*\n\n## 保养周期与项目\n\n- 每 1 年/1 万公里：检查制动系统、悬挂、转向、冷却液\n- 每 2 年/4 万公里：更换刹车油、冷却液\n- 每 4 年/8 万公里：检查高压线束、电池包密封性\n- *无需更换机油、机滤、火花塞、正时皮带*\n\n## 非官方维修风险\n\n- 非授权拆解电池/电控：直接导致核心部件保修失效\n- 使用非原厂配件：可能导致系统兼容性问题\n- 私自刷写 ECU 程序：极大概率导致保修拒赔\n\n## 避坑指南\n\n1. 保留所有保养记录与发票，含非官方维修记录\n2. 事故维修必须走保险定损，指定授权钣喷中心\n3. 电池包进水/撞击后，必须第 1 时间联系官方救援\n4. 定期通过官方 APP 查看电池健康度（SOH）\n\n## 维权建议\n\n- 保修拒赔：要求书面说明理由，保留证据向消协/市监局投诉\n- 质量问题：依据《消费者权益保护法》主张退换赔\n- 群体性问题：可联合车友向监管部门反映",
+      "tags": [
+        "保修",
+        "保养",
+        "维权",
+        "避坑"
+      ],
+      "sources": [
+        {
+          "label": "国家市场监督管理总局 — 汽车召回与缺陷产品管理",
+          "url": "https://www.samr.gov.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/motor/cn-yadea-g6.webp",
+      "seoTitle": "电动车保修保养常见问题指南",
+      "keywords": "电动车保修, 电动车保养, 维权指南, 避坑",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T07:57:34.166Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "dianche-changtu-lvxing-zhinan",
+      "title": "电动车长途出行全攻略：路线规划、充电策略与应急方案",
+      "slug": "dianche-changtu-lvxing-zhinan",
+      "excerpt": "计划电动车长途自驾？本文提供路线规划、充电策略、应急方案全方位指南，让您的长途出行无忧无虑。",
+      "body": "## 摘要\n\n电动车长途出行需要更周密的规划。本文提供从路线规划到应急处理的完整指南。\n\n## 出发前准备\n\n- 检查车辆状态：胎压、电量、冷却液\n- 规划路线：使用高德/百度地图 EV 版规划充电站\n- 准备应急包：充电线、转接头、备用电源\n\n## 充电策略\n\n- 遵循 20-80% 原则：到达 20% 开始找桩，充至 80% 即走\n- 优选超充桩：高速服务区超充桩优先，30 分钟补能 300+ 公里\n- 错峰充电：避开节假日高峰时段（10:00-14:00，17:00-20:00）\n\n## 路线规划技巧\n\n- 预留 20% 电量余量：规划到达下一充电站时仍有 20% 电量\n- 备选充电站：每段路线准备 2-3 个备选充电站\n- 利用休息时间充电：用餐、上厕所、休息时同步充电\n\n## 应急方案\n\n- 电量不足：立即开启节能模式，关闭空调/座椅加热，降低车速\n- 充电站故障：立即导航至备选充电站，拨打客服电话报修\n- 电量极低：开启最省电模式，以 60km/h 匀速行驶至最近充电点\n\n## 实用小工具\n\n- 高德/百度地图 EV 版：实时显示充电站状态\n- 国家电网 e 充电 / 特来电 / 星星充电：查看桩状态、排队情况\n- 车载导航：大多新能源车自带充电站规划功能",
+      "tags": [
+        "长途出行",
+        "充电策略",
+        "路线规划",
+        "应急方案"
+      ],
+      "sources": [
+        {
+          "label": "国家电网 — 充电服务",
+          "url": "https://www.sgcc.com.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/motor/yadea-oris.webp",
+      "seoTitle": "电动车长途出行全攻略",
+      "keywords": "电动车长途, 充电策略, 路线规划, 应急方案",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T07:57:34.166Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "ev-charging-etiquette-public-stations-us",
+      "title": "EV Charging Etiquette at Public Stations: The Unwritten Rules Every Driver Should Know",
+      "slug": "ev-charging-etiquette-public-stations-us",
+      "excerpt": "Public charging works best when everyone follows basic etiquette. Learn the unwritten rules that keep charging stations running smoothly for everyone.",
+      "body": "## Summary\n\nPublic charging infrastructure is shared infrastructure. Good etiquette keeps it working for everyone.\n\n## Don't park in a charging spot if you're not charging\n\nThis is rule #1. An EV parked in a charging spot without charging blocks someone who needs it.\n\n## Move your car when charging is done\n\nMost apps notify you when charging completes. Move within 10-15 minutes. Some networks charge idle fees after grace period.\n\n## Don't unplug someone else's car\n\nNever unplug another EV unless they've left a note saying it's okay. It's rude and potentially dangerous.\n\n## Use the right charger for your car\n\nDon't occupy a 350 kW charger if your car maxes at 50 kW. Leave ultra-fast chargers for cars that can use them.\n\n## Keep cables tidy\n\nReturn cables to holsters. Don't let them lie on the ground where they can be damaged or tripped over.\n\n## Be mindful of queue order\n\nIf there's a line, respect it. Don't cut in because you \"just need a quick top-up.\"\n\n## Report broken chargers\n\nUse the network app to report broken chargers. It helps the next driver and the network operator.",
+      "tags": [
+        "charging etiquette",
+        "public charging",
+        "EV community",
+        "public stations"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Electric Vehicles",
+          "url": "https://www.energy.gov/eere/electricvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/spklu/pln-charge-in.jpg",
+      "seoTitle": "EV Charging Etiquette Public Stations US",
+      "keywords": "EV charging etiquette, public charging rules, EV charging station manners",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T07:57:34.166Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "ev-home-charging-cost-calculator-us",
+      "title": "EV Home Charging Cost Calculator: Know Exactly What You Pay Per Mile",
+      "slug": "ev-home-charging-cost-calculator-us",
+      "excerpt": "Wondering how much it really costs to charge your EV at home? This guide breaks down the math, compares utility rates, and shows you how to calculate your true cost per mile.",
+      "body": "## Summary\n\nHome charging is the cheapest way to fuel an EV, but the actual cost varies wildly by utility, time of use, and charger efficiency. Here's how to calculate your real cost per mile.\n\n## The basic formula\n\nCost per mile = (kWh per 100 miles × electricity rate per kWh) ÷ 100\n\nExample: 30 kWh/100 mi × $0.15/kWh = $4.50 per 100 miles = $0.045/mi\n\n## Factor in charger efficiency\n\nLevel 2 chargers are 85-95% efficient. Multiply kWh by 1.05-1.15 to account for losses.\n\nAdjusted: 30 kWh × 1.10 = 33 kWh drawn from grid\n\n## Time-of-use rates\n\nMany utilities offer TOU plans. Charging 11 PM - 6 AM can cut rates 50-70%.\n\nExample: $0.08/kWh off-peak vs $0.28/kWh peak = 71% savings\n\n## Calculate your annual cost\n\nAnnual miles × (kWh/100 mi ÷ 100) × effective $/kWh\n\nExample: 12,000 mi × 0.33 kWh/mi × $0.12/kWh = $475/year\n\n## Compare to gas\n\nGas car: 12,000 mi ÷ 25 MPG × $3.50/gal = $1,680/year\n\nEV saves ~$1,200/year in fuel alone.",
+      "tags": [
+        "home charging",
+        "cost calculator",
+        "EV savings",
+        "utility rates"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Electric Vehicles",
+          "url": "https://www.energy.gov/eere/electricvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/motor/honda-icon-e.webp",
+      "seoTitle": "EV Home Charging Cost Calculator US",
+      "keywords": "EV home charging cost, cost per mile EV, electricity rate EV",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T07:57:34.166Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "mengatasi-range-anxiety-motor-listrik",
+      "title": "Mengatasi Range Anxiety Motor Listrik: Tips Percaya Diri Berkendara Jauh",
+      "slug": "mengatasi-range-anxiety-motor-listrik",
+      "excerpt": "Takut kehabisan baterai di tengah jalan? Ikuti panduan ini untuk mengatasi range anxiety dan berkendara motor listrik dengan percaya diri ke mana pun.",
+      "body": "## Ringkasan\n\nRange anxiety (kecemasan kehabisan baterai) adalah kendala utama pengguna motor listrik baru. Berikut panduan praktis untuk mengatasinya.\n\n## Kenali range nyata motor Anda\n\nJangan percaya angka klaim pabrik. Catat range nyata di kondisi normal (AC mati, beban normal) selama 1-2 minggu pertama. Itu jadi baseline perencanaan perjalanan.\n\n## Gunakan aturan 80-20\n\nIsi baterai saat tersisa 20%, hentikan di 80% untuk charging cepat. Rentang ini paling efisien dan melindungi umur baterai.\n\n## Rencanakan rute dengan SPKLU/SPBKLU\n\nSebelum berangkat jauh, peta kan SPKLU/SPBKLU di rute Anda. Aplikasi PLN Mobile, Charge.IN, dan EvCharge membantu menemukan titik charging terdekat.\n\n## Bawa charger portabel sebagai cadangan\n\nSelalu bawa charger portabel bawaan pabrik. Di darurat, Anda bisa ngecas di stopkontak rumah/warung meski lambat (4-6 jam untuk penuh).\n\n## Manfaatkan mode Eco\n\nHidupkan mode Eco/Eco+ untuk perjalanan jauh. Mode ini membatasi kecepatan maksimal dan respons throttle, tapi bisa memperpanjang range 15-25%.\n\n## Latih intuisi range\n\nSetelah 1-2 bulan, Anda akan punya 'rasa' sendiri: berapa persen baterai untuk ke kantor pulang, ke mall, ke kota tetangga. Itu obat paling ampuh range anxiety.",
+      "tags": [
+        "range anxiety",
+        "motor listrik",
+        "tips berkendara",
+        "baterai"
+      ],
+      "sources": [
+        {
+          "label": "Kementerian Perhubungan — Kendaraan Listrik",
+          "url": "https://www.dephub.go.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/motor/alessa-uno.webp",
+      "seoTitle": "Mengatasi Range Anxiety Motor Listrik",
+      "keywords": "range anxiety motor listrik, tips berkendara motor listrik, jangkauan motor listrik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T07:57:34.166Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
+      "id": "tips-hemat-listrik-rumah-charging-ev",
+      "title": "Tips Hemat Listrik Rumah saat Charging Mobil Listrik",
+      "slug": "tips-hemat-listrik-rumah-charging-ev",
+      "excerpt": "Tagihan listrik melonjak sejak punya mobil listrik? Ikuti tips praktis ini untuk mengehemat biaya charging di rumah tanpa mengorbankan kenyamanan.",
+      "body": "## Ringkasan\n\nMobil listrik memang hemat BBM, tapi tagihan listrik rumah bisa melonjak kalau charging tidak dikelola dengan bijak. Berikut tips praktis untuk mengehemat biaya listrik.\n\n## Atur jadwal charging di luar jam puncak\n\nBanyak wilayah di Indonesia menerapkan tarif time-of-use (TOU) di mana listrik malam hari lebih murah. Atur charging mobil di jam 22:00-05:00 untuk memanfaatkan tarif lebih rendah.\n\n## Gunakan wall charger dengan pengaturan arus\n\nWall charger modern memungkinkan pengaturan arus charging. Turunkan arus ke 8-10A untuk charging malam hari yang lebih lambat tapi lebih efisien dan ramah jaringan listrik rumah.\n\n## Manfaatkan panel surya (jika ada)\n\nJika rumah sudah terpasang panel surya, charging di siang hari saat produksi surya puncak bisa menghemat hingga 100% biaya listrik dari jaringan PLN.\n\n## Pantau konsumsi per charging\n\nGunakan aplikasi charger atau meteran listrik digital untuk mencatat kWh per sesi charging. Targetkan efisiensi 15-18 kWh per 100 km untuk mobil sedan/kombi.\n\n## Hindari charging ke 100% setiap hari\n\nCharging rutin ke 80-90% saja untuk pemakaian harian. Ini memperpanjang umur baterai DAN menghemat listrik karena efisiensi charging menurun di atas 90%.\n\n## Periksa kebocoran arus\n\nJika tagihan tiba-tiba melonjak tanpa perubahan pola pakai, periksa instalasi charging dan kabel untuk kebocoran arus yang bisa memboroskan listrik.",
+      "tags": [
+        "hemat listrik",
+        "charging rumah",
+        "biaya listrik",
+        "tips EV"
+      ],
+      "sources": [
+        {
+          "label": "PLN — Layanan Tarif Tenaga Listrik",
+          "url": "https://web.pln.co.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/motor/alessa-quatro.webp",
+      "seoTitle": "Tips Hemat Listrik Rumah Charging Mobil Listrik",
+      "keywords": "hemat listrik charging EV, biaya listrik mobil listrik, tips charging hemat",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-22",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-22T07:57:34.166Z",
+      "updatedBy": "",
+      "author": "Redaksi EVKita",
+      "category": "Panduan"
+    },
+    {
       "id": "dianche-zijian-xiufu-zhinan",
       "title": "电动车常见故障自检与简单修复指南",
       "slug": "dianche-zijian-xiufu-zhinan",
