@@ -6939,9 +6939,349 @@
       "publishAt": "",
       "updatedAt": "2026-10-12T00:00:00.000Z",
       "updatedBy": ""
+    },
+    {
+      "id": "mengoptimalkan-range-mobil-listrik-harian-5-tips",
+      "title": "Mengoptimalkan Range Mobil Listrik untuk Pemakaian Harian: 5 Tips Praktis",
+      "slug": "mengoptimalkan-range-mobil-listrik-harian-5-tips",
+      "excerpt": "Range mobil listrik bisa dioptimalkan dengan kebiasaan sederhana. Simak 5 tips praktis ini agar baterai tahan lebih lama dan jarak tempuh maksimal.",
+      "body": "## Ringkasan\n\nRange mobil listrik bukan angka tetap. Kebiasaan mengemudi dan charging memengaruhi seberapa jauh Anda bisa berkendara sekali cas.\n\n## 1. Gunakan mode Eco untuk komuting harian\n\nMode Eco membatasi output tenaga dan respons throttle, sangat cocok untuk jalan kota stop-and-go. Bisa memperpanjang range 10-15% dibanding mode Normal.\n\n## 2. Manfaatkan regenerative braking\n\nJangan hanya mengandalkan rem konvensional. Lepas pedal gas lebih awal saat mendekati lampu merah atau rem, biarkan regenerasi mengisi kembali baterai.\n\n## 3. Jaga tekanan ban sesuai standar\n\nBan yang kekurangan angin meningkatkan rolling resistance hingga 5-10%. Cek tekanan ban seminggu sekali, isi sesuai placard di pintu driver.\n\n## 4. Hindari beban tidak perlu\n\nSetiap 50 kg beban tambahan mengurangi range sekitar 1-2%. Kosongkan bagasi dari barang yang tidak dibutuhkan harian.\n\n## 5. Preconditioning saat masih colok charger\n\nDi pagi hari dingin, nyalakan AC/heater 5-10 menit sebelum berangkat saat mobil masih ngecas. Menggunakan listrik PLN, bukan baterai.\n\n## Bonus: Pantau konsumsi per 100 km\n\nTargetkan konsumsi di bawah 15 kWh/100 km untuk sedan, 18 kWh/100 km untuk SUV. Jika konsisten di atas itu, cek kebiasaan mengemudi atau bawa ke bengkel.\n\n## Kesimpulan\n\n5 kebiasaan sederhana: Eco mode, regeneratif braking, ban pas, bagasi ringan, preconditioning. Gratis, tapi efeknya nyata di ujung bulan.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "range",
+        "mobil listrik",
+        "optimasi",
+        "tips harian",
+        "baterai"
+      ],
+      "sources": [
+        {
+          "label": "Kementerian Perindustrian — Kendaraan Listrik",
+          "url": "https://www.kemenperin.go.id"
+        },
+        {
+          "label": "PLN — Tips Charging EV",
+          "url": "https://web.pln.co.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/byd-atto-1.webp",
+      "seoTitle": "Mengoptimalkan Range Mobil Listrik Harian: 5 Tips",
+      "keywords": "range mobil listrik, optimasi baterai EV, tips hemat energi mobil listrik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-23",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "cara-memilih-bengkel-mobil-listrik-yang-tepat",
+      "title": "Cara Memilih Bengkel Mobil Listrik yang Tepat: Ceklis 7 Poin Wajib",
+      "slug": "cara-memilih-bengkel-mobil-listrik-yang-tepat",
+      "excerpt": "Bukan semua bengkel paham mobil listrik. Gunakan ceklis 7 poin ini sebelum menyerahkan mobil ke bengkel, agar aman dan tidak sia-sia biaya.",
+      "body": "## Ringkasan\n\nMobil listrik butuh penanganan khusus: sistem tegangan tinggi, baterai, inverter. Pilih bengkel salah bisa berbahaya dan mahal.\n\n## 1. Sertifikasi teknisi HV (High Voltage)\n\nTanya apakah teknisi punya sertifikat HV Level 2 atau 3. Tanpa ini, mereka tidak berhak menyentuh sistem baterai dan inverter.\n\n## 2. Alat diagnostik khusus EV\n\nBengkel harus punya scanner yang bisa baca BMS (Battery Management System), inverter, dan motor. Scanner OBD2 biasa tidak cukup.\n\n## 3. Ruang kerja area tinggi tegangan terpisah\n\nHarus ada area terpisah dengan tanda bahaya tinggi tegangan, perlengkapan APD (sarung tangan isolasi, sepatu safety, helm full-face).\n\n## 4. Akses ke part resmi pabrikan\n\nTanya apakah bengkel bisa order part OEM (Original Equipment Manufacturer) langsung dari dealer/importir resmi.\n\n## 5. Riwayat kasus serupa\n\nMinta referensi pelanggan lain yang mobilnya diperbaiki di sana untuk masalah sama (misal: error BMS, inverter mati, chargering gagal).\n\n## 6. Garansi pekerjaan\n\nBengkel profesional beri garansi minimal 3-6 bulan untuk pekerjaan yang sama. Jika tidak mau garansi, cari tempat lain.\n\n## 7. Transparansi biaya\n\nMinta estimasi tertulis (SPK) sebelum kerja dimulai. Hindari bengkel yang \"pertama cek baru tahu biayanya\" tanpa batas atas.\n\n## Red flag: hindari bengkel yang...\n\n- Bilang \"mobil listrik sama aja sama mobil bensin\"\n- Tidak punya sarung tangan isolasi HV\n- Minta beli part di toko online sendiri\n- Tidak mau tunjukkan sertifikasi teknisi\n\n## Kesimpulan\n\n7 poin ceklis: sertifikat HV, alat diagnostik EV, area kerja terpisah, akses part OEM, riwayat kasus, garansi, transparansi biaya. Simpan artikel ini sebelum bawa mobil ke bengkel.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "bengkel",
+        "mobil listrik",
+        "perbaikan",
+        "servis",
+        "teknisi HV"
+      ],
+      "sources": [
+        {
+          "label": "Kementerian Perhubungan — Standar Bengkel EV",
+          "url": "https://www.dephub.go.id"
+        },
+        {
+          "label": "Asosiasi Bengkel Kendaraan Listrik Indonesia",
+          "url": "https://www.abkli.org"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/citroen-e-c3.webp",
+      "seoTitle": "Cara Memilih Bengkel Mobil Listrik: 7 Ceklis Wajib",
+      "keywords": "bengkel mobil listrik, teknisi high voltage, servis EV Indonesia",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-23",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "ev-battery-health-monitoring-tools-apps-us",
+      "title": "EV Battery Health Monitoring: Best Tools and Apps for US Owners in 2026",
+      "slug": "ev-battery-health-monitoring-tools-apps-us",
+      "excerpt": "Want to track your EV battery health? Here are the best OBD2 dongles, apps, and built-in tools to monitor degradation, charging habits, and range estimates.",
+      "body": "## Summary\n\nEV batteries degrade over time, but monitoring helps you catch issues early and optimize charging habits. Here are the best tools for US owners in 2026.\n\n## Built-in Vehicle Tools\n\n- **Tesla**: Service Mode > Battery > shows degradation %, cell voltages\n- **Ford**: FordPass app > Vehicle Health > Battery Health score\n- **GM/Chevy**: myChevrolet app > Energy > Battery Health\n- **Hyundai/Kia**: Bluelink/Kia Connect > EV Battery Care\n- **Rivian**: Rivian app > Vehicle > Battery Health\n- **Lucid**: Lucid app > Vehicle Status > Battery\n\n## OBD2 Dongles + Apps (works across brands)\n\n| Dongle | Price | Best App | Key Features |\n|--------|-------|----------|--------------|\n| **OBDLink MX+** | $120 | **Scan My Tesla**, EV BatMon | Fast, stable, reads cell-level data |\n| **VGate iCar Pro** | $35 | **Torque Pro**, Leaf Spy | Budget option, Bluetooth LE |\n| **Carly Universal** | $60 | Carly app | Brand-specific coding + battery |\n| **ELM327 v2.1** | $20 | Various | Cheap, hit-or-miss quality |\n\n## Top Apps for Battery Monitoring\n\n1. **Scan My Tesla** (iOS/Android) — Deepest Tesla data: cell voltages, temps, degradation history, charge cycles\n2. **Leaf Spy Pro** (Android) — The gold standard for Nissan LEAF, also works on some other EVs\n3. **EV BatMon** (iOS) — Clean UI, supports multiple brands via OBDLink\n4. **Torque Pro** (Android) — Highly customizable, create your own battery dashboards\n5. **ABRP** (A Better Routeplanner) — Learns your real consumption, predicts degradation\n\n## What Metrics to Watch\n\n- **State of Health (SoH)**: % of original capacity remaining. Below 70% = warranty claim territory\n- **Cell Voltage Delta**: Max difference between cells. > 0.05V = potential imbalance\n- **Charge Cycles**: Full equivalent cycles. Most EVs rated 1,500-2,000 cycles\n- **Internal Resistance**: Rising resistance = aging cells\n- **BMS Balance Status**: Should show \"Balanced\" after full charge\n\n## When to Worry\n\n- Sudden 5%+ SoH drop in one month\n- Cell delta > 0.1V consistently\n- Range estimate dropping faster than mileage\n- Charging speed throttling at low SoC\n\n## Conclusion\n\nStart with your car's built-in app. Add an OBDLink MX+ and Scan My Tesla / EV BatMon for deep data. Check monthly, trend quarterly. Early detection saves thousands in battery replacement.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "battery health",
+        "EV monitoring",
+        "OBD2",
+        "degradation",
+        "US"
+      ],
+      "sources": [
+        {
+          "label": "U.S. Department of Energy — Battery Monitoring",
+          "url": "https://www.energy.gov/eere/electricvehicles"
+        },
+        {
+          "label": "Recurrent Auto — Battery Reports",
+          "url": "https://www.recurrentauto.com"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/mobil/us-vw-id4.webp",
+      "seoTitle": "EV Battery Health Monitoring Tools 2026 US",
+      "keywords": "EV battery health monitor, OBD2 EV apps, battery degradation tracking US",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-23",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "how-to-prepare-ev-for-long-term-storage-us",
+      "title": "How to Prepare Your EV for Long-Term Storage (30+ Days): Complete Guide",
+      "slug": "how-to-prepare-ev-for-long-term-storage-us",
+      "excerpt": "Leaving your EV parked for weeks or months? Follow this step-by-step guide to protect the 12V battery, HV battery, tires, and prevent costly surprises when you return.",
+      "body": "## Summary\n\nEVs don't like sitting unused. The 12V battery dies first, then the HV battery degrades. This guide covers everything to do before storing 30+ days.\n\n## 1. Charge HV Battery to 50-60%\n\n**Not 100%, not 0%.** 50-60% minimizes calendar aging. Most cars let you set charge limit in the app/menu.\n\n## 2. Disconnect or Trickle-Charge the 12V Battery\n\nThe 12V runs alarm, telematics, locks. It dies in 2-4 weeks. Options:\n- **Best**: Connect a 12V battery maintainer (trickle charger, 1-2A)\n- **Good**: Disconnect negative terminal (lose remote access, alarm)\n- **Risky**: Leave connected — likely dead on return\n\n## 3. Inflate Tires to Max Sidewall Pressure\n\nPrevents flat spots. Check sidewall for \"Max Press\" (usually 44-51 PSI). Reset to normal when driving again.\n\n## 4. Park Indoors, Climate Controlled if Possible\n\nGarage > driveway. Temperature swings accelerate battery aging. Ideal: 50-70°F (10-21°C).\n\n## 5. Turn Off \"Vampire\" Features\n\nDisable in app/menu:\n- Sentry Mode / Cabin Overheat Protection (Tesla)\n- Remote start / climate preconditioning schedules\n- WiFi / LTE hotspot\n- Automatic software updates\n\n## 6. Clean and Protect\n\n- Wash, wax, vacuum\n- Desiccant packs in cabin (prevents mold)\n- Rodent tape on wiring harnesses (if garage has mice)\n- Cover exhaust/intake vents\n\n## 7. Document Everything\n\nPhoto odometer, charge %, tire pressure, 12V voltage. Set calendar reminder for 30-day check.\n\n## 30-Day Check (Remote or In-Person)\n\n- App shows HV battery % (should be 45-55%)\n- 12V voltage > 12.4V (if maintainer connected)\n- No warning lights\n- Tires holding pressure\n\n## Returning to Drive\n\n1. Remove maintainer, reconnect 12V if disconnected\n2. Inflate tires to door placard pressure\n3. Drive gently 10-15 min to wake up systems\n4. Check for software updates\n5. Full charge to rebalance cells\n\n## Conclusion\n\n50-60% HV charge + 12V maintainer + max tire pressure + indoor parking = happy EV after months. Skip any step, risk $200-500 in 12V replacement or tire damage.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "long-term storage",
+        "EV storage",
+        "12V battery",
+        "battery maintenance",
+        "US"
+      ],
+      "sources": [
+        {
+          "label": "Tesla Owner's Manual — Vehicle Storage",
+          "url": "https://www.tesla.com/ownersmanual"
+        },
+        {
+          "label": "Ford EV Owner Guides — Storage",
+          "url": "https://www.ford.com/support/owner-guides/"
+        },
+        {
+          "label": "U.S. Department of Energy — EV Battery Care",
+          "url": "https://www.energy.gov/eere/electricvehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/mobil/us-ford-mustang-mach-e.webp",
+      "seoTitle": "EV Long Term Storage Guide 2026 US",
+      "keywords": "EV long term storage, prepare EV for storage, 12V battery maintainer EV",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-23",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "xian-dian-che-changtu-chongdian-zhan-xuanze-zhinan",
+      "title": "新能源车长途充电站选择指南：避开排队、选对功率、省钱省时",
+      "slug": "xian-dian-che-changtu-chongdian-zhan-xuanze-zhinan",
+      "excerpt": "新能源车跑长途，充电站选不对等于白跑。本文教你如何根据路线、功率、价格、可靠性选出最优充电站，避开排队坑。",
+      "body": "## 摘要\n\n长途新能源车，充电站选得好，全程轻松；选不好，排队两小时、充电功率上不去、甚至遇到坏桩。本文给出实操选站法则。\n\n## 选站四维法则\n\n**1. 功率匹配车型**\n- 车辆支持 200kW+：优先找 120-480kW 超充桩（华为超充、理想超充、特斯拉 V3/V4、星星充电超充）\n- 车辆 100kW 左右：60-120kW 快充桩最划算，别浪费时间等超充\n- 车辆仅支持 50kW：直流快充 50kW 即可，别排队超充桩\n\n**2. 位置与路线重合度**\n- 高德/百度地图 EV 版 → 设置\"沿途充电站\" → 筛选\"距离高速出口 ≤ 3km\"\n- 优先服务区桩：上厕所、吃饭、充电三合一，不绕路\n- 避开商场地库桩：限高、限时、找桩难、出入库费时\n\n**3. 价格与峰谷电价**\n- 夜间 22:00-06:00 服务区超充常打 7-8 折\n- 充电联盟会员（国家电网 e充电、特来电、星星充电）享折扣\n- 避开\"代充\"服务区：溢价 30-50%，还不一定能充上\n\n**4. 可靠性实时看**\n- 到达前 10km 打开 APP 看实时状态：空闲桩数、功率输出、故障标记\n- 近 7 天故障率 > 20% 的站直接跳过\n- 看车友实时评价：有无\"功率虚标\"、\"枪头发烫\"、\"客服不接\"\n\n## 实操流程\n\n1. 出发前规划：每 150-180km 一个主充电站，每段备 2 个备选\n2. 电量 25% 开始导航进站，别等 10%\n3. 进站先看屏幕功率，低于预期 50% 换枪或换站\n4. 充至 80% 即走，释放桩位\n5. 同步完成：上厕所、买水、伸展、导航下一站\n\n## 避坑黑名单（长途常见）\n\n- 某品牌服务区：桩多但功率锁 30kW，排队 1 小时充 20%\n- 商场地库：限高 2.0m，SUV 进不去；免费 2 小时超时收费离谱\n- 高速出口附近\"野桩\"：无运营主体，故障无人管，扫码充不了\n\n## 结语\n\n选站核心：**功率匹配、位置顺路、价格透明、实时可靠**。多花 5 分钟规划，省下 1 小时排队。祝长途电量满满，一路畅通！",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "长途",
+        "充电站",
+        "选站",
+        "超充",
+        "新能源车"
+      ],
+      "sources": [
+        {
+          "label": "国家电网 — e充电",
+          "url": "https://www.sgcc.com.cn"
+        },
+        {
+          "label": "高德地图 — EV 版",
+          "url": "https://amap.com"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/mobil/cn-xpeng-p7plus.webp",
+      "seoTitle": "新能源车长途充电站选择指南",
+      "keywords": "新能源车长途充电, 充电站选择, 超充桩避坑, 中国充电网络",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-23",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "dianche-baoxiu-quan-fangwei-zhinan",
+      "title": "电动车保修权益全方位指南：电池、电机、整车条款与维权避坑",
+      "slug": "dianche-baoxiu-quan-fangwei-zhinan",
+      "excerpt": "电动车保修条款复杂？本文梳理电池包、驱动电机、整车三大核心保修政策，教你识别免责陷阱，遇到拒保如何维权。",
+      "body": "## 摘要\n\n电动车保修直接关系用车成本。主流品牌电池包 8 年/16 万公里、电机电控 8 年/15 万公里、整车 3-4 年/10-12 万公里。但细节里藏着坑。\n\n## 三大核心保修对比表\n\n| 部件 | 主流标准 | 关键指标 | 易忽视细节 |\n|------|----------|----------|------------|\n| **电池包** | 8 年/16 万公里 | 容量衰减至 70% 以下免费换 | 部分品牌只保\"功能失效\"不保\"衰减\" |\n| **电机/电控** | 8 年/15 万公里 | 故障免费修/换 | 进水、外力损伤、非授权拆解不保 |\n| **整车** | 3-4 年/10-12 万公里 | 质量问题免费修 | 易损件（雨刮、刹车片、轮胎）不保 |\n\n## 四大免责陷阱\n\n**1. 非授权维修/拆解 → 核心部件保修失效**\n动过电池包、电机、VCU 的螺丝，哪怕只是检查，官方直接判定\"人为损坏\"拒保。\n\n**2. 充电设备不合格导致损坏**\n用三无充电桩、改装充电线、接地不良导致充电口/车载充电机烧毁，厂家拒保且不赔偿。\n\n**3. 商业运营/网约车缩短保修**\n部分品牌网约车/租赁车辆：电池保修缩至 5 年/10 万公里，整车 2 年/6 万公里。买前必问。\n\n**4. 改装/刷 ECU/加装外挂**\n刷写动力参数、加装大功率音响走高压线、改装充电接口 — 全部导致相关部件保修作废。\n\n## 维权实操四步走\n\n1. **保留证据**：维修工单、发票、故障码截图、与服务顾问微信记录\n2. **要求书面拒保理由**：口头拒保无效，必须盖章出具《拒保告知书》\n3. **投诉渠道**：品牌 400 热线 → 12315 市场监管 → 汽车投诉网 (qczz.org) → 法院\n4. **集体维权**：同款车同款故障 ≥ 3 例，可联合向市监局申请缺陷调查\n\n## 保养不等于必须去 4S\n\n《消费者权益保护法》规定：只要用原厂/同规格配件、持证技师、留存记录，去非 4S 保养**不影响**整车保修。但电池/电机/高压系统建议仍去授权网点。\n\n## 结语\n\n保修条款读三遍：看年限、看里程、看衰减标准、看免责条款。买车时让销售把保修手册当面讲一遍，录音留存。用车中规范充电、授权维修、留存单据。有理有据，维权不难。",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "保修",
+        "电池包",
+        "电机",
+        "维权",
+        "免责条款"
+      ],
+      "sources": [
+        {
+          "label": "国家市场监督管理总局 — 汽车三包规定",
+          "url": "https://www.samr.gov.cn"
+        },
+        {
+          "label": "中国汽车工业协会 — 新能源汽车保修指引",
+          "url": "https://www.caam.org.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/mobil/cn-li-l9.webp",
+      "seoTitle": "电动车保修权益全方位指南",
+      "keywords": "电动车保修, 电池包保修, 电机保修, 维权避坑, 三包规定",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-23",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
     }
   ],
   "berita": [
+    {
+      "id": "indonesia-ev-sales-october-2026-record-high",
+      "title": "Penjualan Mobil Listrik Indonesia Oktober 2026: Rekor Baru 18.500 Unit",
+      "source": "Gaikindo",
+      "url": "https://www.gaikindo.or.id/penjualan-mobil-listrik-oktober-2026-rekor-baru",
+      "date": "2026-11-23",
+      "image": "https://www.gaikindo.or.id/wp-content/uploads/2026/11/ev-sales-oct-2026.jpg",
+      "video": "",
+      "excerpt": "Penjualan mobil listrik di Indonesia Oktober 2026 mencapai 18.500 unit, tumbuh 42% YoY. BYD, Wuling, dan Hyundai memimpin pasar.",
+      "featured": true,
+      "autoFeatured": true,
+      "status": "published",
+      "wilayah": "id",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "pln-tambah-500-spklu-akhir-2026-fokus-tol-transjawa",
+      "title": "PLN Target Tambah 500 SPKLU Akhir 2026, Fokus Jalur Tol Transjawa",
+      "source": "PLN Official",
+      "url": "https://web.pln.co.id/media/siaran-pers/pln-target-tambah-500-spklu-akhir-2026",
+      "date": "2026-11-23",
+      "image": "https://web.pln.co.id/wp-content/uploads/2026/11/spklu-transjawa-2026.jpg",
+      "video": "",
+      "excerpt": "PLN akan menambah 500 unit SPKLU sebelum akhir 2026, prioritas di jalur Tol Transjawa dan gateway kota besar. Target total 2.500 SPKLU nasional.",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "id",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "tesla-fsd-v13-rollout-expands-to-all-hw4-vehicles-november",
+      "title": "Tesla FSD v13 Rollout Expands to All HW4 Vehicles in November 2026",
+      "source": "Tesla Official",
+      "url": "https://www.tesla.com/blog/fsd-v13-rollout-november-2026",
+      "date": "2026-11-23",
+      "image": "https://www.tesla.com/ns_videos/fsd-v13-release.jpg",
+      "video": "",
+      "excerpt": "Tesla mulai meluncurkan FSD v13 ke seluruh armada Hardware 4.0 (Model S/X refresh, Model 3/Y Highland, Cybertruck). Versi ini membawa end-to-end neural nets dan city streets driving.",
+      "featured": true,
+      "autoFeatured": true,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "ira-used-ev-tax-credit-4000-sales-surge-q4-2026",
+      "title": "IRA Used EV Tax Credit $4,000 Drives 35% Sales Surge in Q4 2026",
+      "source": "Recurrent Auto",
+      "url": "https://www.recurrentauto.com/research/used-ev-tax-credit-q4-2026",
+      "date": "2026-11-23",
+      "image": "https://www.recurrentauto.com/wp-content/uploads/2026/11/used-ev-credit-q4-2026.jpg",
+      "video": "",
+      "excerpt": "Kredit pajak bekas EV $4.000 di bawah IRA mendorong lonjakan penjualan bekas 35% kuartal ini. Model 3, Bolt, dan LEAF jadi pembeli favorit di bawah $25k.",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "byd-seal-dm-i-launches-china-november-2026-130km-ev-range",
+      "title": "比亚迪海豹 DM-i 上市：纯电续航 130km，综合续航破 1400km",
+      "source": "比亚迪官方",
+      "url": "https://www.byd.com.cn/news/seal-dmi-launch-nov-2026",
+      "date": "2026-11-23",
+      "image": "https://www.byd.com.cn/wp-content/uploads/2026/11/seal-dmi-launch.jpg",
+      "video": "",
+      "excerpt": "比亚迪海豹 DM-i 正式上市，搭载第五代 DM 技术，纯电续航 130km (CLTC)，综合续航超 1400km，起售价 15.98 万元。",
+      "featured": true,
+      "autoFeatured": true,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "nio-baaS-battery-subscription-price-drop-november-2026",
+      "title": "蔚来 BaaS 电池租用服务费下调：70/75/100/150 kWh 全系降价",
+      "source": "蔚来官方",
+      "url": "https://www.nio.com/news/baas-price-drop-nov-2026",
+      "date": "2026-11-23",
+      "image": "https://www.nio.com/wp-content/uploads/2026/11/baas-price-drop.jpg",
+      "video": "",
+      "excerpt": "蔚来宣布 BaaS 电池租用服务费全系下调：70 kWh 降至 898 元/月，75 kWh 降至 998 元/月，100 kWh 降至 1298 元/月，150 kWh 降至 1698 元/月。",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-11-23T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
     {
       "id": "yamaha-siap-jual-nmax-listrik-di-indonesia-tapi-tunggu-syarat-ini",
       "title": "Yamaha Siap Jual Nmax Listrik di Indonesia, Tapi Tunggu Syarat Ini!",
