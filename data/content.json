@@ -7181,6 +7181,159 @@
   ],
   "berita": [
     {
+      "id": "indonesia-ev-incentive-2027-draft-regulation",
+      "title": "Pemerintah Siapkan Insentif EV Baru 2027: PPnBM 0% dan PPN Dibebaskan",
+      "source": "Kemenkeu",
+      "url": "https://www.kemenkeu.go.id/publikasi/berita/draft-insentif-ev-2027",
+      "date": "2026-11-24",
+      "image": "https://www.kemenkeu.go.id/wp-content/uploads/2026/11/ev-insentif-2027.jpg",
+      "video": "",
+      "excerpt": "Kemenkeu menyiapkan draft regulasi insentif EV 2027: PPnBM 0% untuk CKD/SKD, PPN dibebaskan, dan insentif konversi taksi/logistik ke listrik. Target 2 juta unit EV 2027.",
+      "featured": true,
+      "autoFeatured": true,
+      "status": "published",
+      "wilayah": "id",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "pln-spklu-500-unit-q4-2026-progress",
+      "title": "PLN Capai 80% Target SPKLU 2026, 400 Unit Baru Beroperasi November",
+      "source": "PLN Official",
+      "url": "https://web.pln.co.id/media/siaran-pers/pln-spklu-november-2026-progress",
+      "date": "2026-11-24",
+      "image": "https://web.pln.co.id/wp-content/uploads/2026/11/spklu-nov-2026-progress.jpg",
+      "video": "",
+      "excerpt": "PLN resmi mengoperasikan 400 SPKLU baru di November 2026, mencakup 50 titik di Tol Transjawa, 30 di Transsumatera, dan 320 di gerbang kota. Total SPKLU nasional 2.100 unit.",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "id",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "hyundai-ioniq-9-indonesia-debut-early-2027",
+      "title": "Hyundai Ioniq 9 Resmi Debut di Indonesia Awal 2027, Targetkan Segmen SUV 7-Seater Premium",
+      "source": "Hyundai Indonesia",
+      "url": "https://www.hyundai.com/id/id/news/ioniq-9-debut-2027",
+      "date": "2026-11-24",
+      "image": "https://www.hyundai.com/id/id/wp-content/uploads/2026/11/ioniq-9-indonesia.jpg",
+      "video": "",
+      "excerpt": "Hyundai Motor Indonesia mengkonfirmasi Ioniq 9 (E-Seven konsep) akan diluncurkan Q1 2027. SUV 7-seater full-electric ini bersaing dengan Kia EV9 dan Denza D9, baterai 110 kWh, jarak 620 km WLTP.",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "id",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "tesla-model-y-juniper-refresh-spotted-testing-us",
+      "title": "Tesla Model Y 'Juniper' Refresh Spotted Testing in California Ahead of 2027 Launch",
+      "source": "Electrek",
+      "url": "https://electrek.co/2026/11/24/tesla-model-y-juniper-refresh-spotted",
+      "date": "2026-11-24",
+      "image": "https://electrek.co/wp-content/uploads/2026/11/model-y-juniper-spy.jpg",
+      "video": "",
+      "excerpt": "Prototype Tesla Model Y refresh (kode Juniper) tertangkam kamera di Fremont, California. Perubahan: lampu LED full-width, suspensi retuned, interior minimalis Model 3 Highland style, baterai 4680 struktural. Estimasi launch Q1 2027.",
+      "featured": true,
+      "autoFeatured": true,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "ford-f150-lightning-flash-trim-2027-pricing-announced",
+      "title": "Ford F-150 Lightning Flash Trim 2027 Pricing Announced: Starts at $67,995 with 320 EPA Miles",
+      "source": "Ford Media",
+      "url": "https://media.ford.com/content/fordmedia/fna/us/en/news/2026/11/24/f150-lightning-flash-2027.html",
+      "date": "2026-11-24",
+      "image": "https://media.ford.com/content/dam/fordmedia/2026/11/f150-lightning-flash-2027.jpg",
+      "video": "",
+      "excerpt": "Ford mengumumkan harga F-150 Lightning Flash 2027 mulai $67,995. Trim menengah ini menawarkan extended-range battery 131 kWh, 320 mil EPA, 580 hp, dan Pro Power Onboard 9.6 kW. Pesanan dibuka Januari 2027.",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "rivian-r2-r3-production-timeline-confirmed-normal-illinois",
+      "title": "Rivian R2 & R3 Production Timeline Confirmed: Normal, Illinois Plant Retooling Starts Q2 2026",
+      "source": "Rivian Official",
+      "url": "https://rivian.com/news/r2-r3-production-timeline-2026",
+      "date": "2026-11-24",
+      "image": "https://rivian.com/wp-content/uploads/2026/11/r2-r3-normal-plant.jpg",
+      "video": "",
+      "excerpt": "Rivian mengkonfirmasi R2 (midsize SUV) mulai produksi H1 2027, R3 (compact crossover) H2 2027. Pabrik Normal, Illinois akan diretool Q2 2026 dengan investasi $1,5M. R2 target harga $45k, R3 $35k.",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "us",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "xiaomi-su7-ultra-track-edition-china-launch-december",
+      "title": "小米 SU7 Ultra 赛道版 12 月上市：1548 匹、纽北 6:29.093、售价 81.49 万起",
+      "source": "小米汽车官方",
+      "url": "https://www.xiaomiev.com/news/su7-ultra-track-dec-2026",
+      "date": "2026-11-24",
+      "image": "https://www.xiaomiev.com/wp-content/uploads/2026/11/su7-ultra-track.jpg",
+      "video": "",
+      "excerpt": "小米 SU7 Ultra 赛道版将于 12 月 2026 正式交付，搭载 V8s×2 + V6s 三电机 1548 马力，纽北量产车最速 6:29.093，碳纤维套件全标配，限量 1000 台。",
+      "featured": true,
+      "autoFeatured": true,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "nio-et9-pre-sales-start-december-2026-flagship-sedan",
+      "title": "蔚来 ET9 12 月开启预售：旗舰行政轿车、900V 平台、天行智驾、预售 80 万起",
+      "source": "蔚来官方",
+      "url": "https://www.nio.com/news/et9-pre-sale-dec-2026",
+      "date": "2026-11-24",
+      "image": "https://www.nio.com/wp-content/uploads/2026/11/et9-pre-sale.jpg",
+      "video": "",
+      "excerpt": "蔚来旗舰轿车 ET9 将于 12 月 2026 开启预售，搭载 900V 高压平台、全系标配天行智驾、后轮转向、行政后排。预售价 80 万元起，交付 2027 年 Q1。",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "catl-shenxing-plus-battery-1000km-range-mass-production-2027",
+      "title": "宁德时代神行 PLUS 电池量产：CLTC 1000km、4C 超充、2027 年搭载车型上市",
+      "source": "宁德时代官方",
+      "url": "https://www.catl.com/news/shenxing-plus-2027",
+      "date": "2026-11-24",
+      "image": "https://www.catl.com/wp-content/uploads/2026/11/shenxing-plus.jpg",
+      "video": "",
+      "excerpt": "宁德时代发布神行 PLUS 电池，CLTC 续航破 1000km，4C 超充 10 分钟补能 600km，计划 2027 年量产上车。比亚迪、小鹏、零跑已确认首批搭载。",
+      "featured": false,
+      "autoFeatured": false,
+      "status": "published",
+      "wilayah": "cn",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
       "id": "indonesia-ev-sales-october-2026-record-high",
       "title": "Penjualan Mobil Listrik Indonesia Oktober 2026: Rekor Baru 18.500 Unit",
       "source": "Gaikindo",
@@ -14945,6 +15098,264 @@
       "publishAt": "",
       "updatedAt": "2026-11-18T06:15:00.000Z",
       "updatedBy": "编辑部"
+    },
+    {
+      "id": "perawatan-baterai-ev-musim-hujan-indonesia",
+      "title": "Perawatan Baterai Mobil Listrik di Musim Hujan: Tips Agar Tidak Cepat Rusak",
+      "slug": "perawatan-baterai-ev-musim-hujan-indonesia",
+      "excerpt": "Musim hujan meningkatkan risiko korosi dan kerusakan baterai mobil listrik. Ikuti panduan lengkap ini untuk melindungi investasi baterai Anda.",
+      "body": "## Ringkasan\n\nKelembaban tinggi dan air hujan adalah musuh utama sistem kelistrikan mobil listrik. Baterai yang terkena air atau kelembaban berlebih bisa mengalami korosi konektor, penurunan isolasi, hingga kerusakan sel yang permanen. Berikut panduan praktis untuk melindungi baterai EV Anda saat musim hujan.\n\n## 1. Parkir di Tempat Tertutup\n\nSelalu parkir mobil di garasi atau tempat yang tertutup saat hujan. Hindari parkir di area terbuka tanpa atap, terutama saat hujan deras berlangsung lama. Jika tidak punya garasi, gunakan car cover berkualitas yang tahan air dan memiliki ventilasi.\n\n## 2. Bersihkan dan Cek Konektor Baterai Rutin\n\nSetelah hujan lebat, buka tutup kotak baterai (jika aksesnya memungkinkan) dan periksa konektor positif dan negatif. Bersihkan karat atau korosi dengan kain kering, lalu olesi dengan grasi dielektrik khusus kontak listrik. Pastikan baut pengunci kencang.\n\n## 3. Cek Isolasi Kabel dan Wiring Harness\n\nPeriksa kabel-kabel yang terlihat di ruang mesin dan dekat baterai. Cari tanda isolasi yang terkelupas, retak, atau terkena gigitan tikus. Kabel yang rusak saat hujan berisiko tinggi menyebabkan short circuit. Ganti segera kabel yang bermasalah.\n\n## 4. Jangan Biarkan Baterai dalam Keadaan Kosong Lama\n\nSaat musim hujan, frekensi berkendara biasanya berkurang. Tetap isi baterai minimal sekali seminggu meskipun tidak dipakai. Baterai yang kosong lama saat lembab mempercepat degradasi sel dan sulit diisi kembali.\n\n## 5. Gunakan Charger Resmi dan Stopkontak yang Aman\n\nHindari menggunakan charger non-resmi atau kabel ekstensi yang tidak standar. Saat charging di luar rumah, pastikan SPKLU/stopkontak dalam kondisi kering dan aman. Jangan pernah charging saat konektor basah.\n\n## 6. Perhatikan Tanda-tanda Awal Kerusakan\n\nWaspadai gejala: (a) Jarak tempuh tiba-tiba turun drastis, (b) Charging jadi sangat lambat atau gagal total, (c) Muncul warning lamp baterai/kelistrikan di dashboard, (d) Bau aneh dari area baterai. Jika ada gejala ini, segera ke bengkel resmi.\n\n## Kesimpulan\n\nPerawatan preventif saat musim hujan jauh lebih murah dibandingkan ganti paket baterai. Kebiasaan sederhana: parkir tertutup, cek konektor, isi rutin, dan pakai charger resmi — sudah cukup melindungi investasi ratusan juta rupiah Anda.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "baterai ev",
+        "musim hujan",
+        "perawatan",
+        "korosi",
+        "charging"
+      ],
+      "sources": [
+        {
+          "label": "Hyundai Indonesia — Panduan Pemilik EV",
+          "url": "https://www.hyundai.com/id/id"
+        },
+        {
+          "label": "PLN — Keselamatan Pengisian Kendaraan Listrik",
+          "url": "https://web.pln.co.id"
+        },
+        {
+          "label": "Kementerian Perindustrian — Standar Kendaraan Listrik",
+          "url": "https://www.kemenperin.go.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/hyundai-ioniq-5.webp",
+      "seoTitle": "Perawatan Baterai Mobil Listrik Musim Hujan: Tips Anti Korosi & Rusak",
+      "keywords": "perawatan baterai ev musim hujan, mencegah korosi baterai, charging ev hujan, kerusakan baterai listrik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-24",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "cara-memperbaiki-error-charging-mobil-listrik",
+      "title": "Cara Memperbaiki Mobil Listrik Error Charging: Panduan Troubleshooting Lengkap",
+      "slug": "cara-memperbaiki-error-charging-mobil-listrik",
+      "excerpt": "Mobil listrik tidak mau charging? Jangan panik. Ikuti langkah-langkah troubleshooting sistematis ini untuk mengidentifikasi dan memperbaiki masalah charging sebelum ke bengkel.",
+      "body": "## Ringkasan\n\nError charging adalah salah satu keluhan paling umum pemilik mobil listrik. Penyebabnya bervariasi: dari yang sederhana seperti kabel longgar hingga yang kompleks seperti kerusakan OBC (On-Board Charger). Panduan ini membantu Anda mendiagnosis masalah secara bertahap.\n\n## Tahap 1: Pemeriksaan Fisik Paling Dasar\n\n1. **Cek konektor charging** — Pastikan kabel charging tertancap penuh di sisi mobil dan sisi charger/stopkontak. Konektor longgar adalah penyebab #1 charging gagal.\n2. **Periksa kondisi kabel** — Cari robekan, bekas lipatan tajam, atau bagian yang melunak (tanda overheat). Kabel rusak WAJIB diganti, jangan diperbaiki dengan tape.\n3. **Bersihkan port charging** — Debu, daun, atau kotoran di port charging mobil dan konektor bisa menghambat kontak. Bersihkan dengan kuas lembut atau udara tekanan.\n\n## Tahap 2: Cek Sumber Daya Listrik\n\n1. **Stopkontak/SPKLU** — Coba colok perangkat lain (mis. kipas angin) ke stopkontak yang sama. Jika tidak menyala, masalah ada di sumber listrik, bukan mobil.\n2. **MCB/sekering** — Cek panel listrik rumah. MCB yang turun (tripped) adalah gejala umum saat charging beban tinggi. Reset sekali; jika turun lagi, jangan dipaksa.\n3. **Grounding** — Stopkontak tanpa grounding yang benar bisa membuat charger menolak charging demi keamanan. Tes dengan tester grounding.\n\n## Tahap 3: Cek Sistem Mobil\n\n1. **Jadwal charging** — Banyak mobil punya fitur \"Scheduled Charging\" atau \"Departure Time\". Pastikan tidak ada jadwal yang menahan charging hingga jam tertentu.\n2. **Batas charging (SoC limit)** — Cek apakah batas charging diset terlalu rendah (mis. 50%) sehingga mobil berhenti charging lebih awal.\n3. **Mode hemat/eco** — Beberapa mobil menonaktifkan fast charging saat mode eco aktif. Coba matikan mode eco.\n4. **Suhu baterai** — Baterai terlalu panas (pasca fast charging/long drive) atau terlalu dingin (malam musim dingin) bisa menolak charging. Tunggu suhu normal.\n\n## Tahap 4: Reset Sistem\n\n1. **Soft reset** — Matikan mobil total (termasuk aksesoris), tunggu 2-3 menit, nyalakan kembali.\n2. **Re-plug charger** — Cabut charger dari stopkontak dan mobil, tunggu 30 detik, colok ulang dengan urutan: stopkontak dulu, baru ke mobil.\n3. **Coba charger lain** — Jika memungkinkan, coba charger lain (mis. EVSE portabel bawaan) untuk memisahkan masalah: charger atau mobil.\n\n## Kode Error Umum & Artinya\n\n| Kode/Indikator | Kemungkinan Penyebab |\n|----------------|----------------------|\n| \"Ground Fault\" / GFCI trip | Kebocoran arus ke ground, cek kabel & grounding |\n| \"Over Temperature\" | Charger/mobil overheat, biarkan dingin |\n| \"Communication Error\" | Konektor tidak kontak penuh atau protokol tidak cocok |\n| \"No Pilot Signal\" | Konektor CP (Control Pilot) tidak terhubung |\n| \"Battery Temp High/Low\" | Baterai di luar range suhu aman |\n\n## Kapan Harus ke Bengkel Resmi?\n\n- Sudah coba semua langkah di atas tapi charging tetap gagal\n- Muncul warning \"High Voltage System\" / \"Service EV System\"\n- Charger berbau hangus, berasap, atau casing meleleh\n- Mobil tidak mau READY meski baterai terisi\n- Ada kerusakan fisik pada port charging mobil\n\n**Jangan pernah** membuka unit OBC atau high-voltage junction box sendiri. Tegangan di sana berbahaya nyawa dan akan membatalkan garansi pabrikan.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "error charging",
+        "troubleshooting",
+        "mobil listrik",
+        "charger",
+        "perbaikan"
+      ],
+      "sources": [
+        {
+          "label": "Wuling Indonesia — Panduan Charging",
+          "url": "https://wuling.id"
+        },
+        {
+          "label": "BYD Indonesia — Dukungan Teknis",
+          "url": "https://www.byd.com/id"
+        },
+        {
+          "label": "Kementerian Perhubungan — Standar Keselamatan EV",
+          "url": "https://dephub.go.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/mobil/wuling-cloud-ev.webp",
+      "seoTitle": "Cara Memperbaiki Error Charging Mobil Listrik: Troubleshooting Lengkap",
+      "keywords": "mobil listrik tidak charging, error charging ev, troubleshooting charger ev, perbaikan charging mobil listrik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-24",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "ev-battery-maintenance-hurricane-season-america",
+      "title": "How to Maintain Your EV Battery During Hurricane Season: A Complete Guide",
+      "slug": "ev-battery-maintenance-hurricane-season-america",
+      "excerpt": "Hurricane season brings flooding, power outages, and extreme humidity. Learn how to protect your EV battery before, during, and after a storm.",
+      "body": "## Summary\n\nHurricane season (June–November) poses unique risks for EV owners in coastal and flood-prone areas: storm surge, prolonged power outages, and weeks of high humidity. This guide covers practical steps to protect your battery investment.\n\n## Before the Storm: Preparation\n\n1. **Charge to 80–90%** — Not 100%. A full pack has no room to absorb regenerative braking energy if you must drive immediately. 80–90% gives maximum usable range with buffer.\n2. **Move to higher ground** — If you live in a flood zone, park on the highest paved surface available. A garage on a slope is better than a driveway at street level. Storm surge saltwater immersion = total battery loss.\n3. **Document pre-storm condition** — Take photos of the car, charge port, and dashboard showing SoC. This helps insurance claims if damage occurs.\n4. **Unplug and secure charger** — Disconnect the EVSE, coil the cable neatly, and store indoors. A wall charger submerged in saltwater is a fire hazard and total loss.\n5. **Pre-condition if grid is up** — If power is still on before the storm hits, pre-condition the cabin and battery while plugged in. This uses grid power, preserving battery for evacuation.\n\n## During the Storm: If You Must Shelter in Place\n\n- **Do not charge** if flooding is imminent. Water + high voltage = electrocution and fire risk.\n- **Keep the 12 V battery healthy** — The 12 V runs the contactors that wake the HV pack. If the car sits for days, a dead 12 V means the car won't \"start\" even with a full traction battery. A trickle charger on the 12 V (if safe to run) is cheap insurance.\n- **Monitor via app only** — Don't go outside to check the car during the storm. Use the manufacturer app to monitor SoC and alerts.\n\n## After the Storm: Assessment & Recovery\n\n1. **Visual inspection first** — Before touching anything, look for: water line on body, debris in charge port, salt crust on undercarriage, displaced charger.\n2. **Do NOT plug in if any water reached the charge port or battery pack** — Saltwater contamination causes delayed short circuits. Tow to a dealer for HV system inspection.\n3. **If dry, try 12 V jump** — If the car appears dry but won't wake, the 12 V may be dead. Jump per manufacturer procedure (usually under-hood terminals, not the HV pack).\n4. **Test charge slowly** — Plug into a Level 1/120 V outlet first. Watch for error codes, unusual heat, or smell. If clean, escalate to Level 2.\n5. **Document everything for insurance** — Photos, timestamps, dealer inspection reports. Flood damage to HV battery is usually a total loss claim.\n\n## Long-Term Humidity Care (Weeks After)\n\n- **Run the car weekly** — Even short drives circulate coolant and exercise the HV contactors.\n- **Charge to 80% weekly** — Prevents cell imbalance from prolonged storage.\n- **Watch for corrosion** — Check charge port pins, 12 V terminals, and under-hood ground points for green/white crust. Clean with dielectric grease.\n\n## Emergency Kit for Hurricane Season\n\n- Portable 120 V EVSE (comes with most EVs)\n- 12 V jump pack (lithium, not lead-acid)\n- Waterproof bag for charge cable\n- Dealer and insurance 24-h numbers saved in phone\n- Paper map with dealer locations (cell service may be down)\n\n## Bottom Line\n\nSaltwater is the enemy. If storm surge reaches your battery pack, the car is almost certainly totaled. The best protection is moving the car to high ground *before* the water rises. No sandbag or cover substitutes for elevation.",
+      "author": "EVKita Editorial",
+      "category": "Panduan",
+      "tags": [
+        "hurricane",
+        "ev battery",
+        "flood",
+        "storm preparation",
+        "emergency"
+      ],
+      "sources": [
+        {
+          "label": "FEMA — Electric Vehicle Safety in Disasters",
+          "url": "https://www.fema.gov"
+        },
+        {
+          "label": "NHTSA — Electric Vehicle Safety",
+          "url": "https://www.nhtsa.gov/vehicle-safety/electric-and-hybrid-vehicles"
+        },
+        {
+          "label": "U.S. Department of Energy — EV Emergency Response",
+          "url": "https://www.energy.gov/eere/vehicles"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/mobil/us-ford-f150-lightning.webp",
+      "seoTitle": "EV Battery Hurricane Season Guide: Protect Your Battery Before, During & After Storms",
+      "keywords": "ev battery hurricane, electric car flood protection, hurricane season ev prep, saltwater battery damage",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-24",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "ev-charging-cable-repair-vs-replace-guide",
+      "title": "EV Charging Cable Repair: When to Fix vs Replace Your Home Charger Cable",
+      "slug": "ev-charging-cable-repair-vs-replace-guide",
+      "excerpt": "A damaged EV charging cable is a safety hazard. Learn how to inspect, when a repair is safe, and when replacement is the only option.",
+      "body": "## Summary\n\nThe charging cable is the most abused part of your home charging setup: run over, left in rain, coiled tight, yanked by the cord. A compromised cable can cause fire, shock, or damage your car's onboard charger. Here is how to decide repair vs replace.\n\n## Inspect Your Cable Monthly\n\nLook for these red flags:\n\n- **Cuts, nicks, or abrasion** through the outer jacket exposing inner conductors\n- **Flattened sections** where the cable was run over — internal strands may be broken\n- **Melted, discolored, or brittle** areas near the plugs — signs of overheating\n- **Loose strain relief** where cable enters the plug — wiggles when tugged gently\n- **Corrosion (green/white crust)** on plug pins — increases resistance and heat\n- **Cracked plug housing** — loses weather seal and mechanical retention\n\n## When Repair Might Be Okay (Rare)\n\nOnly a **licensed electrician** should attempt repairs, and only if:\n\n1. Damage is *solely* to the outer jacket, no conductor exposure, and the cable passes a continuity + insulation resistance test.\n2. The strain relief is loose but the cable and plug test electrically sound — can be re-clamped.\n3. A single pin has minor surface corrosion — can be cleaned with contact cleaner and protected with dielectric grease.\n\n**Even then, most electricians will refuse** because a repaired cable no longer meets UL/ETL listing, voids the charger warranty, and creates liability if it fails later.\n\n## When Replacement Is Mandatory\n\nReplace immediately (do not use) if:\n\n- Any conductor is visible\n- Cable was submerged in water (especially saltwater)\n- Plug housing is cracked or melted\n- Cable fails insulation resistance test (< 2 MΩ at 500 V DC)\n- The cable is > 5 years old and shows multiple wear points\n\n## Choosing a Replacement Cable\n\n- **Match the rating** — If your charger is 40 A / 9.6 kW, the cable must be rated ≥ 40 A continuous. Underrated cables overheat.\n- **UL/ETL listed** — Non-negotiable for safety and insurance.\n- **Correct connector** — NACS (Tesla) or J1772/CCS1 per your vehicle.\n- **Length** — 18–25 ft is typical. Longer = more voltage drop; avoid > 30 ft unless wire gauge is upsized.\n- **Outdoor rating** — Must be rated for wet locations (UL 62 / NEC 625).\n\n## Installation Tips for Longevity\n\n- **Install a cable hanger/holster** — Keeps cable off the ground, prevents drive-over damage.\n- **Use a drip loop** — Cable should loop down then up before entering the charger or outlet, so water runs off, not into the plug.\n- **Don't coil while charging** — A coiled cable traps heat. Fully extend during use.\n- **Protect from UV** — If mounted outdoors, use a cover or choose a cable with UV-rated jacket.\n\n## Cost Comparison\n\n| Option | Typical Cost | Warranty | Safety |\n|--------|--------------|----------|--------|\n| Electrician repair (if allowed) | $80–$150 | None / voids charger | Conditional |\n| New OEM cable (ChargePoint, Wallbox, etc.) | $120–$250 | 1–3 years | Full UL listing |\n| New generic J1772/NACS cable | $80–$180 | 1 year | Check for UL |\n\n## Bottom Line\n\nA $150 cable is cheap compared to a $3,000 onboard charger replacement, a $20,000 battery pack, or a house fire. When in doubt, replace. Keep the old cable for the electrician to inspect — it tells a story about your installation that can prevent the next failure.",
+      "author": "EVKita Editorial",
+      "category": "Panduan",
+      "tags": [
+        "charging cable",
+        "repair",
+        "replacement",
+        "home charger",
+        "safety"
+      ],
+      "sources": [
+        {
+          "label": "UL Standards — UL 2251 / UL 2594",
+          "url": "https://www.ul.com"
+        },
+        {
+          "label": "NEC Article 625 — Electric Vehicle Charging",
+          "url": "https://www.nfpa.org"
+        },
+        {
+          "label": "ChargePoint — Cable Care Guide",
+          "url": "https://www.chargepoint.com/support"
+        }
+      ],
+      "wilayah": "us",
+      "image": "/gambar/bengkel/us-evwest.webp",
+      "seoTitle": "EV Charging Cable Repair vs Replace: Safety Guide for Home Chargers",
+      "keywords": "ev charging cable repair, damaged ev cable, replace ev charger cable, home charger safety",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-24",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "dianche-yuji-dianchi-baoyang-quan-gong-lue",
+      "title": "电动车雨季电池保养全攻略：防潮、防水与应急处理",
+      "slug": "dianche-yuji-dianchi-baoyang-quan-gong-lue",
+      "excerpt": "雨季高湿、积水是电动车电池的大敌。掌握防潮防水要领、日常自检清单与应急处理，让电池安全度过漫长梅雨季。",
+      "body": "## 摘要\n\n中国南方梅雨季、北方汛期，高湿与积水让电动车电池面临三大风险：连接器腐蚀、绝缘下降、进水短路。本文给出可落地的防护清单。\n\n## 一、停放与防水：第一道防线\n\n1. **优先地库、车库、有顶棚车位**。露天停放必须用全包防水车衣，且车衣下摆要扎紧，防止雨水倒灌底盘。\n2. **避开低洼、易积水路段**。电池包通常在底盘最低处，水深超过 15 cm 即可能淹没电池包边缘。遇积水绕行，强行涉水属于违规用车，保修拒赔。\n3. **充电口防水盖必须合上**。每次充电后确认盖子锁紧。丢失时立即买原厂替代件，不要用胶带代替。\n\n## 二、连接器与线束：每周自检 5 分钟\n\n打开前机舱盖或后备箱（视车型而定），手电筒照着看：\n\n- **高压连接器（橙色护套）**：有无绿色/白色结晶（电解腐蚀）、护套破损、卡扣松动。\n- **12 V 电瓶端子**：氧化严重要打磨、涂脂、拧紧。12 V 挂了，高压系统也唤醒不了。\n- **线束固定点**：卡扣脱落会让线束甩动、磨破护套。扎带补固定。\n- **接地螺栓**：车身接地点生锈会导致绝缘监测报警。除锈、涂导电脂、拧紧到扭矩。\n\n发现腐蚀：断电（拔 12 V 负极）— 打磨 — 涂脂 — 复位 — 读故障码清码。不敢动，去 4S 店，别省这点工时费。\n\n## 三、充电习惯：雨天更要守规矩\n\n1. **充电枪枪头、车端口必须干燥**。雨中插枪前，用纸巾擦干两端。水珠进去就是绝缘故障。\n2. **优先室内/地库充电桩**。露天桩雨天故障率高，且人也淋雨。\n3. **慢充为主，快充为辅**。雨天湿度大，电池包散热差，慢充电流小、发热少、更安全。\n4. **充满即走**。长时间满电趴在桩上，万一桩位进水、线路老化漏电，风险叠加。\n\n## 四、应急处理：进水、报警、不动了怎么办\n\n| 现象 | 立即动作 | 禁忌 |\n|------|----------|------|\n| 涉水后仪表亮高压/绝缘报警 | 熄火、下车、撤离到安全区、拨打品牌救援 | **严禁再次尝试启动**、严禁自行拔高压插头 |\n| 充电枪插上即报\"绝缘故障\" | 拔枪、擦干枪头车口、换干燥桩位再试 | 反复插拔试运气 |\n| 底盘传来\"滋滋\"声/异味 | 远离车辆、拉警示带、等专业救援 | 靠近检查、泼水降温 |\n| 车辆泡过水（水位过电池包） | 定损走保险、厂家授权拆解评估 | 晒干以为没事就开 |\n\n## 五、长期不开车的雨季存放\n\n- 电量 50%–60%，断开 12 V 负极（或接智能维护器）。\n- 垫高车辆（千斤顶+木方），轮胎离地，防轮胎扁平、刹车盘锈死。\n- 车内放防潮箱/干燥剂，防霉菌侵蚀线束插针。\n- 每月接回 12 V、充到 80%、读故障码、再断开。\n\n## 结语\n\n雨季电池保养的核心八字：**停得高、查得勤、充得干、不动莽**。电池包进水是万元级起步的维修，哪怕只换一个高压连接器也要几千。花十分钟自检，省下的可能是整包电池的钱。",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "电池保养",
+        "雨季",
+        "防潮",
+        "防水",
+        "应急处理"
+      ],
+      "sources": [
+        {
+          "label": "比亚迪 — 官方售后用车建议",
+          "url": "https://www.bydauto.com.cn"
+        },
+        {
+          "label": "宁德时代 CATL — 电池安全白皮书",
+          "url": "https://www.catl.com/"
+        },
+        {
+          "label": "工信部 — 新能源汽车安全技术规范",
+          "url": "https://www.miit.gov.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/mobil/cn-byd-seal.webp",
+      "seoTitle": "电动车雨季电池保养全攻略：防潮防水应急处理 2026",
+      "keywords": "电动车雨季电池保养, 电池防水, 高压绝缘故障, 涉水应急, 梅雨季用车",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-24",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "dianche-chongdianqiang-guzhang-zijian-weixiu",
+      "title": "电动车充电枪故障自查与维修指南：从接触不良到内部短路",
+      "slug": "dianche-chongdianqiang-guzhang-zijian-weixiu",
+      "excerpt": "充电枪是充电链路中最易损的环节。学会识别常见故障现象、自查步骤，以及何时必须找专业维修、何时直接换新。",
+      "body": "## 摘要\n\n充电枪每天插拔、拖地、晒雨、被车压，是充电系统里机械应力最大、故障率最高的部件。本文按故障现象分类，给出自查流程与处理决策树。\n\n## 故障现象分类速查表\n\n| 现象 | 常见原因 | 自查可行性 |\n|------|----------|------------|\n| 枪头发热、有烧焦味 | 触点氧化/磨损、插拔不紧 | 可擦拭触点，不可拆枪 |\n| 充电枪指示灯异常/不亮 | 内部电路板故障、通讯模块坏 | **不可自修**，换枪 |\n| 枪线软化、外皮开裂 | 老化、过热、被碾压 | **立即停用**，换线/换枪 |\n| 插上即报\"枪锁故障/未锁定\" | 电磁锁卡滞、弹簧疲劳 | 可润滑机械部件 |\n| 充电功率忽高忽低 | 触点接触电阻大、CP 信号不稳 | 擦拭触点、换桩位试 |\n| 枪头进水/冷凝水 | 密封圈老化、盖子未盖 | 烘干、换密封圈 |\n\n## 自查步骤（按顺序，风险递增）\n\n### 1. 视觉检查（零风险）\n\n- 枪头触点（直流大触点、交流小触点、CP/PE 信号触点）是否发黑、发绿、凹陷、变形？\n- 枪线外皮有无割伤、扁平段、鼓包、发白老化？\n- 枪身外壳有无裂纹、变形、螺丝松动？\n- 密封圈（枪头橡胶圈、尾部线缆入口密封）完整否？\n\n### 2. 触点清洁（低风险）\n\n- 断电确认（拔枪、桩端断开）。\n- 无水酒精 + 无尘布/棉签，轻擦所有触点，去除氧化层。\n- 触点干燥后，薄涂一层导电脂（防氧化、降接触电阻）。\n- **严禁**用砂纸、锉刀打磨触点 —— 会破坏镀层，加速氧化。\n\n### 3. 机械锁润滑（低风险）\n\n- 枪锁卡滞表现：插入顺畅，拔出费劲，或\"咔哒\"一声锁不住。\n- 拆下枪头护套（通常 2–4 颗螺丝），见到电磁锁/弹簧机构。\n- 干式润滑剂（PTFE/石墨喷雾）喷在滑动面、弹簧上，**严禁**用油脂（沾灰、引尘、更卡）。\n- 装回测试，锁定/解锁各 5 次确认顺滑。\n\n### 4. 更换密封圈（中风险，需动手能力）\n\n- 买对应型号密封圈（原厂配件最稳）。\n- 拆枪头，取旧圈，清理槽底，装新圈，涂薄层硅脂。\n- 装回拧螺丝对角线均匀用力，防壳体变形漏水。\n\n## 必须找专业维修/直接换新的红线\n\n- **内部电路板烧毁、元件脱焊**：拆开可见焦黑、断脚。\n- **高压绝缘测试不合格**：专业设备测出绝缘电阻 < 2 MΩ。\n- **枪线内部断芯**：外皮完好但摇晃线身时充电忽断忽续。\n- **直流触点严重烧蚀、凹坑 > 1 mm**：接触面已不可修复。\n- **涉水/泡水史**：盐水腐蚀是延时炸弹，外观正常内部已坏。\n\n这些情况**强制换枪**。拆修成本往往超新枪，且修后无法通过绝缘/耐压测试，上车即隐患。\n\n## 换枪选购要点\n\n1. **认准国标 GB/T 20234.2/3**（直流/交流接口尺寸、耐压、温升）。\n2. **额定电流 ≥ 桩功率对应电流**（如 120 kW 桩约 200 A，枪头须 ≥ 250 A）。\n3. **带温控触点（NTC/PTC）**，过热保护是硬指标。\n4. **品牌售后**：国产一线（云快充、星星充电、特来电、国网自营）配件可追溯。\n5. **保留旧枪给电工看** —— 旧枪磨损模式能指导安装改进（如加保护套、改走线）。\n\n## 结语\n\n充电枪是耗材，不是终身件。高频快充站单枪寿命约 1–2 年，家用慢充枪 3–5 年。建立\"月检触点、季检外皮、年换密封\"的节奏，比等坏了再抢修省钱、省心、更安全。",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "充电枪",
+        "故障自查",
+        "维修",
+        "更换",
+        "国标"
+      ],
+      "sources": [
+        {
+          "label": "国家标准 GB/T 20234.2-2015 / .3-2015",
+          "url": "https://www.sac.gov.cn"
+        },
+        {
+          "label": "特来电 — 充电设备运维规范",
+          "url": "https://www.teld.cn"
+        },
+        {
+          "label": "国家电网 e充电 — 设备维护指引",
+          "url": "https://www.sgcc.com.cn"
+        }
+      ],
+      "wilayah": "cn",
+      "image": "/gambar/mobil/cn-xiaomi-su7.webp",
+      "seoTitle": "电动车充电枪故障自查维修指南：接触不良到内部短路 2026",
+      "keywords": "充电枪故障, 充电枪维修, 接触不良, 枪锁卡滞, 绝缘测试, 国标充电枪",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-24",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
     }
   ],
   "media": {}
