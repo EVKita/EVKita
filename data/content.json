@@ -14802,6 +14802,95 @@
       "updatedBy": "Redaksi"
     },
     {
+      "id": "tips-hemat-charging-ev-indonesia-peak-offpeak-2026",
+      "title": "Tips Hemat Charging EV di Indonesia: Manfaat Tarif Peak & Off-Peak PLN",
+      "slug": "tips-hemat-charging-ev-indonesia-peak-offpeak-2026",
+      "excerpt": "Tarif listrik PLN peak/off-peak bisa menghemat biaya charging EV hingga 50%. Pelajari cara mengatur jadwal charging agar paling hemat.",
+      "body": "## Ringkasan\n\nPLN menerapkan tarif Time of Use (ToU) dengan perbedaan harga peak (puncak) dan off-peak (luar puncak) yang signifikan. Untuk pemilik EV, mengatur jadwal charging di jam off-peak bisa menghemat biaya operasional hingga 50%.\n\n## 1. Pahami Jadwal Tarif ToU PLN\n\n- **Off-Peak (Termurah)**: 22.00 – 05.00 WIB → Rp 415/kWh (contoh tarif 1300 VA)\n- **Peak (Termahal)**: 17.00 – 22.00 WIB → Rp 1.660/kWh\n- **Normal**: 05.00 – 17.00 WIB → Rp 830/kWh\n\n*Catatan: Tarif pasti bervariasi per golongan daya. Cek tagihan PLN atau aplikasi PLN Mobile untuk detail akun Anda.*\n\n## 2. Atur Scheduled Charging di Mobil/App\n\nHampir semua EV modern (BYD, Wuling, Hyundai, Tesla, VinFast) punya fitur **Scheduled Charging** atau **Departure Time**:\n\n1. Buka menu charging di infotainment atau app mobile\n2. Set \"Start Charging\" jam 22:00\n3. Set \"Target SoC\" sesuai kebutuhan (mis. 80%)\n4. Simpan sebagai jadwal harian\n\n## 3. Gunakan Wallbox/Charger dengan Timer\n\nJika mobil tidak punya jadwal built-in, gunakan wallbox dengan timer (seperti ChargePoint Home Flex, Wallbox Pulsar Plus, atau EVSE portabel dengan timer). Atau colok ke smart plug yang bisa diatur via app.\n\n## 4. Contoh Perhitungan Hemat\n\n| Skenario | Kapasitas Baterai | Biaya Peak | Biaya Off-Peak | Hemat |\n|----------|-------------------|------------|----------------|-------|\n| Charging 60 kWh | 60 kWh | Rp 99.600 | Rp 24.900 | **Rp 74.700 (75%)** |\n| Bulanan (12x) | 720 kWh | Rp 1.195.200 | Rp 298.800 | **Rp 896.400** |\n| Tahunan | 8.640 kWh | Rp 14.342.400 | Rp 3.585.600 | **Rp 10.756.800** |\n\n## 5. Tips Tambahan\n\n- **Weekend**: Beberapa tarif PLN off-peak berlaku 24 jam di hari libur — cek tagihan Anda\n- **Solar + Battery**: Jika punya panel surya, charging siang hari gratis, malam pakai off-peak\n- **Aplikasi PLN Mobile**: Monitor penggunaan real-time, set notifikasi jam off-peak\n- **Jangan full 100% tiap malam**: 80% cukup untuk harian, perpanjang umur baterai\n\n## Kesimpulan\n\nCukup atur sekali jadwal charging jam 22:00, biarkan sistem kerja otomatis. Hemat jutaan rupiah per tahun tanpa mengubah kebiasaan berkendara.",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "charging ev",
+        "pln",
+        "peak offpeak",
+        "hemat",
+        "tarif listrik",
+        "indonesia"
+      ],
+      "sources": [
+        {
+          "label": "PLN — Tarif Time of Use",
+          "url": "https://web.pln.co.id/layanan/tarif-tenaga-listrik"
+        },
+        {
+          "label": "Kementerian ESDM — Kebijakan Charging EV",
+          "url": "https://www.esdm.go.id"
+        },
+        {
+          "label": "BYD Indonesia — Panduan Charging",
+          "url": "https://www.byd.com/id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/spklu/pln-charge-in.webp",
+      "seoTitle": "Tips Hemat Charging EV Indonesia: Tarif PLN Peak Off-Peak 2026",
+      "keywords": "hemat charging ev indonesia, tarif pln peak offpeak, scheduled charging ev, biaya charging motor listrik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-24",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
+      "id": "persiapan-mudik-ev-2026-rute-spklu-tol-transjawa",
+      "title": "Persiapan Mudik EV 2026: Rute SPKLU Tol Transjawa & Tips Aman",
+      "slug": "persiapan-mudik-ev-2026-rute-spklu-tol-transjawa",
+      "excerpt": "Mudik dengan EV 2026 semakin mudah dengan 2.100+ SPKLU nasional. Ikuti panduan rute Tol Transjawa, strategi charging, dan tips darurat.",
+      "body": "## Ringkasan\n\nMudik 2026 sudah bisa dilakukan tenang dengan EV. PLN sudah mengoperasikan 2.100+ SPKLU, banyak di jalur Tol Transjawa. Berikut panduan lengkap agar mudik EV lancar.\n\n## 1. Rute Utama Tol Transjawa & SPKLU Kunci\n\n**Jakarta – Surabaya (via Tol Transjawa)**:\n- KM 0: SPKLU Jakarta (Cikampek, Karawang, Kalijati)\n- KM 150: SPKLU Cirebon (Plaza Tol Cirebon)\n- KM 300: SPKLU Brebes (Plaza Tol Brebes)\n- KM 420: SPKLU Pemalang (Rest Area)\n- KM 550: SPKLU Semarang (Plaza Tol Krapyak)\n- KM 680: SPKLU Rembang (Rest Area)\n- KM 780: SPKLU Surabaya (Plaza Tol Waru)\n\n**Jarak antar SPKLU rata-rata 80–130 km** — aman untuk EV modern (jarak 300–500 km).\n\n## 2. Aplikasi Wajib Install\n\n- **PLN Mobile / PLN Charge.in** — resmi PLN, real-time status\n- **ChargePoint / EvGo / Tesla** — jika pakai jaringan mitra\n- **A Better Routeplanner (ABRP)** — perencanaan rute otomatis dengan SoC\n- **PlugShare** — komunitas, review, foto real-time\n\n## 3. Strategi Charging Mudik\n\n| Prinsip | Penjelasan |\n|---------|------------|\n| **Charge 20–80%** | Paling cepat, baterai sehat, hemat waktu |\n| **Stop tiap 200–250 km** | Jaga buffer 50 km untuk keamanan |\n| **Prioritaskan DC Fast Charging (50–150 kW)** | 20–30 menit istirahat + charging |\n| **Hindari AC Charging di tengah perjalanan** | Terlalu lambat (3–7 kW) |\n\n## 4. Checklist Sebelum Berangkat (H-1)\n\n- [ ] Charging full 100% (hanya untuk keberangkatan jauh)\n- [ ] Cek tekanan ban (sesuai stiker pintu)\n- [ ] Update aplikasi charging ke versi terbaru\n- [ ] Simpan power bank & kabel darurat di mobil\n- [ ] Download peta offline (Google Maps/Maps.me)\n- [ ] Siapkan uang tunai/qris untuk toilet/makan di rest area\n\n## 5. Tips Darurat\n\n- **Baterai < 15% & tidak ada SPKLU**: Cari outlet 220V (rest area, hotel, bengkel) — charging lambat tapi aman\n- **SPKLU penuh/offline**: Buka PlugShare/ABRP cari alternatif 10–15 km depan/belakang\n- **Cuaca hujan deras**: Kurangi kecepatan, tambah jarak tempuh charging 20%\n- **Keluarga butuh toilet/makan**: Sinkronkan dengan charging stop\n\n## 6. Estimasi Biaya Mudik Jakarta–Surabaya (EV 60 kWh)\n\n- Total jarak: ~780 km\n- Konsumsi: ~15 kWh/100 km → butuh ~117 kWh\n- Charging 3x DC Fast (0–80%): 3 × 48 kWh = 144 kWh\n- Biaya @ Rp 2.500/kWh: **~Rp 360.000** (vs bensin ~Rp 1.200.000)\n\n## Kesimpulan\n\nMudik EV 2026: **bisa, hemat, dan nyaman** asal rencanakan charging stop di SPKLU Tol Transjawa. Kunci: charge 20–80%, stop tiap 200 km, bawa app PLN Mobile + ABRP.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "mudik ev",
+        "transjawa",
+        "spklu",
+        "charging",
+        "liburan",
+        "indonesia",
+        "2026"
+      ],
+      "sources": [
+        {
+          "label": "PLN — SPKLU Tol Transjawa November 2026",
+          "url": "https://web.pln.co.id/media/siaran-pers/pln-spklu-november-2026-progress"
+        },
+        {
+          "label": "Kementerian Perhubungan — Rute Mudik EV",
+          "url": "https://dephub.go.id"
+        },
+        {
+          "label": "PLN Charge.in — Peta SPKLU Real-time",
+          "url": "https://charge.in.pln.co.id"
+        }
+      ],
+      "wilayah": "id",
+      "image": "/gambar/spklu/pertamina.webp",
+      "seoTitle": "Persiapan Mudik EV 2026: Rute SPKLU Transjawa & Tips Charging Aman",
+      "keywords": "mudik ev 2026, spklu transjawa, charging ev mudik, rute mudik mobil listrik, pln charge.in",
+      "noindex": false,
+      "featured": true,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-24",
+      "status": "published",
+      "publishAt": "",
+      "updatedAt": "2026-11-24T00:00:00.000Z",
+      "updatedBy": "Redaksi"
+    },
+    {
       "id": "ev-battery-maintenance-hurricane-season-america",
       "title": "How to Maintain Your EV Battery During Hurricane Season: A Complete Guide",
       "slug": "ev-battery-maintenance-hurricane-season-america",
