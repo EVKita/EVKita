@@ -10497,41 +10497,6 @@
       "updatedBy": ""
     },
     {
-      "id": "dianche-dongji-baoyang-quan-mian-zhinan",
-      "title": "电动车冬季保养全方位指南：续航、电池与充电实用技巧",
-      "slug": "dianche-dongji-baoyang-quan-mian-zhinan",
-      "excerpt": "冬季低温会让电动车续航下降、充电变慢。掌握这套冬季保养技巧，让爱车在寒冷天气里依然高效可靠。",
-      "body": "## 摘要\n\n冬季是电动车用车的考验期。本文提供续航、电池与充电方面的实用保养建议。\n\n## 每周检查胎压\n\n低温导致胎压下降，胎压不足增加能耗。每周检查并按标准充气。\n\n## 出发前预热座舱与电池\n\n利用插电状态预热，使用电网电力而非电池电量，节省续航。\n\n## 电量保持 20%-80%\n\n避免电量过低或长期满充，冬季日常建议保持 20%-80% 区间。\n\n## 优先使用座椅加热\n\n座椅和方向盘加热功率远低于空调暖风，更节能，取暖效果更直接。\n\n## 合理规划充电站\n\n冬季充电速度变慢，长途出行提前规划充电站，预留充足充电时间。\n\n## 尽量室内停车\n\n车库停车可保持电池温度较高，提升续航和充电速度，优于露天停放。\n\n## 结论\n\n做好这几点冬季保养，电动车在寒冷天气里依然高效可靠。",
-      "author": "Redaksi EVKita",
-      "category": "Panduan",
-      "tags": [
-        "冬季",
-        "保养",
-        "电池",
-        "充电",
-        "续航"
-      ],
-      "sources": [
-        {
-          "label": "国家电网 — 充电服务",
-          "url": "https://www.sgcc.com.cn"
-        }
-      ],
-      "wilayah": "cn",
-      "image": "/gambar/motor/cn-segway-e300se.webp",
-      "seoTitle": "电动车冬季保养全方位指南",
-      "keywords": "电动车冬季保养, 电池, 充电, 续航",
-      "noindex": false,
-      "featured": false,
-      "aiAssisted": false,
-      "auto": false,
-      "date": "2026-11-22",
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-11-22T01:19:19.884Z",
-      "updatedBy": ""
-    },
-    {
       "id": "dianche-chongdian-anquan-quan-mian-zhinan",
       "title": "电动车家用充电桩安全使用全指南：安装、检查与日常防护",
       "slug": "dianche-chongdian-anquan-quan-mian-zhinan",
@@ -10726,41 +10691,6 @@
       "image": "/gambar/motor/cn-supersoco-cux.webp",
       "seoTitle": "电动摩托车不启动自检指南",
       "keywords": "电动摩托车, 不启动, 自检, 修复",
-      "noindex": false,
-      "featured": false,
-      "aiAssisted": false,
-      "auto": false,
-      "date": "2026-11-22",
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-11-22T01:10:14.947Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "dongchedongji-dongji-baoyang-quan-jia-lue",
-      "title": "电动车冬季续航保养全攻略：5 个必做步骤",
-      "slug": "dongchedongji-dongji-baoyang-quan-jia-lue",
-      "excerpt": "冬季电动车续航会下降，充电变慢。掌握 5 个必做保养步骤，让电动车在寒冷天气里依然高效可靠。",
-      "body": "## 摘要\n\n冬季低温会导致电动车续航缩水、充电变慢。掌握以下 5 个保养步骤，保障冬季用车高效安全。\n\n## 每周检查胎压\n\n低温会降低胎压，胎压不足增加能耗并加速磨损。每周检查并按标准充气。\n\n## 出发前预热\n\n利用插电状态预热电池和座舱，用电网电力而非电池电量，节省续航。\n\n## 电量保持在 20 %以上\n\n低温下可用容量下降，避免电量低于 20%，以保护电池并维持性能。\n\n## 优先座椅加热\n\n座椅和方向盘加热功率远低于空调暖风，更节能，体感舒适。\n\n## 合理规划充电站\n\n冬季充电速度变慢，长途出行提前规划充电站，预留充足充电时间。\n\n## 尽量室内停车\n\n车库停车可保持电池温度较高，提升续航和充电速度，优于露天停放。\n\n## 结论\n\n做好这 5 点冬季保养，电动车在寒冷天气里依然高效可靠。",
-      "author": "Redaksi EVKita",
-      "category": "Panduan",
-      "tags": [
-        "冬季",
-        "续航",
-        "保养",
-        "电池",
-        "充电"
-      ],
-      "sources": [
-        {
-          "label": "国家电网 — 充电服务",
-          "url": "https://www.sgcc.com.cn"
-        }
-      ],
-      "wilayah": "cn",
-      "image": "/gambar/motor/cn-yadea-g5.webp",
-      "seoTitle": "电动车冬季续航保养指南",
-      "keywords": "电动车冬季保养, 续航, 电池, 充电",
       "noindex": false,
       "featured": false,
       "aiAssisted": false,
@@ -11414,53 +11344,6 @@
       "image": "/gambar/mobil/nissan-leaf.webp",
       "seoTitle": "Used EV Battery Health Checklist: 12 Checks Before You Buy",
       "keywords": "used EV inspection, EV battery state of health, used electric car checklist, EV warranty transfer",
-      "noindex": false,
-      "featured": false,
-      "aiAssisted": false,
-      "auto": false,
-      "date": "2026-11-19",
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-11-19T13:30:00.000Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "jiayong-chongdianzhuang-anzhuang-liucheng-2026",
-      "title": "家用充电桩安装全流程：从物业报装到验收通电，一次讲清楚",
-      "slug": "jiayong-chongdianzhuang-anzhuang-liucheng-2026",
-      "excerpt": "装充电桩不只是买一台机器。物业同意、独立电表、线径与接地，每一步都会影响费用和安全性。本文按实际办理顺序拆解全流程。",
-      "body": "## 先说结论\n\n家用充电桩能不能装，取决于三件事：车位是否固定、物业是否同意、供电容量是否够。三者缺一，安装就会卡住。费用通常由三部分组成：充电桩本体、施工线材、以及超出免费长度的电缆。\n\n提前把这三件事确认清楚，比先买桩再找人装要省心得多。\n\n## 第一步：确认车位条件\n\n需要固定车位，产权车位或一年以上的租赁车位都可以，但必须能提供证明。临时车位、消防通道旁的车位、以及地下车库中未划定区域的空地，通常无法通过审批。\n\n同时确认车位到配电箱的距离。这个距离直接决定线材费用。超过三十米的部分一般按米收费，老小区走桥架或穿墙还会增加施工难度。\n\n## 第二步：取得物业书面同意\n\n物业的顾虑主要有两个：电容是否够用，以及消防责任。准备材料时把这两点讲清楚，沟通会顺利很多：\n\n- 充电桩的产品合格证与检测报告\n- 安装方案，包括走线路径、断路器位置、接地方式\n- 施工单位资质\n- 承诺不占用公共通道、不私拉乱接\n\n部分城市要求物业在申请表中盖章。没有盖章，供电公司通常不受理独立电表申请。\n\n## 第三步：申请独立电表\n\n通过国家电网的网上国网 App，或南方电网的相关渠道，提交\"充电桩报装\"。需要上传身份证、车位证明、物业同意书、购车凭证。\n\n供电公司会安排现场勘查，确认接入点和容量。多数地区为居民充电桩提供独立电表，执行居民电价或分时电价。能用谷电的城市，夜间充电成本会明显低于白天。\n\n注意：独立电表的意义在于把充电用电和家庭用电分开，避免家庭阶梯电价被快速推高，也方便单独统计。\n\n## 第四步：选择功率\n\n- **7 kW（220V／32A）**：单相电即可，一晚可以补进约 40–50 kWh，覆盖绝大多数家用车日常通勤。是最常见的家用选择。\n- **11 kW（380V／16A）**：需要三相电，老小区往往没有条件。\n- **21 kW**：同样需要三相，家庭场景较少使用。\n\n不要为了\"更快\"盲目上大功率。家用车的车载充电机本身有上限，很多车型交流充电只支持 7 kW 或 11 kW，装再大的桩也不会更快。\n\n## 第五步：线材、断路器与接地\n\n这是最容易被偷工减料的部分。\n\n- 7 kW 建议使用 3×6 mm² 铜芯电缆；线路较长时应适当加粗。\n- 独立断路器，容量与充电桩匹配，不与家中其他大功率电器共用。\n- 必须可靠接地。接地不良时充电桩会报故障或拒绝启动，这是保护机制。\n- 建议加装漏电保护装置，并确认充电桩防护等级不低于 IP54。\n- 电缆应走桥架或穿管，不裸露、不悬空、不压在地毯或门槛下。\n\n## 第六步：安装与验收\n\n安装完成后，按顺序验收：\n\n1. 检查断路器容量、线径、接地电阻是否符合方案。\n2. 空载通电，确认充电桩自检通过。\n3. 连接车辆，观察起始功率是否达到预期。\n4. 连续充电二十分钟，触摸配电箱与插头，确认没有异常发热。\n5. 测试急停按钮与漏电保护是否有效。\n6. 保存施工照片和验收单，日后维修或卖房都用得上。\n\n## 费用大概是多少\n\n充电桩本体从一千多元到四五千元不等，带屏幕、带联网、带刷卡功能的更贵。施工费用取决于距离和施工难度，常见范围是一千到三千元。电缆超出免费长度的部分，按每米几十元计算。\n\n如果车位离配电箱很远，或者需要开挖、穿墙、加装桥架，费用会明显上升。签合同前让对方给出包含线材和人工的总价，而不是只报\"安装费\"。\n\n## 常见问题\n\n**物业不同意怎么办？** 先确认是电容不足还是责任顾虑。电容不足可以请供电公司出具勘查意见；责任顾虑可以用书面安全承诺和产品认证来解决。部分城市住建部门有明确的支持文件，可以作为沟通依据。\n\n**能不能用普通插座充？** 可以，但只能用随车便携充电器，功率通常在 2–3 kW，充满需要十几小时。不要用普通插座给 7 kW 充电桩供电。\n\n**下雨天能充吗？** 符合防护等级的充电桩可以，但插拔时应保持手部干燥，接口不能有积水。暴雨积水时不要使用。\n\n**租的房子能装吗？** 需要产权人同意和物业同意，迁走时可以拆走充电桩，但线路通常留在原位。\n\n## 最后提醒\n\n充电桩是长期使用的电气设备，不要把它当成一次性消费品来比价。线径、断路器、接地这三项省下的钱，往往会以发热、跳闸甚至安全事故的形式还回来。把方案、材料和验收记录留好，比任何口头承诺都可靠。",
-      "author": "EVKita编辑部",
-      "category": "充电指南",
-      "tags": [
-        "家用充电桩",
-        "安装流程",
-        "物业报装",
-        "独立电表",
-        "接地"
-      ],
-      "sources": [
-        {
-          "label": "网上国网 — 充电桩报装服务",
-          "url": "https://www.95598.cn/"
-        },
-        {
-          "label": "蔚来 — 家用充电桩安装说明",
-          "url": "https://www.nio.cn/"
-        },
-        {
-          "label": "小鹏汽车 — 家充服务",
-          "url": "https://www.xiaopeng.com/"
-        },
-        {
-          "label": "中国电力企业联合会 — 电动汽车充电设施标准",
-          "url": "https://www.cec.org.cn/"
-        }
-      ],
-      "wilayah": "cn",
-      "image": "/gambar/mobil/cn-nio-et5.webp",
-      "seoTitle": "家用充电桩安装全流程 2026：物业、电表、线径与验收",
-      "keywords": "家用充电桩安装,充电桩报装,独立电表,7kW充电桩,接地",
       "noindex": false,
       "featured": false,
       "aiAssisted": false,
@@ -12690,40 +12573,6 @@
       "updatedBy": ""
     },
     {
-      "id": "xin-nengyuan-jiayong-chongdianzhuang-an-zhuang-zhinan-2026",
-      "title": "新能源汽车家用充电桩安装指南（2026版）",
-      "slug": "xin-nengyuan-jiayong-chongdianzhuang-an-zhuang-zhinan-2026",
-      "excerpt": "从电容评估到施工验收，一步步教你在家安装家用充电桩，避免常见坑点。",
-      "body": "## 摘要\n\n家用充电桩是新能源车主日常补能最便捷的方式。本文从电力容量评估到施工验收，逐步说明安装流程与注意事项。\n\n## 1. 评估电力容量\n\n安装前需确认住宅变压器容量与电表规格。大多数家用充电桩功率为 7 kW，需单相 32A 线路。老旧小区可能需要增容申请。\n\n## 2. 选择安装位置\n\n优先选择靠近电表箱且通风良好的位置，避免阳光直射与积水。车位固定可安装壁挂式，无固定车位可考虑便携式充电枪。\n\n## 3. 选择运营商与设备\n\n主流运营商包括特来电、星星充电、云快充等。比较设备价格、安装费与后续电费。部分车企提供免费充电桩与安装服务。\n\n## 4. 施工与验收\n\n施工应由持证电工完成，使用符合标准的电缆与断路器。验收时检查接地保护、漏电保护与功率显示是否正常。\n\n## 5. 使用与维护\n\n定期检查电缆老化，雨天使用时确保插头干燥。避免长期满充满放，建议日常充电至 80% 以延长电池寿命。\n\n## 结论\n\n家用充电桩安装并不复杂，关键在于前期评估与规范施工。做好准备，日常充电将更加省心。",
-      "author": "EVKita",
-      "category": "Panduan",
-      "tags": [
-        "充电桩",
-        "家用充电",
-        "安装",
-        "中国"
-      ],
-      "sources": [
-        {
-          "label": "国家能源局 — 充电基础设施政策",
-          "url": "https://www.nea.gov.cn"
-        }
-      ],
-      "wilayah": "cn",
-      "image": "/gambar/spklu/cn-nio-power.webp",
-      "seoTitle": "",
-      "keywords": "",
-      "noindex": false,
-      "featured": false,
-      "aiAssisted": false,
-      "auto": false,
-      "date": "2026-11-01",
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "",
-      "updatedBy": ""
-    },
-    {
       "id": "ev-incentives-usa-2026-what-you-can-claim",
       "title": "Federal and State EV Incentives in 2026: What You Can Still Claim",
       "slug": "ev-incentives-usa-2026-what-you-can-claim",
@@ -13650,82 +13499,6 @@
       "updatedBy": ""
     },
     {
-      "id": "zhongguo-jiazhuang-chongdianzhuang-2026-11-04",
-      "title": "2026年中国新能源汽车家用充电桩安装全指南",
-      "slug": "zhongguo-jiazhuang-chongdianzhuang-2026-11-04",
-      "excerpt": "从选型、报装、安装到费用与注意事项，全面讲解2026年中国新能源汽车家用充电桩安装流程。",
-      "body": "## 概述\n\n家充是大多数中国新能源车主的主力补能方式。2026年，家充安装流程更加标准化，但不同小区、不同电网公司的要求仍有差异。本文梳理从选型到通电的全流程。\n\n## 1. 选型\n\n- **交流慢充（7 kW）**：适合夜间充电，经济实用，是家充主流。\n- **直流快充（更高功率）**：成本高、对电网要求高，一般不推荐家用。\n- 确认车辆支持的交流充电功率，避免\"大马拉小车\"。\n\n## 2. 报装与物业沟通\n\n- 提前联系物业，确认车位产权与安装条件。\n- 向当地电网公司申请用电增容或专用计量。\n- 准备材料：购车发票、车位证明、物业同意书等。\n\n## 3. 安装施工\n\n- 选择具备资质的安装服务商。\n- 线缆应采用符合标准的铜缆，做好防水与接地。\n- 安装完成后进行通电测试与安全检查。\n\n## 4. 费用与补贴\n\n- 安装费用因距离、楼层、线缆长度而异。\n- 部分地区或车企提供家充安装补贴或赠送安装服务。\n- 关注峰谷电价，夜间充电更省钱。\n\n## 5. 注意事项\n\n- 不要私拉电线，存在安全隐患。\n- 定期检查充电桩与线缆老化情况。\n- 充电时保持通风，避免在封闭空间长时间大功率充电。\n\n## 结论\n\n家充安装并不复杂，关键在于提前沟通物业与电网、选择正规服务商、做好安全检查。安装完成后，夜间低价充电将大幅降低用车成本。",
-      "author": "EVKita",
-      "category": "Panduan",
-      "tags": [
-        "充电桩",
-        "家充",
-        "中国",
-        "安装"
-      ],
-      "sources": [
-        {
-          "label": "中华人民共和国工业和信息化部",
-          "url": "https://www.miit.gov.cn/"
-        },
-        {
-          "label": "国家能源局",
-          "url": "https://www.nea.gov.cn/"
-        }
-      ],
-      "wilayah": "cn",
-      "image": "/gambar/mobil/cn-byd-seagull.webp",
-      "seoTitle": "中国家用充电桩安装指南 2026",
-      "keywords": "中国 家用充电桩 安装 2026, 新能源汽车 充电",
-      "noindex": false,
-      "featured": false,
-      "aiAssisted": false,
-      "auto": false,
-      "date": "2026-11-04",
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-11-03T23:28:17.249Z",
-      "updatedBy": ""
-    },
-    {
-      "id": "dongji-dian-dong-qiche-xuhang-chongdian-jiqiao-2026-11-04",
-      "title": "冬季低温下电动汽车续航与充电实用技巧",
-      "slug": "dongji-dian-dong-qiche-xuhang-chongdian-jiqiao-2026-11-04",
-      "excerpt": "冬季低温对电动汽车续航与充电的影响及应对方法：预热、充电策略、驾驶习惯与停车建议。",
-      "body": "## 概述\n\n冬季低温会降低电池活性、增加能耗（暖风、除霜），导致续航缩水与充电变慢。掌握几条实用技巧，可显著改善冬季用车体验。\n\n## 1. 预热与 preconditioning\n\n- 出发前通过 App 远程预热座舱与电池。\n- 到达快充站前让车辆自动预热电池，提升充电速度。\n\n## 2. 充电策略\n\n- 低温下直流快充功率可能受限，耐心等待或选择室内/地下充电站。\n- 夜间家充时间更长，提前规划。\n- 电量保持在 20–80%，避免满充或深度放电。\n\n## 3. 驾驶习惯\n\n- 平缓加速，利用动能回收。\n- 合理使用座椅加热替代全车暖风，更省电。\n- 提前规划路线，减少绕行。\n\n## 4. 停车建议\n\n- 尽量停在室内或避风处，减少冷 soak。\n- 长时间停放保持 SOC 约 50%。\n- 雪天注意充电口防冰，必要时使用充电口加热。\n\n## 结论\n\n冬季 EV 用车需要更多规划，但通过预热、合理充电与节能驾驶，续航与充电体验完全可以接受。提前准备是关键。",
-      "author": "EVKita",
-      "category": "Tips",
-      "tags": [
-        "冬季",
-        "续航",
-        "充电",
-        "中国"
-      ],
-      "sources": [
-        {
-          "label": "中国汽车技术研究中心",
-          "url": "https://www.catarc.org.cn/"
-        },
-        {
-          "label": "国家能源局",
-          "url": "https://www.nea.gov.cn/"
-        }
-      ],
-      "wilayah": "cn",
-      "image": "/gambar/mobil/cn-byd-tang.webp",
-      "seoTitle": "冬季 EV 续航充电技巧 2026",
-      "keywords": "冬季 电动汽车 续航 充电 技巧",
-      "noindex": false,
-      "featured": false,
-      "aiAssisted": false,
-      "auto": false,
-      "date": "2026-11-04",
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-11-03T23:28:17.249Z",
-      "updatedBy": ""
-    },
-    {
       "id": "panduan-lengkap-pemilikan-ev-indonesia-2026",
       "title": "Panduan Lengkap Pemilikan Kendaraan Listrik di Indonesia 2026",
       "slug": "panduan-lengkap-pemilikan-ev-indonesia-2026",
@@ -14083,52 +13856,6 @@
       "image": "/gambar/mobil/cn-byd-han.webp",
       "seoTitle": "",
       "keywords": "中国换电站，公共充电桩使用，GB/T接口，新能源汽车补能指南",
-      "noindex": false,
-      "featured": false,
-      "aiAssisted": false,
-      "auto": false,
-      "date": "2026-11-14",
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "",
-      "updatedBy": ""
-    },
-    {
-      "id": "dongji-ev-china-2026",
-      "title": "2026年中国电动汽车冬季用车与电池护理实用指南",
-      "slug": "dongji-ev-china-2026",
-      "excerpt": "冬季低温对电动汽车续航与充电的影响，以及预热、充电策略与驾驶习惯建议。",
-      "body": "## 摘要\n\n中国北方冬季气温低，电池活性下降，续航会缩短，充电变慢。本指南提供预热、充电策略、驾驶习惯与停车建议，帮助车主安全过冬。\n\n## 1. 预热与电池预调节\n\n出发前通过手机APP远程预热座舱与电池。到达快充站前让车辆自动预热电池，可显著提升低温下的充电速度。\n\n## 2. 充电策略\n\n低温下直流快充功率可能受限，耐心等待或选择室内/地下充电站。夜间家充时间会变长，需提前规划。建议将电量保持在20%–80%，避免满充或深度放电。\n\n## 3. 驾驶习惯\n\n平缓加速，合理利用动能回收。使用座椅加热代替全车暖风更省电。提前规划路线，减少不必要绕行。\n\n## 4. 停车建议\n\n尽量停在室内或避风处，减少电池“冷启动”。长时间停放时保持电量约50%。雪天注意充电口防冰，必要时使用充电口加热功能。\n\n## 5. 电池护理\n\n冬季电池活性降低，更要避免长期停放在0%或100%状态。严格按照厂家保养周期检查电池冷却系统，确保冬季保修有效。\n\n---\n*信息摘自中国汽车技术研究中心、国家能源局及整车厂官方用车手册。极端低温下请结合实际车辆表现调整用车习惯。*",
-      "author": "Redaksi EVKita",
-      "category": "Tips",
-      "tags": [
-        "冬季",
-        "续航",
-        "充电",
-        "电池护理",
-        "电动汽车",
-        "中国",
-        "预热",
-        "实用技巧"
-      ],
-      "sources": [
-        {
-          "label": "中国汽车技术研究中心",
-          "url": "https://www.catarc.org.cn/"
-        },
-        {
-          "label": "国家能源局",
-          "url": "https://www.nea.gov.cn/"
-        },
-        {
-          "label": "中国汽车工业协会 (CAAM)",
-          "url": "http://www.caam.org.cn"
-        }
-      ],
-      "wilayah": "cn",
-      "image": "/gambar/mobil/cn-zeekr-001.webp",
-      "seoTitle": "",
-      "keywords": "冬季电动汽车用车，电池护理，续航缩短，充电技巧，中国",
       "noindex": false,
       "featured": false,
       "aiAssisted": false,
@@ -15012,49 +14739,6 @@
       "publishAt": "",
       "updatedAt": "2026-11-18T06:15:00.000Z",
       "updatedBy": "editor"
-    },
-    {
-      "id": "dian-dong-che-dong-jie-bao-yang-zhi-nan-2026",
-      "title": "电动车冬季保养指南：如何在寒冷天气中保护电池和续航",
-      "slug": "dian-dong-che-dong-jie-bao-yang-zhi-nan-2026",
-      "excerpt": "寒冷天气会显著降低电动车续航。遵循这些实用技巧，保护电池并在冬季最大化行驶里程。",
-      "body": "# 电动车冬季保养指南\n\n冬季给电动车车主带来独特挑战。低温会降低电池效率和续航。以下是保护您电动车的方法。\n\n## 1. 充电时预调节\n\n在电动车还连接充电器时使用预调节功能。这会使用电网电力而非电池电力来加热电池和车厢，保留续航里程。\n\n## 2. 使用座椅加热而非车厢暖气\n\n座椅加热和方向盘加热比整个车厢供暖耗电更少。使用它们保持舒适的同时减少续航影响。\n\n## 3. 保持正确胎压\n\n寒冷空气会降低胎压，增加滚动阻力。冬季每周检查一次胎压，并按制造商规格充气。\n\n## 4. 更频繁规划充电停靠\n\n寒冷天气会使续航减少10-40%，具体取决于温度。长途行程时计划更多充电停靠，不要让电池电量低于20%。\n\n## 5. 使用经济模式\n\n启用经济或效率模式以限制加速并最大化再生制动，在寒冷条件下延长续航。\n\n## 6. 尽可能停在车库内\n\n室内停车能保持电池温暖，减少出行前加热电池所需的能量。\n\n```advisory\n冬季风暴期间，不要在淹没的车库内让电动车保持充电连接，也不要使用损坏的充电线。\n```",
-      "author": "EVKita编辑部",
-      "category": "养护",
-      "tags": [
-        "电动车冬季",
-        "电池保养",
-        "续航提示",
-        "寒冷天气",
-        "中国"
-      ],
-      "sources": [
-        {
-          "label": "中国汽车技术研究中心 — 电动车冬季用车",
-          "url": "https://www.catarc.ac.cn/"
-        },
-        {
-          "label": "电动车百科 — 电池养护",
-          "url": "https://www.dongchedi.com/"
-        },
-        {
-          "label": "特斯拉中国 — 冬季用车指南",
-          "url": "https://www.tesla.com/zh_cn/"
-        }
-      ],
-      "wilayah": "cn",
-      "image": "/gambar/mobil/cn-wuling-mini-ev.webp",
-      "seoTitle": "电动车冬季保养指南：保护电池和续航 2026",
-      "keywords": "电动车冬季保养,寒冷天气电池,电动车续航,电动车养护",
-      "noindex": false,
-      "featured": false,
-      "aiAssisted": false,
-      "auto": false,
-      "date": "2026-11-19",
-      "status": "published",
-      "publishAt": "",
-      "updatedAt": "2026-11-18T06:15:00.000Z",
-      "updatedBy": "编辑部"
     },
     {
       "id": "dian-dong-che-gu-zhang-zi-cha-2026",
