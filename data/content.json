@@ -15160,6 +15160,210 @@
       "publishAt": "",
       "updatedAt": "2026-11-24T00:00:00.000Z",
       "updatedBy": "Redaksi"
+    },
+    {
+      "id": "tips-perawatan-baterai-ev-harian",
+      "title": "Tips Perawatan Baterai EV Harian agar Awet hingga 8 Tahun",
+      "slug": "tips-perawatan-baterai-ev-harian",
+      "excerpt": "Kebiasaan kecil saat mengisi daya dan parkir bisa memperpanjang umur baterai EV. Panduan praktis untuk pemilik baru maupun lama.",
+      "body": "## Ringkasan\n\nUmur baterai EV ditentukan lebih oleh kebiasaan daripada oleh merek. Berikut kebiasaan harian yang terbukti memperlambat degradasi sel.\n\n## Aturan Pengisian\n\n- Jaga SoC (state of charge) di 20-80% untuk pemakaian harian.\n- Hindari pengisian penuh 100% kecuali untuk perjalanan jauh.\n- Gunakan pengisian lambat (AC) untuk rutin; DC fast charge hanya saat perlu.\n- Jangan biarkan baterai kosong (0-5%) terlalu lama.\n\n## Kebiasaan Parkir\n\n- Parkir di tempat teduh atau garasi untuk menghindari panas ekstrem.\n- Saat parkir lama, tinggalkan SoC sekitar 50%.\n- Aktifkan mode penghemat energi saat parkir.\n\n## Pemantauan\n\n- Cek kesehatan baterai (SOH) setiap 6 bulan.\n- Perhatikan penurunan jangkauan yang tiba-tiba.\n- Lakukan kalibrasi SoC sesuai panduan pabrikan.\n\n## Penutup\n\nDengan kebiasaan sederhana ini, baterai EV bisa bertahan 8 tahun atau lebih dengan degradasi minimal.",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "baterai",
+        "perawatan",
+        "EV",
+        "tips"
+      ],
+      "sources": [
+        {
+          "label": "Panduan Pabrikan EV",
+          "url": "https://www.pln.co.id"
+        }
+      ],
+      "wilayah": "Indonesia",
+      "image": "/gambar/spklu/pln-charge-in.jpg",
+      "seoTitle": "Tips Perawatan Baterai EV Harian",
+      "keywords": "baterai ev, perawatan, tips",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00+07:00",
+      "updatedAt": "2026-11-26T00:00:00+07:00",
+      "updatedBy": "admin"
+    },
+    {
+      "id": "cara-mengatasi-ev-tidak-mau-charge",
+      "title": "Cara Mengatasi EV yang Tidak Mau Mengisi Daya",
+      "slug": "cara-mengatasi-ev-tidak-mau-charge",
+      "excerpt": "EV tidak mau charge? Cek langkah demi langkah dari kabel, stasiun, hingga pengaturan kendaraan sebelum ke bengkel.",
+      "body": "## Langkah Awal\n\nSebelum panik, lakukan pemeriksaan dasar berikut.\n\n## 1. Periksa Kabel dan Konektor\n\n- Pastikan kabel terpasang kencang hingga bunyi klik.\n- Bersihkan pin dari debu dan air.\n- Coba kabel lain jika tersedia.\n\n## 2. Periksa Stasiun Pengisian\n\n- Pastikan stasiun menyala dan tidak error.\n- Coba stasiun lain.\n- Periksa aplikasi untuk status gangguan.\n\n## 3. Pengaturan Kendaraan\n\n- Pastikan EV tidak dalam mode penghematan ekstrem.\n- Cek jadwal pengisian (timer) yang mungkin aktif.\n- Restart sistem kendaraan.\n\n## 4. Suhu Baterai\n\n- Jika baterai terlalu panas/dingin, pengisian ditunda otomatis.\n- Tunggu suhu normal lalu coba lagi.\n\n## Kapan ke Bengkel\n\nJika semua langkah di atas gagal, segera hubungi bengkel resmi atau layanan derek EV.\n\n## Penutup\n\nSebagian besar masalah pengisian adalah hal sepele. Periksa sistematis sebelum biaya mahal.",
+      "author": "Redaksi EVKita",
+      "category": "Panduan",
+      "tags": [
+        "charging",
+        "troubleshooting",
+        "EV",
+        "perbaikan"
+      ],
+      "sources": [
+        {
+          "label": "Panduan Pabrikan EV",
+          "url": "https://www.pln.co.id"
+        }
+      ],
+      "wilayah": "Indonesia",
+      "image": "/gambar/spklu/terra.webp",
+      "seoTitle": "Cara Mengatasi EV Tidak Mau Charge",
+      "keywords": "ev tidak charge, troubleshooting, perbaikan",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00+07:00",
+      "updatedAt": "2026-11-26T00:00:00+07:00",
+      "updatedBy": "admin"
+    },
+    {
+      "id": "us-ev-winter-range-tips",
+      "title": "Tips Menjaga Jangkauan EV di Musim Dingin",
+      "slug": "us-ev-winter-range-tips",
+      "excerpt": "Musim dingin memangkas jangkauan EV. Berikut cara memaksimalkan baterai saat cuaca dingin.",
+      "body": "## Ringkasan\n\nSuhu rendah menurunkan performa baterai dan meningkatkan konsumsi pemanas.\n\n## Tips\n\n- Preconditioning baterai saat terhubung charger.\n- Gunakan seat heater daripada heater kabin.\n- Parkir di garasi.\n- Rencanakan charging stop lebih sering.\n\n## Penutup\n\nPerencanaan sederhana membuat perjalanan musim dingin tetap nyaman.",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "winter",
+        "range",
+        "EV",
+        "tips"
+      ],
+      "wilayah": "Amerika",
+      "image": "/gambar/spklu/voltron.webp",
+      "seoTitle": "Tips Menjaga Jangkauan EV di Musim Dingin",
+      "keywords": "winter, range, EV, tips",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00-05:00",
+      "updatedAt": "2026-11-26T00:00:00-05:00",
+      "updatedBy": "admin",
+      "sources": [
+        {
+          "label": "EV Resources US",
+          "url": "https://www.energy.gov"
+        }
+      ]
+    },
+    {
+      "id": "us-home-charger-installation",
+      "title": "Panduan Instalasi Home Charger EV di Rumah",
+      "slug": "us-home-charger-installation",
+      "excerpt": "Memasang charger di rumah memudahkan pengisian harian. Berikut langkah dan biayanya.",
+      "body": "## Ringkasan\n\nHome charger Level 2 mempercepat pengisian hingga 5x dibanding outlet biasa.\n\n## Langkah\n\n- Pilih charger bersertifikat.\n- Hire electrician berlisensi.\n- Pastikan panel listrik cukup.\n- Periksa izin lokal.\n\n## Biaya\n\nBervariasi 500-2000 USD termasuk instalasi.\n\n## Penutup\n\nInvestasi yang cepat balik modal.",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "charger",
+        "home",
+        "instalasi",
+        "EV"
+      ],
+      "wilayah": "Amerika",
+      "image": "/gambar/mobil/cn-byd-seagull.webp",
+      "seoTitle": "Panduan Instalasi Home Charger EV di Rumah",
+      "keywords": "charger, home, instalasi, EV",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00-05:00",
+      "updatedAt": "2026-11-26T00:00:00-05:00",
+      "updatedBy": "admin",
+      "sources": [
+        {
+          "label": "EV Resources US",
+          "url": "https://www.energy.gov"
+        }
+      ]
+    },
+    {
+      "id": "cn-ev-battery-care-summer",
+      "title": "Tips Perawatan Baterai EV di Musim Panas",
+      "slug": "cn-ev-battery-care-summer",
+      "excerpt": "Musim panas ekstrem mempercepat degradasi. Berikut cara menjaga baterai tetap sehat.",
+      "body": "## Ringkasan\n\nPanas berlebih adalah musuh utama baterai lithium.\n\n## Tips\n\n- Hindari parkir di bawah matahari langsung.\n- Jangan charge hingga 100% saat panas.\n- Gunakan pendinginan baterai aktif.\n- Pantau suhu baterai.\n\n## Penutup\n\nPerawatan sederhana memperpanjang umur baterai.",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "baterai",
+        "panas",
+        "EV",
+        "tips"
+      ],
+      "wilayah": "China",
+      "image": "/gambar/mobil/cn-byd-seagull.webp",
+      "seoTitle": "Tips Perawatan Baterai EV di Musim Panas",
+      "keywords": "baterai, panas, EV, tips",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00-05:00",
+      "updatedAt": "2026-11-26T00:00:00-05:00",
+      "updatedBy": "admin",
+      "sources": [
+        {
+          "label": "EV Resources US",
+          "url": "https://www.energy.gov"
+        }
+      ]
+    },
+    {
+      "id": "cn-ev-charging-etiquette",
+      "title": "Etika Menggunakan Stasiun Pengisian Publik",
+      "slug": "cn-ev-charging-etiquette",
+      "excerpt": "Berbagi stasiun pengisian memerlukan etika. Berikut aturan tidak tertulis yang perlu diketahui.",
+      "body": "## Ringkasan\n\nStasiun pengisian terbatas, etika membuat semua pengguna nyaman.\n\n## Etika\n\n- Jangan parkir setelah selesai charge.\n- Pindahkan kendaraan segera.\n- Jangan cabut kabel orang lain.\n- Laporkan kerusakan.\n\n## Penutup\n\nEtika sederhana menjaga kenyamanan bersama.",
+      "author": "Redaksi EVKita",
+      "category": "Tips",
+      "tags": [
+        "charging",
+        "etika",
+        "EV",
+        "publik"
+      ],
+      "wilayah": "China",
+      "image": "/gambar/spklu/cn-nio-power.webp",
+      "seoTitle": "Etika Menggunakan Stasiun Pengisian Publik",
+      "keywords": "charging, etika, EV, publik",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00-05:00",
+      "updatedAt": "2026-11-26T00:00:00-05:00",
+      "updatedBy": "admin",
+      "sources": [
+        {
+          "label": "EV Resources US",
+          "url": "https://www.energy.gov"
+        }
+      ]
     }
   ],
   "media": {}
