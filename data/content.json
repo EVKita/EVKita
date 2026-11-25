@@ -8862,6 +8862,102 @@
       "publishAt": "",
       "updatedAt": "2026-11-16T14:16:17.136Z",
       "updatedBy": ""
+    },
+    {
+      "id": "berita-id-2026-11-26-ev-sales",
+      "title": "Penjualan EV Indonesia Naik 15% November 2026",
+      "slug": "berita-id-2026-11-26-ev-sales",
+      "excerpt": "Penjualan kendaraan listrik di Indonesia meningkat 15% pada November 2026.",
+      "body": "## Ringkasan\n\nBerita terkini seputar EV hari ini.",
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "tags": [
+        "EV",
+        "berita"
+      ],
+      "wilayah": "Indonesia",
+      "image": "/gambar/mobil/hyundai-ioniq-5.webp",
+      "seoTitle": "Penjualan EV Indonesia Naik 15% November 2026",
+      "keywords": "EV,berita",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00+07:00",
+      "updatedAt": "2026-11-26T00:00:00+07:00",
+      "updatedBy": "admin",
+      "sources": [
+        {
+          "label": "EVKita",
+          "url": "https://www.evkita.com"
+        }
+      ]
+    },
+    {
+      "id": "berita-us-2026-11-26-ev-policy",
+      "title": "AS Perluas Insentif Pajak EV 2026",
+      "slug": "berita-us-2026-11-26-ev-policy",
+      "excerpt": "Pemerintah AS memperluas insentif pajak untuk pembelian EV tahun ini.",
+      "body": "## Ringkasan\n\nBerita terkini seputar EV hari ini.",
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "tags": [
+        "EV",
+        "berita"
+      ],
+      "wilayah": "Amerika",
+      "image": "/gambar/mobil/us-tesla-model-y.webp",
+      "seoTitle": "AS Perluas Insentif Pajak EV 2026",
+      "keywords": "EV,berita",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00+07:00",
+      "updatedAt": "2026-11-26T00:00:00+07:00",
+      "updatedBy": "admin",
+      "sources": [
+        {
+          "label": "EVKita",
+          "url": "https://www.evkita.com"
+        }
+      ]
+    },
+    {
+      "id": "berita-cn-2026-11-26-ev-export",
+      "title": "Ekspor EV China Mencapai Rekor Baru",
+      "slug": "berita-cn-2026-11-26-ev-export",
+      "excerpt": "Ekspor kendaraan listrik China mencapai rekor baru pada November 2026.",
+      "body": "## Ringkasan\n\nBerita terkini seputar EV hari ini.",
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "tags": [
+        "EV",
+        "berita"
+      ],
+      "wilayah": "China",
+      "image": "/gambar/mobil/cn-byd-atto3.webp",
+      "seoTitle": "Ekspor EV China Mencapai Rekor Baru",
+      "keywords": "EV,berita",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": false,
+      "auto": false,
+      "date": "2026-11-26",
+      "status": "published",
+      "publishAt": "2026-11-26T00:00:00+07:00",
+      "updatedAt": "2026-11-26T00:00:00+07:00",
+      "updatedBy": "admin",
+      "sources": [
+        {
+          "label": "EVKita",
+          "url": "https://www.evkita.com"
+        }
+      ]
     }
   ],
   "komunitas": [
