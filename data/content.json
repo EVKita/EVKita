@@ -1,5 +1,5 @@
 {
-  "revision": "mwz4dgw6-b067d5ad",
+  "revision": "mx0346to-fa2a9194",
   "site": {
     "brandText": "EVKita",
     "brandSuffix": ".com",
@@ -8471,6 +8471,120 @@
       "publishAt": "",
       "updatedAt": "2026-11-16T14:16:17.136Z",
       "updatedBy": ""
+    },
+    {
+      "id": "berita-id-2026-11-28-icar-v23-v27",
+      "slug": "berita-id-2026-11-28-icar-v23-v27",
+      "title": "iCAR Hadirkan V23 dan V27 dengan Konsep Unik di GAW 2026",
+      "excerpt": "iCAR Indonesia hadir di GAW 2026 dengan NEV V23 dan V27, pengalaman interaktif, dan program lucky draw untuk pengunjung.",
+      "body": "## Ringkasan\n\niCAR Indonesia hadir di GAW 2026 dengan dua model NEV, V23 dan V27, serta pengalaman interaktif di booth. Pengunjung dapat menjelajahi kedua model dan mengikuti program lucky draw.\n\n## Kenapa penting\n\nKehadiran iCAR di pameran otomotif nasional menunjukkan minat merek China terhadap pasar Indonesia. V23 dan V27 menarget segmen SUV listrik dengan konsep desain yang berbeda dari model mainstream.\n\n## Yang perlu diperhatikan pengguna\n\nSebelum mempertimbangkan pembelian, cek:\n- Harga resmi dan varian yang tersedia di Indonesia.\n- Jaringan servis dan ketersediaan suku cadang.\n- Spesifikasi baterai, jangkauan, dan kemampuan pengisian.\n- Garansi baterai dan syaratnya.\n\nInformasi resmi dari pameran perlu diverifikasi lewat kanal pabrikan sebelum menjadi dasar keputusan.\n\n**Sumber:** [detikOto — iCAR Hadirkan V23 dan V27 dengan Konsep Unik di GAW 2026](https://oto.detik.com/mobil/d-8774080/icar-hadirkan-v23-dan-v27-dengan-konsep-unik-di-gaw-2026)",
+      "source": "detikOto",
+      "url": "https://oto.detik.com/mobil/d-8774080/icar-hadirkan-v23-dan-v27-dengan-konsep-unik-di-gaw-2026",
+      "image": "/gambar/berita/berita-id-icar-2026-11-28.webp",
+      "wilayah": "id",
+      "tags": [
+        "iCAR",
+        "V23",
+        "V27",
+        "GAW 2026",
+        "NEV"
+      ],
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "seoTitle": "iCAR Hadirkan V23 dan V27 dengan Konsep Unik di GAW 2026",
+      "keywords": "iCAR, V23, V27, GAW 2026, NEV",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false,
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "video": "",
+      "sources": [
+        {
+          "label": "detikOto",
+          "url": "https://oto.detik.com/mobil/d-8774080/icar-hadirkan-v23-dan-v27-dengan-konsep-unik-di-gaw-2026"
+        }
+      ]
+    },
+    {
+      "id": "berita-us-2026-11-28-ionna-thanksgiving",
+      "slug": "berita-us-2026-11-28-ionna-thanksgiving",
+      "title": "IONNA Offers 50% Off EV Charging Over Thanksgiving Weekend",
+      "excerpt": "IONNA's fast-charging network is half off through Sunday, November 29, a timely deal for Thanksgiving road-trippers.",
+      "body": "## What happened\n\nIONNA is offering a 50% discount on charging across its entire fast-charging network through Sunday, November 29. The promotion targets Thanksgiving holiday road-trippers.\n\n## Why it matters\n\nHoliday travel puts heavy demand on charging infrastructure. Discounts like this can reduce trip costs and encourage drivers to use newer networks. For EV owners planning a route, checking network promotions before departure can save money.\n\n## Practical tips\n\n- Verify the promotion in the IONNA app before charging.\n- Check station availability and wait times in advance.\n- Have a backup charger in your route plan.\n- Monitor charging speed, as cold weather can reduce rates.\n\n**Source:** [Electrek — IONNA's got a 50% discount off EV charging over Thanksgiving weekend](https://electrek.co/2026/11/27/ionnas-got-a-50-discount-off-ev-charging-over-thanksgiving-weekend/)",
+      "source": "Electrek",
+      "url": "https://electrek.co/2026/11/27/ionnas-got-a-50-discount-off-ev-charging-over-thanksgiving-weekend/",
+      "image": "/gambar/berita/berita-us-ionna-2026-11-28.webp",
+      "wilayah": "us",
+      "tags": [
+        "IONNA",
+        "charging",
+        "discount",
+        "Thanksgiving",
+        "fast charging"
+      ],
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "seoTitle": "IONNA Offers 50% Off EV Charging Over Thanksgiving Weekend",
+      "keywords": "IONNA, charging, discount, Thanksgiving, fast charging",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false,
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "video": "",
+      "sources": [
+        {
+          "label": "Electrek",
+          "url": "https://electrek.co/2026/11/27/ionnas-got-a-50-discount-off-ev-charging-over-thanksgiving-weekend/"
+        }
+      ]
+    },
+    {
+      "id": "berita-cn-2026-11-28-bmw-i3",
+      "slug": "berita-cn-2026-11-28-bmw-i3",
+      "title": "BMW launches all-new i3 in China with up to 1,028 km CLTC range",
+      "excerpt": "The all-new BMW i3 Long-Wheelbase Edition debuts at the Guangzhou Auto Show, starting at 37,300 USD, with up to 1,028 km CLTC range.",
+      "body": "## 核心信息\n\n宝马在 2026 广州车展发布全新一代 i3 长轴距版，起售价 37,300 美元，CLTC 续航最高可达 1,028 公里。新车定位纯电动中型轿车，主打长续航与豪华体验。\n\n## 关键点\n\n- 全新 i3 采用长轴距设计，后排空间更充裕。\n- CLTC 续航最高 1,028 公里，满足长途出行需求。\n- 起售价 37,300 美元，进入主流高端电动车市场。\n\n## 对消费者的意义\n\n长续航电动车在中国市场竞争日益激烈。宝马 i3 的续航表现和品牌溢价，使其在与特斯拉 Model 3、蔚来 ET5 等车型的竞争中具备一定优势。但实际体验仍取决于充电网络、冬季续航衰减和软件生态。\n\n上市时间、配置和最终售价以官方发布为准。\n\n**来源：** [CarNewsChina — BMW launches all-new i3 in China](https://carnewschina.com/2026/11/28/bmw-launches-all-new-i3-in-china-up-to-1028-km-cltc-range-priced-from-37300-usd/)",
+      "source": "CarNewsChina",
+      "url": "https://carnewschina.com/2026/11/28/bmw-launches-all-new-i3-in-china-up-to-1028-km-cltc-range-priced-from-37300-usd/",
+      "image": "/gambar/berita/berita-cn-bmw-i3-2026-11-28.webp",
+      "wilayah": "cn",
+      "tags": [
+        "BMW",
+        "i3",
+        "CLTC",
+        "续航",
+        "广州车展"
+      ],
+      "author": "Redaksi EVKita",
+      "category": "Berita",
+      "seoTitle": "BMW launches all-new i3 in China with up to 1,028 km CLTC range",
+      "keywords": "BMW, i3, CLTC, 续航, 广州车展",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false,
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "video": "",
+      "sources": [
+        {
+          "label": "CarNewsChina",
+          "url": "https://carnewschina.com/2026/11/28/bmw-launches-all-new-i3-in-china-up-to-1028-km-cltc-range-priced-from-37300-usd/"
+        }
+      ]
     }
   ],
   "komunitas": [
@@ -15270,6 +15384,270 @@
       "publishAt": "2026-11-27T00:00:00+07:00",
       "updatedAt": "2026-11-27T21:30:00+07:00",
       "updatedBy": "Redaksi"
+    },
+    {
+      "id": "menyimpan-mobil-listrik-tidak-dipakai-lama-id-2026-11-28",
+      "slug": "menyimpan-mobil-listrik-tidak-dipakai-lama-id-2026-11-28",
+      "title": "Menyimpan Mobil Listrik Saat Tidak Dipakai Lama: Baterai, Ban, dan Aki 12V",
+      "excerpt": "Libur panjang atau tugas luar kota membuat mobil listrik diam berminggu-minggu. Ini cara menyimpannya agar baterai, ban, dan aki 12V tidak rusak, plus jadwal pengecekan minimal.",
+      "category": "Perawatan",
+      "tags": [
+        "penyimpanan ev",
+        "baterai ev",
+        "aki 12v",
+        "ban",
+        "perawatan ev",
+        "indonesia"
+      ],
+      "keywords": "menyimpan mobil listrik, baterai ev lama diam, aki 12v, ban flat spot",
+      "wilayah": "id",
+      "image": "/gambar/artikel/id-storage-ev.webp",
+      "sources": [
+        {
+          "label": "MG Motor — Owner Support",
+          "url": "https://www.mgmotor.eu/owners"
+        },
+        {
+          "label": "BYD Indonesia — Dukungan Pelanggan",
+          "url": "https://www.byd.com/id"
+        },
+        {
+          "label": "PLN — SPKLU",
+          "url": "https://www.pln.co.id/main"
+        }
+      ],
+      "body": "## Ringkasan\n\nMobil listrik yang diam terlalu lama bukan hanya soal baterai utama. Aki 12V pendukung bisa habis, ban bisa flat spot, rem cakram bisa berkarat, dan perangkat lunak bisa kehilangan sinkronisasi. Panduan ini membahas penyimpanan 2 minggu hingga 3 bulan, dengan jadwal pengecekan yang realistis.\n\n## 1. Tentukan berapa lama mobil akan diam\n\n- **Kurang dari 2 minggu:** tidak perlu tindakan khusus selain memastikan SOC sekitar 50-60%.\n- **2-6 minggu:** ikuti checklist di bawah.\n- **Lebih dari 6 minggu:** pertimbangkan perawatan baterai di bengkel resmi dan cabut aki 12V bila manual mengizinkan.\n\nJangan menyimpan mobil dengan SOC 100% atau di bawah 20% untuk waktu lama. SOC sekitar 50% adalah titik paling aman untuk baterai lithium.\n\n## 2. Sebelum diparkir\n\n1. Cuci dan keringkan mobil. Noda getah, kotoran burung, dan lumpur bisa merusak cat bila dibiarkan berminggu-minggu.\n2. Isi ban ke tekanan yang direkomendasikan, atau sedikit lebih tinggi 0,2 bar untuk mencegah flat spot.\n3. Pastikan tidak ada makanan atau minuman di kabin. Bau dan hama bisa muncul.\n4. Matikan semua aksesori yang bisa menyedot daya: dashcam, GPS, charger ponsel.\n5. Cek cairan pendingin, cairan rem, dan cairan wiper. Isi bila perlu.\n6. Perbarui perangkat lunak bila ada pembaruan penting sebelum diam.\n\n## 3. Tempat parkir yang tepat\n\n- Pilih tempat kering, teduh, dan berventilasi.\n- Hindari parkir di bawah pohon yang sering menjatuhkan getah atau buah.\n- Jika parkir luar ruangan, gunakan cover bernapas, bukan terpal plastik yang menahan uap air.\n- Hindari tempat dengan genangan air atau banjir.\n\n## 4. Aki 12V: komponen paling sering bermasalah\n\nAki 12V pada EV sering lebih kecil daripada mobil bensin dan lebih cepat habis bila mobil diam. Beberapa pabrikan menyediakan mode \"deep sleep\" yang mematikan sistem non-esensial. Aktifkan mode ini bila ada.\n\nJika mobil akan diam lebih dari 4 minggu:\n- Periksa apakah manual mengizinkan pelepasan aki 12V.\n- Bila dilepas, pastikan Anda tahu cara memasang ulang dan kode radio/infotainment.\n- Bila tidak dilepas, minta seseorang menyalakan mobil 10-15 menit setiap 2 minggu, atau gunakan maintenance charger yang kompatibel.\n\n## 5. Baterai utama: jangan biarkan penuh atau kosong\n\n- SOC sekitar 50% adalah target ideal.\n- Jangan mengaktifkan fitur \"keep battery warm\" bila tidak perlu, karena bisa menghabiskan daya.\n- Jika mobil punya fitur \"battery care mode\" atau \"storage mode\", gunakan.\n- Cek SOC setiap 2 minggu bila memungkinkan. Jika turun di bawah 30%, cas kembali ke 50%.\n\n## 6. Ban dan rem\n\n- Flat spot bisa muncul setelah 4-6 minggu diam, terutama pada ban dengan tekanan rendah.\n- Pindahkan mobil beberapa meter setiap 2 minggu untuk mengubah titik tumpu ban.\n- Rem cakram bisa berkarat bila mobil diam di tempat lembap. Cukup geser mobil maju-mundur perlahan di area aman untuk membersihkan karat ringan.\n- Jangan menarik rem tangan terlalu kuat untuk waktu lama; gunakan \"park\" atau ganjal roda bila memungkinkan.\n\n## 7. Jadwal pengecekan minimal\n\n| Periode | Tindakan |\n|---|---|\n| Setiap 2 minggu | Cek SOC, nyalakan mobil 10-15 menit, pindahkan mobil beberapa meter |\n| Setiap 4 minggu | Cek tekanan ban, cek aki 12V, periksa kebocoran cairan |\n| Setiap 8 minggu | Cuci dan keringkan, periksa karat rem, periksa hama |\n| Sebelum dipakai kembali | Cas ke 80%, cek semua lampu dan sensor, jalan pendek dulu |\n\n## 8. Saat mobil akan dipakai kembali\n\n1. Cas baterai ke 80% sebelum perjalanan jauh.\n2. Cek tekanan ban dan isi sesuai rekomendasi.\n3. Nyalakan mobil dan pastikan tidak ada pesan galat.\n4. Jalan pendek di area aman untuk memastikan rem, setir, dan sensor bekerja.\n5. Periksa wiper, lampu, dan AC sebelum berangkat.\n\n## Kapan harus ke bengkel\n\n- Aki 12V tidak bisa diisi ulang atau mobil tidak menyala.\n- Rem terasa kasar atau bersuara setelah diam lama.\n- Ada pesan galat baterai atau sistem tegangan tinggi.\n- Ban menunjukkan flat spot yang tidak hilang setelah dipanaskan.\n\n## Kesimpulan\n\nMenyimpan mobil listrik bukan hal yang rumit. Target utamanya adalah SOC sekitar 50%, tempat parkir kering, dan aki 12V yang tidak habis. Dengan pengecekan setiap 2 minggu, mobil bisa kembali digunakan tanpa masalah besar.",
+      "seoTitle": "Menyimpan Mobil Listrik Saat Tidak Dipakai Lama",
+      "author": "Redaksi EVKita",
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false
+    },
+    {
+      "id": "perawatan-kaca-wiper-defogger-ev-hujan-id-2026-11-28",
+      "slug": "perawatan-kaca-wiper-defogger-ev-hujan-id-2026-11-28",
+      "title": "Perawatan Kaca, Wiper, dan Defogger Mobil Listrik di Musim Hujan",
+      "excerpt": "Kaca berembun, wiper cepat aus, dan defogger lambat sering muncul di musim hujan. Panduan praktis merawat kaca, wiper, dan sistem defogger agar pandangan tetap jernih.",
+      "category": "Perawatan",
+      "tags": [
+        "kaca mobil",
+        "wiper",
+        "defogger",
+        "musim hujan",
+        "perawatan ev",
+        "indonesia"
+      ],
+      "keywords": "perawatan kaca mobil listrik, wiper, defogger, musim hujan",
+      "wilayah": "id",
+      "image": "/gambar/artikel/id-wiper-defogger.webp",
+      "sources": [
+        {
+          "label": "MG Motor — Owner Support",
+          "url": "https://www.mgmotor.eu/owners"
+        },
+        {
+          "label": "Hyundai Motors Indonesia",
+          "url": "https://www.hyundai.com/id"
+        },
+        {
+          "label": "PLN — SPKLU",
+          "url": "https://www.pln.co.id/main"
+        }
+      ],
+      "body": "## Ringkasan\n\nMusim hujan di Indonesia bukan hanya soal banjir. Kaca yang berembun, wiper yang berdecit, dan defogger yang lambat bisa membuat berkendara tidak aman. Panduan ini membahas perawatan kaca, wiper, dan defogger pada mobil listrik, termasuk kebiasaan yang membuatnya cepat rusak.\n\n## 1. Kenapa kaca mobil listrik lebih mudah berembun\n\nMobil listrik memiliki sistem AC/heat pump yang efisien, tetapi kelembapan di dalam kabin bisa meningkat bila filter kabin kotor atau drainase mampet. Selain itu, kaca yang kotor lebih mudah mengembun karena partikel debu menjadi inti embun.\n\nFaktor lain:\n- Lantai kabin basah karena alas kaki basah.\n- AC dalam mode recirculate terlalu lama.\n- Kaca depan kotor di bagian dalam.\n- Defogger kaca depan atau belakang tidak berfungsi.\n\n## 2. Perawatan kaca depan dan belakang\n\n### Bersihkan kaca bagian dalam\n\nGunakan pembersih kaca yang tidak meninggalkan residu. Semprotkan ke kain, bukan langsung ke kaca, agar tidak merembes ke dashboard atau sensor. Lap dengan gerakan vertikal lalu horizontal untuk mendeteksi goresan.\n\n### Cek karet wiper\n\nKaret wiper yang keras, retak, atau bergelombang akan meninggalkan garis air. Ganti karet setiap 6-12 bulan, atau lebih cepat bila sering dipakai di cuaca panas.\n\n### Jangan gunakan wiper kering\n\nWiper yang diaktifkan pada kaca kering akan menggores kaca dan mempercepat aus karet. Pastikan ada cukup air cuci sebelum menyalakan wiper.\n\n### Cek cairan wiper\n\nGunakan cairan wiper yang mengandung antifreeze ringan dan anti jamur. Jangan isi dengan air keran saja, karena bisa menyumbat nozzle.\n\n## 3. Perawatan wiper yang benar\n\n1. Angkat wiper saat mencuci mobil agar tidak tersapu jet air.\n2. Bersihkan karet wiper dengan kain lembap setiap minggu.\n3. Jangan gunakan wiper untuk membersihkan lumpur tebal; bilas dulu.\n4. Cek nozzle semprot. Jika mampet, bersihkan dengan jarum halus.\n5. Pastikan motor wiper tidak bersuara kasar. Suara kasar bisa menandakan bushing aus.\n\n## 4. Defogger: cara kerja dan perawatan\n\nDefogger kaca depan biasanya memanfaatkan AC dan pemanas. Defogger kaca belakang memakai elemen pemanas di dalam kaca. Keduanya membutuhkan daya dari baterai, sehingga penggunaan lama bisa memengaruhi konsumsi energi.\n\n### Tips penggunaan\n\n- Gunakan mode defog dengan AC menyala dan suhu sedang.\n- Arahkan aliran udara ke kaca depan, bukan ke wajah.\n- Buka sedikit jendela belakang untuk membuang kelembapan berlebih.\n- Jangan menempel stiker besar di kaca belakang karena bisa menghalangi elemen pemanas.\n\n### Perawatan\n\n- Bersihkan kaca belakang dengan kain lembut. Jangan menggosok elemen pemanas.\n- Cek apakah semua garis pemanas menyala. Jika ada yang mati, ada kemungkinan putus elemen.\n- Pastikan tombol defogger berfungsi. Jika lampu indikator menyala tetapi kaca tidak menghangat, periksa fuse dan relay.\n\n## 5. Kebiasaan yang membuat kaca cepat rusak\n\n- Menggunakan wiper saat kaca kering.\n- Memakai sampo mobil untuk membersihkan kaca dalam.\n- Menggosok kaca dengan kain kasar atau spons abrasif.\n- Membiarkan noda getah mengering di kaca.\n- Menempel stiker di area elemen defogger.\n\n## 6. Checklist musim hujan\n\n- [ ] Kaca depan dan belakang dibersihkan bagian dalam dan luar\n- [ ] Karet wiper diperiksa dan diganti bila perlu\n- [ ] Cairan wiper diisi\n- [ ] Nozzle semprot dibersihkan\n- [ ] Filter kabin diperiksa atau diganti\n- [ ] Defogger depan dan belakang diuji\n- [ ] Drainase kaca depan dan atap diperiksa\n\n## 7. Kapan harus ke bengkel\n\n- Wiper berdecit keras meskipun karet baru.\n- Defogger tidak bekerja pada salah satu sisi.\n- Kaca depan berembun berlebihan meskipun AC menyala.\n- Ada kebocoran air di kabin saat hujan.\n- Filter kabin tidak bisa diakses sendiri.\n\n## Kesimpulan\n\nKaca yang jernih adalah bagian dari keselamatan, bukan sekadar kenyamanan. Dengan pembersihan rutin, penggantian karet wiper tepat waktu, dan penggunaan defogger yang benar, berkendara di musim hujan jadi lebih aman dan nyaman.",
+      "seoTitle": "Perawatan Kaca, Wiper, dan Defogger Mobil Listrik",
+      "author": "Redaksi EVKita",
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false
+    },
+    {
+      "id": "how-to-read-ev-window-sticker-mpge-range-us-2026-11-28",
+      "slug": "how-to-read-ev-window-sticker-mpge-range-us-2026-11-28",
+      "title": "How to Read an EV Window Sticker: MPGe, Range, and Efficiency Explained",
+      "excerpt": "The Monroney label on an EV looks different from a gas car's. This guide decodes MPGe, kWh/100 miles, range, charging time, and the fine print that matters.",
+      "category": "Guide",
+      "tags": [
+        "window sticker",
+        "mpge",
+        "ev range",
+        "efficiency",
+        "buying guide",
+        "america"
+      ],
+      "keywords": "EV window sticker, MPGe explained, kWh per 100 miles, EV efficiency",
+      "wilayah": "us",
+      "image": "/gambar/artikel/us-window-sticker.webp",
+      "sources": [
+        {
+          "label": "U.S. DOE — Alternative Fuels Data Center",
+          "url": "https://afdc.energy.gov/vehicles/electric"
+        },
+        {
+          "label": "EPA — Fuel Economy",
+          "url": "https://www.fueleconomy.gov"
+        },
+        {
+          "label": "Rivian — Support",
+          "url": "https://rivian.com/support"
+        }
+      ],
+      "body": "## Why EV stickers are different\n\nA gasoline window sticker centers on miles per gallon and annual fuel cost. An EV sticker centers on efficiency and energy use, because the \"fuel\" is electricity measured in kilowatt-hours. The numbers are not hard to read, but they are easy to misunderstand.\n\nThis guide focuses on the parts of the Monroney label that actually change a buying decision.\n\n## 1. MPGe: miles per gallon equivalent\n\nMPGe converts electricity use into a gasoline-equivalent figure so shoppers can compare EVs and gas cars. A higher MPGe means less energy used per mile.\n\nImportant caveats:\n- MPGe is based on a standard test cycle, not your driving.\n- Cold weather, highway speed, and accessories can reduce real-world efficiency.\n- MPGe does not include charging losses or home electricity rates.\n\nUse MPGe for comparison, not for budgeting. Your utility bill is the real measure.\n\n## 2. kWh per 100 miles\n\nThis is the most useful efficiency number on the sticker. It tells you how many kilowatt-hours the car uses to travel 100 miles.\n\nExamples:\n- 25 kWh/100 mi is efficient for a compact EV.\n- 30-35 kWh/100 mi is typical for a midsize SUV.\n- 45+ kWh/100 mi is common for large trucks and performance cars.\n\nLower is better. When comparing two EVs, kWh/100 miles is more honest than MPGe because it directly links to your electricity cost.\n\n## 3. Range\n\nThe EPA estimated range is a single number, but it is not a promise. It is based on a standardized test that blends city and highway driving.\n\nWhat affects real range:\n- Speed: sustained 75 mph can cut range by 15-25%.\n- Temperature: cold weather reduces range and increases charging time.\n- Terrain: hills and headwinds matter.\n- Load: passengers, cargo, and roof racks add drag.\n- Tire pressure: underinflation hurts efficiency.\n\nIf you drive mostly highway in winter, plan for less than the sticker number. Many owners use 70-80% of the EPA range as a planning figure.\n\n## 4. Charging time\n\nThe sticker usually lists:\n- Level 1 (120V) time for a full charge.\n- Level 2 (240V) time for a full charge.\n- DC fast charging time to reach 80%.\n\nRead the fine print. A \"full charge\" on Level 1 can take 40-60 hours. DC fast charging to 80% is the number that matters for road trips, but it assumes a warm battery and a capable charger.\n\n## 5. Fuel economy and cost\n\nThe annual fuel cost is based on national average electricity rates and 15,000 miles per year. Your actual cost depends on:\n- Your utility rate.\n- Time-of-use pricing.\n- Home charging vs public charging.\n- Solar or off-peak charging.\n\nIf you have time-of-use rates, your cost can be much lower than the sticker estimate.\n\n## 6. Emissions and greenhouse gas\n\nEV stickers show zero tailpipe emissions, but the label may include upstream emissions from electricity generation. This is where the grid mix matters. An EV on a clean grid has far lower lifetime emissions than on a coal-heavy grid.\n\n## 7. Other useful details\n\nLook for:\n- Battery capacity in kWh.\n- Drive type (RWD, AWD).\n- Tire size and type.\n- Weight and towing capacity.\n- Warranty coverage for the battery.\n\nThese affect real-world ownership more than the headline range.\n\n## 8. A quick comparison method\n\nWhen comparing two EVs:\n1. Compare kWh/100 miles, not MPGe.\n2. Compare usable battery size, not gross capacity.\n3. Compare DC fast charging curve and peak rate.\n4. Compare real-world range at your typical speed and climate.\n5. Compare home charging time on a 40-48A circuit.\n\n## Bottom line\n\nThe window sticker is a starting point. The numbers that matter most are kWh/100 miles, usable battery capacity, and DC fast charging performance. Pair those with your local electricity rate and driving pattern, and you will have a realistic picture of ownership cost.",
+      "seoTitle": "How to Read an EV Window Sticker",
+      "author": "Redaksi EVKita",
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false
+    },
+    {
+      "id": "bev-phev-erev-which-fits-your-life-us-2026-11-28",
+      "slug": "bev-phev-erev-which-fits-your-life-us-2026-11-28",
+      "title": "BEV vs PHEV vs EREV: Which Electrified Powertrain Fits Your Life",
+      "excerpt": "Battery electric, plug-in hybrid, and extended-range EVs serve different needs. This guide compares charging, range, cost, and daily use to help you choose.",
+      "category": "Guide",
+      "tags": [
+        "bev",
+        "phev",
+        "erev",
+        "buying guide",
+        "charging",
+        "america"
+      ],
+      "keywords": "BEV vs PHEV vs EREV, electric car types, which EV to buy",
+      "wilayah": "us",
+      "image": "/gambar/artikel/us-bev-phev-erev.webp",
+      "sources": [
+        {
+          "label": "U.S. DOE — Alternative Fuels Data Center",
+          "url": "https://afdc.energy.gov/vehicles/electric"
+        },
+        {
+          "label": "EPA — Fuel Economy",
+          "url": "https://www.fueleconomy.gov"
+        },
+        {
+          "label": "Ford — Electric Vehicles",
+          "url": "https://www.ford.com/electric/"
+        }
+      ],
+      "body": "## Three paths to electrification\n\nNot every electrified vehicle works the same way. Understanding the difference between a battery electric vehicle (BEV), a plug-in hybrid (PHEV), and an extended-range EV (EREV) is the first step to choosing the right car.\n\n## BEV: battery electric vehicle\n\nA BEV runs only on electricity. It has a large battery, no gasoline engine, and no tailpipe emissions.\n\nStrengths:\n- Simplest drivetrain.\n- Lowest running cost if you charge at home.\n- Strong acceleration and quiet operation.\n- Access to home and public charging.\n\nTrade-offs:\n- Requires reliable charging.\n- Road trips need planning.\n- Cold weather reduces range.\n- Higher upfront cost for long range.\n\nBest for: drivers with home charging and mostly predictable daily mileage.\n\n## PHEV: plug-in hybrid electric vehicle\n\nA PHEV has both a battery and a gasoline engine. It can drive on electricity for a limited range, then switch to gasoline.\n\nStrengths:\n- Electric driving for short trips.\n- Gasoline backup for long trips.\n- No range anxiety.\n- Can use existing fuel stations.\n\nTrade-offs:\n- Smaller battery means limited EV range.\n- Two powertrains add complexity.\n- Owners often do not plug in, losing the benefit.\n- Higher maintenance than a BEV.\n\nBest for: drivers who want electric commuting but take frequent long trips.\n\n## EREV: extended-range electric vehicle\n\nAn EREV is driven by an electric motor, but includes a small gasoline engine that acts as a generator to recharge the battery on the road. The engine does not drive the wheels directly.\n\nStrengths:\n- Electric driving feel.\n- Longer total range than most BEVs.\n- No need to stop for charging on long trips.\n- Good for areas with limited charging.\n\nTrade-offs:\n- Still burns gasoline on long trips.\n- More complex than a BEV.\n- Efficiency on gasoline is lower than a hybrid.\n- Smaller battery than a comparable BEV.\n\nBest for: drivers in charging deserts or those who want EV feel without charging dependence.\n\n## Side-by-side comparison\n\n| Factor | BEV | PHEV | EREV |\n|---|---|---|---|\n| Electric range | 200-400+ mi | 20-80 mi | 40-150 mi |\n| Total range | 200-400+ mi | 400-600 mi | 400-700 mi |\n| Fuel use | None | Gas on long trips | Gas as generator |\n| Home charging | Essential | Helpful | Helpful |\n| Maintenance | Low | Medium | Medium |\n| Upfront cost | High | Medium | Medium-High |\n\n## How to choose\n\nAsk yourself:\n\n1. Can I charge at home or work reliably?\n2. How many miles do I drive on a typical day?\n3. How often do I take trips over 200 miles?\n4. Is public charging available where I travel?\n5. Do I want to eliminate gasoline entirely?\n\nIf the answer to 1 is yes and 2 is under 150 miles, a BEV is usually the best value. If you take frequent long trips and cannot charge en route, a PHEV or EREV reduces stress. If you want EV feel but live in a charging desert, an EREV is a practical bridge.\n\n## Cost reality\n\n- BEVs have the lowest cost per mile when charged at home.\n- PHEVs save money only if plugged in regularly.\n- EREVs can save money on commuting but still burn fuel on trips.\n- Tax credits and incentives vary by vehicle and location.\n\n## Bottom line\n\nThere is no universal best choice. Match the powertrain to your charging access, daily mileage, and travel habits. A well-chosen PHEV or EREV can be a better fit than a BEV for some drivers, and the reverse is also true. Test drive all three if possible, and calculate based on your actual utility rate and commute.",
+      "seoTitle": "BEV vs PHEV vs EREV: Which Fits Your Life",
+      "author": "Redaksi EVKita",
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false
+    },
+    {
+      "id": "huan-dian-yu-chongdian-zenme-xuan-cn-2026-11-28",
+      "slug": "huan-dian-yu-chongdian-zenme-xuan-cn-2026-11-28",
+      "title": "新能源车换电与充电怎么选：适用场景、成本与体验对比",
+      "excerpt": "换电速度快，充电更普及。本文从补能效率、成本、电池所有权、网络覆盖和车型选择五个维度，帮你判断哪种方式更适合。",
+      "category": "指南",
+      "tags": [
+        "换电",
+        "充电",
+        "补能",
+        "新能源车",
+        "成本",
+        "中国"
+      ],
+      "keywords": "新能源车换电与充电, 换电站, 补能方式对比",
+      "wilayah": "cn",
+      "image": "/gambar/artikel/cn-swap-vs-charge.webp",
+      "sources": [
+        {
+          "label": "蔚来 — 服务与支持",
+          "url": "https://www.nio.com"
+        },
+        {
+          "label": "工业和信息化部",
+          "url": "https://www.miit.gov.cn"
+        },
+        {
+          "label": "中国电动汽车充电基础设施促进联盟",
+          "url": "https://www.evcipa.org.cn"
+        }
+      ],
+      "body": "## 两种补能方式，两种逻辑\n\n充电是把电能送进车里，换电是把整块电池换成满电的。两者都能让车继续跑，但背后的成本、体验和适用场景完全不同。\n\n## 换电的优势\n\n### 1. 补能速度快\n\n换电通常在 3-5 分钟内完成，接近加油体验。对时间敏感的用户，尤其是运营车辆，吸引力很强。\n\n### 2. 电池寿命与衰减由运营商承担\n\n在 BaaS（电池即服务）模式下，用户不拥有电池，运营商负责电池健康、衰减和更换。这降低了用户对电池寿命的焦虑。\n\n### 3. 可以根据需求选择电池容量\n\n部分品牌允许在不同容量电池间切换，例如日常用小电池、长途用大电池，避免为低频需求长期付费。\n\n## 换电的局限\n\n### 1. 网络覆盖有限\n\n换电站主要集中在一二线城市和高速公路沿线。三四线城市和偏远地区覆盖不足。\n\n### 2. 车型锁定\n\n换电需要车辆结构、接口和软件与换电站兼容。目前只有少数品牌支持。\n\n### 3. 电池一致性问题\n\n不同批次、不同循环次数的电池混用，可能影响体验一致性，运营商需要做好管理。\n\n## 充电的优势\n\n### 1. 网络最普及\n\n公共充电桩和家用充电桩覆盖最广，几乎任何电动车都能用。\n\n### 2. 设备成本低\n\n用户只需购买充电桩或使用公共桩，无需依赖专用换电站。\n\n### 3. 车型选择自由\n\n所有电动车都支持充电，不受品牌限制。\n\n## 充电的局限\n\n### 1. 时间长\n\n慢充需要数小时，快充到 80% 通常 30-60 分钟，且受电池温度和桩功率影响。\n\n### 2. 峰值功率衰减\n\n快充时功率会随 SOC 上升而下降，后半段充电较慢。\n\n### 3. 电池长期快充的担忧\n\n虽然现代电池有热管理，但长期高频快充仍可能加速衰减。\n\n## 对比表\n\n| 维度 | 换电 | 充电 |\n|---|---|---|\n| 补能时间 | 3-5 分钟 | 30-60 分钟（快充） |\n| 网络覆盖 | 有限 | 广泛 |\n| 车型兼容 | 少数品牌 | 所有电动车 |\n| 电池所有权 | 运营商 | 用户 |\n| 成本模式 | 租赁/服务费 | 电费 |\n| 长途便利性 | 高（有站） | 中（需规划） |\n\n## 适用场景建议\n\n### 适合换电\n\n- 城市通勤、运营车辆、出租车、网约车\n- 一二线城市，换电站覆盖好\n- 对时间敏感、不愿等待充电\n- 愿意接受 BaaS 模式\n\n### 适合充电\n\n- 多数私家车主\n- 有固定停车位和家用充电桩\n- 长途出行，沿途充电桩充足\n- 希望车型选择自由\n\n## 成本怎么算\n\n换电成本 = 电池租赁费 + 换电服务费。充电成本 = 电费 + 停车费（如有）。在电价低谷时段充电，成本可能低于换电；在高峰时段或公共快充，成本可能更高。\n\n计算时要考虑：\n- 日均行驶里程\n- 公共充电 vs 家用充电比例\n- 换电套餐价格\n- 电池租赁月费\n\n## 未来趋势\n\n充电网络仍在快速扩张，换电也在特定场景深化。两种方式不会互相替代，而是互补：城市日常用换电提升效率，长途和偏远地区用充电保证覆盖。消费者应根据自己的城市、出行习惯和车型偏好选择。\n\n## 小结\n\n换电快但网络有限，充电慢但普及。如果你在一二线城市、每天跑很多公里，换电可能更省时间；如果你有固定车位、每天里程不高，家用充电更经济。最终选择应基于实际使用数据，而不是营销宣传。",
+      "seoTitle": "新能源车换电与充电怎么选",
+      "author": "Redaksi EVKita",
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false
+    },
+    {
+      "id": "jiayong-chongdianzhuang-guzhang-paicha-cn-2026-11-28",
+      "slug": "jiayong-chongdianzhuang-guzhang-paicha-cn-2026-11-28",
+      "title": "家用充电桩不充电或跳闸：排查顺序与安全处理",
+      "excerpt": "充电桩连不上、充电中断或空气开关跳闸，先别急着叫维修。本文按从简单到复杂的顺序，列出可自行检查的项目和必须停手的红线。",
+      "category": "保养",
+      "tags": [
+        "家用充电桩",
+        "故障排查",
+        "跳闸",
+        "充电",
+        "安全",
+        "中国"
+      ],
+      "keywords": "家用充电桩不充电, 跳闸, 排查, 安全处理",
+      "wilayah": "cn",
+      "image": "/gambar/artikel/cn-home-charger-troubleshoot.webp",
+      "sources": [
+        {
+          "label": "小鹏汽车 — 服务支持",
+          "url": "https://www.xpeng.com"
+        },
+        {
+          "label": "蔚来 — 服务与支持",
+          "url": "https://www.nio.com"
+        },
+        {
+          "label": "比亚迪 — 售后服务",
+          "url": "https://www.byd.com/cn"
+        }
+      ],
+      "body": "## 先判断是哪种故障\n\n家用充电桩常见问题可分为三类：\n\n1. **充不进电**：插枪后车辆不开始充电，或几秒后中断。\n2. **充电中断**：充到一半停止，可能伴随报错。\n3. **空气开关跳闸**：充电过程中总闸或分闸跳开。\n\n不同故障对应不同排查路径。先确认车辆能否在其他充电桩正常充电，以排除车端问题。\n\n## 排查顺序（从简单到复杂）\n\n### 1. 检查车辆端\n\n- 车辆是否处于可充电状态（未满、未达到设定上限）。\n- 充电口盖是否完全打开，插头是否插到位。\n- 车内是否设置了充电定时或电流限制。\n- 是否有充电故障码显示。\n\n如果车辆在公共桩正常充电，问题大概率在充电桩或家庭电路。\n\n### 2. 检查充电桩指示灯\n\n不同品牌指示灯含义不同，但一般：\n- 绿灯常亮：待机\n- 蓝灯闪烁：充电中\n- 红灯：故障\n\n查看充电桩 App 或屏幕的错误代码，按手册对照。常见错误包括 CP 信号异常、PE 接地故障、过温保护。\n\n### 3. 检查插头与线缆\n\n- 插头是否有烧蚀、熔化或变色。\n- 线缆是否被碾压、宠物咬坏或长期暴晒老化。\n- 插头插入时是否松动。\n\n任何烧蚀迹象都应立即停用，不要继续尝试。\n\n### 4. 检查家庭电路\n\n- 空气开关容量是否匹配充电桩功率（例如 7 kW 充电桩通常需要 32A 断路器）。\n- 是否与其他大功率电器共用回路。\n- 接地是否可靠。\n- 导线截面积是否足够。\n\n如果充电时总闸跳闸，可能是过载或短路。不要反复送电尝试。\n\n### 5. 检查充电桩设置\n\n- 充电电流设置是否过高。\n- 是否启用了定时充电但时间设置错误。\n- 是否有固件更新未安装。\n\n## 跳闸的常见原因\n\n| 现象 | 可能原因 | 处理 |\n|---|---|---|\n| 充电开始几秒后跳闸 | 过载、短路、漏电 | 停用，检查电路 |\n| 充电中途跳闸 | 过热、电压不稳、接触不良 | 降低电流，检查接头 |\n| 雷雨天跳闸 | 漏电保护触发 | 等天气稳定后再试 |\n| 多电器同时使用跳闸 | 回路过载 | 单独回路供电 |\n\n## 安全红线\n\n- **不要**自行打开充电桩内部。\n- **不要**用铜丝或铁丝代替保险丝。\n- **不要**在有烧蚀、冒烟、异味时继续通电。\n- **不要**在雷雨天气安装或维修。\n- **不要**自行更换更高容量的断路器以“解决”跳闸。\n\n家用充电桩涉及 220V 交流电，处理不当有触电和火灾风险。\n\n## 何时必须联系专业人员\n\n- 插头或线缆有烧蚀、熔化。\n- 空气开关反复跳闸。\n- 充电过程中有异味、冒烟或异响。\n- 接地不可靠或电路老化。\n- 充电桩显示接地故障、漏电故障。\n- 需要升级电路或更换断路器。\n\n联系充电桩品牌售后或持证电工。保留购买凭证和安装记录，以便质保。\n\n## 预防建议\n\n- 安装时选择持证电工，使用专用回路。\n- 每年检查一次接头、接地和断路器。\n- 避免在高温、高湿环境长期使用。\n- 不要长期满功率充电，适当降低电流可减少发热。\n- 定期清洁充电枪和车辆接口。\n- 雷雨天避免充电。\n\n## 小结\n\n家用充电桩故障多数是插头、电路或设置问题。按从车辆到电路的顺序排查，多数小问题可以快速定位。但涉及烧蚀、漏电和反复跳闸时，应立即停用并联系专业人员，不要为省钱冒险。",
+      "seoTitle": "家用充电桩不充电或跳闸排查",
+      "author": "Redaksi EVKita",
+      "date": "2026-11-28",
+      "status": "published",
+      "publishAt": "2026-11-28T00:00:00+07:00",
+      "updatedAt": "2026-11-28T21:30:00+07:00",
+      "updatedBy": "Redaksi",
+      "noindex": false,
+      "featured": false,
+      "aiAssisted": true,
+      "auto": false
     }
   ],
   "media": {}
